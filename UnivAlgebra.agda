@@ -19,7 +19,7 @@ mkProd A (suc n) = mkProd A n × A
 
 {-
   Tipo de pares que contenien en el primer
-  componente el número n y en el segundo la n-upla
+  componente el número n y en el segundo la n+1-upla
 -}
 NProd : ∀ {l} → (A : Set l) → Set l
 NProd A = Σ ℕ (λ n → mkProd A n)
@@ -42,9 +42,9 @@ record Signature : Set₁ where
 open Signature
 
 {- 
-   Dado un conjunto A, un par (n , (a₁,a₂ ....,aₙ)) donde cada aᵢ ∈ A y
+   dado un conjunto A, un par (n , (a₁,a₂ ....,aₙ₊₁)) donde cada aᵢ ∈ A y
    una función i de A en algún Set l₂, retorna el tipo formado por aplicar
-   la función a cada elemento de la tupla: i a₁ × i a₂ × .... × i aₙ
+   la función a cada elemento de la tupla: i a₁ × i a₂ × .... × i aₙ₊₁
 -}
 MapP : ∀ {l₁} {l₂} → (A : Set l₁) → NProd A → (A → Set l₂) → Set l₂
 MapP A (zero , s) i = i s
@@ -63,13 +63,13 @@ map× {B = B} {B' = B'} (suc n , args , s) (as , a) m =
 
 
 {-
-   Dado un conjunto A, un par (n , (a₁,a₂ ....,a₃) donde cada aᵢ ∈ A y
+   dado un conjunto A, un par (n , (a₁,a₂ ....,aₙ₊₁)) donde cada aᵢ ∈ A y
    una función i de A en algún Set l₂, retorna el tipo
-   i a₁ × i a₂ × .... × i a₍ₙ₋₁₎ → i aₙ
+   i a₁ × i a₂ × .... × i aₙ → i aₙ₊₁
 -}
-mkProd' : ∀ {l₁} {l₂} → (A : Set l₁) → Σ ℕ (λ n → mkProd A n) → (A → Set l₂) → Set l₂
-mkProd' A (zero , s) i = i s
-mkProd' A ((suc n) , (args , s)) i = MapP A (n , args) i → i s
+Fun : ∀ {l₁} {l₂} → (A : Set l₁) → NProd A → (A → Set l₂) → Set l₂
+Fun A (zero , s) i = i s
+Fun A ((suc n) , (args , s)) i = MapP A (n , args) i → i s
 
 
 record Algebra {l₁ l₂ : Level} (S : Signature) : 
@@ -77,7 +77,7 @@ record Algebra {l₁ l₂ : Level} (S : Signature) :
   field
     isorts   : (s : sorts S) → Setoid l₁ l₂
     ifuns    : (f : funcs S) →
-               mkProd' {lzero} {l₁} (sorts S) (arity S f) (Carrier ∘ isorts)
+               Fun {lzero} {l₁} (sorts S) (arity S f) (Carrier ∘ isorts)
                                                    
 
 dom : ∀ {l} {A B : Set l} → (A → B) → Set l
@@ -100,7 +100,7 @@ homPreserv {l₁} {l₂} S A A' m f | zero , s | [ eq ] = Lift {ℓ = l₁} (_�
                                                            (p {A'} eq (ifuns A' f)))
   where p : ∀ {Ã : Algebra {l₁} {l₂} S} →
             arity S f ≡ (zero , s) →
-            mkProd' (sorts S) (arity S f) (Carrier ∘ isorts Ã) →
+            Fun (sorts S) (arity S f) (Carrier ∘ isorts Ã) →
             Carrier (isorts Ã s)
         p ep if rewrite ep = if
 homPreserv {l₁} {l₂} S A A' m f | suc n , (args , s) | [ eq ] =
@@ -112,7 +112,7 @@ homPreserv {l₁} {l₂} S A A' m f | suc n , (args , s) | [ eq ] =
                                                           (n , args) as m))
   where p : ∀ {Ã : Algebra {l₁} {l₂} S} →
             arity S f ≡ (suc n , (args , s)) →
-            mkProd' (sorts S) (arity S f) (Carrier ∘ isorts Ã) →
+            Fun (sorts S) (arity S f) (Carrier ∘ isorts Ã) →
             MapP (sorts S) (n , args) (Carrier ∘ isorts Ã) → Carrier (isorts Ã s)
         p eq if rewrite eq = if
 

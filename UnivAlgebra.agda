@@ -78,7 +78,9 @@ homPreserv : ∀ {l₁ l₂} → (S : Signature) → (A : Algebra {l₁} {l₂} 
                          ((s : sorts S) → Carrier (isorts A s) → Carrier (isorts A' s)) →
                          (f : funcs S) → Set (l₂ ⊔ l₁)
 homPreserv S A A' m f with (arity S f) | inspect (arity S) f
-homPreserv {l₁} {l₂} S A A' m f | zero , s | [ eq ] = {!!}
+homPreserv {l₁} {l₂} S A A' m f | zero , s | [ eq ] = Lift {ℓ = l₁} (_≈_ (isorts A' s)
+                                                             (m s (p {A} eq (ifuns A f)))
+                                                           (p {A'} eq (ifuns A' f)))
                        -- EL TERMINO QUE ESTA ABAJO ES EL QUE VA PERO NO TIPA PORQUE ESTA
                        -- EN Set l₁
                        --  _≈_ (isorts A' s) (m s (p {A} eq (ifuns A f)))

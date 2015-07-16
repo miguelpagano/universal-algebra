@@ -4,7 +4,7 @@ open import Relation.Binary
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat hiding (_⊔_)
 open import Data.Vec
-open import Data.Product renaming (map to map×)
+open import Data.Product hiding (map)
 open import Function
 open import Data.Unit
 open import Data.Bool
@@ -16,6 +16,13 @@ open import Relation.Binary.PropositionalEquality
 mkProd : ∀ {l} (A : Set l) → ℕ → Set l
 mkProd A zero = A
 mkProd A (suc n) = mkProd A n × A
+
+{-
+  Tipo de pares que contenien en el primer
+  componente el número n y en el segundo la n-upla
+-}
+NProd : ∀ {l} → (A : Set l) → Set l
+NProd A = Σ ℕ (λ n → mkProd A n)
 
 
 tgtf : ∀ {l} {A : Set l} {n} → mkProd A n → A
@@ -30,29 +37,39 @@ record Signature : Set₁ where
     funcs : Set
     -- Aridad. Para cada símbolo de función obtenemos la cantidad de 
     -- parámetros y su tipo. El tipo estará representado por una tupla de sorts.
-    arity : funcs → Σ ℕ (λ n → mkProd sorts n)
+    arity : funcs → NProd sorts
 
 open Signature
 
 {- 
-   Dado un conjunto A, un par (n , (a₁,a₂ ....,aₙ) donde cada aᵢ ∈ A y
+   Dado un conjunto A, un par (n , (a₁,a₂ ....,aₙ)) donde cada aᵢ ∈ A y
    una función i de A en algún Set l₂, retorna el tipo formado por aplicar
    la función a cada elemento de la tupla: i a₁ × i a₂ × .... × i aₙ
 -}
-mapP : ∀ {l₁} {l₂} → (A : Set l₁) → Σ ℕ (λ n → mkProd A n) → (A → Set l₂) → Set l₂
-mapP A (zero , s) i = i s
-mapP A (suc n , (args , s)) i = mapP A (n , args) i × i s
+MapP : ∀ {l₁} {l₂} → (A : Set l₁) → NProd A → (A → Set l₂) → Set l₂
+MapP A (zero , s) i = i s
+MapP A (suc n , (args , s)) i = MapP A (n , args) i × i s
+
+
+map× : ∀ {l₁} {l₂} {B B' : Set l₂} {A : Set l₁} {i : A → Set l₂} {i' : A → Set l₂} →
+                   (nargs : NProd A) →
+                   (as : MapP A nargs i) → (m : (s : A) → (i s) → (i' s)) →
+                   MapP A nargs i'
+map× {B = B} {B' = B'} (zero , s) a m = m s a
+map× {B = B} {B' = B'} (suc n , args , s) (as , a) m =
+                                             (map× {B = B}
+                                                   {B' = B'}
+                                                   (n , args) as m) , (m s a)
 
 
 {-
    Dado un conjunto A, un par (n , (a₁,a₂ ....,a₃) donde cada aᵢ ∈ A y
    una función i de A en algún Set l₂, retorna el tipo
    i a₁ × i a₂ × .... × i a₍ₙ₋₁₎ → i aₙ
-   
 -}
 mkProd' : ∀ {l₁} {l₂} → (A : Set l₁) → Σ ℕ (λ n → mkProd A n) → (A → Set l₂) → Set l₂
 mkProd' A (zero , s) i = i s
-mkProd' A ((suc n) , (args , s)) i = mapP A (n , args) i → i s
+mkProd' A ((suc n) , (args , s)) i = MapP A (n , args) i → i s
 
 
 record Algebra {l₁ l₂ : Level} (S : Signature) : 
@@ -81,23 +98,22 @@ homPreserv S A A' m f with (arity S f) | inspect (arity S) f
 homPreserv {l₁} {l₂} S A A' m f | zero , s | [ eq ] = Lift {ℓ = l₁} (_≈_ (isorts A' s)
                                                              (m s (p {A} eq (ifuns A f)))
                                                            (p {A'} eq (ifuns A' f)))
-                       -- EL TERMINO QUE ESTA ABAJO ES EL QUE VA PERO NO TIPA PORQUE ESTA
-                       -- EN Set l₁
-                       --  _≈_ (isorts A' s) (m s (p {A} eq (ifuns A f)))
-                       --                         (p {A'} eq (ifuns A' f))
   where p : ∀ {Ã : Algebra {l₁} {l₂} S} →
             arity S f ≡ (zero , s) →
             mkProd' (sorts S) (arity S f) (Carrier ∘ isorts Ã) →
             Carrier (isorts Ã s)
         p ep if rewrite ep = if
 homPreserv {l₁} {l₂} S A A' m f | suc n , (args , s) | [ eq ] =
-                                (as : mapP (sorts S) (n , args) (Carrier ∘ isorts A)) →
+                                (as : MapP (sorts S) (n , args) (Carrier ∘ isorts A)) →
                                 _≈_ (isorts A' s) (m s (p {A} eq (ifuns A f) as))
-                                                  (p {A'} eq (ifuns A' f) {!!})
+                                                  (p {A'} eq (ifuns A' f)
+                                                    (map× {B = (Carrier $ isorts A s)}
+                                                          {B' = (Carrier $ isorts A' s)}
+                                                          (n , args) as m))
   where p : ∀ {Ã : Algebra {l₁} {l₂} S} →
             arity S f ≡ (suc n , (args , s)) →
             mkProd' (sorts S) (arity S f) (Carrier ∘ isorts Ã) →
-            mapP (sorts S) (n , args) (Carrier ∘ isorts Ã) → Carrier (isorts Ã s)
+            MapP (sorts S) (n , args) (Carrier ∘ isorts Ã) → Carrier (isorts Ã s)
         p eq if rewrite eq = if
 
 

@@ -176,7 +176,7 @@ module Example where
                monFun unit = []
                monFun mult (ls , ls') = ls Data.List.++ ls'
 
-  
+
 -- 3. el monoide trivial
   UnitMon : Algebra monSig
   UnitMon = record { isorts = unitSort
@@ -188,6 +188,19 @@ module Example where
                   unitFun :  (f : funcs monSig) → Fun (sorts monSig) (arity monSig f) (Carrier ∘ unitSort)
                   unitFun unit = unit
                   unitFun mult x = unit
+
+-- 4. 2 con ∨
+  OrMon : Algebra monSig
+  OrMon = record { isorts = orSort
+                 ; ifuns = orFun
+                 }
+              where orSort : sorts monSig → Setoid lzero lzero
+                    orSort S = setoid Bool
+                    
+                    orFun : (f : funcs monSig) → Fun (sorts monSig) (arity monSig f) (Carrier ∘ orSort)
+                    orFun unit = false
+                    orFun mult (b , b') = b ∨ b'
+                    
 
 -- Algunos homomorfismos: 1. el terminal.
   trivialHomo : (A : Algebra monSig) → Homomorphism monSig A UnitMon
@@ -217,5 +230,38 @@ module Example where
                   pres unit = lift _≡_.refl
                   pres mult (ls , ls') = lengthPlus ls ls'
 
--- Ahora podemos probar: trivialHomo ListMon = trivialHomo ℕ · listToNat
+-- 3. isSuc
+
+  natToBool : Homomorphism monSig PlusMon OrMon
+  natToBool = record { morphs = morph
+                     ; preserv = pres
+                     }
+            where morph : (s : sorts monSig) → Carrier (isorts PlusMon s) → Carrier (isorts OrMon s)
+                  morph S 0 = false
+                  morph S (suc _) = true
+
+                  pres : (f : funcs monSig) → homPreserv monSig PlusMon OrMon morph f
+                  pres unit = lift _≡_.refl
+                  pres mult (zero , zero) = _≡_.refl
+                  pres mult (zero , suc m) = _≡_.refl
+                  pres mult (suc n , m) = _≡_.refl
+
+-- 4. isApp
+
+  listToBool : Homomorphism monSig ListMon OrMon
+  listToBool = record { morphs = morph
+                      ; preserv = pres
+                      }
+            where morph : (s : sorts monSig) → Carrier (isorts ListMon s) → Carrier (isorts OrMon s)
+                  morph S [] = false
+                  morph S (_ ∷ _) = true
+
+                  pres : (f : funcs monSig) → homPreserv monSig ListMon OrMon morph f
+                  pres unit = lift _≡_.refl
+                  pres mult ([] , []) = _≡_.refl
+                  pres mult ([] , _ ∷ _) = _≡_.refl
+                  pres mult (_ ∷ _ , _) = _≡_.refl
+                      
+  
+-- Ahora podemos probar: listToBool =  natToBool · listToNat
 -- este sería un buen ejemplo para testear la definición de igualdad de homos.

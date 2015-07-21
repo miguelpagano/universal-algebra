@@ -122,8 +122,8 @@ open Homomorphism
 
 data _≈ₕ_ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} : 
           (H H' : Homomorphism S A A') → Set (lsuc (l₁ ⊔ l₂)) where
-  ext : (H H' : Homomorphism S A A') → (s : sorts S) → (a b : Carrier (isorts A s)) →
-        _≈_ (isorts A s) a b → _≈_ (isorts A' s) (morphs H s ⟨$⟩ a) (morphs H' s ⟨$⟩ b) →
+  ext : (H H' : Homomorphism S A A') → ((s : sorts S) → (a b : Carrier (isorts A s)) →
+        _≈_ (isorts A s) a b → _≈_ (isorts A' s) (morphs H s ⟨$⟩ a) (morphs H' s ⟨$⟩ b)) →
         H ≈ₕ H'
 
 -- Composición de homomorfismos

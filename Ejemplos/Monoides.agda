@@ -151,6 +151,16 @@ listToBool = record { morphs = morph
                  pres mult ([] , _ ∷ _) = _≡_.refl
                  pres mult (_ ∷ _ , _) = _≡_.refl
                       
-  
+        
 -- Ahora podemos probar: listToBool =  natToBool · listToNat
--- este sería un buen ejemplo para testear la definición de igualdad de homos.
+listToBool' : Homomorphism monSig ListMon OrMon
+listToBool' = natToBool ∘ₕ listToNat
+
+same : listToBool ≈ₕ listToBool'
+same = ext listToBool listToBool' prop
+  where prop : (s : sorts monSig) (a b : Carrier (isorts ListMon s)) →
+               (isorts ListMon s ≈ a) b →
+               (isorts OrMon s ≈ Homomorphism.morphs listToBool s ⟨$⟩ a)
+               (Homomorphism.morphs listToBool' s ⟨$⟩ b)
+        prop S [] .[] _≡_.refl = _≡_.refl
+        prop S (x ∷ a) .(x ∷ a) _≡_.refl = _≡_.refl

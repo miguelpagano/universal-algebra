@@ -17,7 +17,8 @@ open import Relation.Binary.PropositionalEquality
    el tipo A × A × ... × A, donde A aparece n+1 veces -}
 mkProd : ∀ {l} (A : Set l) → ℕ → Set l
 mkProd A zero = Lift Unit
-mkProd A (suc n) = mkProd A n × A
+mkProd A (suc zero) = A
+mkProd A (suc (suc n)) = mkProd A (suc n) × A
 
 {-
 data Arity {l} : (A : Set l) → ℕ → Set l
@@ -62,16 +63,18 @@ fdom {S} f = proj₁ (arity S f)
 
 MapP : ∀ {l₁} {l₂} → (A : Set l₁) → NProd A → (A → Set l₂) → Set l₂
 MapP A (zero , lift unit) i = Lift Unit
-MapP A (suc n , (args , s)) i = MapP A (n , args) i × i s
+MapP A (suc zero , a) i = i a
+MapP A (suc (suc n) , (args , s)) i = MapP A (suc n , args) i × i s
 
 map× : ∀ {lₐ} {l₁} {l₂} {B B' : Setoid l₁ l₂} {A : Set lₐ} {i : A → Setoid l₁ l₂} {i' : A → Setoid l₁ l₂} →
                    (nargs : NProd A) →
                    (as : MapP A nargs (Carrier ∘ i)) → (m : (s : A) → (i s) ⟶ (i' s)) →
                    MapP A nargs (Carrier ∘ i')
 map× (zero , lift unit) (lift unit) m = lift unit
-map× {B = B} {B' = B'} (suc n , args , a) (iargs , ia) m =
+map× {B = B} {B' = B'} (suc zero , a) ia m = m a ⟨$⟩ ia
+map× {B = B} {B' = B'} (suc (suc n) , args , a) (iargs , ia) m =
                               map× {B = B} {B' = B'}
-                                   (n , args) iargs m , m a ⟨$⟩ ia
+                                   (suc n , args) iargs m , m a ⟨$⟩ ia
 
 IFun : ∀ {l₁} {l₂} → (A : Set l₁) → (NProd A × A) → (A → Set l₂) → Set l₂
 IFun A (nargs , a) i = MapP A nargs i → i a
@@ -106,8 +109,7 @@ record Homomorphism {l₁ l₂ : Level}
                                     Set (lsuc (l₁ ⊔ l₂)) where
   field
     -- Familia de funciones
-    morphs  : (s : sorts S) → isorts A s ⟶
-                              isorts A' s
+    morphs  : (s : sorts S) → isorts A s ⟶ isorts A' s
     -- Propiedad de preservación de operaciones.
     preserv : (f : funcs S) → homPreserv S A A' morphs f
 
@@ -126,6 +128,8 @@ data _≈ₕ_ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} :
 
 -- Composición de homomorfismos
 
+{- Si f : A -> B y g : B -> C, ambos preservan igualdad, entonces la composición también -}
+
 _∘ₕ_ : ∀ {l₁ l₂} {S} {A₀ A₁ A₂ : Algebra {l₁} {l₂} S} →
        (H₁ : Homomorphism S A₁ A₂) → (H₀ : Homomorphism S A₀ A₁) →
        Homomorphism S A₀ A₂
@@ -134,18 +138,19 @@ _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
                       ; preserv = pres }
   where comp = λ s → morphs H₁ s ∘ₛ morphs H₀ s
         pres : (f : funcs S) → homPreserv S A₀ A₂ comp f
-        pres f  = λ as → Setoid.trans (isorts A₂ s) (Π.cong (morphs H₁ s) (p₀ as))
+        pres f as = Setoid.trans (isorts A₂ s) (Π.cong (morphs H₁ s) (p₀ as))
                          (Setoid.trans (isorts A₂ s) (p₁ (map× args as (morphs H₀)))
                                                      (compMap× as))
           where p₁ = preserv H₁ f
                 p₀ = preserv H₀ f
                 s = ftgt {S} f
                 args = fdom {S} f
-                compMap× : (as : MapP (sorts S) args (Carrier ∘ isorts A₀)) → 
+                postulate 
+                  compMap× : (as : MapP (sorts S) args (Carrier ∘ isorts A₀)) → 
                            _≈_ (isorts A₂ s)
                            ((ifuns A₂ f) (map× args (map× args as (morphs H₀)) (morphs H₁)))
                            ((ifuns A₂ f) (map× args as comp))
-                compMap× = {!!}
+--                compMap× as = {!!}
 
 {-
                  Esta seria la prueba pres en un lenguaje mas ameno:

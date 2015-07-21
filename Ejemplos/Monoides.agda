@@ -2,11 +2,12 @@ module Ejemplos.Monoides where
 
 open import UnivAlgebra
 open import Relation.Binary
+import Relation.Binary.Indexed.Core 
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat hiding (_⊔_)
-open import Data.Vec
 open import Data.Product hiding (map)
 open import Function
+open import Function.Equality hiding (setoid;_∘_;cong) 
 open import Data.Unit hiding (setoid)
 open import Data.Bool
 open import Relation.Binary.PropositionalEquality
@@ -18,9 +19,9 @@ data FunM : Set where
   unit : FunM
   mult : FunM
          
-arFunM : FunM → NProd Sort
-arFunM unit = 0 , S
-arFunM mult = 2 , ((S , S) , S)
+arFunM : FunM → NProd Sort × Sort
+arFunM unit = (0 , lift unit) , S
+arFunM mult = (2 , (S , S )) , S
 
 open Signature
 open Setoid
@@ -40,8 +41,8 @@ PlusMon = record { isorts = monSort
         where monSort : sorts monSig → Setoid lzero lzero
               monSort S = setoid ℕ
               
-              monFun :  (f : funcs monSig) → Fun (sorts monSig) (arity monSig f) (Carrier ∘ monSort)
-              monFun unit = 0
+              monFun :  (f : funcs monSig) → IFun (sorts monSig) (arity monSig f) (Carrier ∘ monSort)
+              monFun unit x = 0
               monFun mult (m , n) = m + n
                                         
 -- 2. el monoide de listas (de naturales, podría ser polimórfico)
@@ -53,8 +54,8 @@ ListMon = record { isorts = monSort
         where monSort : sorts monSig → Setoid lzero lzero
               monSort S = setoid (List ℕ)
                
-              monFun :  (f : funcs monSig) → Fun (sorts monSig) (arity monSig f) (Carrier ∘ monSort)
-              monFun unit = []
+              monFun :  (f : funcs monSig) → IFun (sorts monSig) (arity monSig f) (Carrier ∘ monSort)
+              monFun unit x = []
               monFun mult (ls , ls') = ls Data.List.++ ls'
                                                        
                                                        
@@ -66,8 +67,8 @@ UnitMon = record { isorts = unitSort
           where unitSort : sorts monSig → Setoid lzero lzero
                 unitSort S = setoid Unit
           
-                unitFun :  (f : funcs monSig) → Fun (sorts monSig) (arity monSig f) (Carrier ∘ unitSort)
-                unitFun unit = unit
+                unitFun :  (f : funcs monSig) → IFun (sorts monSig) (arity monSig f) (Carrier ∘ unitSort)
+                unitFun unit x = unit
                 unitFun mult x = unit
 
 -- 4. 2 con ∨
@@ -78,67 +79,74 @@ OrMon = record { isorts = orSort
         where orSort : sorts monSig → Setoid lzero lzero
               orSort S = setoid Bool
                     
-              orFun : (f : funcs monSig) → Fun (sorts monSig) (arity monSig f) (Carrier ∘ orSort)
-              orFun unit = false
+              orFun : (f : funcs monSig) → IFun (sorts monSig) (arity monSig f) (Carrier ∘ orSort)
+              orFun unit _ = false
               orFun mult (b , b') = b ∨ b'
                     
 
 -- Algunos homomorfismos: 1. el terminal.
 trivialHomo : (A : Algebra monSig) → Homomorphism monSig A UnitMon
 trivialHomo A = record { morphs = morph
-                ; preserv = pres
-                  }
-            where morph : (s : sorts monSig) → Carrier (isorts A s) → Carrier (isorts UnitMon s)
-                  morph S x = unit
+                       ; preserv = pres
+                       }
+            where morph : (s : sorts monSig) → (isorts A s) ⟶ (isorts UnitMon s)
+                  morph S = record { _⟨$⟩_ = λ x → unit
+                                   ; cong = λ {i} {j} _ → _≡_.refl
+                                   }
 
                   pres : (f : funcs monSig) → homPreserv monSig A UnitMon morph f
-                  pres unit = lift _≡_.refl
+                  pres unit = λ as → _≡_.refl
                   pres mult as = _≡_.refl
                     
--- 2. El que mapea listas a su longitud.
+-- -- 2. El que mapea listas a su longitud.
 listToNat : Homomorphism monSig ListMon PlusMon 
 listToNat = record { morphs = morph
                    ; preserv = pres }
 
-          where morph : (s : sorts monSig) → Carrier (isorts ListMon s) → Carrier (isorts PlusMon s)
-                morph S ls = length ls
-
-                lengthPlus : (l l' : List ℕ) → length (l Data.List.++ l') ≡ length l + length l'
+          where morph : (s : sorts monSig) → (isorts ListMon s) ⟶  (isorts PlusMon s)
+                morph S = record { _⟨$⟩_ = λ x → length x
+                                 ; cong = λ {ls} {ls'} x → cong length x
+                                 }
+                lengthPlus : (l l' : List ℕ) → length (l ++ l') ≡ length l + length l'
                 lengthPlus [] l' = _≡_.refl
-                lengthPlus (x ∷ l) l' = cong (_+_ 1) (lengthPlus l l')
+                lengthPlus (x ∷ l) l' = cong (_+_ 1) (lengthPlus l l') -- 
 
                 pres : (f : funcs monSig) → homPreserv monSig ListMon PlusMon morph f
-                pres unit = lift _≡_.refl
+                pres unit _ = _≡_.refl
                 pres mult (ls , ls') = lengthPlus ls ls'
 
--- 3. isSuc
+-- -- 3. isSuc
 
 natToBool : Homomorphism monSig PlusMon OrMon
 natToBool = record { morphs = morph
                    ; preserv = pres
                    }
-          where morph : (s : sorts monSig) → Carrier (isorts PlusMon s) → Carrier (isorts OrMon s)
-                morph S 0 = false
-                morph S (suc _) = true
+          where morph : (s : sorts monSig) → (isorts PlusMon s) ⟶ (isorts OrMon s)
+                morph S = record { _⟨$⟩_ = fun ; cong = cong fun }
+                  where fun : ℕ → Bool
+                        fun zero = false
+                        fun (suc _) = true
 
                 pres : (f : funcs monSig) → homPreserv monSig PlusMon OrMon morph f
-                pres unit = lift _≡_.refl
+                pres unit x = _≡_.refl
                 pres mult (zero , zero) = _≡_.refl
                 pres mult (zero , suc m) = _≡_.refl
                 pres mult (suc n , m) = _≡_.refl
 
--- 4. isApp
+-- -- 4. isApp
 
 listToBool : Homomorphism monSig ListMon OrMon
 listToBool = record { morphs = morph
                     ; preserv = pres
                     }
-           where morph : (s : sorts monSig) → Carrier (isorts ListMon s) → Carrier (isorts OrMon s)
-                 morph S [] = false
-                 morph S (_ ∷ _) = true
+           where morph : (s : sorts monSig) → (isorts ListMon s) ⟶ (isorts OrMon s)
+                 morph S = record { _⟨$⟩_ = fun ; cong = cong fun }
+                       where fun : List ℕ → Bool
+                             fun [] = false
+                             fun (_ ∷ _) = true
 
                  pres : (f : funcs monSig) → homPreserv monSig ListMon OrMon morph f
-                 pres unit = lift _≡_.refl
+                 pres unit x = _≡_.refl
                  pres mult ([] , []) = _≡_.refl
                  pres mult ([] , _ ∷ _) = _≡_.refl
                  pres mult (_ ∷ _ , _) = _≡_.refl

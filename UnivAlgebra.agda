@@ -131,16 +131,25 @@ _∘ₕ_ : ∀ {l₁ l₂} {S} {A₀ A₁ A₂ : Algebra {l₁} {l₂} S} →
        Homomorphism S A₀ A₂
 _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
                record { morphs = comp
-                      ; preserv = {!!} }
+                      ; preserv = pres }
   where comp = λ s → morphs H₁ s ∘ₛ morphs H₀ s
-        pres : (f : funcs S) → homPreserv S A₁ A₂ (morphs H₁) f →
-                               homPreserv S A₀ A₁ (morphs H₀) f →
-                               homPreserv S A₀ A₂ comp f
-        pres f p₁ p₀ = Setoid.trans (Π.cong (morphs {!!} {!!}) {!!}) {!!} {!!}
-          where s = ftgt {S} f
-
+        pres : (f : funcs S) → homPreserv S A₀ A₂ comp f
+        pres f  = λ as → Setoid.trans (isorts A₂ s) (Π.cong (morphs H₁ s) (p₀ as))
+                         (Setoid.trans (isorts A₂ s) (p₁ (map× args as (morphs H₀)))
+                                                     (compMap× as))
+          where p₁ = preserv H₁ f
+                p₀ = preserv H₀ f
+                s = ftgt {S} f
+                args = fdom {S} f
+                compMap× : (as : MapP (sorts S) args (Carrier ∘ isorts A₀)) → 
+                           _≈_ (isorts A₂ s)
+                           ((ifuns A₂ f) (map× args (map× args as (morphs H₀)) (morphs H₁)))
+                           ((ifuns A₂ f) (map× args as comp))
+                compMap× = {!!}
 
 {-
+                 Esta seria la prueba pres en un lenguaje mas ameno:
+
                  p₀ :   H₀ fₐ₀ as ≈ₐ₁ fₐ₁ (map× H₀ as)
 
                  p₁ :   H₁ fₐ₁ as ≈ₐ₂ fₐ₂ (map× H₁ as)

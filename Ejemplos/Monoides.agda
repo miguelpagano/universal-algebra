@@ -41,7 +41,7 @@ PlusMon = record { isorts = monSort
         where monSort : sorts monSig → Setoid lzero lzero
               monSort S = setoid ℕ
               
-              monFun :  (f : funcs monSig) → IFun (sorts monSig) (arity monSig f) (Carrier ∘ monSort)
+              monFun :  (f : funcs monSig) → IFun {monSig} (arity monSig f) (Carrier ∘ monSort)
               monFun unit x = 0
               monFun mult (m , n) = m + n
                                         
@@ -54,7 +54,7 @@ ListMon = record { isorts = monSort
         where monSort : sorts monSig → Setoid lzero lzero
               monSort S = setoid (List ℕ)
                
-              monFun :  (f : funcs monSig) → IFun (sorts monSig) (arity monSig f) (Carrier ∘ monSort)
+              monFun :  (f : funcs monSig) → IFun {monSig} (arity monSig f) (Carrier ∘ monSort)
               monFun unit x = []
               monFun mult (ls , ls') = ls Data.List.++ ls'
                                                        
@@ -67,7 +67,7 @@ UnitMon = record { isorts = unitSort
           where unitSort : sorts monSig → Setoid lzero lzero
                 unitSort S = setoid Unit
           
-                unitFun :  (f : funcs monSig) → IFun (sorts monSig) (arity monSig f) (Carrier ∘ unitSort)
+                unitFun :  (f : funcs monSig) → IFun {monSig} (arity monSig f) (Carrier ∘ unitSort)
                 unitFun unit x = unit
                 unitFun mult x = unit
 
@@ -79,14 +79,14 @@ OrMon = record { isorts = orSort
         where orSort : sorts monSig → Setoid lzero lzero
               orSort S = setoid Bool
                     
-              orFun : (f : funcs monSig) → IFun (sorts monSig) (arity monSig f) (Carrier ∘ orSort)
+              orFun : (f : funcs monSig) → IFun {monSig} (arity monSig f) (Carrier ∘ orSort)
               orFun unit _ = false
               orFun mult (b , b') = b ∨ b'
                     
 
 -- Algunos homomorfismos: 1. el terminal.
 trivialHomo : (A : Algebra monSig) → Homomorphism monSig A UnitMon
-trivialHomo A = record { morphs = morph
+trivialHomo A = record { morph = morph
                        ; preserv = pres
                        }
             where morph : (s : sorts monSig) → (isorts A s) ⟶ (isorts UnitMon s)
@@ -100,7 +100,7 @@ trivialHomo A = record { morphs = morph
                     
 -- -- 2. El que mapea listas a su longitud.
 listToNat : Homomorphism monSig ListMon PlusMon 
-listToNat = record { morphs = morph
+listToNat = record { morph = morph
                    ; preserv = pres }
 
           where morph : (s : sorts monSig) → (isorts ListMon s) ⟶  (isorts PlusMon s)
@@ -118,7 +118,7 @@ listToNat = record { morphs = morph
 -- -- 3. isSuc
 
 natToBool : Homomorphism monSig PlusMon OrMon
-natToBool = record { morphs = morph
+natToBool = record { morph = morph
                    ; preserv = pres
                    }
           where morph : (s : sorts monSig) → (isorts PlusMon s) ⟶ (isorts OrMon s)
@@ -136,7 +136,7 @@ natToBool = record { morphs = morph
 -- -- 4. isApp
 
 listToBool : Homomorphism monSig ListMon OrMon
-listToBool = record { morphs = morph
+listToBool = record { morph = morph
                     ; preserv = pres
                     }
            where morph : (s : sorts monSig) → (isorts ListMon s) ⟶ (isorts OrMon s)
@@ -160,7 +160,7 @@ same : listToBool ≈ₕ listToBool'
 same = ext listToBool listToBool' prop
   where prop : (s : sorts monSig) (a b : Carrier (isorts ListMon s)) →
                (isorts ListMon s ≈ a) b →
-               (isorts OrMon s ≈ Homomorphism.morphs listToBool s ⟨$⟩ a)
-               (Homomorphism.morphs listToBool' s ⟨$⟩ b)
+               (isorts OrMon s ≈ Homomorphism.morph listToBool s ⟨$⟩ a)
+               (Homomorphism.morph listToBool' s ⟨$⟩ b)
         prop S [] .[] _≡_.refl = _≡_.refl
         prop S (x ∷ a) .(x ∷ a) _≡_.refl = _≡_.refl

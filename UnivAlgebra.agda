@@ -3,7 +3,7 @@ module UnivAlgebra where
 open import Relation.Binary
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat hiding (_⊔_)
-open import Data.Vec
+open import Data.Vec hiding (init)
 open import Data.Product hiding (map)
 open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_)
@@ -134,16 +134,16 @@ FunAlg {S} A A' = (s : sorts S) → isorts A s ⟶ isorts A' s
 
 
 
-map× : ∀ {l₁} {l₂} {B B' : Setoid l₁ l₂} {S : Signature}
-         {i : (sorts S) → Setoid l₁ l₂} {i' : (sorts S) → Setoid l₁ l₂} →
+map× : ∀ {l₁} {B B' : Set l₁} {S : Signature}
+         {i : (sorts S) → Set l₁} {i' : (sorts S) → Set l₁} →
          (nargs : Dom S) →
-         (as : IDom {S} nargs (Carrier ∘ i)) → (m : (s : sorts S) → (i s) ⟶ (i' s)) →
-         IDom {S} nargs (Carrier ∘ i')
+         (as : IDom {S} nargs i) → (m : (s : sorts S) → (i s) → (i' s)) →
+         IDom {S} nargs i'
 map×(zero , lift unit) (lift unit) m = lift unit
-map× {B = B} {B' = B'} (suc zero , a) ia m = m a ⟨$⟩ ia
+map× {B = B} {B' = B'} (suc zero , a) ia m = m a ia
 map× {B = B} {B' = B'} (suc (suc n) , args , a) (iargs , ia) m =
                               map× {B = B} {B' = B'}
-                                   (suc n , args) iargs m , m a ⟨$⟩ ia
+                                   (suc n , args) iargs m , m a ia
 
 
 
@@ -153,9 +153,9 @@ mapMorph : ∀ {S : Signature} {l₁} {l₂}
                 (m : FunAlg A A') → (as : idom f A) → 
                 idom f A'
 mapMorph {S} {l₁} {l₂} {A} {A'} {f} m as =
-                    map× {B = isorts A (ftgt {S} f)}
-                         {B' = isorts A' (ftgt {S} f)}
-                         (fdom {S} f) as m
+                    map× {B = Carrier $ isorts A (ftgt {S} f)}
+                         {B' = Carrier $ isorts A' (ftgt {S} f)}
+                         (fdom {S} f) as (λ s → _⟨$⟩_ (m s))
 
 {- 
    Definición de la propiedad de preservación de igualdad
@@ -168,9 +168,8 @@ homPreserv : ∀ {l₁ l₂} → (S : Signature) → (A : Algebra {l₁} {l₂} 
 homPreserv S A A' m f = (as : idom f A) →
                         _≈_ (isorts A' tgtf)
                             (m tgtf ⟨$⟩ (ifuns A f as))
-                            (ifuns A' f (map× {B = (isorts A tgtf)}
-                                              {B' = (isorts A' tgtf)}
-                                              targs as m))
+                            (ifuns A' f (mapMorph {S} {A = A} {A' = A'} {f = f}
+                                                  m as))
   where tgtf = ftgt {S} f
         targs = fdom {S} f
 
@@ -201,17 +200,17 @@ data _≈ₕ_ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} :
 ≡to≈ {St = St} PE.refl = Setoid.refl St
  
 
-propMap×Comp : ∀ {l₁} {l₂} {B₀ B₁ B₂ : Setoid l₁ l₂} {S : Signature}
-                 {i₀ : (sorts S) → Setoid l₁ l₂} {i₁ : (sorts S) → Setoid l₁ l₂}
-                 {i₂ : (sorts S) → Setoid l₁ l₂} →
+propMap×Comp : ∀ {l₁} {B₀ B₁ B₂ : Set l₁} {S : Signature}
+                 {i₀ : (sorts S) → Set l₁} {i₁ : (sorts S) → Set l₁}
+                 {i₂ : (sorts S) → Set l₁} →
                  (nargs : Dom S) →
-                 (as : IDom {S} nargs (Carrier ∘ i₀)) →
-                 (m : (s : sorts S) → (i₀ s) ⟶ (i₁ s)) →
-                 (m' : (s : sorts S) → (i₁ s) ⟶ (i₂ s)) →
+                 (as : IDom {S} nargs i₀) →
+                 (m : (s : sorts S) → (i₀ s) → (i₁ s)) →
+                 (m' : (s : sorts S) → (i₁ s) → (i₂ s)) →
                  (s : sorts S) →
                  map× {B = B₁} {B' = B₂} nargs (map× {B = B₀} {B' = B₁} nargs as m) m'
                  ≡
-                 map× {B = B₀} {B' = B₂} nargs as (λ s' → m' s' ∘ₛ m s')
+                 map× {B = B₀} {B' = B₂} nargs as (λ s' → m' s' ∘ m s')
 propMap×Comp (zero , lift unit) (lift unit) m m' s = _≡_.refl
 propMap×Comp (suc zero , a) ia m m' s = _≡_.refl
 propMap×Comp {B₀ = B₀} {B₁ = B₁} {B₂ = B₂}
@@ -252,7 +251,8 @@ _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
                                ((ifuns A₂ f) (mapMorph {A = A₀} {A' = A₂}
                                                        comp as))
                 propMapMorph = ≡to≈ {St = isorts A₂ s} (PE.cong (ifuns A₂ f)
-                               (propMap×Comp args as (morph H₀) (morph H₁) s))
+                               (propMap×Comp args as (λ s' → _⟨$⟩_ (morph H₀ s'))
+                                                     (λ s' → _⟨$⟩_ (morph H₁ s')) s))
 
 {-
                  Esta seria la prueba pres en un lenguaje mas ameno:
@@ -274,3 +274,49 @@ _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
                     se prueba en map×CompProp
 
  -}
+
+
+Unicity : ∀ {l₁} {l₂} → (A : Set l₁) → (A → A → Set l₂) → Set _ 
+Unicity A rel = Σ A (λ a → (a' : A) → rel a a')
+
+
+record Initial {l₁ l₂ : Level} (S : Signature) : 
+                             Set (lsuc (l₁ ⊔ l₂)) where
+  field
+    alg      : Algebra {l₁} {l₂} S
+    init     : (A : Algebra {l₁} {l₂} S) → Unicity (Homomorphism S alg A) (_≈ₕ_)
+
+
+-- Algebra de términos
+
+-- Carriers del álgebra de términos de una signatura
+data HerbrandUniverse (S : Signature) : (s : sorts S) → Set where
+  term : (f : funcs S) →
+         (t : IDom {S} (fdom {S} f) (λ s → HerbrandUniverse S s)) →
+         HerbrandUniverse S (ftgt {S} f)
+
+termAlgebra : (S : Signature) → Algebra {lzero} {lzero} S
+termAlgebra S = record { isorts = λ s → PE.setoid (HerbrandUniverse S s)
+                       ; ifuns = λ f t → term f t }
+
+-- Homomorfismo del álgebra de términos a cualquier otra álgebra
+tAlgHomo : ∀ {S} → (A : Algebra {lzero} {lzero} S) → Homomorphism S (termAlgebra S) A
+tAlgHomo {S} A = record { morph = λ s → record { _⟨$⟩_ = fun s
+                                           ; cong = {!!} }
+                    ; preserv = {!!} }
+  where fun : (s : sorts S) → HerbrandUniverse S s → Carrier (isorts A s)
+        fun ._ (term f t) = ifuns A f (map× {B = HerbrandUniverse S (ftgt {S} f)}
+                                            {B' = Carrier $ isorts A (ftgt {S} f)}
+                                            {S = S}
+                                            (fdom {S} f) t fun)
+
+-- El álgebra de términos es inicial
+tAlgInit : (S : Signature) → Initial {lzero} {lzero} S
+tAlgInit S = record { alg = termAlgebra S
+                    ; init = tinit }
+  where tinit : (A : Algebra {lzero} {lzero} S) →
+                Unicity (Homomorphism S (termAlgebra S) A) (_≈ₕ_)
+        tinit A = tAlgHomo A , uni
+          where uni : (h : Homomorphism S (termAlgebra S) A) → tAlgHomo A ≈ₕ h
+                uni h = {!!}
+

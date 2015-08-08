@@ -56,12 +56,16 @@ Dom S = NProd (sorts S)
 Arity : Signature → Set _
 Arity S = Dom S × (sorts S)
 
-{-
+  {-
   Dado un símbolo de función en la signatura S,
   retorna su dominio.
 -}
 fdom : ∀ {S : Signature} → (f : funcs S) → Dom S
 fdom {S} f = proj₁ (arity S f)
+
+sizeDom : ∀ {S : Signature} → (f : funcs S) → ℕ
+sizeDom {S} = proj₁ ∘ fdom {S}
+
 
 {-
   Dado un símbolo de función en la signatura S,
@@ -88,6 +92,8 @@ IDom : ∀ {S : Signature} {l} → Dom S → (ISorts S (Set l)) → Set _
 IDom (zero , lift unit) i = Lift Unit
 IDom (suc zero , a) i = i a
 IDom {S} (suc (suc n) , (args , s)) i = IDom {S} (suc n , args) i × i s
+
+     
 
 {-
   Dada la aridad de un símbolo de función f en la signatura S, y 
@@ -291,25 +297,63 @@ record Initial {l₁ l₂ : Level} (S : Signature) :
 
 -- Carriers del álgebra de términos de una signatura
 data HerbrandUniverse (S : Signature) : (s : sorts S) → Set where
-  term : (f : funcs S) →
-         (t : IDom {S} (fdom {S} f) (λ s → HerbrandUniverse S s)) →
-         HerbrandUniverse S (ftgt {S} f)
+  term    : (f : funcs S) →
+            (t : IDom {S} (fdom {S} f) (λ s → HerbrandUniverse S s)) →
+            HerbrandUniverse S (ftgt {S} f)
+
+
+interpHerb : ∀ {S : Signature} → sorts S → Set
+interpHerb {S} = (λ s → HerbrandUniverse S s)
+
+data _∈ₜ_ : ∀ {S} {fsig : Dom S}  → {B : Set} → 
+              B → IDom {S} fsig (interpHerb {S}) → Set₁ where 
+     empty∈ : ∀ {S} {ids : IDom {S} (zero , lift unit) (interpHerb {S})} → 
+              _∈ₜ_ {S} {(zero , lift unit)} {Lift Unit} (lift unit) ids
+     unary∈ : ∀ {S} {s : sorts S} {t : HerbrandUniverse S s}
+              {ids : IDom {S} (suc zero , s) (interpHerb {S})} → 
+              _∈ₜ_ {S} {(suc zero , s)} {HerbrandUniverse S s} t ids
+     here∈  : ∀ {S} {n} {args} {s : sorts S} {t : HerbrandUniverse S s}
+              {ids : IDom {S} (suc (suc n) , (args , s)) (interpHerb {S})} → 
+              _∈ₜ_ {S} {(suc (suc n) , (args , s))} {HerbrandUniverse S s}
+                   t ids
+     there∈ :  ∀ {S} {n} {args} {s : sorts S} {s' : sorts S}
+               {t : HerbrandUniverse S s} {t' : HerbrandUniverse S s'}
+               {ids : IDom {S} (suc n , args) (interpHerb {S})} → 
+               _∈ₜ_ {S} {(suc n , args)} {HerbrandUniverse S s} t ids →
+               _∈ₜ_ {S} {(suc (suc n) , args , s')} {HerbrandUniverse S s} t (ids , t')
+     
+
+-- Relacion de orden entre Herbrand...
+
+data _<ₜ_ {S : Signature} : ∀ {s s'} → HerbrandUniverse S s →
+                                       HerbrandUniverse S s' → Set₁ where
+     tless : ∀ {s : sorts S} {s' : sorts S} {f : funcs S}
+               {t : HerbrandUniverse S s} {ts : IDom {S} (fdom {S} f) (λ s̃ → HerbrandUniverse S s̃)} →
+               _∈ₜ_ {S} {fdom {S} f} {HerbrandUniverse S s} t ts →
+               t <ₜ term f ts
+
+
 
 termAlgebra : (S : Signature) → Algebra {lzero} {lzero} S
 termAlgebra S = record { isorts = λ s → PE.setoid (HerbrandUniverse S s)
                        ; ifuns = λ f t → term f t }
 
+
+{-
 -- Homomorfismo del álgebra de términos a cualquier otra álgebra
 tAlgHomo : ∀ {S} → (A : Algebra {lzero} {lzero} S) → Homomorphism S (termAlgebra S) A
 tAlgHomo {S} A = record { morph = λ s → record { _⟨$⟩_ = fun s
-                                           ; cong = {!!} }
+                                               ; cong = {!!} }
                     ; preserv = {!!} }
   where fun : (s : sorts S) → HerbrandUniverse S s → Carrier (isorts A s)
-        fun ._ (term f t) = ifuns A f (map× {B = HerbrandUniverse S (ftgt {S} f)}
+        fun = {!!}
+        {- fun ._ (term f t) = ifuns A f (map× {B = HerbrandUniverse S (ftgt {S} f)}
                                             {B' = Carrier $ isorts A (ftgt {S} f)}
                                             {S = S}
-                                            (fdom {S} f) t fun)
+                                            (fdom {S} f) t {!!} )--fun) -}
 
+
+{-
 -- El álgebra de términos es inicial
 tAlgInit : (S : Signature) → Initial {lzero} {lzero} S
 tAlgInit S = record { alg = termAlgebra S
@@ -320,3 +364,5 @@ tAlgInit S = record { alg = termAlgebra S
           where uni : (h : Homomorphism S (termAlgebra S) A) → tAlgHomo A ≈ₕ h
                 uni h = {!!}
 
+-}
+-}

@@ -10,6 +10,7 @@ open import Function.Equality renaming (_∘_ to _∘ₛ_)
 open import Data.Unit hiding (setoid)
 open import Data.Bool
 open import Relation.Binary.PropositionalEquality as PE
+open import Induction.WellFounded
 
 
 {- Dado un conjunto A y un número n, construye
@@ -298,7 +299,7 @@ record Initial {l₁ l₂ : Level} (S : Signature) :
 -- Carriers del álgebra de términos de una signatura
 data HerbrandUniverse (S : Signature) : (s : sorts S) → Set where
   term    : (f : funcs S) →
-            (t : IDom {S} (fdom {S} f) (λ s → HerbrandUniverse S s)) →
+            (t : IDom {S} (fdom {S} f) (HerbrandUniverse S)) →
             HerbrandUniverse S (ftgt {S} f)
 
 
@@ -328,11 +329,14 @@ data _∈ₜ_ : ∀ {S} {fsig : Dom S}  → {B : Set} →
 data _<ₜ_ {S : Signature} : ∀ {s s'} → HerbrandUniverse S s →
                                        HerbrandUniverse S s' → Set₁ where
      tless : ∀ {s : sorts S} {s' : sorts S} {f : funcs S}
-               {t : HerbrandUniverse S s} {ts : IDom {S} (fdom {S} f) (λ s̃ → HerbrandUniverse S s̃)} →
+               {t : HerbrandUniverse S s} {ts : IDom {S} (fdom {S} f) (HerbrandUniverse S)} →
                _∈ₜ_ {S} {fdom {S} f} {HerbrandUniverse S s} t ts →
                t <ₜ term f ts
 
 
+-- _<ₜ_ es bien fundada
+well-founded<ₜ : ∀ {S : Signature} {s : sorts S} → Well-founded (_<ₜ_ {S} {s})
+well-founded<ₜ {S} (term f ts) = {!!}
 
 termAlgebra : (S : Signature) → Algebra {lzero} {lzero} S
 termAlgebra S = record { isorts = λ s → PE.setoid (HerbrandUniverse S s)

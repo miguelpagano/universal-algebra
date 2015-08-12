@@ -299,27 +299,25 @@ record Initial {l₁ l₂ : Level} (S : Signature) :
 -- Carriers del álgebra de términos de una signatura
 data HerbrandUniverse (S : Signature) : (s : sorts S) → Set where
   term    : (f : funcs S) →
-            (t : IDom {S} (fdom {S} f) (HerbrandUniverse S)) →
+            (ts : IDom {S} (fdom {S} f) (HerbrandUniverse S)) →
             HerbrandUniverse S (ftgt {S} f)
 
 
-interpHerb : ∀ {S : Signature} → sorts S → Set
-interpHerb {S} = (λ s → HerbrandUniverse S s)
 
 data _∈ₜ_ : ∀ {S} {fsig : Dom S}  → {B : Set} → 
-              B → IDom {S} fsig (interpHerb {S}) → Set₁ where 
-     empty∈ : ∀ {S} {ids : IDom {S} (zero , lift unit) (interpHerb {S})} → 
+              B → IDom {S} fsig (HerbrandUniverse S) → Set₁ where 
+     empty∈ : ∀ {S} {ids : IDom {S} (zero , lift unit) (HerbrandUniverse S)} → 
               _∈ₜ_ {S} {(zero , lift unit)} {Lift Unit} (lift unit) ids
      unary∈ : ∀ {S} {s : sorts S} {t : HerbrandUniverse S s}
-              {ids : IDom {S} (suc zero , s) (interpHerb {S})} → 
+              {ids : IDom {S} (suc zero , s) (HerbrandUniverse S)} → 
               _∈ₜ_ {S} {(suc zero , s)} {HerbrandUniverse S s} t ids
      here∈  : ∀ {S} {n} {args} {s : sorts S} {t : HerbrandUniverse S s}
-              {ids : IDom {S} (suc (suc n) , (args , s)) (interpHerb {S})} → 
+              {ids : IDom {S} (suc (suc n) , (args , s)) (HerbrandUniverse S)} → 
               _∈ₜ_ {S} {(suc (suc n) , (args , s))} {HerbrandUniverse S s}
                    t ids
      there∈ :  ∀ {S} {n} {args} {s : sorts S} {s' : sorts S}
                {t : HerbrandUniverse S s} {t' : HerbrandUniverse S s'}
-               {ids : IDom {S} (suc n , args) (interpHerb {S})} → 
+               {ids : IDom {S} (suc n , args) (HerbrandUniverse S)} → 
                _∈ₜ_ {S} {(suc n , args)} {HerbrandUniverse S s} t ids →
                _∈ₜ_ {S} {(suc (suc n) , args , s')} {HerbrandUniverse S s} t (ids , t')
      
@@ -333,10 +331,39 @@ data _<ₜ_ {S : Signature} : ∀ {s s'} → HerbrandUniverse S s →
                _∈ₜ_ {S} {fdom {S} f} {HerbrandUniverse S s} t ts →
                t <ₜ term f ts
 
+-- TODO: Pensar los niveles.
+
+l₁ : Level
+l₁ = lsuc lzero
+
+-- Relación sobre un tipo indizado
+HRel : ∀ {B : Set} → (A : B → Set) → (b : B) → (b' : B) → Set _
+HRel A b b' = REL (A b) (A b') l₁
+
+data Acc' {B : Set} {A : B → Set} {b̃} (rel : ∀ {b b'} → HRel A b b') (x : A b̃) : Set l₁ where
+  acc' :  (∀ {b₀} → ∀ y → rel {b₀} {b̃} y x → Acc' {B} {A} {b₀} rel y) → Acc' rel x
+
+WellFounded : ∀ {B : Set} {A : B → Set} → (∀ {b b'} → HRel A b b') → Set _
+WellFounded {B} {A} rel = ∀ {b : B} → (x : A b) → Acc' {B} {A} {b} rel x
+
+foldAcc' : ∀ {B : Set} {A : B → Set}  {rel : (∀ {b b'} → HRel A b b')}
+             (P : ∀ {b} → A b → Set) →
+             (∀ {b'} x → (∀ {b} y → rel {b} {b'} y x → P y) → P x) →
+             ∀ {b̃} z → Acc' {B} {A} {b̃} rel z → P z
+foldAcc' P ind z (acc' a) = ind z (λ y rel_y_z → foldAcc' P ind y (a y rel_y_z))
+
+-- Recursion para HRels bien fundadas
+rec : ∀ {B : Set} {A : B → Set}  {rel : (∀ {b b'} → HRel A b b')} →
+        WellFounded {B} {A} rel → (P : ∀ {b} → A b → Set) →
+        (∀ {b'} x → (∀ {b} y → rel {b} {b'} y x → P y) → P x) →
+        ∀ {b̃}z  → P {b̃} z
+rec wf P ind z = foldAcc' P ind z (wf z)
 
 -- _<ₜ_ es bien fundada
-well-founded<ₜ : ∀ {S : Signature} {s : sorts S} → Well-founded (_<ₜ_ {S} {s})
-well-founded<ₜ {S} (term f ts) = {!!}
+well-founded<ₜ : ∀ {S : Signature} → WellFounded {sorts S} {HerbrandUniverse S} (_<ₜ_ {S})
+well-founded<ₜ {S} (term f ts) = acc' acc<ₜ
+  where acc<ₜ : ∀ {s₀} → ∀ y → _<ₜ_ {S} {s₀} {ftgt {S} f} y (term f ts) → Acc' {sorts S} {HerbrandUniverse S} {s₀} _<ₜ_ y
+        acc<ₜ t' (tless x) = {!!}
 
 termAlgebra : (S : Signature) → Algebra {lzero} {lzero} S
 termAlgebra S = record { isorts = λ s → PE.setoid (HerbrandUniverse S s)

@@ -303,6 +303,11 @@ data HerbrandUniverse (S : Signature) : (s : sorts S) → Set where
             HerbrandUniverse S (ftgt {S} f)
 
 
+-- Nota de Miguel: creo que esta relación está mal definida!  La idea
+-- sería decir cuándo un término está dentro de un vector de términos.
+-- Para ver que esta relación no es del todo correcta podemos intentar
+-- probar: ∀ t → t ∈ₜ lift unit → ⊥, pero podemos ver que es imposible
+-- construir esa función porque puede ser que t sea (lift unit)!
 
 data _∈ₜ_ : ∀ {S} {fsig : Dom S}  → {B : Set} → 
               B → IDom {S} fsig (HerbrandUniverse S) → Set₁ where 
@@ -329,7 +334,7 @@ data _<ₜ_ {S : Signature} : ∀ {s s'} → HerbrandUniverse S s →
      tless : ∀ {s : sorts S} {s' : sorts S} {f : funcs S}
                {t : HerbrandUniverse S s} {ts : IDom {S} (fdom {S} f) (HerbrandUniverse S)} →
                _∈ₜ_ {S} {fdom {S} f} {HerbrandUniverse S s} t ts →
-               t <ₜ term f ts
+               _<ₜ_ {s' = ftgt {S} f} t  (term f ts)
 
 -- TODO: Pensar los niveles.
 
@@ -359,11 +364,15 @@ rec : ∀ {B : Set} {A : B → Set}  {rel : (∀ {b b'} → HRel A b b')} →
         ∀ {b̃}z  → P {b̃} z
 rec wf P ind z = foldAcc' P ind z (wf z)
 
+
 -- _<ₜ_ es bien fundada
 well-founded<ₜ : ∀ {S : Signature} → WellFounded {sorts S} {HerbrandUniverse S} (_<ₜ_ {S})
-well-founded<ₜ {S} (term f ts) = acc' acc<ₜ
-  where acc<ₜ : ∀ {s₀} → ∀ y → _<ₜ_ {S} {s₀} {ftgt {S} f} y (term f ts) → Acc' {sorts S} {HerbrandUniverse S} {s₀} _<ₜ_ y
-        acc<ₜ t' (tless x) = {!!}
+well-founded<ₜ {S} (term f ts) = {!!} -- acc' (λ {s₀} → acc<ₜ s₀)
+  where acc<ₜ : ∀ s₀ f' ts' t' → _<ₜ_ {S} {s₀} {ftgt {S} f'} t' (term f' ts') → Acc' {sorts S} {HerbrandUniverse S} {s₀} _<ₜ_ t'
+        acc<ₜ s₀ g as t' (tless {.s₀} {ts = .as} lt) with arity S g
+        acc<ₜ s₀ g (lift unit) t' (tless lt) | (zero , lift unit) , s' = {!lt!}
+        acc<ₜ s₀ g as t' (tless lt) | (suc zero , s) , s' = {!lt!}
+        acc<ₜ s₀ g (a , as) t' (tless lt) | (suc (suc n) , s₁ , sn) , s' = {!!}
 
 termAlgebra : (S : Signature) → Algebra {lzero} {lzero} S
 termAlgebra S = record { isorts = λ s → PE.setoid (HerbrandUniverse S s)

@@ -9,83 +9,28 @@ open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_)
 open import Data.Unit hiding (setoid)
 open import Data.Bool
+open import Data.List
 open import Relation.Binary.PropositionalEquality as PE
 open import Induction.WellFounded
 
-
-{- Dado un conjunto A y un número n, construye
-   el tipo A × A × ... × A, donde A aparece n veces.
-   Si n = zero entonces retorna Lift Unit. -}
-mkProd : ∀ {l} (A : Set l) → ℕ → Set l
-mkProd A zero = Lift Unit
-mkProd A (suc zero) = A
-mkProd A (suc (suc n)) = mkProd A (suc n) × A
-
 open Setoid
-
--- Aridad para símbolos de función
-data Arity (A : Set) : Set where
-  naryA : ∀ {n} → mkProd A (suc n) → Arity A
 
 
 record Signature : Set₁ where
   field
     sorts  : Set
-    consts : Set
-    funcs  : Set
-    consTy : consts → sorts
-    funTy  : funcs → Arity sorts × sorts
-
+    funcs  : List sorts × sorts → Set
 
 
 open Signature
 
-Arityₛ : (S : Signature) → Set
-Arityₛ S = Arity (sorts S)
+Arity : (S : Signature) → Set
+Arity S = List (sorts S)
 
-arity : ∀ {S : Signature} → (f : funcs S) → Arityₛ S
-arity {S} f = proj₁ (funTy S f)
-
-
-ftgt : ∀ {S : Signature} → (f : funcs S) → sorts S
-ftgt {S} f = proj₂ (funTy S f)
+SType : (S : Signature) → Set
+SType S = Arity S × (sorts S)
 
 
--- Alcanzabilidad de un sort en una signatura
-mutual
-  data ReachSort (S : Signature) : (sorts S) → Set where
-    constS : (c : consts S) → ReachSort S (consTy S c)
-    funcS  : ∀ (f : funcs S) → AllReachSorts S (arity {S} f) →
-               ReachSort S (ftgt {S} f)
-
-  data AllReachSorts (S : Signature) : Arityₛ S → Set where
-    oneRS : ∀ {s} → ReachSort S s → AllReachSorts S (naryA {n = zero} s)
-
-{-
--- Alcanzabilidad de un sort en una signatura
-mutual 
-  data ReachSort {S : Signature} : (sorts S) → Set where
-    -- Si una constante tiene sort s, entonces s es alcanzable
-    constS :   (f : funcs S) → (_∶ₛ_⇢_  {S} f zeroA (ftgt {S} f)) → ReachSort (ftgt {S} f)
-    -- Si una funcion tiene como target un sort s y los sorts del dominio son alcanzables
-    -- entonces s es alcanzable.
-    funcS  :   ∀ {n : ℕ} {sargs : mkProd (sorts S) (suc n)}→
-               (f : funcs S) → (_∶ₛ_⇢_  {S} f (naryA {n = n} sargs) (ftgt {S} f)) →
-               AllReachSorts {S} {n} sargs → ReachSort (ftgt {S} f)
-
-  data AllReachSorts {S : Signature} : ∀ {n} → mkProd (sorts S) (suc n) → Set where
-    oneS : ∀ {s : sorts S} → ReachSort {S} s → AllReachSorts {n = zero} s
-    allS : ∀ {n} {s : sorts S} → (sargs : mkProd (sorts S) (suc n)) →
-                   AllReachSorts {S} {n = n} sargs → ReachSort {S} s →
-                   AllReachSorts {n = suc n} (sargs , s)
-
-
--- Una signatura es bien formada si todos sus sorts son alcanzables
-record wellFormedₛ : Set₁ where
-  field
-    sign  : Signature
-    reach : (s : sorts sign) → ReachSort {sign} s
--}
 
 {-
   Tipo que representa la interpretación de un sort de
@@ -100,45 +45,32 @@ ISorts S A = (sorts S) → A
    Dada la aridad de un símbolo de función de la signatura S,
    retorna el tipo resultante de interpretar cada sort en la aridad.
 -}
-IDom : ∀ {S : Signature} {l} → Arityₛ S → (ISorts S (Set l)) → Set _
-IDom (naryA {zero} s) i = i s
-IDom {S} (naryA {suc n} (sargs , s)) i = IDom {S} (naryA {n = n} sargs) i × i s
-
+IDom : ∀ {l} → (S : Signature) → Arity S → (ISorts S (Set l)) → Set _
+IDom S [] i = Lift Unit
+IDom S (s ∷ []) i = i s
+IDom S (s₀ ∷ rest) i = i s₀ × IDom S rest i
 
 {-
   Dada la aridad de un símbolo de función f en la signatura S, el sort
   target y una función de interpretación de los sorts de S, retorna
   el tipo de la interpretación de la función f. 
 -}
-IFun : ∀ {S : Signature} {l} → (ar : Arityₛ S) → (s : sorts S) →
-                               ISorts S (Set l)  → Set l
-IFun {S} ar s i = IDom {S} ar i → i s
+IFun : ∀ {l} → (S : Signature) → (ty : SType S) →
+               ISorts S (Set l)  → Set l
+IFun S (ar , s) i = IDom S ar i → i s
+
 
 -- Algebra de una signatura S
 record Algebra {l₁ l₂ : Level} (S : Signature) : 
                              Set (lsuc (l₁ ⊔ l₂)) where
   field
     isorts   : (s : sorts S) → Setoid l₁ l₂
-    icons    : (c : consts S) → Carrier (isorts (consTy S c))
-    ifuns    : (f : funcs S) →
-               IFun {S} (arity {S} f) (ftgt {S} f) (Carrier ∘ isorts)
+    ifuns    : (ty : SType S) → (f : funcs S ty) → IFun S ty (Carrier ∘ isorts)
 
 open Algebra
 
-{-
-  Dado un símbolo de función f de la signatura S y un álgebra A de S,
-  retorna el dominio de la interpretación de f.
--}
-idom : ∀ {S} {l₁} {l₂} → (f : funcs S) → (A : Algebra {l₁} {l₂} S) → Set _ 
-idom {S} f A = IDom {S} (arity {S} f) (Carrier ∘ isorts A)
-
-
-{-
-  Dado un símbolo de función f de la signatura S y un álgebra A de S,
-  retorna el codominio de la interpretación de f.
--}
-itgt : ∀ {S} {l₁} {l₂} → (f : funcs S) → (A : Algebra {l₁} {l₂} S) → Set _ 
-itgt {S} f A = Carrier $ isorts A (ftgt {S} f)
+idom : ∀ {S} {l₁} {l₂} → (ty : SType S) → (A : Algebra {l₁} {l₂} S) → Set _ 
+idom {S} (ar , _) A = IDom S ar (Carrier ∘ isorts A)
 
 -- Función many sorted entre dos álgebras
 -- (Ver si este es el nombre más adecuado)
@@ -147,26 +79,22 @@ FunAlg : ∀ {S : Signature} {l₁} {l₂} →
            Set _
 FunAlg {S} A A' = (s : sorts S) → isorts A s ⟶ isorts A' s
 
-
-map× : ∀ {l₁} {B B' : Set l₁} {S : Signature}
+map× : ∀ {l₁} {S : Signature}
          {i : (sorts S) → Set l₁} {i' : (sorts S) → Set l₁} →
-         (arty : Arityₛ S) →
-         (as : IDom {S} arty i) → (m : (s : sorts S) → (i s) → (i' s)) →
-         IDom {S} arty i'
-map× (naryA {zero} s) is m = m s is
-map× {B = B} {B' = B'} (naryA {suc n} (sargs , s))
-                       (iargs , is) m = map× {B = B} {B' = B'}
-                                             (naryA {n = n} sargs) iargs m , m s is
+         (arty : Arity S) →
+         (as : IDom S arty i) → (m : (s : sorts S) → (i s) → (i' s)) →
+         IDom S arty i'
+map× [] (lift unit) m = lift unit
+map× (s ∷ []) is m = m s is
+map× (s₀ ∷ s₁ ∷ rest) (is₀ , irest) m = m s₀ is₀ , map× (s₁ ∷ rest) irest m
+
 
 mapMorph : ∀ {S : Signature} {l₁} {l₂}
                 {A A' : Algebra {l₁} {l₂} S}
-                {f : funcs S} →
-                (m : FunAlg A A') → (as : idom f A) → 
-                idom f A'
-mapMorph {S} {l₁} {l₂} {A} {A'} {f} m as =
-                    map× {B = Carrier $ isorts A (ftgt {S} f)}
-                         {B' = Carrier $ isorts A' (ftgt {S} f)}
-                         (arity {S} f) as (λ s → _⟨$⟩_ (m s))
+                {ty : SType S}
+                (m : FunAlg A A') → (as : idom ty A) → 
+                idom ty A'
+mapMorph {S} {_} {_} {A} {A'} {ty = ar , s} m as = map× ar as (λ s → _⟨$⟩_ (m s))
 
 {- 
    Definición de la propiedad de preservación de igualdad
@@ -174,23 +102,14 @@ mapMorph {S} {l₁} {l₂} {A} {A'} {f} m as =
 -}
 homPreserv : ∀ {l₁ l₂} → (S : Signature) → (A : Algebra {l₁} {l₂} S) →
                          (A' : Algebra {l₁} {l₂} S) →
-                         FunAlg A A' →
-                         (f : funcs S) → Set (l₂ ⊔ l₁)
-homPreserv S A A' m f = (as : idom f A) →
-                        _≈_ (isorts A' tgtf)
-                            (m tgtf ⟨$⟩ (ifuns A f as))
-                            (ifuns A' f (mapMorph {S} {A = A} {A' = A'} {f = f}
+                         FunAlg A A' → (ty : SType S) →
+                         (f : funcs S ty) → Set (l₂ ⊔ l₁)
+homPreserv S A A' m (ar , s) f =
+                        (as : idom (ar , s) A) →
+                        _≈_ (isorts A' s)
+                            (m s ⟨$⟩ (ifuns A (ar , s) f as))
+                            (ifuns A' (ar , s) f (mapMorph {S} {A = A} {A' = A'} {ty = (ar , s)}
                                                   m as))
-  where tgtf = ftgt {S} f
-        targs = arity {S} f
-
-homConsPreserv : ∀ {l₁ l₂} → (S : Signature) → (A : Algebra {l₁} {l₂} S) →
-                         (A' : Algebra {l₁} {l₂} S) →
-                         FunAlg A A' → (c : consts S) →
-                         Set l₂
-homConsPreserv S A A' m c = _≈_ (isorts A' ty) ((m ty) ⟨$⟩ (icons A c)) (icons A' c)
-  where ty = consTy S c
-
 
 --Homomorfismo.
 
@@ -201,8 +120,7 @@ record Homomorphism {l₁ l₂ : Level}
     -- Familia de funciones
     morph  : FunAlg A A'
     -- Propiedad de preservación de operaciones.
-    conspreserv : (c : consts S) → homConsPreserv S A A' morph c
-    funpreserv : (f : funcs S) → homPreserv S A A' morph f
+    preserv : (ty : SType S) → (f : funcs S ty) → homPreserv S A A' morph ty f
 
 -- -- Igualdad de homomorfismos
 
@@ -219,23 +137,21 @@ data _≈ₕ_ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} :
 ≡to≈ {St = St} PE.refl = Setoid.refl St
 
 
-propMap×Comp : ∀ {l₁} {B₀ B₁ B₂ : Set l₁} {S : Signature}
+propMap×Comp : ∀ {l₁} {S : Signature}
                  {i₀ : (sorts S) → Set l₁} {i₁ : (sorts S) → Set l₁}
                  {i₂ : (sorts S) → Set l₁} →
-                 (arty : Arityₛ S) →
-                 (as : IDom {S} arty i₀) →
+                 (ar : Arity S) →
+                 (d : IDom S ar i₀) →
                  (m : (s : sorts S) → (i₀ s) → (i₁ s)) →
                  (m' : (s : sorts S) → (i₁ s) → (i₂ s)) →
-                 map× {B = B₁} {B' = B₂} arty (map× {B = B₀} {B' = B₁} arty as m) m'
+                 map× ar (map× ar d m) m'
                  ≡
-                 map× {B = B₀} {B' = B₂} arty as (λ s' → m' s' ∘ m s')
-propMap×Comp (naryA {zero} s) is m m' = _≡_.refl
-propMap×Comp {B₀ = B₀} {B₁ = B₁} {B₂ = B₂}
-             (naryA {suc n} (sargs , s)) (iargs , is) m m' =
-                          cong₂ (λ x y → x , y)
-                                (propMap×Comp {B₀ = B₀} {B₁ = B₁} {B₂ = B₂}
-                                              (naryA {n = n} sargs) iargs m m')
-                                              PE.refl
+                 map× ar d (λ s' → m' s' ∘ m s')
+propMap×Comp [] (lift unit) m m' = PE.refl
+propMap×Comp (s ∷ []) d m m' = PE.refl
+propMap×Comp (s₀ ∷ s₁ ∷ rest) (is₀ , irest) m m' =
+                   cong₂ (λ x y → x , y) PE.refl
+                         (propMap×Comp (s₁ ∷ rest) irest m m')
 
 -- Composición de homomorfismos
 
@@ -247,33 +163,27 @@ _∘ₕ_ : ∀ {l₁ l₂} {S} {A₀ A₁ A₂ : Algebra {l₁} {l₂} S} →
        Homomorphism S A₀ A₂
 _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
                record { morph = comp
-                      ; conspreserv = cpres
-                      ; funpreserv = pres }
+                      ; preserv = pres }
   where comp = λ s → morph H₁ s ∘ₛ morph H₀ s
-        cpres : (c : consts S) → homConsPreserv S A₀ A₂ comp c
-        cpres c = Setoid.trans (isorts A₂ s)
-                               (Π.cong (morph H₁ s) (conspreserv H₀ c))
-                               (conspreserv H₁ c)
-          where s = consTy S c
-        pres : (f : funcs S) → homPreserv S A₀ A₂ comp f
-        pres f as = Setoid.trans (isorts A₂ s) (Π.cong (morph H₁ s) (p₀ as))
-                    (Setoid.trans (isorts A₂ s) (p₁ (mapMorph {A = A₀} {A' = A₁}
+        pres :  (ty : SType S) → (f : funcs S ty) → homPreserv S A₀ A₂ comp ty f
+        pres (ar , s) f as = Setoid.trans (isorts A₂ s) (Π.cong (morph H₁ s) (p₀ as))
+                    (Setoid.trans (isorts A₂ s) (p₁ (mapMorph {A = A₀} {A' = A₁} {ty = ty}
                                                                  (morph H₀) as))
                                                 propMapMorph)
-          where p₁ = funpreserv H₁ f
-                p₀ = funpreserv H₀ f
-                s = ftgt {S} f
-                args = arity {S} f
+          where ty = (ar , s)
+                p₁ = preserv H₁ (ar , s) f
+                p₀ = preserv H₀ (ar , s) f
                 propMapMorph : _≈_ (isorts A₂ s)
-                               ((ifuns A₂ f) (mapMorph {A = A₁} {A' = A₂}
+                               ((ifuns A₂ ty f) (mapMorph {A = A₁} {A' = A₂} {ty = ty}
                                                        (morph H₁)
-                                                   (mapMorph {A = A₀} {A' = A₁}
+                                                   (mapMorph {A = A₀} {A' = A₁} {ty = ty}
                                                                 (morph H₀) as)))
-                               ((ifuns A₂ f) (mapMorph {A = A₀} {A' = A₂}
+                               ((ifuns A₂ ty f) (mapMorph {A = A₀} {A' = A₂} {ty = ty}
                                                        comp as))
-                propMapMorph = ≡to≈ {St = isorts A₂ s} (PE.cong (ifuns A₂ f)
-                               (propMap×Comp args as (λ s' → _⟨$⟩_ (morph H₀ s'))
+                propMapMorph = ≡to≈ {St = isorts A₂ s} (PE.cong (ifuns A₂ ty f)
+                               (propMap×Comp ar as (λ s' → _⟨$⟩_ (morph H₀ s'))
                                                      (λ s' → _⟨$⟩_ (morph H₁ s'))))
+
 
 {-
                  Esta seria la prueba pres en un lenguaje mas ameno:
@@ -307,6 +217,7 @@ record Initial {l₁ l₂ : Level} (S : Signature) :
     alg      : Algebra {l₁} {l₂} S
     init     : (A : Algebra {l₁} {l₂} S) → Unicity (Homomorphism S alg A) (_≈ₕ_)
 
+{-
 -- Algebra de términos
 
 
@@ -459,5 +370,6 @@ tAlgInit S = record { alg = termAlgebra S
           where uni : (h : Homomorphism S (termAlgebra S) A) → tAlgHomo A ≈ₕ h
                 uni h = {!!}
 
+-}
 -}
 -}

@@ -42,6 +42,14 @@ data VecH {l : Level} (S : Signature) (A : ISorts S (Set l)) : Arity S → Set l
   ⟨⟩  : VecH S A []
   _▹_ : ∀ {s} {ar} → A s → VecH S A ar → VecH S A (s ∷ ar)
 
+-- Igualdad de vectores
+data _≈v_ {S : Signature} {l₁ l₂ : Level} {A : ISorts S (Set l₁)} {R : (s : sorts S) → Rel (A s) l₂} :
+              {ar : Arity S} → (ts₁ : VecH S A ar) → (ts₂ : VecH S A ar) → Set (l₁ ⊔ l₂) where
+     ≈⟨⟩ : ⟨⟩ ≈v ⟨⟩
+     ≈▹  : ∀ {s} {ar} {t₁} {t₂} {ts₁ : VecH S A ar} {ts₂ : VecH S A ar} →
+           R s t₁ t₂ → _≈v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ≈v (t₂ ▹ ts₂)
+
+
 data _∈_ {l} {S : Signature} {A : ISorts S (Set l)} :
          ∀ {s : sorts S} {ar : Arity S} → A s → VecH S A ar → Set l where
   here : ∀ {s} {t : A s} {ar} {ts : VecH S A ar} → t ∈ (t ▹ ts)
@@ -65,6 +73,11 @@ record Algebra {l₁ l₂ : Level} (S : Signature) :
   field
     isorts   : (s : sorts S) → Setoid l₁ l₂
     ifuns    : (ty : SType S) → (f : funcs S ty) → IFun S ty (Carrier ∘ isorts)
+    ifuncong : ∀ {ar} {s} {f} →
+               (ts₁ ts₂ : VecH S (Carrier ∘ isorts) ar) →
+               _≈v_ {R = _≈_ ∘ isorts} ts₁ ts₂ →
+               _≈_ (isorts s) (ifuns (ar , s) f ts₁)
+                              (ifuns (ar , s) f ts₂)
 
 open Algebra
 
@@ -80,11 +93,12 @@ FunAlg {S} A A' = (s : sorts S) → isorts A s ⟶ isorts A' s
 
 mapV : ∀ {l₁} {S : Signature}
          {i : (sorts S) → Set l₁} {i' : (sorts S) → Set l₁} →
+         (m : (s : sorts S) → (i s) → (i' s)) → 
          (arty : Arity S) →
-         (as : VecH S i arty) → (m : (s : sorts S) → (i s) → (i' s)) →
+         (as : VecH S i arty) →
          VecH S i' arty
-mapV [] ⟨⟩ m = ⟨⟩
-mapV (s₀ ∷ rest) (is₀ ▹ irest) m = m s₀ is₀ ▹ mapV rest irest m
+mapV m [] ⟨⟩ = ⟨⟩
+mapV m (s₀ ∷ rest) (is₀ ▹ irest) = m s₀ is₀ ▹ mapV m rest irest
 
 
 mapMorph : ∀ {S : Signature} {l₁} {l₂}
@@ -92,7 +106,7 @@ mapMorph : ∀ {S : Signature} {l₁} {l₂}
                 {ty : SType S}
                 (m : FunAlg A A') → (as : idom ty A) → 
                 idom ty A'
-mapMorph {S} {_} {_} {A} {A'} {ty = ar , s} m as = mapV ar as (λ s → _⟨$⟩_ (m s))
+mapMorph {S} {_} {_} {A} {A'} {ty = ar , s} m as = mapV (λ s → _⟨$⟩_ (m s)) ar as 
 
 {- 
    Definición de la propiedad de preservación de igualdad
@@ -142,9 +156,9 @@ propMapVComp : ∀ {l₁} {S : Signature}
                  (d : VecH S i₀ ar) →
                  (m : (s : sorts S) → (i₀ s) → (i₁ s)) →
                  (m' : (s : sorts S) → (i₁ s) → (i₂ s)) →
-                 mapV ar (mapV ar d m) m'
+                 mapV m' ar (mapV m ar d)
                  ≡
-                 mapV ar d (λ s' → m' s' ∘ m s')
+                 mapV (λ s' → m' s' ∘ m s') ar d
 propMapVComp [] ⟨⟩ m m' = PE.refl
 propMapVComp (s₀ ∷ rest) (is₀ ▹ irest) m m' =
                    cong₂ (λ x y → x ▹ y) PE.refl
@@ -226,230 +240,102 @@ data HU (S : Signature) : (s : sorts S) → Set where
 
 -- Tamaño de un termino HU
 nterm : ∀ {S} {s : sorts S} → HU S s → ℕ
-nterm (term {[]} f ts) = zero
+nterm (term {[]} f ⟨⟩) = zero
 nterm {S} (term {s ∷ ar} f ts) = suc (maxn ts)
   where maxn : ∀ {s'} {ar'} → VecH S (HU S) (s' ∷ ar') → ℕ
         maxn {ar' = []} (t ▹ ⟨⟩) = nterm t
         maxn {ar' = s₁ ∷ ar'} (t₀ ▹ ts') = nterm t₀ ⊔ₙ maxn ts'
 
 
-open import Relation.Nullary.Core
-
-maxₜ : ∀ {S} {s s' : sorts S} → HU S s → HU S s' → Σ (sorts S) (HU S)
-maxₜ t t' with (nterm t) ≤? (nterm t')
-maxₜ {S} {s} {s'} t t' | yes _ = s' , t'
-maxₜ {S} {s} {s'} t t' | no _ = s , t
-
-maxterm : ∀ {S} {s₀ : sorts S} {ar} → VecH S (HU S) (s₀ ∷ ar) → Σ (sorts S) (HU S)
-maxterm {S} {s₀} (t ▹ ⟨⟩) = s₀ , t
-maxterm (t₀ ▹ (t₁ ▹ ts)) = maxₜ t₀ (proj₂ (maxterm (t₁ ▹ ts)))
-
-predₜ : ∀ {S} {s : sorts S}  →
-              (t : HU S s) → 0 < nterm t  →
-              Σ (sorts S) (HU S)
-predₜ (term {[]} f ts) ()
-predₜ (term {s₁ ∷ ar} f ts) lt = maxterm ts
-
-notZero : ∀ {m n} → m ≡ suc n → 0 < m
-notZero eq rewrite eq = s≤s z≤n
-
-npredₜ : ∀ {S} {s : sorts S} →
-           (t : HU S s) → (lt : 0 < nterm t) →
-           nterm (proj₂ (predₜ t lt)) ≡ pred (nterm t)
-npredₜ (term {[]} f ts) ()
-npredₜ (term {s₀ ∷ []} f (t ▹ ⟨⟩)) lt = PE.refl
-npredₜ (term {s₀ ∷ s₁ ∷ ar} f (t₀ ▹ ts)) lt = {!!}
-  
-
-             
-
--- Relacion de orden entre HU
-data _<ₜ_ {S : Signature} : ∀ {s s'} → HU S s →
-                                       HU S s' → Set₁ where
-     lessₜ    : ∀ {s₁} {s₂} {t₁ : HU S s₁} {t₂ : HU S s₂} →
-                            nterm t₁ < nterm t₂ → t₁ <ₜ t₂
-
--- TODO: Pensar los niveles.
-
-l₁ : Level
-l₁ = lsuc lzero
-
--- Relación sobre un tipo indizado
-HRel : ∀ {B : Set} → (A : B → Set) → (b : B) → (b' : B) → Set _
-HRel A b b' = REL (A b) (A b') l₁
-
-data Acc' {B : Set} {A : B → Set} {b̃} (rel : ∀ {b b'} → HRel A b b') (x : A b̃) : Set l₁ where
-  acc' :  (∀ {b₀} → ∀ y → rel {b₀} {b̃} y x → Acc' {B} {A} {b₀} rel y) → Acc' rel x
-
-WellFounded : ∀ {B : Set} {A : B → Set} → (∀ {b b'} → HRel A b b') → Set _
-WellFounded {B} {A} rel = ∀ {b : B} → (x : A b) → Acc' {B} {A} {b} rel x
-
-foldAcc' : ∀ {B : Set} {A : B → Set}  {rel : (∀ {b b'} → HRel A b b')}
-             (P : ∀ {b} → A b → Set) →
-             (∀ {b'} x → (∀ {b} y → rel {b} {b'} y x → P y) → P x) →
-             ∀ {b̃} z → Acc' {B} {A} {b̃} rel z → P z
-foldAcc' P ind z (acc' a) = ind z (λ y rel_y_z → foldAcc' P ind y (a y rel_y_z))
-
--- Recursion para HRels bien fundadas
-rec : ∀ {B : Set} {A : B → Set}  {rel : (∀ {b b'} → HRel A b b')} →
-        WellFounded {B} {A} rel → (P : ∀ {b} → A b → Set) →
-        (∀ {b'} x → (∀ {b} y → rel {b} {b'} y x → P y) → P x) →
-        ∀ {b̃}z  → P {b̃} z
-rec wf P ind z = foldAcc' P ind z (wf z)
-
-
-open import Data.Empty
-
-
-
-acc<ₜtrivial : ∀ {S} {s : sorts S} {s₀ : sorts S} →
-                     (t : HU S s) → nterm t ≡ zero →
-                     (t₀ : HU S s₀) → t₀ <ₜ t →
-                     Acc' {sorts S} {HU S} {s₀} _<ₜ_ t₀
-acc<ₜtrivial t eq t₀ (lessₜ lt) rewrite eq = ⊥-elim (absurd (nterm t₀) lt)
-  where absurd : ∀ (m : ℕ) → m < 0 → ⊥
-        absurd _ ()
-
-mutual
-  acc<ₜ : ∀ {S} {s₀ s : sorts S} → (t : HU S s) → (t₀ : HU S s₀) → t₀ <ₜ t → Acc' {sorts S} {HU S} {s₀} _<ₜ_ t₀
-  acc<ₜ t t₀ lt with nterm t | inspect nterm t
-  acc<ₜ {S} {s₀} t t₀ lt | zero | PE.[ eq ] = acc<ₜtrivial t eq t₀ lt
-  acc<ₜ t t₀ lt | suc n | _ with nterm t₀ | inspect nterm t₀
-  acc<ₜ t t₀ lt | suc n | w | zero | PE.[ eq ] =
-             acc' (λ y x → acc<ₜtrivial t₀ eq y x)
-  acc<ₜ t t₀ t₀<ₜt | suc n | PE.[ t≡sucn ] | suc m | PE.[ t₀≡sucm ] = acc<ₜsuc t t≡sucn t₀ t₀≡sucm t₀<ₜt
-  
-  acc<ₜsuc : ∀ {S} {s : sorts S} {s₀ : sorts S} {n} {m} →
-                   (t : HU S s) → nterm t ≡ suc n →
-                   (t₀ : HU S s₀) → nterm t₀ ≡ suc m →
-                   t₀ <ₜ t → Acc' {sorts S} {HU S} {s₀} _<ₜ_ t₀
-  acc<ₜsuc {S} {s} {s₀} {n} {m} t t≡sucn t₀ t₀≡sucm (lessₜ sucm<sucn) rewrite t≡sucn | t₀≡sucm  = aux sucm<sucn
-    where aux : suc m < suc n → Acc' {sorts S} {HU S} {s₀} _<ₜ_ t₀
-          aux (s≤s m<n) = acc' (λ {y (lessₜ ny<sm) → acc<ₜ (proj₂ (predₜ t (notZero t≡sucn))) y (lessₜ {!!})})
-
-well-founded<ₜ : ∀ {S} → WellFounded {sorts S} {HU S} (_<ₜ_ {S})
-well-founded<ₜ {S} t = acc' (acc<ₜ t)
-
 termAlgebra : (S : Signature) → Algebra {lzero} {lzero} S
 termAlgebra S = record { isorts = PE.setoid ∘ HU S
-                       ; ifuns = λ ty f d → term f d }
+                       ; ifuns = λ ty f d → term f d
+                       ; ifuncong = {!!} }
 
 
 -- Homomorfismo del álgebra de términos a cualquier otra álgebra
+
+mutual
+  funAlgHomo : ∀ {S} {A : Algebra {lzero} {lzero} S} (s : sorts S) → HU S s → Carrier (isorts A s)
+  funAlgHomo {S} {A} s (term {[]} f ⟨⟩) = ifuns A ([] , s) f ⟨⟩
+  funAlgHomo {S} {A }s (term {s₀ ∷ ar} f (t₀ ▹ ts)) =
+                 ifuns A (s₀ ∷ ar , s) f
+                         ((funAlgHomo {S} {A} s₀ t₀) ▹ funv {S} {A} ar ts)   --ifuns A (ar , s) f (mapV ar ts fun)
+
+  funv : ∀ {S} {A : Algebra {lzero} {lzero} S} (ar : Arity S) → VecH S (HU S) ar → VecH S (Carrier ∘ isorts A) ar
+  funv [] ⟨⟩ = ⟨⟩
+  funv {S} {A} (s₁ ∷ ar₁) (t₁ ▹ ts₁) = funAlgHomo {S} {A} s₁ t₁ ▹ funv {S} {A} ar₁ ts₁
+
+
+-- funv es igual a mapV funAlgHomo
+funv≡mapV : ∀ {S} {A} {ar : Arity S} {ts : VecH S (HU S) ar} →
+              funv {S} {A} ar ts ≡ mapV (funAlgHomo {S} {A}) ar ts
+funv≡mapV {ar = []} {⟨⟩} = PE.refl
+funv≡mapV {S} {A} {s₀ ∷ ar} {t₀ ▹ ts} = PE.cong (λ ts' → funAlgHomo {S} {A} s₀ t₀ ▹ ts')
+                                                funv≡mapV
+
 tAlgHomo : ∀ {S} → (A : Algebra {lzero} {lzero} S) → Homomorphism S (termAlgebra S) A
-tAlgHomo {S} A = record { morph = λ s → record { _⟨$⟩_ = fun s
-                                               ; cong = {!!} }
-                        ; preserv = {!!} }
-  where fun : (s : sorts S) → HU S s → Carrier (isorts A s)
-        fun s (term {ar = ar} f d) = ifuns A (ar , s) f (mapV ar d {!!})
-{-
--}
-{-
-where fun : (s : sorts S) → HerbrandUniverse S s → Carrier (isorts A s)
-        fun ._ (consT c) = icons A c
-        fun ._ (funT f ts) with arity {S} f
-        fun ._ (funT f t) | naryA {zero} s = ifuns A f {!f!}
-        fun ._ (funT f ts) | naryA {suc n} x = {!!}
-                              {- ifuns A f (map× {B = HerbrandUniverse S (ftgt {S} f)}
-                                            {B' = Carrier $ isorts A (ftgt {S} f)}
-                                            (arity {S} f) ts fun) -}
--}
-{-
-
-HU : (S : Signature) → (s : sorts S) → Set
-HU = HerbrandUniverse
-
-data _∈ₜ_ : ∀ {S : Signature} {farty : Arityₛ S} {s : sorts S} → 
-              HerbrandUniverse S s → IDom {S} farty (HerbrandUniverse S) → Set₁ where 
-     unary∈ : ∀ {S} {s : sorts S} {t : HerbrandUniverse S s} → 
-              _∈ₜ_ {S} {naryA {n = zero} s} t t
-     here∈  : ∀ {S} {n} {sargs} {s : sorts S} {t : HerbrandUniverse S s}
-              {ids : IDom {S} (naryA {n = n} sargs) (HerbrandUniverse S)} → 
-              _∈ₜ_ {S} {naryA {n = suc n} (sargs , s)}
-                   t (ids , t)
-     there∈ :  ∀ {S} {n} {sargs} {s : sorts S} {s' : sorts S}
-               {t : HerbrandUniverse S s} {t' : HerbrandUniverse S s'}
-               {ids : IDom {S} (naryA {n = n} sargs) (HerbrandUniverse S)} → 
-               _∈ₜ_ {S} {naryA {n = n} sargs} t ids →
-               _∈ₜ_ {S} {naryA {n = suc n} (sargs , s')} t (ids , t')
-
--- Relacion de orden entre Herbrand...
-data _<ₜ_ {S : Signature} : ∀ {s s'} → HerbrandUniverse S s →
-                                        HerbrandUniverse S s' → Set₁ where
-     lessₜ    : ∀  {s : sorts S} {f : funcs S} {t : HerbrandUniverse S s} {ts} →
-                  _∈ₜ_ {S} {arity {S} f} t ts →
-                  _<ₜ_ {s = s} {s' = ftgt {S} f} t (funT f ts)
+tAlgHomo {S} A = record { morph = morphAlgHomo 
+                        ; preserv = hompres }
+  where congfun : ∀ {s} {t₁ t₂ : HU S s} →
+                  t₁ ≡ t₂ → _≈_ (isorts A s) (funAlgHomo {S} {A} s t₁) (funAlgHomo {S} {A} s t₂)
+        congfun {s} {t₁} {t₂} t₁≡t₂ = ≡to≈ {St = isorts A s} (PE.cong (funAlgHomo s) t₁≡t₂)
+        morphAlgHomo : FunAlg (termAlgebra S) A
+        morphAlgHomo s = record { _⟨$⟩_ = funAlgHomo {S} {A} s
+                                ; cong  = congfun}
+        hompres : (ty : SType S) → (f : funcs S ty) →
+                  homPreserv S (termAlgebra S) A morphAlgHomo ty f
+        hompres ([] , s) f ⟨⟩ = ≡to≈ {St = isorts A s} PE.refl
+        hompres (s₀ ∷ ar , s) f (t₀ ▹ ts) =
+                ≡to≈ {St = isorts A s}
+                     (PE.cong (λ ts' → ifuns A (s₀ ∷ ar , s) f (funAlgHomo {S} {A} s₀ t₀ ▹ ts'))
+                              funv≡mapV)
 
 
--- _<ₜ_ es bien fundada
-
-acc<ₜ : ∀ {S} (f : funcs S) → (ts : IDom {S} (arity {S} f) (HU S)) →
-              {s₀ : sorts S} → (t₀ : HU S s₀) → 
-              _<ₜ_ {S} {s₀} {ftgt {S} f} t₀ (funT f ts) →
-                Acc' {sorts S} {HerbrandUniverse S} {s₀} _<ₜ_ t₀
-acc<ₜ {S} f ts {s₀} t₀ (lessₜ {.s₀} {ts = .ts} x) with arity {S} f
-acc<ₜ f ts (consT c) (lessₜ _) | naryA x = acc' λ _ → λ ()
-acc<ₜ f .(funT f₁ ts₁) (funT f₁ ts₁) (lessₜ unary∈) | naryA ._ =
-      acc' (λ t₀ t₀<ₜt → acc<ₜ f₁ ts₁ t₀ t₀<ₜt)
-acc<ₜ f ._ (funT f₁ ts₁) (lessₜ here∈) | naryA ._ =
-      acc' (λ t₀ t₀<ₜt → acc<ₜ f₁ ts₁ t₀ t₀<ₜt)
-acc<ₜ f ._ (funT f₁ ts₁) (lessₜ (there∈ x₁)) | naryA ._ =
-      acc' (λ t₀ t₀<ₜt → {!!})
-
-
-
-{-acc<ₜ {S} f (consT c) .(consT c) (lessₜ unary∈) | naryA {zero} ._ = acc' λ _ ()
-acc<ₜ f (funT f₁ ts) .(funT f₁ ts) (lessₜ unary∈) | naryA {zero} ._ =
-      acc' (λ t₀ t₀<ₜt → acc<ₜ f₁ ts t₀ t₀<ₜt)
--}
-well-founded<ₜ : ∀ {S} → WellFounded {sorts S} {HerbrandUniverse S} (_<ₜ_ {S})
-well-founded<ₜ {S} (consT c) = acc' λ _ ()
-well-founded<ₜ (funT f ts) = acc' (acc<ₜ f ts)
-
-{-
-  where consAcc : ∀ {s₀} → (t₀ : HU S s₀) → t₀ <ₜ (consT x) → Acc' {sorts (sign S)} {HU S} _<ₜ_ t₀
-        consAcc t₀ ()
-well-founded<ₜ (funT x ts) = {!!}
-
-acc<ₜ {S} s₀ t₀ f ts (lessₜ {.s₀} {ts = .ts} x) with fdom {sign S} f
-acc<ₜ s₀ t₀ f ts (lessₜ ()) | zeroA
-acc<ₜ s₀ t₀ f ts (lessₜ x₁) | naryA {zero} x = {!!}
-acc<ₜ s₀ t₀ f ts (lessₜ x₁) | naryA {suc n} x = {!!}
-
-acc<ₜ {S} s₀ t₀ f ts (tless {.s₀} {ts = .ts} t₀<ₜt) with fdom {S} f
-acc<ₜ s₀ t₀ f ts (tless ()) | zero , proj₂
-acc<ₜ {S} s₀ t₀ f ts (tless t₀<ₜt) | suc zero , proj₂ = {!!}
-  where acc₁ : ∀ {s : sorts S} → (t‼ : HU S s) → t‼ <ₜ t₀ → Acc' {sorts S} {HU S} {s} _<ₜ_ t‼
-        acc₁ t‼ tl = {!!}
-acc<ₜ s₀ t₀ f ts (tless t₀<ₜt) | suc (suc proj₁) , proj₂ = {!!}
-
-
-
-well-founded<ₜ : ∀ {S : Signature} → WellFounded {sorts S} {HerbrandUniverse S} (_<ₜ_ {S})
-well-founded<ₜ {S} (term f ts) = {!!} -- acc' (λ {s₀} → acc<ₜ s₀)
-{-  where acc<ₜ : ∀ s₀ t₀ f ts' → _<ₜ_ {S} {s₀} {ftgt {S} f'} t₀ (term f' ts') → Acc' {sorts S} {HerbrandUniverse S} {s₀} _<ₜ_ t'
-        acc<ₜ s₀ f' ts' t' (tless {.s₀} {ts = .ts'} t'<ₜt) with fdom {S} f'
-        acc<ₜ s₀ f' _ t' (tless ()) | zero , lift unit
-        acc<ₜ ._ f' t₀ (term f₁ ts₁) (tless t'<ₜt) | suc zero , proj₂ = {!!}
-        acc<ₜ s₀ f' ts' t' (tless lt) | suc (suc proj₁) , proj₂ = {!!}-}
-
-        acc<ₜ s₀ g (lift unit) t' (tless lt) | (zero , lift unit) , s' = {!!}
-        acc<ₜ s₀ g as t' (tless lt) | (suc zero , s) , s' = {!lt!}
-        acc<ₜ s₀ g (a , as) t' (tless lt) | (suc (suc n) , s₁ , sn) , s' = {!!} -}
-
-{-
-
-{-
 -- El álgebra de términos es inicial
+
+-- Si dos vectores son iguales entonces aplicar la interpretacion de una funcion
+-- sobre dichos vectores es igual.
+≈ifuns : ∀ {l₁ l₂} {S} {A : Algebra {l₁} {l₂} S} {ar} {s} {f}
+           {ts₁ ts₂ : VecH S (Carrier ∘ isorts A) ar} →
+           _≈v_ {R = _≈_ ∘ isorts A} ts₁ ts₂ →
+         _≈_ (isorts A s)
+             (ifuns A (ar , s) f ts₁)
+             (ifuns A (ar , s) f ts₂)
+≈ifuns {A = A} {ts₁ = ts₁} {ts₂ = ts₂} ts₁≈ts₂ = ifuncong A ts₁ ts₂ ts₁≈ts₂
+
+{-
+mapV≡ : ∀ {l₁ l₂} {S} {A : Setoid l₁ l₂} {ar} →
+          (v : VecH S (Carrier A) ar) →
+          (f₁ : Carrier A → Carrier A) → (f₂ : Carrier A → Carrier A) →
+          (g : (a : Carrier A) → _≈_ A (f₁ a) (f₂ a)) →
+          v ≈v (mapV g v ar)
+mapV≡ = ?
+-}
+          
+
 tAlgInit : (S : Signature) → Initial {lzero} {lzero} S
 tAlgInit S = record { alg = termAlgebra S
                     ; init = tinit }
   where tinit : (A : Algebra {lzero} {lzero} S) →
                 Unicity (Homomorphism S (termAlgebra S) A) (_≈ₕ_)
-        tinit A = tAlgHomo A , uni
-          where uni : (h : Homomorphism S (termAlgebra S) A) → tAlgHomo A ≈ₕ h
-                uni h = {!!}
+        tinit A = tAlgHomo A , (λ h → ext (tAlgHomo A) h (uni (tAlgHomo A) h))
+          where uni : (h₁ : Homomorphism S (termAlgebra S) A) →
+                      (h₂ : Homomorphism S (termAlgebra S) A) →
+                      (s : sorts S) → (t₁ t₂ : HU S s) →
+                      t₁ ≡ t₂ →
+                      _≈_ (isorts A s) (morph h₁ s ⟨$⟩ t₁) (morph h₂ s ⟨$⟩ t₂)
+                uni h₁ h₂ s (term {ar} f ts) ._ PE.refl =
+                    Setoid.trans (isorts A s)
+                                     (preserv h₁ (ar , s) f ts)
+                    (Setoid.trans (isorts A s)
+                                     {!!} {!!})
+{-                uni h₁ h₂ s (term {[]} f ⟨⟩) ._ PE.refl =
+                    Setoid.trans (isorts A s)
+                                 (preserv h₁ ([] , s) f ⟨⟩)
+                                 (Setoid.sym (isorts A s) (preserv h₂ ([] , s) f ⟨⟩))
+                uni h₁ h₂ s (term {x ∷ ar} f ts) .(term f ts) PE.refl =
+                       Setoid.trans (isorts A s)
+                                    {!preserv h₁ !} {!!}
 
--}
--}
 -}

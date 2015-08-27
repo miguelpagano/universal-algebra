@@ -250,7 +250,16 @@ nterm {S} (term {s ∷ ar} f ts) = suc (maxn ts)
 termAlgebra : (S : Signature) → Algebra {lzero} {lzero} S
 termAlgebra S = record { isorts = PE.setoid ∘ HU S
                        ; ifuns = λ ty f d → term f d
-                       ; ifuncong = {!!} }
+                       ; ifuncong = fcong }
+  where ≡vec : ∀ {ar}  → (ts₁ ts₂ : VecH S (HU S) ar) →
+                  _≈v_ {R = λ s₀ → _≡_} ts₁ ts₂ →
+                  ts₁ ≡ ts₂
+        ≡vec ⟨⟩ ⟨⟩ ≈⟨⟩ = PE.refl
+        ≡vec (t ▹ ts₁) (.t ▹ ts₂) (≈▹ PE.refl ts₁≈ts₂) = PE.cong (λ ts → t ▹ ts) (≡vec ts₁ ts₂ ts₁≈ts₂)
+        fcong : ∀ {ar} {s} {f : funcs S (ar , s)} → (ts₁ ts₂ : VecH S (HU S) ar) →
+                  _≈v_ {R = λ s₀ → _≡_} ts₁ ts₂ →
+                  term f ts₁ ≡ term f ts₂
+        fcong {ar} {s} {f} ts₁ ts₂ ts₁≈ts₂ = PE.cong (term f) (≡vec ts₁ ts₂ ts₁≈ts₂)
 
 
 -- Homomorfismo del álgebra de términos a cualquier otra álgebra
@@ -304,15 +313,18 @@ tAlgHomo {S} A = record { morph = morphAlgHomo
              (ifuns A (ar , s) f ts₂)
 ≈ifuns {A = A} {ts₁ = ts₁} {ts₂ = ts₂} ts₁≈ts₂ = ifuncong A ts₁ ts₂ ts₁≈ts₂
 
+
+
 {-
-mapV≡ : ∀ {l₁ l₂} {S} {A : Setoid l₁ l₂} {ar} →
-          (v : VecH S (Carrier A) ar) →
-          (f₁ : Carrier A → Carrier A) → (f₂ : Carrier A → Carrier A) →
-          (g : (a : Carrier A) → _≈_ A (f₁ a) (f₂ a)) →
-          v ≈v (mapV g v ar)
-mapV≡ = ?
+mapV≡ : ∀ {l₁ l₂} {S} {A : Algebra {l₁} {l₂} S} {A' : Algebra {l₁} {l₂} S} {ar} →
+          (v : VecH S (Carrier ∘ isorts A) ar) →
+          (f₁ f₂ : (s : sorts S) → Carrier (isorts A s) → Carrier (isorts A' s)) → 
+          (g : (s : sorts S) → (a₁ a₂ : Carrier (isorts A s)) →
+          _≈_ (isorts A s) a₁ a₂ →
+          _≈_ (isorts A' s) (f₁ s a₁) (f₂ s a₂)) →
+          _≈v_ {R = _≈_ ∘ isorts A'} (mapV f₁ ar v) (mapV f₂ ar v)
+mapV≡ = {!!}
 -}
-          
 
 tAlgInit : (S : Signature) → Initial {lzero} {lzero} S
 tAlgInit S = record { alg = termAlgebra S
@@ -329,13 +341,8 @@ tAlgInit S = record { alg = termAlgebra S
                     Setoid.trans (isorts A s)
                                      (preserv h₁ (ar , s) f ts)
                     (Setoid.trans (isorts A s)
-                                     {!!} {!!})
-{-                uni h₁ h₂ s (term {[]} f ⟨⟩) ._ PE.refl =
-                    Setoid.trans (isorts A s)
-                                 (preserv h₁ ([] , s) f ⟨⟩)
-                                 (Setoid.sym (isorts A s) (preserv h₂ ([] , s) f ⟨⟩))
-                uni h₁ h₂ s (term {x ∷ ar} f ts) .(term f ts) PE.refl =
-                       Setoid.trans (isorts A s)
-                                    {!preserv h₁ !} {!!}
-
--}
+                                     (ifuncong A (mapV (_⟨$⟩_ ∘ morph h₁) ar ts)
+                                                 (mapV (_⟨$⟩_ ∘ morph h₂) ar ts)
+                                                 {!!})
+                                     (Setoid.sym (isorts A s) (preserv h₂ (ar , s) f ts)))
+--                  where mapV≡ : 

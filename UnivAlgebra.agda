@@ -302,30 +302,6 @@ tAlgHomo {S} A = record { morph = morphAlgHomo
 
 
 -- El álgebra de términos es inicial
-
--- Si dos vectores son iguales entonces aplicar la interpretacion de una funcion
--- sobre dichos vectores es igual.
-≈ifuns : ∀ {l₁ l₂} {S} {A : Algebra {l₁} {l₂} S} {ar} {s} {f}
-           {ts₁ ts₂ : VecH S (Carrier ∘ isorts A) ar} →
-           _≈v_ {R = _≈_ ∘ isorts A} ts₁ ts₂ →
-         _≈_ (isorts A s)
-             (ifuns A (ar , s) f ts₁)
-             (ifuns A (ar , s) f ts₂)
-≈ifuns {A = A} {ts₁ = ts₁} {ts₂ = ts₂} ts₁≈ts₂ = ifuncong A ts₁ ts₂ ts₁≈ts₂
-
-
-
-{-
-mapV≡ : ∀ {l₁ l₂} {S} {A : Algebra {l₁} {l₂} S} {A' : Algebra {l₁} {l₂} S} {ar} →
-          (v : VecH S (Carrier ∘ isorts A) ar) →
-          (f₁ f₂ : (s : sorts S) → Carrier (isorts A s) → Carrier (isorts A' s)) → 
-          (g : (s : sorts S) → (a₁ a₂ : Carrier (isorts A s)) →
-          _≈_ (isorts A s) a₁ a₂ →
-          _≈_ (isorts A' s) (f₁ s a₁) (f₂ s a₂)) →
-          _≈v_ {R = _≈_ ∘ isorts A'} (mapV f₁ ar v) (mapV f₂ ar v)
-mapV≡ = {!!}
--}
-
 tAlgInit : (S : Signature) → Initial {lzero} {lzero} S
 tAlgInit S = record { alg = termAlgebra S
                     ; init = tinit }
@@ -343,6 +319,11 @@ tAlgInit S = record { alg = termAlgebra S
                     (Setoid.trans (isorts A s)
                                      (ifuncong A (mapV (_⟨$⟩_ ∘ morph h₁) ar ts)
                                                  (mapV (_⟨$⟩_ ∘ morph h₂) ar ts)
-                                                 {!!})
+                                                 (mapV≡ ar ts))
                                      (Setoid.sym (isorts A s) (preserv h₂ (ar , s) f ts)))
---                  where mapV≡ : 
+                  where mapV≡ : (ar : Arity S) → (ts₀ : VecH S (HU S) ar) →
+                                (mapV (_⟨$⟩_ ∘ morph h₁) ar ts₀) ≈v
+                                (mapV (_⟨$⟩_ ∘ morph h₂) ar ts₀)
+                        mapV≡ [] ⟨⟩ = ≈⟨⟩
+                        mapV≡ (s₀ ∷ ar₀) (t₀ ▹ ts₀) = ≈▹ (uni h₁ h₂ s₀ t₀ t₀ PE.refl)
+                                                          (mapV≡ ar₀ ts₀)

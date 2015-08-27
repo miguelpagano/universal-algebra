@@ -29,7 +29,6 @@ SType : (S : Signature) → Set
 SType S = Arity S × (sorts S)
 
 
-
 {-
   Tipo que representa la interpretación de un sort de
   la signatura S.
@@ -77,7 +76,6 @@ idom : ∀ {S} {l₁} {l₂} → (ar : Arity S) → (A : Algebra {l₁} {l₂} S
 idom {S} ar A = VecH S (Carrier ∘ isorts A) ar
 
 -- Función many sorted entre dos álgebras
--- (Ver si este es el nombre más adecuado)
 FunAlg : ∀ {S : Signature} {l₁} {l₂} →
            (A : Algebra {l₁} {l₂} S) → (A' : Algebra {l₁} {l₂} S) →
            Set _
@@ -126,15 +124,15 @@ record Homomorphism {l₁ l₂ : Level}
     -- Propiedad de preservación de operaciones.
     preserv : (ty : SType S) → (f : funcs S ty) → homPreserv S A A' morph ty f
 
--- -- Igualdad de homomorfismos
-
 open Homomorphism
 
+-- -- Igualdad de homomorfismos
 data _≈ₕ_ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} : 
           (H H' : Homomorphism S A A') → Set (lsuc (l₁ ⊔ l₂)) where
   ext : (H H' : Homomorphism S A A') → ((s : sorts S) → (a b : Carrier (isorts A s)) →
         _≈_ (isorts A s) a b → _≈_ (isorts A' s) (morph H s ⟨$⟩ a) (morph H' s ⟨$⟩ b)) →
         H ≈ₕ H'
+
 
 ≡to≈ : ∀ {l₁} {l₂} {St : Setoid l₁ l₂} {x y : Carrier St} →
        x ≡ y → _≈_ St x y
@@ -157,10 +155,6 @@ propMapVComp (s₀ ∷ rest) (is₀ ▹ irest) m m' =
                          (propMapVComp rest irest m m')
 
 -- Composición de homomorfismos
-
-{- Si H₀ : A₀ → A₁ y H₁ : A₁ → A₂, ambos preservan igualdad, 
-      entonces la composición también -}
-
 _∘ₕ_ : ∀ {l₁ l₂} {S} {A₀ A₁ A₂ : Algebra {l₁} {l₂} S} →
        (H₁ : Homomorphism S A₁ A₂) → (H₀ : Homomorphism S A₀ A₁) →
        Homomorphism S A₀ A₂
@@ -210,10 +204,12 @@ _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
  -}
 
 
+-- Definición de unicidad
 Unicity : ∀ {l₁} {l₂} → (A : Set l₁) → (A → A → Set l₂) → Set _ 
 Unicity A rel = Σ A (λ a → (a' : A) → rel a a')
 
 
+-- Álgebra inicial
 record Initial {l₁ l₂ : Level} (S : Signature) : 
                              Set (lsuc (l₁ ⊔ l₂)) where
   field

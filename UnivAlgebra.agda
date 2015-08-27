@@ -50,17 +50,9 @@ data _≈v_ {S : Signature} {l₁ l₂ : Level} {A : ISorts S (Set l₁)} {R : (
            R s t₁ t₂ → _≈v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ≈v (t₂ ▹ ts₂)
 
 
-data _∈_ {l} {S : Signature} {A : ISorts S (Set l)} :
-         ∀ {s : sorts S} {ar : Arity S} → A s → VecH S A ar → Set l where
-  here : ∀ {s} {t : A s} {ar} {ts : VecH S A ar} → t ∈ (t ▹ ts)
-  there : ∀ {s} {s'} {t : A s} {t' : A s'} {ar} {ts : VecH S A ar} →
-            t ∈ ts → t ∈ (t' ▹ ts)
-
-
 {-
-  Dada la aridad de un símbolo de función f en la signatura S, el sort
-  target y una función de interpretación de los sorts de S, retorna
-  el tipo de la interpretación de la función f. 
+  Interpretar un simbolo de funcion con aridad ar y tipo de retorno s,
+  es una funcion que va de un vector 
 -}
 IFun : ∀ {l} → (S : Signature) → (ty : SType S) →
                ISorts S (Set l)  → Set l
@@ -81,8 +73,8 @@ record Algebra {l₁ l₂ : Level} (S : Signature) :
 
 open Algebra
 
-idom : ∀ {S} {l₁} {l₂} → (ty : SType S) → (A : Algebra {l₁} {l₂} S) → Set _ 
-idom {S} (ar , _) A = VecH S (Carrier ∘ isorts A) ar
+idom : ∀ {S} {l₁} {l₂} → (ar : Arity S) → (A : Algebra {l₁} {l₂} S) → Set _ 
+idom {S} ar A = VecH S (Carrier ∘ isorts A) ar
 
 -- Función many sorted entre dos álgebras
 -- (Ver si este es el nombre más adecuado)
@@ -103,10 +95,10 @@ mapV m (s₀ ∷ rest) (is₀ ▹ irest) = m s₀ is₀ ▹ mapV m rest irest
 
 mapMorph : ∀ {S : Signature} {l₁} {l₂}
                 {A A' : Algebra {l₁} {l₂} S}
-                {ty : SType S}
-                (m : FunAlg A A') → (as : idom ty A) → 
-                idom ty A'
-mapMorph {S} {_} {_} {A} {A'} {ty = ar , s} m as = mapV (λ s → _⟨$⟩_ (m s)) ar as 
+                {ar : Arity S}
+                (m : FunAlg A A') → (ts : idom ar A) → 
+                idom ar A'
+mapMorph {ar = ar} m ts = mapV (_⟨$⟩_ ∘ m) ar ts
 
 {- 
    Definición de la propiedad de preservación de igualdad
@@ -117,10 +109,10 @@ homPreserv : ∀ {l₁ l₂} → (S : Signature) → (A : Algebra {l₁} {l₂} 
                          FunAlg A A' → (ty : SType S) →
                          (f : funcs S ty) → Set (l₂ ⊔ l₁)
 homPreserv S A A' m (ar , s) f =
-                        (as : idom (ar , s) A) →
+                        (as : idom ar A) →
                         _≈_ (isorts A' s)
                             (m s ⟨$⟩ (ifuns A (ar , s) f as))
-                            (ifuns A' (ar , s) f (mapMorph {S} {A = A} {A' = A'} {ty = (ar , s)}
+                            (ifuns A' (ar , s) f (mapMorph {S} {A = A} {A' = A'} {ar = ar}
                                                   m as))
 
 --Homomorfismo.
@@ -178,18 +170,18 @@ _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
   where comp = λ s → morph H₁ s ∘ₛ morph H₀ s
         pres :  (ty : SType S) → (f : funcs S ty) → homPreserv S A₀ A₂ comp ty f
         pres (ar , s) f as = Setoid.trans (isorts A₂ s) (Π.cong (morph H₁ s) (p₀ as))
-                    (Setoid.trans (isorts A₂ s) (p₁ (mapMorph {A = A₀} {A' = A₁} {ty = ty}
+                    (Setoid.trans (isorts A₂ s) (p₁ (mapMorph {A = A₀} {A' = A₁} {ar = ar}
                                                                  (morph H₀) as))
                                                 propMapMorph)
           where ty = (ar , s)
                 p₁ = preserv H₁ (ar , s) f
                 p₀ = preserv H₀ (ar , s) f
                 propMapMorph : _≈_ (isorts A₂ s)
-                               ((ifuns A₂ ty f) (mapMorph {A = A₁} {A' = A₂} {ty = ty}
+                               ((ifuns A₂ ty f) (mapMorph {A = A₁} {A' = A₂} {ar = ar}
                                                        (morph H₁)
-                                                   (mapMorph {A = A₀} {A' = A₁} {ty = ty}
+                                                   (mapMorph {A = A₀} {A' = A₁} {ar = ar}
                                                                 (morph H₀) as)))
-                               ((ifuns A₂ ty f) (mapMorph {A = A₀} {A' = A₂} {ty = ty}
+                               ((ifuns A₂ ty f) (mapMorph {A = A₀} {A' = A₂} {ar = ar}
                                                        comp as))
                 propMapMorph = ≡to≈ {St = isorts A₂ s} (PE.cong (ifuns A₂ ty f)
                                (propMapVComp ar as (λ s' → _⟨$⟩_ (morph H₀ s'))
@@ -233,19 +225,9 @@ record Initial {l₁ l₂ : Level} (S : Signature) :
 
 
 -- Carriers del álgebra de términos de una signatura. HU es por Herbrand Universe.
-
 data HU (S : Signature) : (s : sorts S) → Set where
   term : ∀ {ar} {s} → (f : funcs S (ar , s)) →
                       (ts : VecH S (HU S) ar) → HU S s
-
--- Tamaño de un termino HU
-nterm : ∀ {S} {s : sorts S} → HU S s → ℕ
-nterm (term {[]} f ⟨⟩) = zero
-nterm {S} (term {s ∷ ar} f ts) = suc (maxn ts)
-  where maxn : ∀ {s'} {ar'} → VecH S (HU S) (s' ∷ ar') → ℕ
-        maxn {ar' = []} (t ▹ ⟨⟩) = nterm t
-        maxn {ar' = s₁ ∷ ar'} (t₀ ▹ ts') = nterm t₀ ⊔ₙ maxn ts'
-
 
 termAlgebra : (S : Signature) → Algebra {lzero} {lzero} S
 termAlgebra S = record { isorts = PE.setoid ∘ HU S
@@ -269,7 +251,7 @@ mutual
   funAlgHomo {S} {A} s (term {[]} f ⟨⟩) = ifuns A ([] , s) f ⟨⟩
   funAlgHomo {S} {A }s (term {s₀ ∷ ar} f (t₀ ▹ ts)) =
                  ifuns A (s₀ ∷ ar , s) f
-                         ((funAlgHomo {S} {A} s₀ t₀) ▹ funv {S} {A} ar ts)   --ifuns A (ar , s) f (mapV ar ts fun)
+                         ((funAlgHomo {S} {A} s₀ t₀) ▹ funv {S} {A} ar ts)
 
   funv : ∀ {S} {A : Algebra {lzero} {lzero} S} (ar : Arity S) → VecH S (HU S) ar → VecH S (Carrier ∘ isorts A) ar
   funv [] ⟨⟩ = ⟨⟩

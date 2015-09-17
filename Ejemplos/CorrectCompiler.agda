@@ -12,15 +12,21 @@ open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid;cong)
 open import Data.List
 
+Var : Set
+Var = String
+
+
 data Sorts : Set where
   NatS  : Sorts
   ExprN : Sorts
   Vars  : Sorts
 
 data Funcs :  List Sorts × Sorts → Set where
+  nat   : (n : ℕ) → Funcs ([] , NatS)
+  var   : (v : Var) → Funcs ([] , Vars)
   valN  : Funcs ([ NatS ] , ExprN)
   plus  : Funcs ( ExprN ∷ [ ExprN ] , ExprN )
-  var   : Funcs ([ Vars ] , ExprN)
+  varℕ   : Funcs ([ Vars ] , ExprN)
 
 
 -- Signatura para el lenguaje
@@ -32,9 +38,6 @@ Sig = record { sorts = Sorts
 
 
 -- Semántica del lenguaje como álgebra
-Var : Set
-Var = String
-
 State : Set
 State = Var → ℕ
 
@@ -66,18 +69,22 @@ open Algebra
 
 semInterpFuncs : (ty : SType Sig) → (f : funcs Sig ty) → 
                  IFun Sig ty (Carrier ∘ semInterpSorts)
-semInterpFuncs ([] , _) () _
+semInterpFuncs ([] , .NatS) (nat n) _ = n
+semInterpFuncs ([] , .Vars) (var v) _ = v
 semInterpFuncs (NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) σ = x
 semInterpFuncs (ExprN ∷ ExprN ∷ [] , ExprN) plus (e₁ ▹ (e₂ ▹ ⟨⟩)) σ = e₁ σ + e₂ σ
-semInterpFuncs (Vars ∷ [] , ExprN) var (v ▹ ⟨⟩) σ = σ v
+semInterpFuncs (Vars ∷ [] , ExprN) varℕ (v ▹ ⟨⟩) σ = σ v
+
 
 congSemInt : ∀ {ar s f} → (ts₁ ts₂ : VecH Sig (Carrier ∘ semInterpSorts) ar) →
                _≈v_ {R = _≈_ ∘ semInterpSorts} ts₁ ts₂ →
                _≈_ (semInterpSorts s) (semInterpFuncs (ar , s) f ts₁)
                               (semInterpFuncs (ar , s) f ts₂)
+congSemInt {f = nat n} .⟨⟩ .⟨⟩ ≈⟨⟩ = refl
+congSemInt {f = var v} .⟨⟩ .⟨⟩ ≈⟨⟩ = refl
 congSemInt {f = valN} ._ ._ (≈▹ refl ≈⟨⟩) σ = refl
 congSemInt {f = plus} ._ ._ (≈▹ eq (≈▹ eq' ≈⟨⟩)) σ = cong₂ (λ m n → m + n) (eq σ) (eq' σ)
-congSemInt {f = var} ._ ._ (≈▹ eq ≈⟨⟩) σ = cong (λ v → σ v) eq
+congSemInt {f = varℕ} ._ ._ (≈▹ eq ≈⟨⟩) σ = cong (λ v → σ v) eq
 
 
 Sem : Algebra Sig
@@ -177,8 +184,11 @@ cong-add' {st} t t' r r' eq eq' = ext st (add' t r st) (add' t' r' st) (λ sσ �
         n' sσ = head (proj₁ ((r' ⟨$⟩ st) sσ))
         n≡n' : (sσ : Conf st) → n sσ ≡ n' sσ
         n≡n' sσ = cong (λ sσ' → head (proj₁ sσ')) (prop2 sσ)
-        
+
+
 execInterpFuncs : (ty : SType Sig) → (f : funcs Sig ty) → IFun Sig ty (Carrier ∘ execInterpSorts)
+execInterpFuncs .([] , NatS) (nat n) _ = n
+execInterpFuncs .([] , Vars) (var v) _ = v
 execInterpFuncs .(NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) = record { _⟨$⟩_ = λ _ sσ → x ▹ proj₁ sσ , proj₂ sσ
                                                             ; cong = λ eq → extRefl eq (λ st' sσ → x ▹ proj₁ sσ , proj₂ sσ)
                                                             }
@@ -186,7 +196,7 @@ execInterpFuncs .(ExprN ∷ ExprN ∷ [] , ExprN) plus (x ▹ (y ▹ ⟨⟩)) = 
                                                                            ; cong = λ eq → extRefl eq (add' x y)
                                                                            }
                                                               
-execInterpFuncs .(Vars ∷ [] , ExprN) var (x ▹ ⟨⟩) = record { _⟨$⟩_ = λ _ sσ → proj₂ sσ x ▹ proj₁ sσ , proj₂ sσ
+execInterpFuncs .(Vars ∷ [] , ExprN) varℕ (x ▹ ⟨⟩) = record { _⟨$⟩_ = λ _ sσ → proj₂ sσ x ▹ proj₁ sσ , proj₂ sσ
                                                            ; cong = λ eq → extRefl eq (λ _ sσ → proj₂ sσ x ▹ proj₁ sσ , proj₂ sσ) }
 
 
@@ -194,9 +204,11 @@ execSemInt : ∀ {ar s f} → (ts₁ ts₂ : VecH Sig (Carrier ∘ execInterpSor
                _≈v_ {R = _≈_ ∘ execInterpSorts} ts₁ ts₂ →
                _≈_ (execInterpSorts s) (execInterpFuncs (ar , s) f ts₁)
                                        (execInterpFuncs (ar , s) f ts₂)
+execSemInt {f = nat n} v₁ v₂ eq = refl
+execSemInt {f = var v} v₁ v₂ eq = refl
 execSemInt {f = valN} ._ ._ (≈▹ refl ≈⟨⟩) refl = I.IsEquivalence.refl isEquiv
 execSemInt {f = plus} (t ▹ (r ▹ .⟨⟩)) (t' ▹ (r' ▹ .⟨⟩)) (≈▹ x (≈▹ x₁ ≈⟨⟩)) refl = cong-add' t t' r r' x x₁
-execSemInt {f = var} (t ▹ ⟨⟩) (.t ▹ ⟨⟩) (≈▹ refl ≈⟨⟩) refl = I.IsEquivalence.refl isEquiv
+execSemInt {f = varℕ} (t ▹ ⟨⟩) (.t ▹ ⟨⟩) (≈▹ refl ≈⟨⟩) refl = I.IsEquivalence.refl isEquiv
 
 
 Exec : Algebra Sig
@@ -217,12 +229,35 @@ m ExprN = record { _⟨$⟩_ = λ x σ → head (proj₁ ((x ⟨$⟩ []) (ε , �
 m Vars = record { _⟨$⟩_ = λ x → x ; cong = λ x → x }
 
 pres : (ty : SType Sig) (f : funcs Sig ty) → homPreserv Sig Exec Sem m ty f
+pres .([] , NatS) (nat n) _ = refl
+pres .([] , Vars) (var v) _ = refl
 pres .(NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) σ = refl
 pres .(ExprN ∷ ExprN ∷ [] , ExprN) plus (x ▹ (x₁ ▹ ⟨⟩)) σ = refl
-pres .(Vars ∷ [] , ExprN) var (x ▹ ⟨⟩) σ = refl
+pres .(Vars ∷ [] , ExprN) varℕ (x ▹ ⟨⟩) σ = refl
 
 hom : Homomorphism Sig Exec Sem
 hom = record { morph = m
              ; preserv = pres
              }
+
+
+-- Lenguaje como álgebra inicial
+
+ExprAlg : Algebra {lzero} {lzero} Sig
+ExprAlg = termAlgebra Sig
+
+Expr : Set
+Expr = Carrier ((isorts ExprAlg) ExprN)
+∣_∣ : ℕ → Expr
+∣ n ∣ = term valN (term (nat n) ⟨⟩ ▹ ⟨⟩)
+_⊕_ : Expr → Expr → Expr
+e₁ ⊕ e₂ = term plus (e₁ ▹ (e₂ ▹ ⟨⟩))
+
+varₑ : Var → Expr
+varₑ v = term varℕ ((term (var v) ⟨⟩) ▹ ⟨⟩)
+
+-- Ejemplo de expresión
+3+3 : Expr
+3+3 = ∣ 3 ∣ ⊕ ∣ 3 ∣
+
 

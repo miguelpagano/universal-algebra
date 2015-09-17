@@ -6,53 +6,32 @@ open import Data.Product
 open import Data.Nat
 open import Data.Bool
 open import Level renaming (suc to lsuc ; zero to lzero)
-open import Relation.Binary.PropositionalEquality as PropEq
+open import Relation.Binary.PropositionalEquality as PropEq hiding ([_])
 open import Data.String hiding (setoid)
 open import Function
+open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid;cong)
 open import Data.List
 
 data Sorts : Set where
   NatS  : Sorts
-  BoolS : Sorts
   ExprN : Sorts
-  ExprB : Sorts
-  Stmt  : Sorts
   Vars  : Sorts
 
-data Funcs : Set where
-  valN  : Funcs
-  valB  : Funcs
-  plus  : Funcs
-  var   : Funcs
-  assgn : Funcs
-  comp  : Funcs
-  if    : Funcs
-  for   : Funcs
-  while : Funcs
+data Funcs :  List Sorts × Sorts → Set where
+  valN  : Funcs ([ NatS ] , ExprN)
+  plus  : Funcs ( ExprN ∷ [ ExprN ] , ExprN )
+  var   : Funcs ([ Vars ] , ExprN)
 
-
-arityFuncs : Funcs  → NProd Sorts
-arityFuncs valN = 1 , NatS , ExprN
-arityFuncs valB = 1 , BoolS , ExprB
-arityFuncs plus = 2 , (ExprN , ExprN) , ExprN
-arityFuncs var = 1 , Vars , ExprN
-arityFuncs assgn = 2 , (Vars , ExprN) , Stmt
-arityFuncs comp = 2 , (Stmt , Stmt) , Stmt
-arityFuncs if = 3 , ((ExprB , Stmt) , Stmt) , Stmt
-arityFuncs for = 2 , (ExprN , Stmt) , Stmt
-arityFuncs while = 2 , (ExprB , Stmt) , Stmt
 
 -- Signatura para el lenguaje
 
 Sig : Signature
 Sig = record { sorts = Sorts
              ; funcs = Funcs
-             ; arity = arityFuncs
              }
 
 
 -- Semántica del lenguaje como álgebra
-
 Var : Set
 Var = String
 
@@ -64,17 +43,16 @@ _[_←_] : State → Var → ℕ → State
 σ [ x ← n ] = λ y → if y == x then n
                               else σ y
 
+
+
 semInterpSorts : Sorts → Setoid _ _
 semInterpSorts NatS = setoid ℕ
-semInterpSorts BoolS = setoid Bool
-semInterpSorts ExprN = setoid ((σ : State) → ℕ)
-semInterpSorts ExprB = setoid ((σ : State) → Bool)
-semInterpSorts Stmt = setoid ((m : ℕ) → (σ : State) → State)
+semInterpSorts ExprN =  (State) →-setoid ℕ
 semInterpSorts Vars = setoid Var
 
 open Signature
 
-open Setoid
+open Setoid renaming (refl to srefl)
 
 forRec : ℕ → (State → State) → State → State
 forRec zero f σ = σ
@@ -84,24 +62,28 @@ wRec : ℕ → (State → State) → (State → Bool) → State → State
 wRec zero f fcond σ    = σ
 wRec (suc n) f fcond σ = if (fcond σ) then wRec n f fcond (f σ)
                                       else σ
+open Algebra
 
+semInterpFuncs : (ty : SType Sig) → (f : funcs Sig ty) → 
+                 IFun Sig ty (Carrier ∘ semInterpSorts)
+semInterpFuncs ([] , _) () _
+semInterpFuncs (NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) σ = x
+semInterpFuncs (ExprN ∷ ExprN ∷ [] , ExprN) plus (e₁ ▹ (e₂ ▹ ⟨⟩)) σ = e₁ σ + e₂ σ
+semInterpFuncs (Vars ∷ [] , ExprN) var (v ▹ ⟨⟩) σ = σ v
 
-semInterpFuncs : (f : Funcs) →
-                 Fun Sorts (arity Sig f) (Carrier ∘ semInterpSorts)
-semInterpFuncs valN n σ = n
-semInterpFuncs valB b σ = b
-semInterpFuncs plus (fn₁ , fn₂) σ = fn₁ σ + fn₂ σ
-semInterpFuncs var v σ = σ v
-semInterpFuncs assgn (v , fn) m σ = σ [ v ← fn σ ]
-semInterpFuncs comp (fst₁ , fst₂) m σ = fst₂ m (fst₁ m σ)
-semInterpFuncs if ((fb , fst₁) , fst₂) m σ = if fb σ then fst₁ m σ
-                                                     else fst₂ m σ
-semInterpFuncs for (fn , fst) m σ = forRec (fn σ) (fst m) σ
-semInterpFuncs while (fb , fst) m σ = wRec m (fst m) fb σ
+congSemInt : ∀ {ar s f} → (ts₁ ts₂ : VecH Sig (Carrier ∘ semInterpSorts) ar) →
+               _≈v_ {R = _≈_ ∘ semInterpSorts} ts₁ ts₂ →
+               _≈_ (semInterpSorts s) (semInterpFuncs (ar , s) f ts₁)
+                              (semInterpFuncs (ar , s) f ts₂)
+congSemInt {f = valN} ._ ._ (≈▹ refl ≈⟨⟩) σ = refl
+congSemInt {f = plus} ._ ._ (≈▹ eq (≈▹ eq' ≈⟨⟩)) σ = cong₂ (λ m n → m + n) (eq σ) (eq' σ)
+congSemInt {f = var} ._ ._ (≈▹ eq ≈⟨⟩) σ = cong (λ v → σ v) eq
+
 
 Sem : Algebra Sig
 Sem = record { isorts = semInterpSorts
              ; ifuns = semInterpFuncs
+             ; ifuncong = λ {ar} {s} → congSemInt {ar} {s}
              }
 
 
@@ -133,52 +115,114 @@ tail (t ▹ s) = s
 Conf : StackType → Set
 Conf st = Stack st × State
 
+open import Relation.Binary.Indexed as I hiding (Setoid)
+
+data relIx : {st st' : StackType} → (f : Conf st → Conf (nat ∷ st)) → (g : Conf st' → Conf (nat ∷ st')) → Set where
+    ext : (st : StackType) (f g : Conf st → Conf (nat ∷ st)) → ((sσ : Conf st) → f sσ ≡ g sσ) → relIx {st} {st} f g
+
+isEquiv : I.IsEquivalence (λ st → Conf st → Conf (nat ∷ st))
+                       (λ {st} {st'} → relIx {st} {st'})
+isEquiv = record { refl = λ {i} {x} → ext i x x (λ sσ → refl)
+                 ; sym = sym'
+                 ; trans = trans'
+                 }
+        where sym' : I.Symmetric (λ st → Conf st → Conf (nat ∷ st)) relIx
+              sym' (ext st f g x) = ext st g f (λ y → PropEq.sym (x y))
+              trans' : I.Transitive (λ st → Conf st → Conf (nat ∷ st)) relIx
+              trans' (ext st f g x) (ext .st .g h y) =
+                ext st f h (λ sσ → PropEq.trans (x sσ) (y sσ))
+
+extRefl : {st st' : List Type} → st ≡ st' → (f : (st'' : StackType) → Conf st'' → Conf (nat ∷ st'')) → relIx {st} {st'} (f st) (f st')
+extRefl {st} refl f = ext st (f st) (f st) (λ sσ → refl)
+
+
 execInterpSorts : Sorts → Setoid _ _
 execInterpSorts NatS = setoid ℕ
-execInterpSorts BoolS = setoid Bool
-execInterpSorts ExprN = setoid (∀ {st} → (sσ : Conf st) → Conf (nat ∷ st))
-execInterpSorts ExprB = setoid (∀ {st} → (sσ : Conf st) → Conf (bool ∷ st))
-execInterpSorts Stmt = setoid (∀ {st} → ℕ → (sσ : Conf st) → Conf st)
 execInterpSorts Vars = setoid Var
+execInterpSorts ExprN = Function.Equality.setoid (setoid StackType) setIx
+   where setIx : I.Setoid StackType lzero lzero
+         setIx = record { Carrier = λ st → (sσ : Conf st) → Conf (nat ∷ st)
+                        ; _≈_ = relIx
+                        ; isEquivalence = isEquiv
+                        }
+
+elimExt : ∀ {st} f g → relIx {st} {st} f g → (sσ : Conf st) → f sσ ≡ g sσ
+elimExt f g (ext st .f .g x) sσ = x sσ
+
+add' : Carrier (execInterpSorts ExprN) → Carrier (execInterpSorts ExprN) → (st : StackType) → (Conf st) → Conf (nat ∷ st)
+add' x y st s = (m + n) ▹ proj₁ s , proj₂ s
+  where m : ℕ
+        m = head (proj₁ ((x ⟨$⟩ st) s))
+        n : ℕ
+        n = head (proj₁ ((y ⟨$⟩ st) s))
+
+cong-add' : {st : StackType} → (t t' r r' : Carrier (execInterpSorts ExprN))
+                → (eq : _≈_ (execInterpSorts ExprN) t t')
+                → (eq : _≈_ (execInterpSorts ExprN) r r')
+                → relIx {st} {st} (add' t r st) (add' t' r' st)
+cong-add' {st} t t' r r' eq eq' = ext st (add' t r st) (add' t' r' st) (λ sσ → cong₂ (λ m n → (m + n) ▹ proj₁ sσ , proj₂ sσ) (m≡m' sσ) (n≡n' sσ))
+  where prop1 : (sσ : Conf st) → (t ⟨$⟩ st) sσ ≡ (t' ⟨$⟩ st) sσ
+        prop1 sσ = elimExt (t ⟨$⟩ st) (t' ⟨$⟩ st) (eq {st} {st} refl) sσ
+        prop2 : (sσ : Conf st) → (r ⟨$⟩ st) sσ ≡ (r' ⟨$⟩ st) sσ
+        prop2 sσ = elimExt (r ⟨$⟩ st) (r' ⟨$⟩ st) (eq' {st} {st} refl) sσ
+        m : Conf st → ℕ
+        m sσ = head (proj₁ ((t ⟨$⟩ st) sσ))
+        m' : Conf st → ℕ
+        m' sσ = head (proj₁ ((t' ⟨$⟩ st) sσ))
+        m≡m' : (sσ : Conf st) → m sσ ≡ m' sσ
+        m≡m' sσ = cong (λ sσ' → head (proj₁ sσ')) (prop1 sσ)
+        n : Conf st → ℕ
+        n sσ = head (proj₁ ((r ⟨$⟩ st) sσ))
+        n' : Conf st → ℕ
+        n' sσ = head (proj₁ ((r' ⟨$⟩ st) sσ))
+        n≡n' : (sσ : Conf st) → n sσ ≡ n' sσ
+        n≡n' sσ = cong (λ sσ' → head (proj₁ sσ')) (prop2 sσ)
+        
+execInterpFuncs : (ty : SType Sig) → (f : funcs Sig ty) → IFun Sig ty (Carrier ∘ execInterpSorts)
+execInterpFuncs .(NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) = record { _⟨$⟩_ = λ _ sσ → x ▹ proj₁ sσ , proj₂ sσ
+                                                            ; cong = λ eq → extRefl eq (λ st' sσ → x ▹ proj₁ sσ , proj₂ sσ)
+                                                            }
+execInterpFuncs .(ExprN ∷ ExprN ∷ [] , ExprN) plus (x ▹ (y ▹ ⟨⟩)) = record { _⟨$⟩_ = add' x y
+                                                                           ; cong = λ eq → extRefl eq (add' x y)
+                                                                           }
+                                                              
+execInterpFuncs .(Vars ∷ [] , ExprN) var (x ▹ ⟨⟩) = record { _⟨$⟩_ = λ _ sσ → proj₂ sσ x ▹ proj₁ sσ , proj₂ sσ
+                                                           ; cong = λ eq → extRefl eq (λ _ sσ → proj₂ sσ x ▹ proj₁ sσ , proj₂ sσ) }
 
 
-execInterpFuncs : (f : Funcs) →
-                  Fun Sorts (arity Sig f) (Carrier ∘ execInterpSorts)
-execInterpFuncs valN n (s , σ) = n ▹ s , σ
-execInterpFuncs valB b (s , σ) = (b ▹ s) , σ
-execInterpFuncs plus (fn₁ , fn₂) (s , σ) = ((n₁ + n₂) ▹ s) , σ
-  where n₁ : ℕ
-        n₁ = head $ proj₁ (fn₁ (s , σ))
-        n₂ : ℕ
-        n₂ = head $ proj₁ (fn₂ (s , σ))
-execInterpFuncs var v (s , σ) = (σ v ▹ s) , σ
-execInterpFuncs assgn (v , fn) {st} m sσ = s' , σ' [ v ← n ]
-  where s' : Stack st
-        s' = tail $ proj₁ $ fn sσ
-        σ' : State
-        σ' = proj₂ $ fn sσ
-        n  : ℕ
-        n = head $ proj₁ $ fn sσ
-execInterpFuncs comp (fstmt₁ , fstmt₂) m sσ = fstmt₂ m (fstmt₁ m sσ)
-execInterpFuncs if x sσ = {!!}
-execInterpFuncs for x sσ = {!!}
-execInterpFuncs while x sσ = {!!}
+execSemInt : ∀ {ar s f} → (ts₁ ts₂ : VecH Sig (Carrier ∘ execInterpSorts) ar) →
+               _≈v_ {R = _≈_ ∘ execInterpSorts} ts₁ ts₂ →
+               _≈_ (execInterpSorts s) (execInterpFuncs (ar , s) f ts₁)
+                                       (execInterpFuncs (ar , s) f ts₂)
+execSemInt {f = valN} ._ ._ (≈▹ refl ≈⟨⟩) refl = I.IsEquivalence.refl isEquiv
+execSemInt {f = plus} (t ▹ (r ▹ .⟨⟩)) (t' ▹ (r' ▹ .⟨⟩)) (≈▹ x (≈▹ x₁ ≈⟨⟩)) refl = cong-add' t t' r r' x x₁
+execSemInt {f = var} (t ▹ ⟨⟩) (.t ▹ ⟨⟩) (≈▹ refl ≈⟨⟩) refl = I.IsEquivalence.refl isEquiv
 
 
 Exec : Algebra Sig
 Exec = record { isorts = execInterpSorts
               ; ifuns = execInterpFuncs
+              ; ifuncong = λ {ar} {s} {f} → execSemInt {ar} {s} {f}
               }
 
 
 
--- Homomorfismo
+-- -- Homomorfismo
 
-m : (s : Sorts) → Carrier (execInterpSorts s) → Carrier (semInterpSorts s)
-m s = {!!} 
+m : (s : Sorts) → (execInterpSorts s) ⟶ (semInterpSorts s)
+m NatS = record { _⟨$⟩_ = λ x → x ; cong = λ {i} {j} z → z }
+m ExprN = record { _⟨$⟩_ = λ x σ → head (proj₁ ((x ⟨$⟩ []) (ε , σ)))
+                 ; cong = λ {i} {j} x σ → cong (λ sσ → head (proj₁ sσ)) (elimExt {[]} (i ⟨$⟩ []) (j ⟨$⟩ []) (x {[]} {[]} refl) (ε , σ))
+                 }
+m Vars = record { _⟨$⟩_ = λ x → x ; cong = λ x → x }
 
+pres : (ty : SType Sig) (f : funcs Sig ty) → homPreserv Sig Exec Sem m ty f
+pres .(NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) σ = refl
+pres .(ExprN ∷ ExprN ∷ [] , ExprN) plus (x ▹ (x₁ ▹ ⟨⟩)) σ = refl
+pres .(Vars ∷ [] , ExprN) var (x ▹ ⟨⟩) σ = refl
 
 hom : Homomorphism Sig Exec Sem
-hom = record { morphs = {!!}
-             ; preserv = {!!}
+hom = record { morph = m
+             ; preserv = pres
              }
+

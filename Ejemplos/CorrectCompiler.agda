@@ -113,6 +113,9 @@ data Stack : (st : StackType) → Set where
   ε   : Stack []
   _▹_ : ∀ {t} {st} → Val t → Stack st → Stack (t ∷ st)
 
+infixr 5 _▹_
+--infixr 4 _,_
+
 head : ∀ {t} {st} → Stack (t ∷ st) → Val t
 head (t ▹ s) = t
 
@@ -121,6 +124,12 @@ tail (t ▹ s) = s
 
 Conf : StackType → Set
 Conf st = Stack st × State
+
+headConf : ∀ {t} {st} → Conf (t ∷ st) → Val t
+headConf = head ∘ proj₁
+
+tailConf : ∀ {t} {st} → Conf (t ∷ st) → Conf st
+tailConf (s , σ) = (tail s , σ)
 
 open import Relation.Binary.Indexed as I hiding (Setoid)
 
@@ -157,33 +166,54 @@ elimExt : ∀ {st} f g → relIx {st} {st} f g → (sσ : Conf st) → f sσ ≡
 elimExt f g (ext st .f .g x) sσ = x sσ
 
 add' : Carrier (execInterpSorts ExprN) → Carrier (execInterpSorts ExprN) → (st : StackType) → (Conf st) → Conf (nat ∷ st)
-add' x y st s = (m + n) ▹ proj₁ s , proj₂ s
-  where m : ℕ
-        m = head (proj₁ ((x ⟨$⟩ st) s))
-        n : ℕ
-        n = head (proj₁ ((y ⟨$⟩ st) s))
+add' x y st (s , σ) with (x ⟨$⟩ st) (s , σ)
+... | (m ▹ s' , σ') with (y ⟨$⟩ st) (s' , σ')
+... | n ▹ s₁ , σ₁ = (m + n) ▹ s₁ , σ₁
+  -- where confₓ : Conf (nat ∷ st)
+  --       confₓ = (x ⟨$⟩ st) (s , σ)
+  --       m : ℕ
+  --       m = (head ∘ proj₁) confₓ
+  --       confy : Conf (nat ∷ st) → Conf (nat ∷ st)
+  --       confy (_ ▹ sₓ , σₓ) = (y ⟨$⟩ st) (sₓ , σₓ)
+        -- n : ℕ
+        -- n = (head ∘ proj₁) (confy confₓ)
+        -- s₁ : Stack st
+        -- s₁ = (tail ∘ proj₁) (confy confₓ)
+        -- σ₁ : State
+        -- σ₁ = proj₂ (confy confₓ)
 
 cong-add' : {st : StackType} → (t t' r r' : Carrier (execInterpSorts ExprN))
                 → (eq : _≈_ (execInterpSorts ExprN) t t')
                 → (eq : _≈_ (execInterpSorts ExprN) r r')
                 → relIx {st} {st} (add' t r st) (add' t' r' st)
-cong-add' {st} t t' r r' eq eq' = ext st (add' t r st) (add' t' r' st) (λ sσ → cong₂ (λ m n → (m + n) ▹ proj₁ sσ , proj₂ sσ) (m≡m' sσ) (n≡n' sσ))
+cong-add' {st} t t' r r' eq eq' =
+          ext st (add' t r st)
+                 (add' t' r' st)
+                 (λ sσ → {!!}) --cong₂ (λ m n → (m + n) ▹ proj₁ sσ , proj₂ sσ) (m≡m' sσ) (n≡n' sσ))
   where prop1 : (sσ : Conf st) → (t ⟨$⟩ st) sσ ≡ (t' ⟨$⟩ st) sσ
         prop1 sσ = elimExt (t ⟨$⟩ st) (t' ⟨$⟩ st) (eq {st} {st} refl) sσ
         prop2 : (sσ : Conf st) → (r ⟨$⟩ st) sσ ≡ (r' ⟨$⟩ st) sσ
         prop2 sσ = elimExt (r ⟨$⟩ st) (r' ⟨$⟩ st) (eq' {st} {st} refl) sσ
+        confₜ : Conf st → Conf (nat ∷ st)
+        confₜ = t ⟨$⟩ st
         m : Conf st → ℕ
-        m sσ = head (proj₁ ((t ⟨$⟩ st) sσ))
+        m = head ∘ proj₁ ∘ confₜ
+        confₜ' : Conf st → Conf (nat ∷ st)
+        confₜ' = t' ⟨$⟩ st
         m' : Conf st → ℕ
-        m' sσ = head (proj₁ ((t' ⟨$⟩ st) sσ))
+        m' = head ∘ proj₁ ∘ confₜ'
         m≡m' : (sσ : Conf st) → m sσ ≡ m' sσ
         m≡m' sσ = cong (λ sσ' → head (proj₁ sσ')) (prop1 sσ)
+        confᵣ : Conf st → Conf (nat ∷ st)
+        confᵣ = (r ⟨$⟩ st) ∘ tailConf ∘ confₜ
         n : Conf st → ℕ
-        n sσ = head (proj₁ ((r ⟨$⟩ st) sσ))
+        n = head ∘ proj₁ ∘ confᵣ
+        confᵣ' : Conf st → Conf (nat ∷ st)
+        confᵣ' = (r' ⟨$⟩ st) ∘ tailConf ∘ confₜ'
         n' : Conf st → ℕ
-        n' sσ = head (proj₁ ((r' ⟨$⟩ st) sσ))
+        n' = head ∘ proj₁ ∘ confᵣ'
         n≡n' : (sσ : Conf st) → n sσ ≡ n' sσ
-        n≡n' sσ = cong (λ sσ' → head (proj₁ sσ')) (prop2 sσ)
+        n≡n' sσ = {!!} --cong (λ sσ' → head (proj₁ sσ')) (prop2 sσ)
 
 
 execInterpFuncs : (ty : SType Sig) → (f : funcs Sig ty) → IFun Sig ty (Carrier ∘ execInterpSorts)
@@ -232,7 +262,7 @@ pres : (ty : SType Sig) (f : funcs Sig ty) → homPreserv Sig Exec Sem m ty f
 pres .([] , NatS) (nat n) _ = refl
 pres .([] , Vars) (var v) _ = refl
 pres .(NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) σ = refl
-pres .(ExprN ∷ ExprN ∷ [] , ExprN) plus (x ▹ (x₁ ▹ ⟨⟩)) σ = refl
+pres .(ExprN ∷ ExprN ∷ [] , ExprN) plus (x ▹ (x₁ ▹ ⟨⟩)) σ = {!!}
 pres .(Vars ∷ [] , ExprN) varℕ (x ▹ ⟨⟩) σ = refl
 
 hom : Homomorphism Sig Exec Sem
@@ -259,5 +289,22 @@ varₑ v = term varℕ ((term (var v) ⟨⟩) ▹ ⟨⟩)
 -- Ejemplo de expresión
 3+3 : Expr
 3+3 = ∣ 3 ∣ ⊕ ∣ 3 ∣
+{-
+-- Código
+
+data ≈Code≈ : ∀ {st} {st'} → (ℕ → Conf st → Conf st') → Set where
+  _,_       : ∀ {st} {st₀} {st'} {f₀ : ℕ → Conf st  → Conf st₀} 
+                                 {f₁ : ℕ → Conf st₀ → Conf st' }  → 
+                (c₁ : ≈Code≈ f₀) → (c₂ : ≈Code≈ f₁)  → 
+                ≈Code≈ (λ n → (f₁ n) ∘ (f₀ n))
+  push      : ∀ {st} {t} → (v : Val t) →
+              ≈Code≈ {st} {t ∷ st} (λ {_ (s , σ) → (v ▹ s , σ)})
+  add       : ∀ {st} → 
+              ≈Code≈ {nat ∷ nat ∷ st} {nat ∷ st} 
+                     (λ n → fadd)
+  load      : ∀ {st} → (x : Var) → 
+              ≈Code≈ {st} {nat ∷ st} (λ {_ (s , σ) → ((σ x ▹ s , σ))})
 
 
+-- Compilador
+-}

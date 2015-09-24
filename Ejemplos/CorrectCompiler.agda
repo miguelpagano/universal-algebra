@@ -41,6 +41,9 @@ Sig = record { sorts = Sorts
 State : Set
 State = Var → ℕ
 
+emptyS : State
+emptyS = λ x → 0
+
 -- Modificación del estado
 _[_←_] : State → Var → ℕ → State
 σ [ x ← n ] = λ y → if y == x then n
@@ -114,7 +117,7 @@ data Stack : (st : StackType) → Set where
   _▹_ : ∀ {t} {st} → Val t → Stack st → Stack (t ∷ st)
 
 infixr 5 _▹_
---infixr 4 _,_
+infixr 4 _,_
 
 head : ∀ {t} {st} → Stack (t ∷ st) → Val t
 head (t ▹ s) = t
@@ -165,10 +168,21 @@ execInterpSorts ExprN = Function.Equality.setoid (setoid StackType) setIx
 elimExt : ∀ {st} f g → relIx {st} {st} f g → (sσ : Conf st) → f sσ ≡ g sσ
 elimExt f g (ext st .f .g x) sσ = x sσ
 
+
+
+faddm : ∀ {st} → (m : ℕ) → Stack (nat ∷ st) → Stack (nat ∷ st)
+faddm m (m' ▹ s) = (m + m') ▹ s
+
+fadd : ∀ {st} → Conf (nat ∷ nat ∷ st) → Conf (nat ∷ st)
+fadd (m ▹ (n ▹ s') , σ') = (faddm m (n ▹ s') , σ')
+
 add' : Carrier (execInterpSorts ExprN) → Carrier (execInterpSorts ExprN) → (st : StackType) → (Conf st) → Conf (nat ∷ st)
-add' x y st (s , σ) with (x ⟨$⟩ st) (s , σ)
-... | (m ▹ s' , σ') with (y ⟨$⟩ st) (s' , σ')
-... | n ▹ s₁ , σ₁ = (m + n) ▹ s₁ , σ₁
+add' x y st (s , σ) = fadd {st} ((y ⟨$⟩ (nat ∷ st)) ((x ⟨$⟩ st) (s , σ)))
+
+{-
+with (x ⟨$⟩ st) (s , σ)
+... | (m ▹ s₀ , σ₀) with (y ⟨$⟩ (nat ∷ st)) (m ▹ s₀ , σ₀)
+... | n ▹ (m' ▹ s₁) , σ₁ = (m' + n) ▹ s₁ , σ₁-}
   -- where confₓ : Conf (nat ∷ st)
   --       confₓ = (x ⟨$⟩ st) (s , σ)
   --       m : ℕ
@@ -258,11 +272,18 @@ m ExprN = record { _⟨$⟩_ = λ x σ → head (proj₁ ((x ⟨$⟩ []) (ε , �
                  }
 m Vars = record { _⟨$⟩_ = λ x → x ; cong = λ x → x }
 
+{-
+plusPres : ∀ {st} {e₁} {e₂} {s : Stack st} {σ} →
+           head (proj₁ (fadd ((e₂ ⟨$⟩ (nat ∷ st)) ((e₁ ⟨$⟩ st) (s , σ))))) ≡
+           head (proj₁ ((e₁ ⟨$⟩ st) (s , σ))) + head (proj₁ ((e₂ ⟨$⟩ st) (s , σ)))
+plusPres = ?
+-}
+
 pres : (ty : SType Sig) (f : funcs Sig ty) → homPreserv Sig Exec Sem m ty f
 pres .([] , NatS) (nat n) _ = refl
 pres .([] , Vars) (var v) _ = refl
 pres .(NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) σ = refl
-pres .(ExprN ∷ ExprN ∷ [] , ExprN) plus (x ▹ (x₁ ▹ ⟨⟩)) σ = {!!}
+pres .(ExprN ∷ ExprN ∷ [] , ExprN) plus (e₁ ▹ (e₂ ▹ ⟨⟩)) σ = {!!}
 pres .(Vars ∷ [] , ExprN) varℕ (x ▹ ⟨⟩) σ = refl
 
 hom : Homomorphism Sig Exec Sem
@@ -278,6 +299,7 @@ ExprAlg = termAlgebra Sig
 
 Expr : Set
 Expr = Carrier ((isorts ExprAlg) ExprN)
+
 ∣_∣ : ℕ → Expr
 ∣ n ∣ = term valN (term (nat n) ⟨⟩ ▹ ⟨⟩)
 _⊕_ : Expr → Expr → Expr
@@ -289,22 +311,56 @@ varₑ v = term varℕ ((term (var v) ⟨⟩) ▹ ⟨⟩)
 -- Ejemplo de expresión
 3+3 : Expr
 3+3 = ∣ 3 ∣ ⊕ ∣ 3 ∣
-{-
+
+-- Semántica de las expresiones
+
+open Homomorphism
+open Initial
+
+homSem : Homomorphism Sig ExprAlg Sem
+homSem = proj₁ (init (tAlgInit Sig) Sem)
+
+⟦_⟧_ : Expr → State → ℕ
+⟦ e ⟧ σ = (_⟨$⟩_ (morph homSem ExprN) e) σ
+
+-- Semántica de ejecución
+
+homExec : Homomorphism Sig ExprAlg Exec
+homExec = proj₁ (init (tAlgInit Sig) Exec)
+
+
+⟪_⟫ : Expr → (st : StackType) → Conf st → Conf (nat ∷ st)
+⟪ e ⟫ = _⟨$⟩_ (_⟨$⟩_ (morph homExec ExprN) e) 
+
 -- Código
 
-data ≈Code≈ : ∀ {st} {st'} → (ℕ → Conf st → Conf st') → Set where
-  _,_       : ∀ {st} {st₀} {st'} {f₀ : ℕ → Conf st  → Conf st₀} 
-                                 {f₁ : ℕ → Conf st₀ → Conf st' }  → 
+
+data ≈Code≈ : ∀ {st} {st'} → (Conf st → Conf st') → Set where
+  _,_       : ∀ {st} {st₀} {st'} {f₀ : Conf st  → Conf st₀} 
+                                 {f₁ : Conf st₀ → Conf st' }  → 
                 (c₁ : ≈Code≈ f₀) → (c₂ : ≈Code≈ f₁)  → 
-                ≈Code≈ (λ n → (f₁ n) ∘ (f₀ n))
+                ≈Code≈ (f₁ ∘ f₀)
   push      : ∀ {st} {t} → (v : Val t) →
-              ≈Code≈ {st} {t ∷ st} (λ {_ (s , σ) → (v ▹ s , σ)})
+              ≈Code≈ {st} {t ∷ st} (λ {(s , σ) → (v ▹ s , σ)})
   add       : ∀ {st} → 
-              ≈Code≈ {nat ∷ nat ∷ st} {nat ∷ st} 
-                     (λ n → fadd)
+              ≈Code≈ {nat ∷ nat ∷ st} {nat ∷ st}
+                     fadd
   load      : ∀ {st} → (x : Var) → 
-              ≈Code≈ {st} {nat ∷ st} (λ {_ (s , σ) → ((σ x ▹ s , σ))})
+              ≈Code≈ {st} {nat ∷ st} (λ {(s , σ) → ((σ x ▹ s , σ))})
 
 
 -- Compilador
--}
+{- A partir del homomorfismo del álgebra inicial al
+álgebra de la ejecución del código podemos extraer
+el compilador.
+ -}
+compₑ : ∀ {st}  →
+        (e : Expr) → 
+        ≈Code≈ {st} {nat ∷ st} (⟪ e ⟫ st)
+compₑ (term valN (term (nat n) ⟨⟩ ▹ ⟨⟩)) = push n
+compₑ (term plus (e₁ ▹ (e₂ ▹ ⟨⟩))) = compₑ e₁ , (compₑ e₂ , add)
+compₑ (term varℕ (term (var v) ⟨⟩ ▹ ⟨⟩)) = load v
+
+correct : ∀ {st} (e : Expr) → (s : Stack st) → (σ : State) → 
+            ((⟦ e ⟧ σ) ▹ s , σ) ≡ ⟪ e ⟫ st (s , σ)
+correct e s σ = {!!}

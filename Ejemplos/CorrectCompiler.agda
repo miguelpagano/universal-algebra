@@ -358,4 +358,4 @@ correct e s σ = {!!}
   where unic : _
         unic = unique (tAlgInit Sig) Sem homSem (hom ∘ₕ homExec)
         prop : _
-        prop = elimEqh unic ExprN e e (srefl (isorts (termAlgebra Sig) ExprN ) {x = e}) σ
+        prop = elimEqh unic (srefl (isorts (termAlgebra Sig) ExprN ) {x = e}) σ

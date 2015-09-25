@@ -133,6 +133,12 @@ data _≈ₕ_ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} :
         _≈_ (isorts A s) a b → _≈_ (isorts A' s) (morph H s ⟨$⟩ a) (morph H' s ⟨$⟩ b)) →
         H ≈ₕ H'
 
+elimEqh : ∀ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} →
+          {H H' : Homomorphism S A A'} → (H ≈ₕ H') →
+          ({s : sorts S} → {a b : Carrier (isorts A s)} → _≈_ (isorts A s) a b →
+            _≈_ (isorts A' s) (morph H s ⟨$⟩ a) (morph H' s ⟨$⟩ b))
+elimEqh (ext H H' eq) {s} {a} {b} = eq s a b
+
 
 ≡to≈ : ∀ {l₁} {l₂} {St : Setoid l₁ l₂} {x y : Carrier St} →
        x ≡ y → _≈_ St x y
@@ -179,8 +185,7 @@ _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
                                                        comp as))
                 propMapMorph = ≡to≈ {St = isorts A₂ s} (PE.cong (ifuns A₂ ty f)
                                (propMapVComp ar as (λ s' → _⟨$⟩_ (morph H₀ s'))
-                                                     (λ s' → _⟨$⟩_ (morph H₁ s'))))
-
+                                                   (λ s' → _⟨$⟩_ (morph H₁ s'))))
 
 {-
                  Esta seria la prueba pres en un lenguaje mas ameno:
@@ -203,6 +208,27 @@ _∘ₕ_ {l₁} {l₂} {S} {A₀} {A₁} {A₂} H₁ H₀ =
 
  -}
 
+-- Los homomorfismos forman un setoide respecto a la igualdad ≈ₕ.
+hrefl : ∀ {l₁ l₂} {S} {A₁ A₂ : Algebra {l₁} {l₂} S} →
+                          (H₁ : Homomorphism S A₁ A₂) → H₁ ≈ₕ H₁
+hrefl {A₂ = A₂} H₁ = ext H₁ H₁ (λ s a b a=b → Π.cong (morph H₁ s) a=b)
+
+hsym : ∀ {l₁ l₂} {S} {A₁ A₂ : Algebra {l₁} {l₂} S} →
+                          (H₁ H₂ : Homomorphism S A₁ A₂) → H₁ ≈ₕ H₂ → H₂ ≈ₕ H₁
+hsym {S = S} {A₁ = A₁} {A₂ = A₂} H₁ H₂ eq = ext H₂ H₁ equ
+  where equ : (s : sorts S) → (a b : Carrier (isorts A₁ s)) → _ → _
+        equ s a b a=b = Setoid.sym (isorts A₂ s)
+                               (elimEqh eq (Setoid.sym (isorts A₁ s) a=b))
+
+htrans : ∀ {l₁ l₂} {S} {A₁ A₂ : Algebra {l₁} {l₂} S} →
+                          (H₁ H₂ H₃ : Homomorphism S A₁ A₂) →
+                           H₁ ≈ₕ H₂ → H₂ ≈ₕ H₃ → H₁ ≈ₕ H₃
+htrans {S = S} {A₁ = A₁} {A₂ = A₂} H₁ H₂ H₃ eq eq' = ext H₁ H₃ equ
+  where equ : (s : sorts S) → (a b : Carrier (isorts A₁ s)) → _ → _
+        equ s a b a=b = Setoid.trans (isorts A₂ s)
+                                 (elimEqh eq (Setoid.refl (isorts A₁ s) {x = a}))
+                                 (elimEqh eq' a=b)
+
 
 -- Definición de unicidad
 Unicity : ∀ {l₁} {l₂} → (A : Set l₁) → (A → A → Set l₂) → Set _ 
@@ -216,6 +242,15 @@ record Initial {l₁ l₂ : Level} (S : Signature) :
     alg      : Algebra {l₁} {l₂} S
     init     : (A : Algebra {l₁} {l₂} S) → Unicity (Homomorphism S alg A) (_≈ₕ_)
 
+  homInit : (A : Algebra S) → Homomorphism S alg A
+  homInit A = proj₁ (init A)
+
+  unique : (A : Algebra S) (h₁ h₂ : Homomorphism S alg A) → h₁ ≈ₕ h₂
+  unique A h₁ h₂ = htrans h₁ (homInit A) h₂ h₁≈i i≈h₂
+    where h₁≈i : _
+          h₁≈i = hsym (homInit A) h₁ (proj₂ (init A) h₁)
+          i≈h₂ : _
+          i≈h₂ = proj₂ (init A) h₂
 
 -- Algebra de términos
 

@@ -6,6 +6,7 @@ open import Data.Product
 open import Data.Nat
 open import Data.Bool
 open import Level renaming (suc to lsuc ; zero to lzero)
+open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality as PropEq hiding ([_])
 open import Data.String hiding (setoid)
 open import Function
@@ -168,33 +169,47 @@ execInterpSorts ExprN = Function.Equality.setoid (setoid StackType) setIx
 elimExt : ∀ {st} f g → relIx {st} {st} f g → (sσ : Conf st) → f sσ ≡ g sσ
 elimExt f g (ext st .f .g x) sσ = x sσ
 
-
-
 faddm : ∀ {st} → (m : ℕ) → Stack (nat ∷ st) → Stack (nat ∷ st)
 faddm m (m' ▹ s) = (m + m') ▹ s
 
 fadd : ∀ {st} → Conf (nat ∷ nat ∷ st) → Conf (nat ∷ st)
-fadd (m ▹ (n ▹ s') , σ') = (faddm m (n ▹ s') , σ')
+fadd (m ▹ (n ▹ s') , σ') = (m + n) ▹ s' , σ'
 
-add' : Carrier (execInterpSorts ExprN) → Carrier (execInterpSorts ExprN) → (st : StackType) → (Conf st) → Conf (nat ∷ st)
+add' : (c c' : Carrier (execInterpSorts ExprN)) → (st : StackType) → (Conf st) → Conf (nat ∷ st)
 add' x y st (s , σ) = fadd {st} ((y ⟨$⟩ (nat ∷ st)) ((x ⟨$⟩ st) (s , σ)))
 
-{-
-with (x ⟨$⟩ st) (s , σ)
-... | (m ▹ s₀ , σ₀) with (y ⟨$⟩ (nat ∷ st)) (m ▹ s₀ , σ₀)
-... | n ▹ (m' ▹ s₁) , σ₁ = (m' + n) ▹ s₁ , σ₁-}
-  -- where confₓ : Conf (nat ∷ st)
-  --       confₓ = (x ⟨$⟩ st) (s , σ)
-  --       m : ℕ
-  --       m = (head ∘ proj₁) confₓ
-  --       confy : Conf (nat ∷ st) → Conf (nat ∷ st)
-  --       confy (_ ▹ sₓ , σₓ) = (y ⟨$⟩ st) (sₓ , σₓ)
-        -- n : ℕ
-        -- n = (head ∘ proj₁) (confy confₓ)
-        -- s₁ : Stack st
-        -- s₁ = (tail ∘ proj₁) (confy confₓ)
-        -- σ₁ : State
-        -- σ₁ = proj₂ (confy confₓ)
+addprop : (c c' : Carrier (execInterpSorts ExprN)) → (st : StackType) → (sσ : Conf st) →
+        head (proj₁ (add' c c' st sσ)) ≡ head (proj₁ ((c ⟨$⟩ st) sσ)) + head (proj₁ ((c' ⟨$⟩ st) sσ))
+addprop c c' st sσ = {! rhs!}
+  where sσ' : Conf []
+        sσ' = (ε , emptyS)
+
+
+badBad : Carrier (execInterpSorts ExprN)
+badBad = record { _⟨$⟩_ = fun
+                ; cong = cong'
+                }
+  where fun : (st : StackType) → (sσ : Conf st) → Conf (nat ∷ st)
+        fun (nat ∷ st) (3 ▹ s , σ) = 8 ▹ (3 ▹ s) , σ
+        fun (nat ∷ st) (x ▹ s , σ) = 10 ▹ (3 ▹ s) , σ
+        fun st (s , σ) = 9 ▹ s , σ
+        cong' : {i j : List Type} → i ≡ j → relIx (fun i) (fun j)
+        cong' {i} refl = ext i (fun i) (fun i) (λ sσ → refl )
+
+-- No hay forma que podamos probar que el homomorfismo respeta las
+-- operaciones. El contra-ejemplo que podemos construir se basa en que
+-- las funciones pueden inspeccionar los argumentos, tal como se
+-- evidencia en badBad.
+
+addIsNotFine : ∀ σ → ∃₂ (λ c c' → ¬ 
+        (head (proj₁ (add' c c' [] (ε , σ))) ≡ head (proj₁ ((c ⟨$⟩ []) (ε , σ))) + head (proj₁ ((c' ⟨$⟩ []) (ε , σ)))))
+addIsNotFine σ = badBad , (badBad , (λ ()))
+  where
+        lhs : _
+        lhs = add' badBad badBad [] (ε , emptyS)
+        rhs : _
+        rhs = head (proj₁ ((badBad ⟨$⟩ []) (ε , σ))) + head (proj₁ ((badBad ⟨$⟩ []) (ε , σ)))
+
 
 cong-add' : {st : StackType} → (t t' r r' : Carrier (execInterpSorts ExprN))
                 → (eq : _≈_ (execInterpSorts ExprN) t t')
@@ -203,31 +218,13 @@ cong-add' : {st : StackType} → (t t' r r' : Carrier (execInterpSorts ExprN))
 cong-add' {st} t t' r r' eq eq' =
           ext st (add' t r st)
                  (add' t' r' st)
-                 (λ sσ → {!!}) --cong₂ (λ m n → (m + n) ▹ proj₁ sσ , proj₂ sσ) (m≡m' sσ) (n≡n' sσ))
+                 (λ sσ → cong fadd (equ2 sσ))
   where prop1 : (sσ : Conf st) → (t ⟨$⟩ st) sσ ≡ (t' ⟨$⟩ st) sσ
         prop1 sσ = elimExt (t ⟨$⟩ st) (t' ⟨$⟩ st) (eq {st} {st} refl) sσ
-        prop2 : (sσ : Conf st) → (r ⟨$⟩ st) sσ ≡ (r' ⟨$⟩ st) sσ
-        prop2 sσ = elimExt (r ⟨$⟩ st) (r' ⟨$⟩ st) (eq' {st} {st} refl) sσ
-        confₜ : Conf st → Conf (nat ∷ st)
-        confₜ = t ⟨$⟩ st
-        m : Conf st → ℕ
-        m = head ∘ proj₁ ∘ confₜ
-        confₜ' : Conf st → Conf (nat ∷ st)
-        confₜ' = t' ⟨$⟩ st
-        m' : Conf st → ℕ
-        m' = head ∘ proj₁ ∘ confₜ'
-        m≡m' : (sσ : Conf st) → m sσ ≡ m' sσ
-        m≡m' sσ = cong (λ sσ' → head (proj₁ sσ')) (prop1 sσ)
-        confᵣ : Conf st → Conf (nat ∷ st)
-        confᵣ = (r ⟨$⟩ st) ∘ tailConf ∘ confₜ
-        n : Conf st → ℕ
-        n = head ∘ proj₁ ∘ confᵣ
-        confᵣ' : Conf st → Conf (nat ∷ st)
-        confᵣ' = (r' ⟨$⟩ st) ∘ tailConf ∘ confₜ'
-        n' : Conf st → ℕ
-        n' = head ∘ proj₁ ∘ confᵣ'
-        n≡n' : (sσ : Conf st) → n sσ ≡ n' sσ
-        n≡n' sσ = {!!} --cong (λ sσ' → head (proj₁ sσ')) (prop2 sσ)
+        prop2 : (sσ sσ' : Conf (nat ∷ st)) → sσ ≡ sσ' → (r ⟨$⟩ (nat ∷ st)) sσ ≡ (r' ⟨$⟩ (nat ∷ st)) sσ'
+        prop2 sσ .sσ refl = elimExt (r ⟨$⟩ nat ∷ st) (r' ⟨$⟩ nat ∷ st) (eq' {nat ∷ st} {nat ∷ st} refl) sσ
+        equ2 : ∀ sσ → ( ((r ⟨$⟩ (nat ∷ st)) ((t ⟨$⟩ st) sσ)) ≡ ((r' ⟨$⟩ (nat ∷ st)) ((t' ⟨$⟩ st) sσ)))
+        equ2 sσ = prop2 ((t ⟨$⟩ st) sσ) ((t' ⟨$⟩ st) sσ) (prop1 sσ)
 
 
 execInterpFuncs : (ty : SType Sig) → (f : funcs Sig ty) → IFun Sig ty (Carrier ∘ execInterpSorts)
@@ -272,12 +269,6 @@ m ExprN = record { _⟨$⟩_ = λ x σ → head (proj₁ ((x ⟨$⟩ []) (ε , �
                  }
 m Vars = record { _⟨$⟩_ = λ x → x ; cong = λ x → x }
 
-{-
-plusPres : ∀ {st} {e₁} {e₂} {s : Stack st} {σ} →
-           head (proj₁ (fadd ((e₂ ⟨$⟩ (nat ∷ st)) ((e₁ ⟨$⟩ st) (s , σ))))) ≡
-           head (proj₁ ((e₁ ⟨$⟩ st) (s , σ))) + head (proj₁ ((e₂ ⟨$⟩ st) (s , σ)))
-plusPres = ?
--}
 
 pres : (ty : SType Sig) (f : funcs Sig ty) → homPreserv Sig Exec Sem m ty f
 pres .([] , NatS) (nat n) _ = refl
@@ -350,10 +341,10 @@ data ≈Code≈ : ∀ {st} {st'} → (Conf st → Conf st') → Set where
 
 
 -- Compilador
-{- A partir del homomorfismo del álgebra inicial al
-álgebra de la ejecución del código podemos extraer
-el compilador.
- -}
+
+{- A partir del homomorfismo del álgebra inicial al álgebra de la
+ejecución del código podemos extraer el compilador.  -}
+
 compₑ : ∀ {st}  →
         (e : Expr) → 
         ≈Code≈ {st} {nat ∷ st} (⟪ e ⟫ st)
@@ -362,5 +353,9 @@ compₑ (term plus (e₁ ▹ (e₂ ▹ ⟨⟩))) = compₑ e₁ , (compₑ e₂ 
 compₑ (term varℕ (term (var v) ⟨⟩ ▹ ⟨⟩)) = load v
 
 correct : ∀ {st} (e : Expr) → (s : Stack st) → (σ : State) → 
-            ((⟦ e ⟧ σ) ▹ s , σ) ≡ ⟪ e ⟫ st (s , σ)
+            ((⟦ e ⟧ σ) ▹ ε , σ) ≡ ⟪ e ⟫ [] (ε , σ)
 correct e s σ = {!!}
+  where unic : _
+        unic = unique (tAlgInit Sig) Sem homSem (hom ∘ₕ homExec)
+        prop : _
+        prop = elimEqh unic ExprN e e (srefl (isorts (termAlgebra Sig) ExprN ) {x = e}) σ

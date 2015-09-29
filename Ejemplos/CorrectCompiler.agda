@@ -60,15 +60,6 @@ semInterpSorts Vars = setoid Var
 open Signature
 
 open Setoid renaming (refl to srefl)
-
-forRec : ℕ → (State → State) → State → State
-forRec zero f σ = σ
-forRec (suc n) f σ = forRec n f (f σ)
-
-wRec : ℕ → (State → State) → (State → Bool) → State → State
-wRec zero f fcond σ    = σ
-wRec (suc n) f fcond σ = if (fcond σ) then wRec n f fcond (f σ)
-                                      else σ
 open Algebra
 
 semInterpFuncs : (ty : SType Sig) → (f : funcs Sig ty) → 
@@ -129,6 +120,10 @@ tail (t ▹ s) = s
 Conf : StackType → Set
 Conf st = Stack st × State
 
+ConfEN : (st : StackType) → Stack st → Set _
+ConfEN st s = Σ[ s ∈ Stack st ] (Stack st → Stack (nat ∷ st) × State) --(λ s → ((Stack st → Stack (nat ∷ st)) × State))
+
+
 headConf : ∀ {t} {st} → Conf (t ∷ st) → Val t
 headConf = head ∘ proj₁
 
@@ -154,6 +149,10 @@ isEquiv = record { refl = λ {i} {x} → ext i x x (λ sσ → refl)
 
 extRefl : {st st' : List Type} → st ≡ st' → (f : (st'' : StackType) → Conf st'' → Conf (nat ∷ st'')) → relIx {st} {st'} (f st) (f st')
 extRefl {st} refl f = ext st (f st) (f st) (λ sσ → refl)
+
+-- Tratemos de definir las funciones que no modifican el resto del stack
+funcsEN : Set
+funcsEN = (st : StackType) → (sσ : Conf st) → {!!}
 
 
 execInterpSorts : Sorts → Setoid _ _
@@ -201,6 +200,7 @@ badBad = record { _⟨$⟩_ = fun
 -- las funciones pueden inspeccionar los argumentos, tal como se
 -- evidencia en badBad.
 
+{-
 addIsNotFine : ∀ σ → ∃₂ (λ c c' → ¬ 
         (head (proj₁ (add' c c' [] (ε , σ))) ≡ head (proj₁ ((c ⟨$⟩ []) (ε , σ))) + head (proj₁ ((c' ⟨$⟩ []) (ε , σ)))))
 addIsNotFine σ = badBad , (badBad , (λ ()))
@@ -209,7 +209,7 @@ addIsNotFine σ = badBad , (badBad , (λ ()))
         lhs = add' badBad badBad [] (ε , emptyS)
         rhs : _
         rhs = head (proj₁ ((badBad ⟨$⟩ []) (ε , σ))) + head (proj₁ ((badBad ⟨$⟩ []) (ε , σ)))
-
+-}
 
 cong-add' : {st : StackType} → (t t' r r' : Carrier (execInterpSorts ExprN))
                 → (eq : _≈_ (execInterpSorts ExprN) t t')
@@ -218,7 +218,7 @@ cong-add' : {st : StackType} → (t t' r r' : Carrier (execInterpSorts ExprN))
 cong-add' {st} t t' r r' eq eq' =
           ext st (add' t r st)
                  (add' t' r' st)
-                 (λ sσ → cong fadd (equ2 sσ))
+                 (λ sσ → {!!} )-- cong fadd (equ2 sσ))
   where prop1 : (sσ : Conf st) → (t ⟨$⟩ st) sσ ≡ (t' ⟨$⟩ st) sσ
         prop1 sσ = elimExt (t ⟨$⟩ st) (t' ⟨$⟩ st) (eq {st} {st} refl) sσ
         prop2 : (sσ sσ' : Conf (nat ∷ st)) → sσ ≡ sσ' → (r ⟨$⟩ (nat ∷ st)) sσ ≡ (r' ⟨$⟩ (nat ∷ st)) sσ'
@@ -282,6 +282,28 @@ hom = record { morph = m
              ; preserv = pres
              }
 
+-- Homomorfismo al revés
+
+m' : (s : Sorts) → (semInterpSorts s) ⟶ (execInterpSorts s)
+m' NatS = record { _⟨$⟩_ = λ x → x ; cong = λ {i} {j} z → z }
+m' ExprN = record { _⟨$⟩_ = λ f → record { _⟨$⟩_ = λ {st (s , σ) → ((f σ) ▹ s) , σ}
+                                         ; cong = λ {st} {st'} st≡st' → {!!} }
+                  ; cong = {!!} }
+m' Vars = record { _⟨$⟩_ = λ x → x ; cong = λ x → x }
+
+pres' : (ty : SType Sig) (f : funcs Sig ty) → homPreserv Sig Sem Exec m' ty f
+pres' .([] , NatS) (nat n) as = refl
+pres' .([] , Vars) (var v) as = refl
+pres' .(NatS ∷ [] , ExprN) valN (n ▹ ⟨⟩) refl = ext {!!} {!!} {!!} (λ sσ → refl) 
+pres' .(ExprN ∷ ExprN ∷ [] , ExprN) plus (f ▹ as) refl = {!!}
+pres' .(Vars ∷ [] , ExprN) varℕ as x₁ = {!!}
+
+hom' : Homomorphism Sig Sem Exec
+hom' = record { morph = m'
+              ; preserv = pres'
+              }
+
+
 
 -- Lenguaje como álgebra inicial
 
@@ -309,7 +331,7 @@ open Homomorphism
 open Initial
 
 homSem : Homomorphism Sig ExprAlg Sem
-homSem = proj₁ (init (tAlgInit Sig) Sem)
+homSem = tAlgHomo Sem
 
 ⟦_⟧_ : Expr → State → ℕ
 ⟦ e ⟧ σ = (_⟨$⟩_ (morph homSem ExprN) e) σ
@@ -317,7 +339,7 @@ homSem = proj₁ (init (tAlgInit Sig) Sem)
 -- Semántica de ejecución
 
 homExec : Homomorphism Sig ExprAlg Exec
-homExec = proj₁ (init (tAlgInit Sig) Exec)
+homExec = tAlgHomo Exec
 
 
 ⟪_⟫ : Expr → (st : StackType) → Conf st → Conf (nat ∷ st)
@@ -325,11 +347,10 @@ homExec = proj₁ (init (tAlgInit Sig) Exec)
 
 -- Código
 
-
 data ≈Code≈ : ∀ {st} {st'} → (Conf st → Conf st') → Set where
   _,_       : ∀ {st} {st₀} {st'} {f₀ : Conf st  → Conf st₀} 
                                  {f₁ : Conf st₀ → Conf st' }  → 
-                (c₁ : ≈Code≈ f₀) → (c₂ : ≈Code≈ f₁)  → 
+                (c₀ : ≈Code≈ f₀) → (c₁ : ≈Code≈ f₁)  → 
                 ≈Code≈ (f₁ ∘ f₀)
   push      : ∀ {st} {t} → (v : Val t) →
               ≈Code≈ {st} {t ∷ st} (λ {(s , σ) → (v ▹ s , σ)})
@@ -352,6 +373,7 @@ compₑ (term valN (term (nat n) ⟨⟩ ▹ ⟨⟩)) = push n
 compₑ (term plus (e₁ ▹ (e₂ ▹ ⟨⟩))) = compₑ e₁ , (compₑ e₂ , add)
 compₑ (term varℕ (term (var v) ⟨⟩ ▹ ⟨⟩)) = load v
 
+{-
 correct : ∀ {st} (e : Expr) → (s : Stack st) → (σ : State) → 
             ((⟦ e ⟧ σ) ▹ ε , σ) ≡ ⟪ e ⟫ [] (ε , σ)
 correct e s σ = {!!}
@@ -359,3 +381,16 @@ correct e s σ = {!!}
         unic = unique (tAlgInit Sig) Sem homSem (hom ∘ₕ homExec)
         prop : _
         prop = elimEqh unic ExprN e e (srefl (isorts (termAlgebra Sig) ExprN ) {x = e}) σ
+-}
+
+
+{-
+_∣_→-setoid_ : ∀ {a b} (I : Set a) (A : I → Set b) (B : I → Set b) → Setoid _ _
+I ∣ A →-setoid B = Function.Equality.setoid (setoid I) setIx
+  where setIx : I.Setoid I _ _
+        setIx = record { Carrier = λ i → A i → B i
+                        ; _≈_ = {!!} --relIx
+                        ; isEquivalence = {!!} --isEquiv
+                        }
+-}
+

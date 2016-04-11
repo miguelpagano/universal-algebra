@@ -2,7 +2,7 @@ module Ejemplos.CorrectC where
 
 open import UnivAlgebra
 open import Relation.Binary
-open import Data.Product
+open import Data.Product renaming (map to pmap)
 open import Data.Nat
 open import Data.Bool
 open import Level renaming (suc to lsuc ; zero to lzero)
@@ -12,7 +12,9 @@ open import Data.String hiding (setoid)
 open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid;cong)
 open import Data.List
-open import Data.Maybe hiding (setoid)
+open import Data.Maybe hiding (setoid ; map)
+open import AlgTransf
+open import Data.Fin hiding (_+_)
 
 Var : Set
 Var = String
@@ -32,10 +34,12 @@ data Funcsₑ :  List Sortsₑ × Sortsₑ → Set where
   plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
   varℕ   : Funcsₑ ([ Vars ] , ExprN)
 
+
+
 -- Signatura para el lenguaje
 
-Sigₑ : Signature
-Sigₑ = record { sorts = Sortsₑ
+Σₑ : Signature
+Σₑ = record { sorts = Sortsₑ
              ; funcs = Funcsₑ
              }
 
@@ -46,9 +50,9 @@ open Setoid renaming (refl to srefl)
 open Algebra
 
 
--- El lenguaje Expr es el álgebra de términos de Sigₑ
-ExprAlg : Algebra {lzero} {lzero} Sigₑ
-ExprAlg = termAlgebra Sigₑ
+-- El lenguaje Expr es el álgebra de términos de Σₑ
+ExprAlg : Algebra {lzero} {lzero} Σₑ
+ExprAlg = termAlgebra Σₑ
 
 Expr : Set
 Expr = Carrier ((isorts ExprAlg) ExprN)
@@ -78,16 +82,14 @@ _[_←_] : State → Var → ℕ → State
 σ [ x ← n ] = λ y → if y == x then n
                               else σ y
 
-
-
 semInterpSorts : Sortsₑ → Setoid _ _
 semInterpSorts NatS = setoid ℕ
 semInterpSorts ExprN = State →-setoid ℕ
 semInterpSorts Vars = setoid Var
 
 
-semInterpFuncs : (ty : SType Sigₑ) → (f : funcs Sigₑ ty) → 
-                 IFun Sigₑ ty (Carrier ∘ semInterpSorts)
+semInterpFuncs : (ty : SType Σₑ) → (f : funcs Σₑ ty) → 
+                 IFun Σₑ ty (Carrier ∘ semInterpSorts)
 semInterpFuncs ([] , .NatS) (nat n) _ = n
 semInterpFuncs ([] , .Vars) (var v) _ = v
 semInterpFuncs (NatS ∷ [] , ExprN) valN (x ▹ ⟨⟩) σ = x
@@ -95,7 +97,7 @@ semInterpFuncs (ExprN ∷ ExprN ∷ [] , ExprN) plus (e₁ ▹ (e₂ ▹ ⟨⟩)
 semInterpFuncs (Vars ∷ [] , ExprN) varℕ (v ▹ ⟨⟩) σ = σ v
 
 
-congSemInt : ∀ {ar s f} → (ts₁ ts₂ : VecH Sigₑ (Carrier ∘ semInterpSorts) ar) →
+congSemInt : ∀ {ar s f} → (ts₁ ts₂ : VecH Σₑ (Carrier ∘ semInterpSorts) ar) →
                _≈v_ {R = _≈_ ∘ semInterpSorts} ts₁ ts₂ →
                _≈_ (semInterpSorts s) (semInterpFuncs (ar , s) f ts₁)
                               (semInterpFuncs (ar , s) f ts₂)
@@ -106,7 +108,7 @@ congSemInt {f = plus} ._ ._ (≈▹ eq (≈▹ eq' ≈⟨⟩)) σ = cong₂ (λ 
 congSemInt {f = varℕ} ._ ._ (≈▹ eq ≈⟨⟩) σ = cong σ eq
 
 
-Sem : Algebra Sigₑ
+Sem : Algebra Σₑ
 Sem = record { isorts = semInterpSorts
              ; ifuns = semInterpFuncs
              ; ifuncong = λ {ar} {s} → congSemInt {ar} {s}
@@ -117,7 +119,7 @@ Sem = record { isorts = semInterpSorts
 open Homomorphism
 open Initial
 
-homSem : Homomorphism Sigₑ ExprAlg Sem
+homSem : Homomorphism Σₑ ExprAlg Sem
 homSem = tAlgHomo Sem
 
 ⟦_⟧_ : Expr → State → ℕ
@@ -139,17 +141,17 @@ data Funcsₘ : List Sortsₘ ×  Sortsₘ → Set where
   loadₘ  : Funcsₘ (Varsₛ ∷ [] , Codeₛ)
   
 
-Sigₘ : Signature
-Sigₘ = record { sorts = Sortsₘ
+Σₘ : Signature
+Σₘ = record { sorts = Sortsₘ
               ; funcs = Funcsₘ
               }
 
 
 
--- El código es el álgebra de términos de Sigₘ
-CodeAlg : Algebra {lzero} {lzero} Sigₘ
-CodeAlg = termAlgebra Sigₘ
-
+-- El código es el álgebra de términos de Σₘ
+CodeAlg : Algebra {lzero} {lzero} Σₘ
+CodeAlg = termAlgebra Σₘ
+  
 
 -- Semántica del lenguaje de bajo nivel
 
@@ -173,8 +175,8 @@ _>>=_ : ∀ {a b : Set} → Maybe a → (a → Maybe b) → Maybe b
 nothing >>= _  = nothing
 
 
-execInterpFuncs : (ty : SType Sigₘ) → (f : funcs Sigₘ ty) → 
-                  IFun Sigₘ ty (Carrier ∘ execInterpSorts)
+execInterpFuncs : (ty : SType Σₘ) → (f : funcs Σₘ ty) → 
+                  IFun Σₘ ty (Carrier ∘ execInterpSorts)
 execInterpFuncs ._ (natₘ n) ⟨⟩ = n
 execInterpFuncs ._ (varₘ v) ⟨⟩ = v
 execInterpFuncs ._ pushₘ (n ▹ ⟨⟩) (s , σ) = just (n ▹ s , σ)
@@ -184,7 +186,7 @@ execInterpFuncs ._ seqₘ (c₀ ▹ (c₁ ▹ ⟨⟩)) s = c₀ s >>= c₁
 execInterpFuncs ._ loadₘ (v ▹ ⟨⟩) (s , σ) = just ((σ v ▹ s) , σ)
 
 
-Exec : Algebra Sigₘ
+Exec : Algebra Σₘ
 Exec = record {
                isorts = execInterpSorts
              ; ifuns = execInterpFuncs
@@ -192,76 +194,50 @@ Exec = record {
              }
 
 -- Como CodeAlg es el álgebra inicial, tengo homomorfismo hacia Exec
-hexec : Homomorphism Sigₘ CodeAlg Exec
+hexec : Homomorphism Σₘ CodeAlg Exec
 hexec = tAlgHomo Exec
 
 
--- Ahora deberíamos poder expresar al código como un álgebra de Sigₑ
--- Definamos una función que vaya de un álgebra de Sigₑ en un álgebra
--- de Sigₘ: Un transformador de álgebras.
+{- Para definir el compilador vamos a ver al código de bajo nivel
+   como un álgebra de la signatura Σₑ. Para ello definimos
+   un transformador de álgebras. -}
 
-MtoEsorts : sorts Sigₑ → sorts Sigₘ
-MtoEsorts NatS = Natₛ
-MtoEsorts ExprN = Codeₛ
-MtoEsorts Vars = Varsₛ
+open SigTransf
 
-MtoEisorts : ∀ {l₀} {l₁} → Algebra {l₀} {l₁} Sigₘ → (s : sorts Sigₑ) → Setoid l₀ l₁
-MtoEisorts a s = isorts a (MtoEsorts s)
+sₑ⟶sₘ : sorts Σₑ → sorts Σₘ
+sₑ⟶sₘ NatS  = Natₛ
+sₑ⟶sₘ ExprN = Codeₛ
+sₑ⟶sₘ Vars  = Varsₛ
 
-MtoEfuncs : ∀ {l₀} {l₁} → (a : Algebra {l₀} {l₁} Sigₘ) →
-            (ty : SType Sigₑ) → (f : funcs Sigₑ ty) →
-            IFun {l₀} Sigₑ ty (Carrier ∘ (MtoEisorts a))
-MtoEfuncs a ._ (nat n) ⟨⟩ = ifuns a ([] , Natₛ) (natₘ n) ⟨⟩
-MtoEfuncs a ._ (var v) ⟨⟩ = ifuns a ([] , Varsₛ) (varₘ v) ⟨⟩
-MtoEfuncs a ._ valN (n ▹ ⟨⟩) = ifuns a (Natₛ ∷ [] , Codeₛ) pushₘ (n ▹ ⟨⟩)
-MtoEfuncs a ._ plus (c₀ ▹ (c₁ ▹ ⟨⟩)) =
-          ifuns a (Codeₛ ∷ Codeₛ ∷ [] , Codeₛ) seqₘ
-                  (c₀ ▹ (ifuns a ((Codeₛ ∷ Codeₛ ∷ []) , Codeₛ) seqₘ
-                    (c₁ ▹ ((ifuns a ([] , Codeₛ) addₘ ⟨⟩) ▹ ⟨⟩)) ▹ ⟨⟩))
-MtoEfuncs a .(Vars ∷ [] , ExprN) varℕ (v ▹ ⟨⟩) =
-          ifuns a ((Varsₛ ∷ []) , Codeₛ) loadₘ (v ▹ ⟨⟩)
-
-MtoEAlg : ∀ {l₀} {l₁} → Algebra {l₀} {l₁} Sigₘ → Algebra {l₀} {l₁} Sigₑ
-MtoEAlg a = record { isorts = MtoEisorts a
-                ; ifuns = MtoEfuncs a
-                ; ifuncong = {!!} }
-
--- Ahora quisiera ver si dado un homomorfismo en la signatura Sigₘ
--- Puedo tener uno en la signatura Sigₑ. Esto es válido por algún teorema
--- importante de teoría de categorías. Si tengo un transformador de álgebras,
--- los homomorfismos se preservan.
-
-MtoEPreserv : ∀ {l₀} {l₁} {a₀ : Algebra {l₀} {l₁} Sigₘ} {a₁ : Algebra {l₀} {l₁} Sigₘ}
-              {hₘ : Homomorphism {l₀} {l₁} Sigₘ a₀ a₁} →
-              (ty : SType Sigₑ) (f : funcs Sigₑ ty) →
-              homPreserv Sigₑ (MtoEAlg a₀) (MtoEAlg a₁) ((morph hₘ) ∘ MtoEsorts)
-              ty f
-MtoEPreserv .([] , NatS) (nat n) ⟨⟩ = {!!}
-MtoEPreserv .([] , Vars) (var v) as = {!!}
-MtoEPreserv .(NatS ∷ [] , ExprN) valN as = {!!}
-MtoEPreserv .(ExprN ∷ ExprN ∷ [] , ExprN) plus as = {!!}
-MtoEPreserv .(Vars ∷ [] , ExprN) varℕ as = {!!}
-
-MtoEHom : ∀ {l₀} {l₁} {a₀} {a₁} →
-            Homomorphism {l₀} {l₁} Sigₘ a₀ a₁ →
-            Homomorphism {l₀} {l₁} Sigₑ (MtoEAlg a₀) (MtoEAlg a₁)
-MtoEHom {a₀ = a₀} {a₁ = a₁} hₘ =
-              record { morph = (morph hₘ) ∘ MtoEsorts
-                     ; preserv = MtoEPreserv  {a₀ = a₀} {a₁ = a₁} {hₘ = hₘ}}
+-- La definición de la transformación de símbolos de función de Σₑ en Σₘ
+-- es el compilador.
+fₑ⟶fₘ : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) → SigExpr Σₘ (map sₑ⟶sₘ ar) (sₑ⟶sₘ s) 
+fₑ⟶fₘ (nat n) = fapp (natₘ n) ⟨⟩
+fₑ⟶fₘ (var v) = fapp (varₘ v) ⟨⟩
+fₑ⟶fₘ valN = fapp pushₘ ((ident zero) ▹ ⟨⟩)
+-- Pruebo definir el plus de una manera que no es la mas
+-- natural, pero que de todas maneras es correcta.
+fₑ⟶fₘ plus = fapp seqₘ (fapp pushₘ (fapp (natₘ 0) ⟨⟩ ▹ ⟨⟩ )  ▹
+                  ((fapp seqₘ ((ident zero) ▹
+                  ( (fapp seqₘ ( fapp addₘ ⟨⟩ ▹ (
+                   ((fapp seqₘ ((ident (suc zero)) ▹ ((fapp addₘ ⟨⟩) ▹ ⟨⟩))))  ▹ ⟨⟩)) )   ▹ ⟨⟩ ))  ) ▹ ⟨⟩))
+fₑ⟶fₘ varℕ = fapp loadₘ ((ident zero) ▹ ⟨⟩)
 
 
+Σₑ⟶Σₘ : SigTransf Σₑ Σₘ
+Σₑ⟶Σₘ = record { sortsT = sₑ⟶sₘ
+                ; funsT = fₑ⟶fₘ }
 
-{- Ahora lo que hacemos es llevar el código de bajo nivel y su semántica a la signatura
-   Sigₘ -}
+
+{- Definamos entonces al código de bajo nivel como un álgebra de Σₑ -}
 
 -- Código de bajo nivel como álgebra de Sigₑ
-CodeAlgₑ : Algebra Sigₑ
-CodeAlgₑ = MtoEAlg CodeAlg
+CodeAlgₑ : Algebra Σₑ
+CodeAlgₑ = AlgTransf Σₑ⟶Σₘ CodeAlg
 
--- Semántica de bajo nivel como álgebra de Sigₑ
-Execₑ : Algebra Sigₑ
-Execₑ = MtoEAlg Exec
-
+-- Semántica de bajo nivel como álgebra de Σₑ
+Execₑ : Algebra Σₑ
+Execₑ = AlgTransf Σₑ⟶Σₘ Exec
 
 -- El código es el carrier del sort ExprN:
 Code : Set
@@ -281,7 +257,7 @@ load : Var → Code
 load v = term loadₘ ((term (varₘ v) ⟨⟩) ▹ ⟨⟩)
 
 -- El compilador está definido por inicialidad:
-homc : Homomorphism Sigₑ ExprAlg CodeAlgₑ
+homc : Homomorphism Σₑ ExprAlg CodeAlgₑ
 homc = tAlgHomo CodeAlgₑ
 
 compₑ : Expr → Code
@@ -292,7 +268,6 @@ La corrección la tenemos si podemos dar un homomorfismo
 entre Sem y Exec.
 -}
 
-
 mSemCode : FunAlg Sem Execₑ
 mSemCode NatS = Function.Equality.id
 mSemCode ExprN =
@@ -301,31 +276,32 @@ mSemCode ExprN =
                   cong (λ n → just (n ▹ s , σ)) (f₀≡f₁ σ)} }
 mSemCode Vars = Function.Equality.id
 
-presSemCode : (ty : SType Sigₑ) (f : funcs Sigₑ ty) →
-              homPreserv Sigₑ Sem Execₑ mSemCode ty f
+presSemCode : (ty : SType Σₑ) (f : funcs Σₑ ty) →
+              homPreserv Σₑ Sem Execₑ mSemCode ty f
 presSemCode ._ (nat n) ⟨⟩ = refl
 presSemCode ._ (var v) ⟨⟩ = refl
 presSemCode ._ valN (n ▹ ⟨⟩) _ = refl
 presSemCode ._ plus (f₀ ▹ (f₁ ▹ ⟨⟩)) _ = refl
 presSemCode ._ varℕ (v ▹ ⟨⟩) _ = refl
 
-hₛₑₘ : Homomorphism Sigₑ Sem Execₑ
+hₛₑₘ : Homomorphism Σₑ Sem Execₑ
 hₛₑₘ = record { morph = mSemCode
               ; preserv = presSemCode }
 
 -- Tengo también un homomorfismo entre Codeₑ y Execₑ
-hexecₑ : Homomorphism Sigₑ CodeAlgₑ Execₑ
-hexecₑ = MtoEHom hexec
+hexecₑ : Homomorphism Σₑ CodeAlgₑ Execₑ
+hexecₑ = HomTransf Σₑ⟶Σₘ hexec
 
 -- Función de ejecución:
 ⟪_⟫ : Code → Conf → Maybe Conf
 ⟪ c ⟫ = _⟨$⟩_ (morph hexecₑ ExprN) c
 
-
 -- Corrección del compilador: trivial por inicialidad y
 -- definición de hₛₑₘ
 correct : ∀ (e : Expr) → (σ : State) → 
             ⟪ compₑ e ⟫ (ε , σ) ≡ just ((⟦ e ⟧ σ) ▹ ε , σ)
-correct e σ = elimEqh unic refl -- Ver por qué me pinta de amarillo acá
-  where unic : (hₛₑₘ ∘ₕ homSem) ≈ₕ (hexecₑ ∘ₕ homc)
-        unic = unique (tAlgInit Sigₑ) Execₑ (hₛₑₘ ∘ₕ homSem) (hexecₑ ∘ₕ homc)
+correct e σ = elim≈ₕ unic ExprN e e refl (ε , σ)
+  where unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
+        unic = unique (tAlgInit Σₑ) Execₑ (hexecₑ ∘ₕ homc) (hₛₑₘ ∘ₕ homSem)
+
+

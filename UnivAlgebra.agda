@@ -3,13 +3,15 @@ module UnivAlgebra where
 open import Relation.Binary
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
-open import Data.Product hiding (map)
+open import Data.Product renaming (map to pmap)
 open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_)
 open import Data.Bool
 open import Data.List
 open import Relation.Binary.PropositionalEquality as PE
 open import Induction.WellFounded
+open import Data.String
+open import Data.Fin
 
 open Setoid
 
@@ -25,6 +27,7 @@ open Signature
 Arity : (S : Signature) → Set
 Arity S = List (sorts S)
 
+
 SType : (S : Signature) → Set
 SType S = Arity S × (sorts S)
 
@@ -37,25 +40,32 @@ ISorts : ∀ {l} → Signature → Set l → Set _
 ISorts S A = (sorts S) → A
 
 
+{-
+Vectores heterogéneos. Si A es una familia indexada por los sorts de la signatura
+S, dada una aridad (s₁,..,sₙ), cada elemento del vector es de tipo A sᵢ.
+-}
 data VecH {l : Level} (S : Signature) (A : ISorts S (Set l)) : Arity S → Set l where
   ⟨⟩  : VecH S A []
-  _▹_ : ∀ {s} {ar} → A s → VecH S A ar → VecH S A (s ∷ ar)
+  _▹_ : ∀ {s} {ar} → (v : A s) → (vs : VecH S A ar) → VecH S A (s ∷ ar)
 
--- Igualdad de vectores
-data _≈v_ {S : Signature} {l₁ l₂ : Level} {A : ISorts S (Set l₁)} {R : (s : sorts S) → Rel (A s) l₂} :
-              {ar : Arity S} → (ts₁ : VecH S A ar) → (ts₂ : VecH S A ar) → Set (l₁ ⊔ l₂) where
+-- Igualdad de vectores.
+-- TODO: Probablemente falte pedir que R sea de equivalencia.
+data _≈v_ {S : Signature} {l₀ l₁ : Level} {A : ISorts S (Set l₀)}
+          {R : (s : sorts S) → Rel (A s) l₁} :
+              {ar : Arity S} → (ts₁ : VecH S A ar) → (ts₂ : VecH S A ar) → Set (l₀ ⊔ l₁) where
      ≈⟨⟩ : ⟨⟩ ≈v ⟨⟩
      ≈▹  : ∀ {s} {ar} {t₁} {t₂} {ts₁ : VecH S A ar} {ts₂ : VecH S A ar} →
            R s t₁ t₂ → _≈v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ≈v (t₂ ▹ ts₂)
 
-
 {-
-  Interpretar un simbolo de funcion con aridad ar y tipo de retorno s,
-  es una funcion que va de un vector 
+  Dada una familia I indexada en los sorts de S,
+  interpretar un simbolo de funcion con aridad ar y tipo de retorno s,
+  es una funcion que va de un vector heterogéneo con interpretación I y
+  aridad ar en I s.
 -}
 IFun : ∀ {l} → (S : Signature) → (ty : SType S) →
                ISorts S (Set l)  → Set l
-IFun S (ar , s) i = VecH S i ar → i s
+IFun S (ar , s) I = VecH S I ar → I s
 
 
 -- Algebra de una signatura S
@@ -81,8 +91,9 @@ FunAlg : ∀ {S : Signature} {l₁} {l₂} →
            Set _
 FunAlg {S} A A' = (s : sorts S) → isorts A s ⟶ isorts A' s
 
-mapV : ∀ {l₁} {S : Signature}
-         {i : (sorts S) → Set l₁} {i' : (sorts S) → Set l₁} →
+{- map en vectores heterogéneos -}
+mapV : ∀ {l₁} {l₂} {S : Signature}
+         {i : (sorts S) → Set l₁} {i' : (sorts S) → Set l₂} →
          (m : (s : sorts S) → (i s) → (i' s)) → 
          (arty : Arity S) →
          (as : VecH S i arty) →
@@ -113,6 +124,7 @@ homPreserv S A A' m (ar , s) f =
                             (ifuns A' (ar , s) f (mapMorph {S} {A = A} {A' = A'} {ar = ar}
                                                   m as))
 
+
 --Homomorfismo.
 
 record Homomorphism {l₁ l₂ : Level} 
@@ -133,11 +145,11 @@ data _≈ₕ_ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} :
         _≈_ (isorts A s) a b → _≈_ (isorts A' s) (morph H s ⟨$⟩ a) (morph H' s ⟨$⟩ b)) →
         H ≈ₕ H'
 
-elimEqh : ∀ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} →
+elim≈ₕ : ∀ {l₁ l₂} {S} {A A' : Algebra {l₁} {l₂} S} →
           {H H' : Homomorphism S A A'} → (H ≈ₕ H') →
-          ({s : sorts S} → {a b : Carrier (isorts A s)} → _≈_ (isorts A s) a b →
-            _≈_ (isorts A' s) (morph H s ⟨$⟩ a) (morph H' s ⟨$⟩ b))
-elimEqh (ext H H' eq) {s} {a} {b} = eq s a b
+          (s : sorts S) → (a b : Carrier (isorts A s)) → _≈_ (isorts A s) a b →
+            _≈_ (isorts A' s) (morph H s ⟨$⟩ a) (morph H' s ⟨$⟩ b)
+elim≈ₕ (ext H H' eq) s a b = eq s a b
 
 
 ≡to≈ : ∀ {l₁} {l₂} {St : Setoid l₁ l₂} {x y : Carrier St} →
@@ -216,18 +228,21 @@ hrefl {A₂ = A₂} H₁ = ext H₁ H₁ (λ s a b a=b → Π.cong (morph H₁ s
 hsym : ∀ {l₁ l₂} {S} {A₁ A₂ : Algebra {l₁} {l₂} S} →
                           (H₁ H₂ : Homomorphism S A₁ A₂) → H₁ ≈ₕ H₂ → H₂ ≈ₕ H₁
 hsym {S = S} {A₁ = A₁} {A₂ = A₂} H₁ H₂ eq = ext H₂ H₁ equ
-  where equ : (s : sorts S) → (a b : Carrier (isorts A₁ s)) → _ → _
+  where equ : (s : sorts S) → (a b : Carrier (isorts A₁ s)) →
+              _≈_ (isorts A₁ s) a b →
+              _≈_ (isorts A₂ s) (morph H₂ s ⟨$⟩ a) (morph H₁ s ⟨$⟩ b)
         equ s a b a=b = Setoid.sym (isorts A₂ s)
-                               (elimEqh eq (Setoid.sym (isorts A₁ s) a=b))
+                               (elim≈ₕ eq s b a (Setoid.sym (isorts A₁ s) a=b))
 
 htrans : ∀ {l₁ l₂} {S} {A₁ A₂ : Algebra {l₁} {l₂} S} →
                           (H₁ H₂ H₃ : Homomorphism S A₁ A₂) →
                            H₁ ≈ₕ H₂ → H₂ ≈ₕ H₃ → H₁ ≈ₕ H₃
 htrans {S = S} {A₁ = A₁} {A₂ = A₂} H₁ H₂ H₃ eq eq' = ext H₁ H₃ equ
-  where equ : (s : sorts S) → (a b : Carrier (isorts A₁ s)) → _ → _
+  where equ : (s : sorts S) → (a b : Carrier (isorts A₁ s)) →
+              _≈_ (isorts A₁ s) a b → _
         equ s a b a=b = Setoid.trans (isorts A₂ s)
-                                 (elimEqh eq (Setoid.refl (isorts A₁ s) {x = a}))
-                                 (elimEqh eq' a=b)
+                                 (elim≈ₕ eq s a a (Setoid.refl (isorts A₁ s) {x = a}))
+                                 (elim≈ₕ eq' s a b a=b)
 
 
 -- Definición de unicidad

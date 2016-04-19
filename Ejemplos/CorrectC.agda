@@ -15,6 +15,7 @@ open import Data.List
 open import Data.Maybe hiding (setoid ; map)
 open import AlgTransf
 open import Data.Fin hiding (_+_)
+open import VecH
 
 Var : Set
 Var = String
@@ -97,15 +98,15 @@ semInterpFuncs (ExprN ∷ ExprN ∷ [] , ExprN) plus (e₁ ▹ (e₂ ▹ ⟨⟩)
 semInterpFuncs (Vars ∷ [] , ExprN) varℕ (v ▹ ⟨⟩) σ = σ v
 
 
-congSemInt : ∀ {ar s f} → (ts₁ ts₂ : VecH Σₑ (Carrier ∘ semInterpSorts) ar) →
-               _≈v_ {R = _≈_ ∘ semInterpSorts} ts₁ ts₂ →
+congSemInt : ∀ {ar s f} → (ts₁ ts₂ : VecH (sorts Σₑ) (Carrier ∘ semInterpSorts) ar) →
+               _∼v_ {R = _≈_ ∘ semInterpSorts} ts₁ ts₂ →
                _≈_ (semInterpSorts s) (semInterpFuncs (ar , s) f ts₁)
                               (semInterpFuncs (ar , s) f ts₂)
-congSemInt {f = nat n} .⟨⟩ .⟨⟩ ≈⟨⟩ = refl
-congSemInt {f = var v} .⟨⟩ .⟨⟩ ≈⟨⟩ = refl
-congSemInt {f = valN} ._ ._ (≈▹ refl ≈⟨⟩) σ = refl
-congSemInt {f = plus} ._ ._ (≈▹ eq (≈▹ eq' ≈⟨⟩)) σ = cong₂ (λ m n → m + n) (eq σ) (eq' σ)
-congSemInt {f = varℕ} ._ ._ (≈▹ eq ≈⟨⟩) σ = cong σ eq
+congSemInt {f = nat n} .⟨⟩ .⟨⟩ ∼⟨⟩ = refl
+congSemInt {f = var v} .⟨⟩ .⟨⟩ ∼⟨⟩ = refl
+congSemInt {f = valN} ._ ._ (∼▹ refl ∼⟨⟩) σ = refl
+congSemInt {f = plus} ._ ._ (∼▹ eq (∼▹ eq' ∼⟨⟩)) σ = cong₂ (λ m n → m + n) (eq σ) (eq' σ)
+congSemInt {f = varℕ} ._ ._ (∼▹ eq ∼⟨⟩) σ = cong σ eq
 
 
 Sem : Algebra Σₑ
@@ -215,13 +216,13 @@ fₑ⟶fₘ : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) → SigExpr Σₘ (map
 fₑ⟶fₘ (nat n) = fapp (natₘ n) ⟨⟩
 fₑ⟶fₘ (var v) = fapp (varₘ v) ⟨⟩
 fₑ⟶fₘ valN = fapp pushₘ ((ident zero) ▹ ⟨⟩)
+fₑ⟶fₘ varℕ = fapp loadₘ ((ident zero) ▹ ⟨⟩)
 -- Pruebo definir el plus de una manera que no es la mas
 -- natural, pero que de todas maneras es correcta.
 fₑ⟶fₘ plus = fapp seqₘ (fapp pushₘ (fapp (natₘ 0) ⟨⟩ ▹ ⟨⟩ )  ▹
                   ((fapp seqₘ ((ident zero) ▹
                   ( (fapp seqₘ ( fapp addₘ ⟨⟩ ▹ (
                    ((fapp seqₘ ((ident (suc zero)) ▹ ((fapp addₘ ⟨⟩) ▹ ⟨⟩))))  ▹ ⟨⟩)) )   ▹ ⟨⟩ ))  ) ▹ ⟨⟩))
-fₑ⟶fₘ varℕ = fapp loadₘ ((ident zero) ▹ ⟨⟩)
 
 
 Σₑ⟶Σₘ : SigTransf Σₑ Σₘ

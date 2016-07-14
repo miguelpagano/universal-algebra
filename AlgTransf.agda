@@ -47,7 +47,7 @@ record _↝_ (Σ₀ : Signature) (Σ₁ : Signature) : Set where
   field
     ↝ₛ  : sorts Σ₀ → sorts Σ₁
     ↝f : ∀ {ar} {s} → (f : funcs Σ₀ (ar , s)) →
-                        ΣExpr Σ₁ (map ↝ₛ ar) (↝ₛ s) 
+                        ΣExpr Σ₁ (map ↝ₛ ar) (↝ₛ s)
 
 -- Mapeo de sorts de una signatura a otra
 mapsorts : ∀ {Σ₀} {Σ₁} → (sorts Σ₀ → sorts Σ₁) →

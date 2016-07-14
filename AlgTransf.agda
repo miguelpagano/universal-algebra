@@ -13,180 +13,160 @@ open import Data.List
 open import Relation.Binary.PropositionalEquality as PE
 open import Induction.WellFounded
 open import Data.String
-open import Data.Fin
+open import Data.Fin hiding (#_)
 open import VecH
 
 {- Transformación entre álgebras.
-   Si tenemos una manera de llevar los sorts de una signatura S₀
-   en sorts de una signatura S₁ y de escribir cada símbolo de función
-   de S₀ como composición de símbolos de S₁, entonces a partir
-   de un álgebra de S₁ podemos obtener un álgebra de S₀. -}
+   Si tenemos una manera de llevar los sorts de una signatura Σ₀
+   en sorts de una signatura Σ₁ y de escribir cada símbolo de función
+   de Σ₀ como composición de símbolos de Σ₁, entonces a partir
+   de un álgebra de Σ₁ podemos obtener un álgebra de Σ₀. -}
 
 open Signature
 
+{-
+Para llevar elementos de una Σ'-álgebra en una Σ-álgebra
+definimos un lenguaje para traducir los símbolos de función
+de Σ a 'expresiones' de Σ'. Estas expresiones están definidas
+en SigExpr:
+-}
 
-data SigExpr (S : Signature) (ar : Arity S) : (sorts S) → Set where
-  ident : (n : Fin (length ar)) → SigExpr S ar (ar ‼ n)
-  fapp  : ∀ {ar'} {s} → (f : funcs S (ar' , s)) →
-                        (es : VecH (sorts S) (SigExpr S ar) ar') → SigExpr S ar s
+{-
+la aridad ar contiene información del contexto donde ocurre
+la expresión. Los sorts de ar serán los correspondientes a
+variables
+-}
+data ΣExpr (Σ : Signature) (ar : Arity Σ) : (sorts Σ) → Set where
+  #      : (n : Fin (length ar)) → ΣExpr Σ ar (ar ‼ n)
+  _∣$∣_   : ∀ {ar'} {s} → (f : funcs Σ (ar' , s)) →
+             (es : VecH (sorts Σ) (ΣExpr Σ ar) ar') → ΣExpr Σ ar s
 
 
--- Transformación de una signatura S₀ en una S₁
-record SigTransf (S₀ : Signature) (S₁ : Signature) : Set where
+-- Transformación de una signatura Σ₀ en una Σ₁
+record _↝_ (Σ₀ : Signature) (Σ₁ : Signature) : Set where
   field
-    sortsT : sorts S₀ → sorts S₁
-    funsT  : ∀ {ar} {s} → (f : funcs S₀ (ar , s)) →
-                          SigExpr S₁ (map sortsT ar) (sortsT s) 
+    ↝ₛ  : sorts Σ₀ → sorts Σ₁
+    ↝f : ∀ {ar} {s} → (f : funcs Σ₀ (ar , s)) →
+                        ΣExpr Σ₁ (map ↝ₛ ar) (↝ₛ s) 
 
 -- Mapeo de sorts de una signatura a otra
-mapsorts : ∀ {S₀} {S₁} → (sorts S₀ → sorts S₁) →
-             SType S₀ → SType S₁
+mapsorts : ∀ {Σ₀} {Σ₁} → (sorts Σ₀ → sorts Σ₁) →
+             ΣType Σ₀ → ΣType Σ₁
 mapsorts fₛ = pmap (map fₛ) fₛ
 
 
-open SigTransf
+open _↝_
 open Algebra
 open Setoid
 
 
 mutual
-  interpSigExpr : ∀ {l₀} {l₁} {S : Signature} {ar : Arity S} →
-                    (a : Algebra {l₀} {l₁} S) →
-                    (vs : VecH (sorts S) (Carrier ∘ isorts a) ar) →
-                    (s : sorts S) → (e : SigExpr S ar s) → 
-                    (Carrier ∘ isorts a) s
-  interpSigExpr a vs ._ (ident n) = vs ‼v n
-  interpSigExpr a vs s (fapp {ar' = ar'} {s = .s} f es) =
-                        ifuns a (ar' , s) f (mapvec a vs es)
+  iΣExpr : ∀ {l₀} {l₁} {Σ : Signature} {ar : Arity Σ} {s : sorts Σ}→
+                    (a : Algebra {l₀} {l₁} Σ) →
+                    (vs : VecH (sorts Σ) (Carrier ∘ _⟦_⟧ₛ a) ar) →
+                    (e : ΣExpr Σ ar s) → Carrier (a ⟦ s ⟧ₛ)
+  iΣExpr a vs (# n) = vs ‼v n
+  iΣExpr a vs (f ∣$∣ es) = a ⟦ f ⟧ ⟨$⟩ mapvec a vs es
 
-  mapvec :  ∀ {l₀} {l₁} {S : Signature} {ar ar' : Arity S} →
-              (a : Algebra {l₀} {l₁} S) → (vs : VecH (sorts S) (Carrier ∘ isorts a) ar) →
-              (es : VecH (sorts S) (SigExpr S ar) ar') → VecH (sorts S) (Carrier ∘ isorts a) ar'
-  mapvec {ar' = []} a vs ⟨⟩ = ⟨⟩
-  mapvec {ar' = s ∷ ar₁} a vs (e ▹ es) = (interpSigExpr a vs s e) ▹ mapvec a vs es 
-
--- mapvec es igual a mapV interpSigExpr. Si el chequeador de terminación
--- de agda fuera más copado, no debería hacer esto.
-mapvec≡mapVi : ∀ {l₀} {l₁} {S : Signature} {ar ar' : Arity S} →
-                 (a : Algebra {l₀} {l₁} S) →
-                 (vs : VecH (sorts S) (Carrier ∘ isorts a) ar) →
-                 (es : VecH (sorts S) (SigExpr S ar) ar') → 
-                 mapvec a vs es ≡ mapV (interpSigExpr a vs) ar' es
-mapvec≡mapVi a vs ⟨⟩ = PE.refl
-mapvec≡mapVi {ar' = s ∷ ar'} a vs (e ▹ es) =
-                    PE.cong (λ es' → interpSigExpr a vs s e ▹ es')
-                                     (mapvec≡mapVi a vs es) 
+  -- mapvec es igual a mapV interpSigExpr, pero hay que definirlo
+  -- así porque sino el chequeador de terminación de Agda se queja. 
+  mapvec :  ∀ {l₀} {l₁} {Σ : Signature} {ar ar' : Arity Σ} →
+              (a : Algebra {l₀} {l₁} Σ) →
+              (vs : VecH (sorts Σ) (Carrier ∘ _⟦_⟧ₛ a) ar) →
+              (es : VecH (sorts Σ) (ΣExpr Σ ar) ar') →
+              VecH (sorts Σ) (Carrier ∘ _⟦_⟧ₛ a) ar'
+  mapvec a _ ⟨⟩ = ⟨⟩
+  mapvec a vs (e ▹ es) = (iΣExpr a vs e) ▹ mapvec a vs es 
 
 
+{- Transformación de la interpretación de un símbolo de función -}
+interpFunTrans : ∀ {l₀ l₁} {Σ₀ Σ₁ : Signature} {ar : Arity Σ₀}
+                   {s : sorts Σ₀} {fₛ : sorts Σ₀ → sorts Σ₁} →
+                   (f : funcs Σ₀ (ar , s)) → (e : ΣExpr Σ₁ (map fₛ ar) (fₛ s)) →
+                   (a : Algebra {l₀} {l₁} Σ₁) → 
+                   IFuncs Σ₀ (ar , s) (_⟦_⟧ₛ a ∘ fₛ)
+interpFunTrans {Σ₀ = Σ₀} {Σ₁} {ar} {s} {fₛ} f e a =
+                   record { _⟨$⟩_ = λ vs → iΣExpr a
+                                           (vecTransf fₛ (Carrier ∘ _⟦_⟧ₛ a) ar vs) e
+                          ; cong = λ vs≈vs' → fTransCong e (∼vtransf fₛ vs≈vs') }
+  where fTransCong : ∀ {ar₁ : Arity Σ₁} {s₁ : sorts Σ₁}
+                       {vs vs' : VecH (sorts Σ₁) (Carrier ∘ _⟦_⟧ₛ a) ar₁} →
+                       (e₁ : ΣExpr Σ₁ ar₁ s₁) →
+                       _∼v_ {R = _≈_ ∘ _⟦_⟧ₛ a} vs vs' → _≈_ (a ⟦ s₁ ⟧ₛ)
+                       (iΣExpr a vs e₁) (iΣExpr a vs' e₁)
+        fTransCong {vs = vs} {vs'} (# n) eq = ~v‼prop vs vs' eq n
+        fTransCong {ar₁ = ar₁} {_} {vs} {vs'} (_∣$∣_ {arₑ} f₁ es) eq =
+                                              Π.cong (a ⟦ f₁ ⟧) (≈mapvec arₑ es)
+          where ≈mapvec : (ar' : Arity Σ₁) →
+                          (ws : VecH (sorts Σ₁) (ΣExpr Σ₁ ar₁) ar') →
+                          (mapvec a vs ws) ∼v (mapvec a vs' ws)
+                ≈mapvec .[] ⟨⟩ = ∼⟨⟩
+                ≈mapvec {s' ∷ ar'} (v ▹ ws) = ∼▹ (fTransCong v eq)
+                                                 (≈mapvec ar' ws)
 
-interpFunTrans : ∀ {l₀ l₁} (S₀ S₁ : Signature) →
-                 {ar : Arity S₀} {s : sorts S₀} {fₛ : sorts S₀ → sorts S₁} →
-                 (f : funcs S₀ (ar , s)) → (e : SigExpr S₁ (map fₛ ar) (fₛ s)) →
-                 (a : Algebra {l₀} {l₁} S₁) → 
-                 IFun S₀ (ar , s) (Carrier ∘ (isorts a ∘ fₛ))
-interpFunTrans S₀ S₁ {ar} {s} {fₛ} f e a vs =
-                     interpSigExpr a (vecTransf fₛ (Carrier ∘ isorts a) ar vs) (fₛ s) e 
 
-funAlgTransf : ∀ {l₀ l₁} {S₀ S₁} (t : SigTransf S₀ S₁) →
-                 (a : Algebra {l₀} {l₁} S₁) →
-                 (ty : SType S₀) → (f : funcs S₀ ty) →
-                 IFun S₀ ty (Carrier ∘ (isorts a ∘ sortsT t))
-funAlgTransf {S₀ = S₀} {S₁ = S₁} t a (ar , s) f vs =
-                   interpFunTrans S₀ S₁ f (funsT t f) a vs
+funAlgTransf : ∀ {l₀ l₁} {Σ₀ Σ₁} {ty : ΣType Σ₀} (t : Σ₀ ↝ Σ₁) →
+                 (a : Algebra {l₀} {l₁} Σ₁) →
+                 (f : funcs Σ₀ ty) →
+                 IFuncs Σ₀ ty (_⟦_⟧ₛ a ∘ (↝ₛ t))
+funAlgTransf {Σ₀ = Σ₀} {Σ₁ = Σ₁} t a f = interpFunTrans {Σ₀ = Σ₀} f (↝f t f) a
 
 
+-- Transformación de un álgebra de Σ₁ en una de Σ₀
+_〈_〉 : ∀ {l₀} {l₁} {Σ₀} {Σ₁} → (t : Σ₀ ↝ Σ₁) →
+            (a : Algebra {l₀} {l₁} Σ₁) → Algebra {l₀} {l₁} Σ₀
+t 〈 a 〉 = (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥ funAlgTransf t a
 
-p : ∀ {l₀} {l₁} {S₁} {ar : Arity S₁} {s : sorts S₁} →
-    (a : Algebra {l₀} {l₁} S₁) → (e : SigExpr S₁ ar s) →
-    (ts₁ ts₂ : VecH (sorts S₁) (Carrier ∘ isorts a) ar) →
-    _∼v_ {R = _≈_ ∘ isorts a} ts₁ ts₂ →
-    _≈_ (isorts a s) (interpSigExpr a ts₁ s e)
-                     (interpSigExpr a ts₂ s e)
-p a (ident n) ts₁ ts₂ eq  = ~v‼prop ts₁ ts₂ eq n
-p {S₁ = S₁} {ar = ar} a (fapp {ar'} f vs) ts₁ ts₂ eq =
-        ifuncong a (mapvec a ts₁ vs) (mapvec a ts₂ vs)
-                   (≈mapvec ar' vs)
-  where ≈mapvec : (ar' : Arity S₁) → (ws : VecH (sorts S₁) (SigExpr S₁ ar) ar') →
-                  (mapvec a ts₁ ws) ∼v (mapvec a ts₂ ws)
-        ≈mapvec [] ⟨⟩ = ∼⟨⟩
-        ≈mapvec (s ∷ ar₁) (w ▹ ws) = ∼▹ (p a w ts₁ ts₂ eq) (≈mapvec ar₁ ws)
 
-congTransf : ∀ {l₀} {l₁} {S₀} {S₁} {ar : Arity S₀} {s : sorts S₀}
-             {f : funcs S₀ (ar , s)}→
-            (t : SigTransf S₀ S₁) → (a : Algebra {l₀} {l₁} S₁) → 
-            (ts₁ ts₂ : VecH (sorts S₀) (Carrier ∘ isorts a ∘ sortsT t) ar) →
-            _∼v_ {R = _≈_ ∘ isorts a ∘ sortsT t} ts₁ ts₂ → 
-            _≈_ (isorts a $ sortsT t s)
-                (funAlgTransf t a (ar , s) f ts₁)
-                (funAlgTransf t a (ar , s) f ts₂)
-congTransf {S₀ = S₀} {S₁} {ar} {s} {f} t a ts₁ ts₂ ts₁≈ts₂ =
-               p a (funsT t f) (vecTransf (sortsT t) (Carrier ∘ isorts a) ar ts₁)
-                               (vecTransf (sortsT t) (Carrier ∘ isorts a) ar ts₂)
-                               (∼vtransf (sortsT t) ts₁ ts₂ ts₁≈ts₂)
-
--- Transformación de un álgebra de S₁ en una de S₀
-AlgTransf : ∀ {l₀} {l₁} {S₀} {S₁} → (t : SigTransf S₀ S₁) →
-            (a : Algebra {l₀} {l₁} S₁) → Algebra {l₀} {l₁} S₀
-AlgTransf t a = record { isorts   = isorts a ∘ sortsT t
-                       ; ifuns    = λ ty f vs → funAlgTransf t a ty f vs
-                       ; ifuncong = congTransf t a
-                       }
 
 open Homomorphism
 
+-- La condición de homomorfismo se preserva en una transformación.
+homCond↝ : ∀ {l₀ l₁} {Σ₀ Σ₁ : Signature} {a a' : Algebra {l₀} {l₁} Σ₁}
+             {ty : ΣType Σ₀} → (t : Σ₀ ↝ Σ₁) → (h : Homomorphism a a') → 
+             (f : funcs Σ₀ ty) → homCond (t 〈 a 〉) (t 〈 a' 〉) (′ h ′ ∘ ↝ₛ t) f
+homCond↝ {Σ₁ = Σ₁} {a} {a'} {ar , s} t h f = λ as →
+               subst (λ vec → _≈_ (a' ⟦ ↝ₛ t s ⟧ₛ)
+                                   (_⟨$⟩_ (′ h ′ (↝ₛ t s))
+                                         (iΣExpr a (vecTransf (↝ₛ t) (Carrier ∘ _⟦_⟧ₛ a) ar as)
+                                          (↝f t f)))
+                                   (iΣExpr a' vec (↝f t f)))
+                     (≡maptransf (↝ₛ t) (Carrier ∘ _⟦_⟧ₛ a) (Carrier ∘ _⟦_⟧ₛ a')
+                                 (_⟨$⟩_ ∘ ′ h ′) ar as)
+                     (homCond↝' (map (↝ₛ t) ar) (↝ₛ t s) (↝f t f)
+                                 (vecTransf (↝ₛ t) (Carrier ∘ _⟦_⟧ₛ a) ar as))
+  where
+        homCond↝' : (ar : Arity Σ₁) → (s : sorts Σ₁) → (e : ΣExpr Σ₁ ar s) →
+                     (vs : VecH (sorts Σ₁) (Carrier ∘ _⟦_⟧ₛ a) ar) →
+                     _≈_ (a' ⟦ s ⟧ₛ )
+                     (′ h ′ s ⟨$⟩ iΣExpr a vs e)
+                     (iΣExpr a' (map⟿ {Σ = Σ₁} {a} {a'} ′ h ′ vs) e)
+        homCond↝' [] _ (# ()) ⟨⟩
+        homCond↝' (s ∷ ar) .s (# zero) (v ▹ vs) = Setoid.refl (a' ⟦ s ⟧ₛ)
+        homCond↝' (s ∷ ar) .(ar ‼ n) (# (suc n)) (v ▹ vs) = homCond↝' ar (ar ‼ n) (# n) vs
+        homCond↝' ar s (_∣$∣_ {ar₁} f₁ es) vs =
+                   Setoid.trans (a' ⟦ s ⟧ₛ) (cond h f₁ (mapvec a vs es))
+                                            (Π.cong (a' ⟦ f₁ ⟧)
+                                                    (homCond↝'vec ar₁ es))
+          where homCond↝'vec : (ar₁ : Arity Σ₁) → 
+                               (es : VecH (sorts Σ₁) (ΣExpr Σ₁ ar) ar₁) →
+                               _∼v_ {R = _≈_ ∘ _⟦_⟧ₛ a'}
+                               (mapV (λ x → _⟨$⟩_ (′ h ′ x)) (mapvec a vs es))
+                               (mapvec a' (mapV (λ x → _⟨$⟩_ (′ h ′ x)) vs) es)
+                homCond↝'vec .[] ⟨⟩ = ∼⟨⟩
+                homCond↝'vec (s₁ ∷ ar₁) (e ▹ es) = ∼▹ (homCond↝' ar s₁ e vs)
+                                                       (homCond↝'vec ar₁ es)
 
 
-presTransf' : ∀ {l₀ l₁} {S₁ : Signature} {a a' : Algebra {l₀} {l₁} S₁}
-                (h : Homomorphism S₁ a a') →
-                (ar : Arity S₁) → (s : sorts S₁) →
-                (e : SigExpr S₁ ar s) → (vs : VecH (sorts S₁) (Carrier ∘ isorts a) ar) →
-                _≈_ (isorts a' s)
-                    (morph h s ⟨$⟩ interpSigExpr a vs s e)
-                    (interpSigExpr a' (mapMorph {A = a} {A' = a'}
-                                                (morph h) vs) s e)
-presTransf' h .[] ._ (ident ()) ⟨⟩
-presTransf' {a' = a'} h (s ∷ ar) .s (ident zero) (v ▹ vs) = Setoid.refl (isorts a' s)
-presTransf' h (s ∷ ar) ._ (ident (suc n)) (x ▹ vs) = presTransf' h ar (ar ‼ n) (ident n) vs
-presTransf' {S₁ = S₁} {a} {a'} h ar s (fapp {ar' = ar'} f es) vs =
-                           Setoid.trans (isorts a' s)
-                                        (preserv h (ar' , s) f (mapvec a vs es))
-                                        (ifuncong a' {f = f} (mapMorph {A = a} {A' = a'}
-                                                                       (morph h) (mapvec a vs es))
-                                                             (mapvec a' (mapMorph {A = a} {A' = a'}
-                                                                                  (morph h) vs) es)
-                                                             (presVec ar' es))
-  where presVec : (ar₀ : Arity S₁) →
-                  (es₀ : VecH (sorts S₁) (SigExpr S₁ ar) ar₀) →
-                  mapMorph {A = a} {A' = a'} (morph h) (mapvec a vs es₀) ∼v
-                  mapvec a' (mapMorph {A = a} {A' = a'} (morph h) vs) es₀
-        presVec [] ⟨⟩ = ∼⟨⟩
-        presVec (s₁ ∷ ar₁) (e ▹ es₀) = ∼▹ (presTransf' h ar s₁ e vs)
-                                          (presVec ar₁ es₀)
 
 
+{- Si tenemos un homomorfismo entre álgebras de Σ₁ y tenemos
+   una transformación de Σ₀ en Σ₁, entonces podemos obtener
+   un homomorfismo entre las álgebras transformadas de Σ₀ -}
+_〈_〉ₕ : ∀ {l₀ l₁} {Σ₀ Σ₁ : Signature} {a a' : Algebra {l₀} {l₁} Σ₁} →
+              (t : Σ₀ ↝ Σ₁) → (h : Homomorphism a a') →
+              Homomorphism (t 〈 a 〉) (t 〈 a' 〉)
+t 〈 h 〉ₕ = record { ′_′ = ′ h ′ ∘ ↝ₛ t
+                  ; cond = homCond↝ t h
+                  }
 
-presTransf : ∀ {l₀ l₁} {S₀ S₁ : Signature} {a a' : Algebra {l₀} {l₁} S₁} →
-                       (t : SigTransf S₀ S₁) → (h : Homomorphism S₁ a a') →
-                       (ty : SType S₀) → (f : funcs S₀ ty) →
-                       homPreserv S₀ (AlgTransf t a) (AlgTransf t a')
-                                     (morph h ∘ sortsT t) ty f
-presTransf {S₀ = S₀} {S₁} {a} {a'} t h (ar , s) f as =
-                          subst (λ vec → _≈_ (isorts a' (sortsT t s))
-                                             (_⟨$⟩_ (morph h (sortsT t s))
-                                                (interpSigExpr a (vecTransf (sortsT t) (Carrier ∘ isorts a) ar as)
-                                                 (sortsT t s) (funsT t f)))
-                                                 (interpSigExpr a' vec (sortsT t s) (funsT t f)))
-                                (≡maptransf (sortsT t) (Carrier ∘ isorts a)
-                                                (Carrier ∘ isorts a') (_⟨$⟩_ ∘ morph h) ar as)
-                                (presTransf' h (map (sortsT t) ar) (sortsT t s) (funsT t f)
-                                               (vecTransf (sortsT t) (Carrier ∘ isorts a) ar as))
-
-{- Si tenemos un homomorfismo entre álgebras de S₁ y tenemos
-   una transformación de S₀ en S₁, entonces podemos obtener
-   un homomorfismo entre las álgebras transformadas de S₀ -}
-HomTransf : ∀ {l₀ l₁} {S₀ S₁ : Signature} {a a' : Algebra {l₀} {l₁} S₁} →
-              (t : SigTransf S₀ S₁) → (h : Homomorphism S₁ a a') →
-              Homomorphism S₀ (AlgTransf t a) (AlgTransf t a')
-HomTransf t h = record { morph = morph h ∘ sortsT t
-                       ; preserv = presTransf t h }
-           

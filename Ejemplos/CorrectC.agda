@@ -27,13 +27,11 @@ Var = String
 
 data Sortsₑ : Sorts where
   ExprN : Sortsₑ
-  Vars  : Sortsₑ
 
 data Funcsₑ : Funcs Sortsₑ where
   valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
-  var   : (v : Var) → Funcsₑ ([] , Vars)
   plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
-  varN  : Funcsₑ ([ Vars ] , ExprN)
+  varN  : (v : Var) → Funcsₑ ([] , ExprN)
 
 
 
@@ -69,7 +67,7 @@ _⊕_ : Expr → Expr → Expr
 e₁ ⊕ e₂ = term plus (e₁ ▹ (e₂ ▹ ⟨⟩))
 
 varₑ : Var → Expr
-varₑ v = term varN (term (var v) ⟨⟩ ▹ ⟨⟩)
+varₑ v = term (varN v) ⟨⟩
 
 
 -- Ejemplo de expresión
@@ -91,25 +89,22 @@ _[_←_] : State → Var → ℕ → State
 
 iSortsₑ : ISorts Σₑ
 iSortsₑ ExprN = State →-setoid ℕ
-iSortsₑ Vars = setoid Var
 
 
 if : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) → VecH Sortsₑ (Carrier ∘ iSortsₑ) ar →
                    Carrier (iSortsₑ s)
 if (valN n) ⟨⟩ = λ σ → n
-if (var x) ⟨⟩  = x
 if plus (v₀ ▹ v₁ ▹ ⟨⟩) σ = v₀ σ + v₁ σ
-if varN (x ▹ ⟨⟩) = λ σ → σ x
+if (varN x) ⟨⟩ = λ σ → σ x
 
 ifcong : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) →
            {vs₀ vs₁ : VecH Sortsₑ (Carrier ∘ iSortsₑ) ar} →
            _∼v_ {R = _≈_ ∘ iSortsₑ} vs₀ vs₁ →
            _≈_ (iSortsₑ s) (if f vs₀) (if f vs₁)
 ifcong (valN n) {⟨⟩} ∼⟨⟩ = λ σ → refl
-ifcong (var v) {⟨⟩} ∼⟨⟩ = refl
 ifcong plus {v₀ ▹ v₀' ▹ ⟨⟩} {v₁ ▹ v₁' ▹ ⟨⟩} (∼▹ v₀≈v₁ (∼▹ v₀'≈v₁' ∼⟨⟩)) =
                            λ σ → cong₂ _+_ (v₀≈v₁ σ) (v₀'≈v₁' σ)
-ifcong varN {x₀ ▹ ⟨⟩} {x₁ ▹ ⟨⟩} (∼▹ x₀≈x₁ ∼⟨⟩) = λ σ → cong σ x₀≈x₁
+ifcong (varN v) {⟨⟩} ∼⟨⟩ = λ σ → refl
 
 iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
 iFuncsₑ f = record { _⟨$⟩_ = if f
@@ -136,13 +131,10 @@ homSem = ∣T∣ₕ Semₑ
 
 data Sortsₘ : Sorts where
   Codeₛ : Sortsₘ
-  Varsₛ : Sortsₘ
-
 
 data Funcsₘ : Funcs Sortsₘ where
-  varₘ  : (v : Var) → Funcsₘ ([] , Varsₛ)
   pushₘ : (n : ℕ) → Funcsₘ ([] , Codeₛ)
-  loadₘ : Funcsₘ (Varsₛ ∷ [] , Codeₛ)
+  loadₘ : (v : Var) → Funcsₘ ([] , Codeₛ)
   addₘ  : Funcsₘ ([] , Codeₛ)
   seqₘ   : Funcsₘ (Codeₛ ∷ Codeₛ ∷ [] , Codeₛ)
 
@@ -177,7 +169,6 @@ Conf = Stack × State
 
 iSortsₘ : ISorts Σₘ
 iSortsₘ Codeₛ = Conf →-setoid Maybe Conf
-iSortsₘ Varsₛ = setoid Var
 
 open import Category.Monad
 open import Category.Monad.Indexed
@@ -187,9 +178,8 @@ open RawMonad {lzero} Data.Maybe.monad
 
 ifₘ : ∀ {ar} {s} → (f : funcs Σₘ (ar , s)) → VecH Sortsₘ (Carrier ∘ iSortsₘ) ar →
                    Carrier (iSortsₘ s)
-ifₘ (varₘ v) ⟨⟩ = v
 ifₘ (pushₘ n) ⟨⟩ = λ {(s , σ) → just (n ▸ s , σ) }
-ifₘ loadₘ (x ▹ ⟨⟩) = λ { (s , σ) → just ((σ x ▸ s) , σ) }
+ifₘ (loadₘ v) ⟨⟩ = λ {(s , σ) → just (σ v ▸ s , σ)}
 ifₘ addₘ ⟨⟩ = λ { (n₀ ▸ n₁ ▸ s , σ) → just ((n₀ + n₁ ▸ s) , σ) ;
                  (_ , σ) → nothing
                }
@@ -199,10 +189,8 @@ ifcongₘ : ∀ {ar} {s} → (f : funcs Σₘ (ar , s)) →
            {vs₀ vs₁ : VecH Sortsₘ (Carrier ∘ iSortsₘ) ar} →
            _∼v_ {R = _≈_ ∘ iSortsₘ} vs₀ vs₁ →
            _≈_ (iSortsₘ s) (ifₘ f vs₀) (ifₘ f vs₁)
-ifcongₘ (varₘ v) {⟨⟩} ∼⟨⟩ = refl
 ifcongₘ (pushₘ n) {⟨⟩} ∼⟨⟩ = λ _ → refl
-ifcongₘ loadₘ {x ▹ ⟨⟩} (∼▹ x≈y ∼⟨⟩) = λ {(s , σ) → cong (λ x₀ → just
-                                                        (σ x₀ ▸ s , σ)) x≈y}
+ifcongₘ (loadₘ v) {⟨⟩} ∼⟨⟩ = λ _ → refl 
 ifcongₘ addₘ {⟨⟩} ∼⟨⟩ = λ _ → refl
 ifcongₘ seqₘ {v₀ ▹ v₁ ▹ ⟨⟩} {v₀' ▹ v₁' ▹ ⟨⟩} (∼▹ v₀≈v₀' (∼▹ v₁≈v₁' ∼⟨⟩)) sσ =
         PropEq.trans (cong (λ mc → mc >>= v₁) (v₀≈v₀' sσ))
@@ -237,14 +225,12 @@ open _↝_
 
 sₑ↝sₘ : sorts Σₑ → sorts Σₘ
 sₑ↝sₘ ExprN = Codeₛ
-sₑ↝sₘ Vars = Varsₛ
 
 fₑ↝fₘ : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) →
                       ΣExpr Σₘ (map sₑ↝sₘ ar) (sₑ↝sₘ s)
 fₑ↝fₘ (valN n) = pushₘ n ∣$∣ ⟨⟩
-fₑ↝fₘ (var v)  = varₘ v ∣$∣ ⟨⟩
 fₑ↝fₘ plus     = seqₘ ∣$∣ (# (suc zero) ▹ (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹ ⟨⟩)
-fₑ↝fₘ varN     = loadₘ ∣$∣ (# zero ▹ ⟨⟩)
+fₑ↝fₘ (varN v) = loadₘ v ∣$∣ ⟨⟩
 
 
 ΣₑtoΣₘ : Σₑ ↝ Σₘ
@@ -282,7 +268,7 @@ c₀ ∙ c₁ = term seqₘ (c₀ ▹ (c₁ ▹ ⟨⟩))
 
 
 load : Var → Code
-load v = term loadₘ ((term (varₘ v) ⟨⟩) ▹ ⟨⟩)
+load v = term (loadₘ v) ⟨⟩
 
 
 -- El compilador está definido por inicialidad:
@@ -305,19 +291,49 @@ Sem→Execₑ ExprN = record { _⟨$⟩_ = λ {fₑ (s , σ) → just (fₑ σ �
                          ; cong = λ { {f₀} {f₁} f₀≈f₁ (s , σ) →
                                       cong (λ n → just (n ▸ s , σ)) (f₀≈f₁ σ) }
                          }
-Sem→Execₑ Vars  = Function.Equality.id
+
 
 
 condhₛₑₘ : ∀ {ty} (f : funcs Σₑ ty) →
                        homCond Semₑ Execₑ Sem→Execₑ f
 condhₛₑₘ (valN n) ⟨⟩ = λ _ → refl
-condhₛₑₘ (var v) ⟨⟩ = refl
 condhₛₑₘ plus (f₀ ▹ f₁ ▹ ⟨⟩) = λ _ → refl
-condhₛₑₘ varN (x ▹ ⟨⟩) = λ _ → refl
+condhₛₑₘ (varN v) ⟨⟩ = λ _ → refl
 
 hₛₑₘ : Homomorphism Semₑ Execₑ
 hₛₑₘ = record { ′_′ = Sem→Execₑ
              ; cond = condhₛₑₘ }
+
+
+{- DUDA: Para definir este homomorfismo, cómo puedo asegurar que
+un elemento en Execₑ siempre deja un natural en el tope y da just???
+Esa propiedad la tienen los códigos compilados, así que debería
+poder probarse.
+Aunque puesto que los que dan nothing o no dejan natural en el tope
+no son alcanzados, podríamos devolver cualquier cosa. Por ejemplo zero-}
+
+fDec : (Conf → Maybe Conf) → State → ℕ
+fDec fc σ with fc (ε , σ)
+fDec fc σ | nothing = zero -- no alcanzado, devuelvo zero
+fDec fc σ | just (n ▸ _ , _) = n
+fDec fc σ | just _           = zero
+
+fDecCong : ∀ {fc₁ fc₂} → ((sσ : Conf) → fc₁ sσ ≡ fc₂ sσ) →
+             (σ : State) → fDec fc₁ σ ≡ fDec fc₂ σ
+fDecCong {fc₁} {fc₂} eq σ rewrite PropEq.sym (eq (ε , σ)) with fc₁ (ε , σ)
+... | just x = refl
+... | nothing = refl
+
+Execₑ→Sem : Execₑ ⟿ Semₑ
+Execₑ→Sem ExprN = record { _⟨$⟩_ = fDec
+                         ; cong = fDecCong }
+
+
+condhDec : ∀ {ty} (f : funcs Σₑ ty) →
+                       homCond Execₑ Semₑ Execₑ→Sem f
+condhDec (valN n) ⟨⟩ = λ σ → refl
+condhDec plus (v₀ ▹ v₁ ▹ ⟨⟩) = λ σ → {!!}
+condhDec (varN v) ⟨⟩ = λ σ → refl 
 
 
 -- Tengo también un homomorfismo entre Codeₑ y Execₑ

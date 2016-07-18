@@ -536,6 +536,248 @@ uni h₁ h₂ s (term {ar} f ts) ._ refl =
                                  (mapV (_⟨$⟩_ ∘ ′ h₂ ′) ts₀)
 \end{spec}
 
+\section{Transformación de álgebras}
+
+Para traducir expresiones de un lenguaje definido por la signatura
+$\Sigma_s$ en otro definido por $\Sigma_t$ debemos llevar los sorts
+de la $\Sigma_s$ en sorts de $\Sigma_t$, y las operaciones de $\Sigma_s$
+en expresiones resultantes de aplicar operaciones de $\Sigma_t$.
+
+Consideremos como ejemplo un lenguaje con constantes naturales y la suma:
+
+\begin{spec}
+data Sortsₑ : Sorts where
+  ExprN : Sortsₑ
+
+data Funcsₑ : Funcs Sortsₑ where
+  valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
+  plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
+
+Σₑ : Signature
+Σₑ = record  { sorts = Sortsₑ
+             ; funcs = Funcsₑ
+             }
+\end{spec}
+
+Y consideremos un lenguaje de bajo nivel cuya ejecución manipula una pila:
+
+\begin{spec}
+data Sortsₘ : Sorts where
+  Codeₛ : Sortsₘ
+
+data Funcsₘ : Funcs Sortsₘ where
+  pushₘ : (n : ℕ) → Funcsₘ ([] , Codeₛ)
+  addₘ  : Funcsₘ ([] , Codeₛ)
+  seqₘ   : Funcsₘ (Codeₛ ∷ Codeₛ ∷ [] , Codeₛ)
+
+Σₘ : Signature
+Σₘ = record  { sorts = Sortsₘ
+             ; funcs = Funcsₘ
+             }
+\end{spec}
+
+Al sort |ExprN| lo llevamos al sort |Codeₛ|. Y podemos dar
+reglas que indiquen cómo traducir un término de |Σₑ| en uno de |Σ |.
+Si tenemos un término |valN| $n$, donde $n$ es algún natural,
+la traducimos en |pushₘ| $n$. Y si tenemos un |plus| $t_1$ $t_2$,
+donde $t_1$ y $t_2$ son términos de |Σₑ|, lo podemos traducir a
+|seqₘ| $t_1'$ (|seqₘ| $t_2'$ |add|), donde $t_1'$ y $t_2'$ son las traducciones
+de $t_1$ y $t_2$ respectivamente.
+
+(COMPLETAR)
+
+
+\section{Corrección de un compilador de expresiones}
+
+En esta sección mostraremos la corrección de un compilador de un lenguaje
+de expresiones naturales sencillo, a un lenguaje de máquina, que manipula un
+stack.
+
+El lenguaje fuente tiene la siguiente sintaxis:
+
+\begin{quote}
+$ e  ::=  \;\; n  \;\; || \;\;  v \;\; || \;\; e_1 ⊕ e_2 $
+\end{quote}
+
+\noindent donde $n$ es una constante natural y $v$ una variable.
+
+La semántica de este lenguaje es la esperada, obteniendo un valor natural a partir
+de un estado de asignación de valores a las variables.
+
+\medskip
+
+El lenguaje target tiene la siguiente sintaxis:
+
+\begin{quote}
+$ c  ::=  \;\; push\,n  \;\; || \;\; load\, v \;\; || \;\; c_1 ; c_2 \;\; || \;\; add $
+\end{quote}
+
+\noindent donde $n$ es una constante natural y $v$ una variable.
+
+Informalmente, la ejecución de un código del lenguaje target modificará una pila de elementos
+naturales y un estado de asignación de valores a las variables.
+$push\,n$ pone en el tope de la pila el valor $n$; $load\,v$ pone en el tope de la pila el valor
+de la variable $v$ en el estado; $c_1 ; c_2$ ejecuta $c_1$ y luego $c_2$ a partir del stack resultante;
+y por último $add$ a partir de una pila que tiene al menos dos elementos en el tope, los quita de la pila
+y pone la el resultado de sumarlos.
+
+Podemos definir la sintaxis de ambos lenguajes a partir de dos signaturas |Σₑ| y |Σₘ|,
+obteniendo las respectivas álgebras de términos:
+
+\begin{spec}
+data Sortsₑ : Sorts where
+  ExprN : Sortsₑ
+
+data Funcsₑ : Funcs Sortsₑ where
+  valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
+  plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
+  varN  : (v : Var) → Funcsₑ ([] , ExprN)
+
+
+Σₑ : Signature
+Σₑ = record  { sorts = Sortsₑ
+             ; funcs = Funcsₑ
+             }
+
+ExprAlg : Algebra Σₑ
+ExprAlg = ∣T∣ Σₑ
+
+\end{spec}
+
+
+\begin{spec}
+data Sortsₘ : Sorts where
+  Codeₛ : Sortsₘ
+
+data Funcsₘ : Funcs Sortsₘ where
+  pushₘ  : (n : ℕ) → Funcsₘ ([] , Codeₛ)
+  loadₘ  : (v : Var) → Funcsₘ ([] , Codeₛ)
+  addₘ   : Funcsₘ ([] , Codeₛ)
+  seqₘ   : Funcsₘ (Codeₛ ∷ Codeₛ ∷ [] , Codeₛ)
+
+Σₘ : Signature
+Σₘ = record  { sorts = Sortsₘ
+             ; funcs = Funcsₘ
+             }
+
+CodeAlg : Algebra Σₘ
+CodeAlg = ∣T∣ Σₘ
+\end{spec}
+
+Las semánticas de ambos lenguajes las definimos a partir de álgebras
+de las signaturas, obteniendo un homomorfismo desde el álgebra de términos:
+
+\begin{spec}
+State : Set
+State = Var → ℕ
+
+iSortsₑ : ISorts Σₑ
+iSortsₑ ExprN = State →-setoid ℕ
+
+if : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
+                   VecH Sortsₑ (Carrier ∘ iSortsₑ) ar →
+                   Carrier (iSortsₑ s)
+if (valN n) ⟨⟩           = λ σ → n
+if plus (v₀ ▹ v₁ ▹ ⟨⟩) σ = v₀ σ + v₁ σ
+if (varN x) ⟨⟩           = λ σ → σ x
+
+iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
+iFuncsₑ f = record  { _⟨$⟩_ = if f
+                    ; cong = ... }
+
+Semₑ : Algebra Σₑ
+Semₑ = iSortsₑ ∥ iFuncsₑ
+
+homSem : Homomorphism ExprAlg Semₑ
+homSem = ∣T∣ₕ Semₑ
+\end{spec}
+
+\begin{spec}
+data Stack : Set where
+  ε   : Stack
+  _▸_ : ℕ → Stack → Stack
+
+Conf : Set
+Conf = Stack × State
+
+
+iSortsₘ : ISorts Σₘ
+iSortsₘ Codeₛ = Conf →-setoid Maybe Conf
+
+
+ifₘ : ∀ {ar} {s} →  (f : funcs Σₘ (ar , s)) →
+                    VecH Sortsₘ (Carrier ∘ iSortsₘ) ar →
+                    Carrier (iSortsₘ s)
+ifₘ (pushₘ n) ⟨⟩  = λ {(s , σ) → just (n ▸ s , σ) }
+ifₘ (loadₘ v) ⟨⟩  = λ {(s , σ) → just (σ v ▸ s , σ)}
+ifₘ addₘ ⟨⟩       = λ {  (n₀ ▸ n₁ ▸ s , σ) → just ((n₀ + n₁ ▸ s) , σ) ;
+                         (_ , σ) → nothing
+               }
+ifₘ seqₘ (v₀ ▹ v₁ ▹ ⟨⟩) = λ sσ → v₀ sσ >>= v₁
+
+
+iFuncsₘ : ∀ {ty} → (f : funcs Σₘ ty) → IFuncs Σₘ ty iSortsₘ
+iFuncsₘ f = record  { _⟨$⟩_ = ifₘ f
+                    ; cong = ... }
+
+Exec : Algebra Σₘ
+Exec = iSortsₘ ∥ iFuncsₘ
+
+hexec : Homomorphism CodeAlg Exec
+hexec = ∣T∣ₕ Exec
+\end{spec}
+
+
+Tenemos entonces el siguiente diagrama:
+
+DIAGRAMA
+
+Para poder traducir un lenguaje a otro, necesitamos llevar
+|CodeAlg| y |Exec| a la signatura |Σₑ|. Para ello definimos
+una transformación.
+
+\begin{spec}
+sₑ↝sₘ : sorts Σₑ → sorts Σₘ
+sₑ↝sₘ ExprN = Codeₛ
+
+fₑ↝fₘ : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) →
+                      ΣExpr Σₘ (map sₑ↝sₘ ar) (sₑ↝sₘ s)
+fₑ↝fₘ (valN n) = pushₘ n ∣$∣ ⟨⟩
+fₑ↝fₘ plus     = seqₘ ∣$∣ (# (suc zero) ▹ (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹ ⟨⟩)
+fₑ↝fₘ (varN v) = loadₘ v ∣$∣ ⟨⟩
+
+ΣₑtoΣₘ : Σₑ ↝ Σₘ
+ΣₑtoΣₘ = record { ↝ₛ = sₑ↝sₘ
+                ; ↝f = fₑ↝fₘ
+                }
+\end{spec}
+(explicar un poco más la transformación, con un ejemplo informal antes)
+
+Podemos entonces llevar las álgebras |CodeAlg| y |Exec| a |Σₑ|:
+
+\begin{spec}
+CodeAlgₑ : Algebra Σₑ
+CodeAlgₑ = ΣₑtoΣₘ 〈 CodeAlg 〉
+
+-- Semántica de bajo nivel como álgebra de Σₑ
+Execₑ : Algebra Σₑ
+Execₑ = ΣₑtoΣₘ 〈 Exec 〉
+\end{spec}
+
+Y tenemos por inicialidad un homomorfismo entre |ExprAlg| y
+|CodeAlgₑ|:
+
+\begin{spec}
+homc : Homomorphism ExprAlg CodeAlgₑ
+homc = ∣T∣ₕ CodeAlgₑ
+\end{spec}
+
+El diagrama ahora puede verse así:
+
+DIAGRAMA
+
+
+
 
 \bibliographystyle{abbrvnat}
 \begin{flushleft}

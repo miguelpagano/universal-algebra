@@ -162,7 +162,13 @@ tradImpl p q = orₜ ∣$∣ ((negₜ ∣$∣ (p ▹ ⟨⟩)) ▹ (q ▹ ⟨⟩)
 tradAnd : ΣExpr Σₜ (bool ∷ [ bool ]) bool →
            ΣExpr Σₜ (bool ∷ [ bool ]) bool →
            ΣExpr Σₜ (bool ∷ [ bool ]) bool
-tradAnd p q = orₜ ∣$∣ ((negₜ ∣$∣ (p ▹ ⟨⟩)) ▹ ((negₜ ∣$∣ (q ▹ ⟨⟩)) ▹ ⟨⟩))
+tradAnd p q = negₜ ∣$∣ (orₜ ∣$∣ ((negₜ ∣$∣ (p ▹ ⟨⟩)) ▹ ((negₜ ∣$∣ (q ▹ ⟨⟩)) ▹ ⟨⟩)) ▹ ⟨⟩)
+
+deMorgan : ∀ b b' → b ∧ b' ≡ not (not b ∨ not b')
+deMorgan true true = _≡_.refl
+deMorgan true false = _≡_.refl
+deMorgan false true = _≡_.refl
+deMorgan false false = _≡_.refl
 
 fₛ↝fₜ : ∀ {ar} {s} → (f : funcs Σₛ (ar , s)) →
                       ΣExpr Σₜ (map sₛ↝sₜ ar) (sₛ↝sₜ s)
@@ -195,8 +201,8 @@ condEnc→ (varₛ v) ⟨⟩ = λ x → PropEq.refl
 condEnc→ trueₛ ⟨⟩ = λ x → PropEq.refl
 condEnc→ falseₛ ⟨⟩ = λ x → PropEq.refl
 condEnc→ impl (v ▹ v₁ ▹ ⟨⟩) = λ σ → PropEq.refl
-condEnc→ equiv (v ▹ v₁ ▹ ⟨⟩) = λ x → {!!}
-condEnc→ andₛ (v ▹ v₁ ▹ as) = λ σ → {!!}
+condEnc→ equiv (v ▹ v₁ ▹ ⟨⟩) = λ x → deMorgan (not (v x) ∨ v₁ x) (not (v₁ x) ∨ v x)
+condEnc→ andₛ (v ▹ v₁ ▹ ⟨⟩) x = deMorgan (v x) (v₁ x)
 condEnc→ orₛ (v ▹ v₁ ▹ ⟨⟩) = λ _ → PropEq.refl
 condEnc→ negₛ (v ▹ ⟨⟩) = λ x → PropEq.refl
 

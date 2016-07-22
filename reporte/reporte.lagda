@@ -538,53 +538,76 @@ uni h₁ h₂ s (term {ar} f ts) ._ refl =
 
 \section{Transformación de álgebras}
 
-Para traducir expresiones de un lenguaje definido por la signatura
-$\Sigma_s$ en otro definido por $\Sigma_t$ debemos llevar los sorts
-de la $\Sigma_s$ en sorts de $\Sigma_t$, y las operaciones de $\Sigma_s$
-en expresiones resultantes de aplicar operaciones de $\Sigma_t$.
+Con el desarrollo algebraico presentado en la sección anterior se puede
+probar la corrección de un traductor de lenguajes. Si podemos ver al
+lenguaje target y su semántica como álgebras del lenguaje fuente, la prueba
+de corrección se obtiene por inicialidad del álgebra de términos.
 
-Consideremos como ejemplo un lenguaje con constantes naturales y la suma:
+\subsection*{Traducción de lenguajes}
+
+Un lenguaje puede definirse a partir de una signatura. Los sorts se corresponden
+con las distintas categorías sintácticas del lenguaje, y los símbolos de función
+con constructores (las constantes son símbolos de función con aridad vacía).
+Los términos del lenguaje para un sort $S$ serán los elementos del carrier de sort
+$S$ en el álgebra de términos.
+
+El problema de traducir expresiones de un lenguaje $L_s$ en expresiones de un lenguaje
+$L_t$ puede verse desde un enfoque algebraico. La sintaxis de los lenguajes está
+definida por las signaturas y sus correspondientes álgebras de términos. La semántica
+queda definida por álgebras junto con los homomorfismos dados por inicialidad del álgebra
+de términos:
+
+\begin{diagram}
+  T_s     &     &   &  &    &T_t\\
+  \dTo_{hSem_s} &     &   &  &   &\dTo_{hSem_t}\\
+  Sem_s        &     &   &  &    &Sem_t\\
+\end{diagram}
+
+A una función que lleve expresiones del lenguaje fuente al target la llamamos
+traductor.
+Si podemos transformar las álgebras $T_t$ y $Sem_t$ en álgebras de la signatura $\Sigma_s$
+(es decir, interpretar los sorts y símbolos de función de $\Sigma_s$ en los carriers de dichas
+álgebras), al homomorfismo $hSem_t$ como un homomorfismo entre estas álgebras transformadas (digamos
+$\theta(T_t)$, $\theta(Sem_t)$ y $\theta(hSem_t)$) y si damos un homomorfismo entre $Sem_s$
+y $\theta(Sem_t)$, el traductor quedará definido por el único homomorfismo que hay entre $T_s$ y
+$\theta(T_t)$, y su corrección por la conmutación del diagrama resultante, gracias a la inicialidad
+de $T_s$:
+
+\begin{diagram}
+  T_s     &\rTo^{trad}  &\theta(T_t)\\
+  \dTo_{hSem_s} &          &\dTo_{\theta(hSem_t)}\\
+  Sem_s        &\rTo^{h}  &\theta(Sem_t)\\
+\end{diagram}
+
+Podemos definir cada álgebra transformada, interpretando los sorts y los símbolos de función
+en los carriers correspondientes. Sin embargo este trabajo sería repetitivo y deberíamos hacerlo
+para cada álgebra de la signatura $\Sigma_t$ que querramos transformar. También deberíamos redefinir
+los homomorfismos, probando que se preserva la condición al cambiar de signatura.
+
+En lugar de eso, definimos un (meta)lenguaje para traducir cualquier álgebra de una signatura en otra.
+
+\paragraph{Traducción de signaturas}
+
+Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, para traducir álgebras de $\Sigma_t$ en $\Sigma_s$, definimos
+una \textit{transformación} de $\Sigma_s$ a $\Sigma_t$. Ésta consiste en una función que lleve sorts
+de $\Sigma_s$ en $\Sigma_t$ y \textit{reglas} para traducir los símbolos de función.
 
 \begin{spec}
-data Sortsₑ : Sorts where
-  ExprN : Sortsₑ
-
-data Funcsₑ : Funcs Sortsₑ where
-  valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
-  plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
-
-Σₑ : Signature
-Σₑ = record  { sorts = Sortsₑ
-             ; funcs = Funcsₑ
-             }
+sorts↝ : (Σₛ Σₜ : Signature) → Set
+sorts↝ = sorts Σₛ → sorts Σₜ
 \end{spec}
 
-Y consideremos un lenguaje de bajo nivel cuya ejecución manipula una pila:
+\noindent La transformación de sorts será una función entre los sorts de las signaturas.
 
-\begin{spec}
-data Sortsₘ : Sorts where
-  Codeₛ : Sortsₘ
+Si tenemos un símbolo de función |f| en |Σₛ| con tipo |([sᵗ₁,...,sᵗₙ] , sᵗ)|, daremos una regla
+que permita interpretar al símbolo |f| en un álgebra |A| definida para la signatura |Σₜ|.
+La interpretación de |f| es una función que va de un vector |⟨v₁,...,vₙ⟩|, donde cada |vᵢ| pertenece
+a la interpretación en |A| del sort |sorts↝ sᵗᵢ|, a un elemento en la interpretación en |A| del sort
+|sorts↝ sᵗ|.
+Podemos dar una regla que diga cómo definir esta interpretación para cualquier |Σₜ|-álgebra. Al símbolo
+|f| lo transformamos en una expresión consistente de combinar símbolos de función de |Σₜ| de manera que respeten
+el tipo de |f|.
 
-data Funcsₘ : Funcs Sortsₘ where
-  pushₘ : (n : ℕ) → Funcsₘ ([] , Codeₛ)
-  addₘ  : Funcsₘ ([] , Codeₛ)
-  seqₘ   : Funcsₘ (Codeₛ ∷ Codeₛ ∷ [] , Codeₛ)
-
-Σₘ : Signature
-Σₘ = record  { sorts = Sortsₘ
-             ; funcs = Funcsₘ
-             }
-\end{spec}
-
-Al sort |ExprN| lo llevamos al sort |Codeₛ|. Y podemos dar
-reglas que indiquen cómo traducir un término de |Σₑ| en uno de |Σ |.
-Si tenemos un término |valN| $n$, donde $n$ es algún natural,
-la traducimos en |pushₘ| $n$. Y si tenemos un |plus| $t_1$ $t_2$,
-donde $t_1$ y $t_2$ son términos de |Σₑ|, lo podemos traducir a
-|seqₘ| $t_1'$ (|seqₘ| $t_2'$ |add|), donde $t_1'$ y $t_2'$ son las traducciones
-de $t_1$ y $t_2$ respectivamente.
-
-(COMPLETAR)
 
 
 \section{Corrección de un compilador de expresiones}
@@ -688,8 +711,8 @@ iFuncsₑ f = record  { _⟨$⟩_ = if f
 Semₑ : Algebra Σₑ
 Semₑ = iSortsₑ ∥ iFuncsₑ
 
-homSem : Homomorphism ExprAlg Semₑ
-homSem = ∣T∣ₕ Semₑ
+hSem : Homomorphism ExprAlg Semₑ
+hSem = ∣T∣ₕ Semₑ
 \end{spec}
 
 \begin{spec}
@@ -730,7 +753,12 @@ hexec = ∣T∣ₕ Exec
 
 Tenemos entonces el siguiente diagrama:
 
-DIAGRAMA
+\begin{diagram}
+  |ExprAlg|     &     &   &  &    &|CodeAlg|\\
+  \dTo_{|hSem|} &     &   &  &   &\dTo_{|hexec|}\\
+  |Semₑ|        &     &   &  &    &|Exec|\\
+\end{diagram}
+
 
 Para poder traducir un lenguaje a otro, necesitamos llevar
 |CodeAlg| y |Exec| a la signatura |Σₑ|. Para ello definimos
@@ -759,12 +787,11 @@ Podemos entonces llevar las álgebras |CodeAlg| y |Exec| a |Σₑ|:
 CodeAlgₑ : Algebra Σₑ
 CodeAlgₑ = ΣₑtoΣₘ 〈 CodeAlg 〉
 
--- Semántica de bajo nivel como álgebra de Σₑ
 Execₑ : Algebra Σₑ
 Execₑ = ΣₑtoΣₘ 〈 Exec 〉
 \end{spec}
 
-Y tenemos por inicialidad un homomorfismo entre |ExprAlg| y
+Tenemos por inicialidad un homomorfismo entre |ExprAlg| y
 |CodeAlgₑ|:
 
 \begin{spec}
@@ -772,12 +799,98 @@ homc : Homomorphism ExprAlg CodeAlgₑ
 homc = ∣T∣ₕ CodeAlgₑ
 \end{spec}
 
+\noindent y podemos llevar el homomorfismo |hexec| a la signatura
+|Σₑ|:
+
+\begin{spec}
+hexecₑ : Homomorphism CodeAlgₑ Execₑ
+hexecₑ = ΣₑtoΣₘ 〈 hexec 〉ₕ
+\end{spec}
+
 El diagrama ahora puede verse así:
 
-DIAGRAMA
+\begin{diagram}
+  |ExprAlg|     &\rTo^{|homc|}  &|CodeAlgₑ|\\
+  \dTo_{|hSem|} &             &\dTo_{|hexecₑ|}\\
+  |Semₑ|        &              &|Execₑ|\\
+\end{diagram}
+
+Para completar el diagrama necesitamos definir un homomorfismo entre
+|Semₑ| y |Execₑ| (Jansen dice que debería ser al revés, pero es bastante
+más complicado. VER ESTO):
+
+\begin{spec}
+Sem→Execₑ : Semₑ ⟿ Execₑ
+Sem→Execₑ ExprN =
+         record  { _⟨$⟩_ = λ {fₑ (s , σ) → just (fₑ σ ▸ s , σ)}
+                 ; cong =  λ { {f₀} {f₁} f₀≈f₁ (s , σ) →
+                           cong (λ n → just (n ▸ s , σ)) (f₀≈f₁ σ) }
+                 }
 
 
 
+condhₛₑₘ : ∀ {ty}  (f : funcs Σₑ ty) →
+                   homCond Semₑ Execₑ Sem→Execₑ f
+condhₛₑₘ (valN n) ⟨⟩          = λ _ → refl
+condhₛₑₘ plus (f₀ ▹ f₁ ▹ ⟨⟩)  = λ _ → refl
+condhₛₑₘ (varN v) ⟨⟩          = λ _ → refl
+
+hₛₑₘ : Homomorphism Semₑ Execₑ
+hₛₑₘ = record  { ′_′ = Sem→Execₑ
+               ; cond = condhₛₑₘ }
+\end{spec}
+
+Con este homomorfismo tenemos que el siguiente diagrama conmuta:
+
+\begin{diagram}
+  |ExprAlg|     &\rTo^{|homc|}  &|CodeAlgₑ|\\
+  \dTo_{|homSem|} &             &\dTo_{|hexecₑ|}\\
+  |Semₑ|        &\rTo^{|hₛₑₘ|}  &|Execₑ|\\
+\end{diagram}
+
+Veamos entonces cómo podemos obtener la prueba de corrección del compilador
+a partir del enfoque algebraico.
+
+El lenguaje de expresiones está definido a partir del álgebra de términos
+|ExprAlg|:
+
+\begin{spec}
+Expr : Set
+Expr = Carrier (ExprAlg ⟦ ExprN ⟧ₛ)
+\end{spec}
+
+La función semántica está definida por el homomorfismo |hSem|, y podemos dar una sintaxis
+más sencilla:
+
+\begin{spec}
+⟦_⟧_ : Expr → State → ℕ
+⟦ e ⟧ σ = (′ hSem ′ ExprN ⟨$⟩ e) σ
+\end{spec}
+
+El resultado de compilar expresiones serán los elementos del álgebra |CodeAlgₑ|:
+
+\begin{spec}
+Code : Set
+Code = Carrier (CodeAlgₑ ⟦ ExprN ⟧ₛ)
+\end{spec}
+
+Podemos extraer el compilador a partir del homomofirmos |homc|:
+
+\begin{spec}
+compₑ : Expr → Code
+compₑ e = ′ homc ′ ExprN ⟨$⟩ e 
+\end{spec}
+
+Finalmente, la corrección del compilador se extrae del desarrollo presentado:
+
+\begin{spec}
+correct : ∀  (e : Expr) → (σ : State) → 
+             ⟪ compₑ e ⟫ (ε , σ) ≡ just ((⟦ e ⟧ σ) ▸ ε , σ)
+correct e σ = (elim≈ₕ unic ExprN e e refl) (ε , σ)
+  where  unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
+         unic = unique (∣T∣init Σₑ) Execₑ  (hexecₑ ∘ₕ homc)
+                                           (hₛₑₘ ∘ₕ homSem)
+\end{spec}
 
 \bibliographystyle{abbrvnat}
 \begin{flushleft}

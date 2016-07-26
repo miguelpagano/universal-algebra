@@ -539,11 +539,7 @@ uni h₁ h₂ s (term {ar} f ts) ._ refl =
 \section{Transformación de álgebras}
 
 Con el desarrollo algebraico presentado en la sección anterior se puede
-probar la corrección de un traductor de lenguajes. Si podemos ver al
-lenguaje target y su semántica como álgebras del lenguaje fuente, la prueba
-de corrección se obtiene por inicialidad del álgebra de términos.
-
-\subsection*{Traducción de lenguajes}
+probar la corrección de un traductor de lenguajes.
 
 Un lenguaje puede definirse a partir de una signatura. Los sorts se corresponden
 con las distintas categorías sintácticas del lenguaje, y los símbolos de función
@@ -568,7 +564,7 @@ traductor.
 Si podemos transformar las álgebras $T_t$ y $Sem_t$ en álgebras de la signatura $\Sigma_s$
 (es decir, interpretar los sorts y símbolos de función de $\Sigma_s$ en los carriers de dichas
 álgebras), al homomorfismo $hSem_t$ como un homomorfismo entre estas álgebras transformadas (digamos
-$\theta(T_t)$, $\theta(Sem_t)$ y $\theta(hSem_t)$) y si damos un homomorfismo entre $Sem_s$
+$\theta(T_t)$, $\theta(Sem_t)$ y $\theta(hSem_t)$) y si damos un homomorfismo $h$ entre $Sem_s$
 y $\theta(Sem_t)$, el traductor quedará definido por el único homomorfismo que hay entre $T_s$ y
 $\theta(T_t)$, y su corrección por la conmutación del diagrama resultante, gracias a la inicialidad
 de $T_s$:
@@ -584,12 +580,12 @@ en los carriers correspondientes. Sin embargo este trabajo sería repetitivo y d
 para cada álgebra de la signatura $\Sigma_t$ que querramos transformar. También deberíamos redefinir
 los homomorfismos, probando que se preserva la condición al cambiar de signatura.
 
-En lugar de eso, definimos un (meta)lenguaje para traducir cualquier álgebra de una signatura en otra.
+En lugar de hacer eso, definiremos un (meta)lenguaje para traducir cualquier álgebra de una signatura en otra.
 
-\paragraph{Traducción de signaturas}
+\subsection*{Traducción de signaturas}
 
-Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, para traducir álgebras de $\Sigma_t$ en $\Sigma_s$, definimos
-una \textit{transformación} de $\Sigma_s$ a $\Sigma_t$. Ésta consiste en una función que lleve sorts
+Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, para llevar álgebras de $\Sigma_t$ en $\Sigma_s$, definimos
+una \textit{traducción} de $\Sigma_s$ a $\Sigma_t$. Ésta consiste en una función que lleve sorts
 de $\Sigma_s$ en $\Sigma_t$ y \textit{reglas} para traducir los símbolos de función.
 
 \begin{spec}
@@ -597,16 +593,191 @@ sorts↝ : (Σₛ Σₜ : Signature) → Set
 sorts↝ = sorts Σₛ → sorts Σₜ
 \end{spec}
 
-\noindent La transformación de sorts será una función entre los sorts de las signaturas.
+\noindent La traducción de sorts será una función entre los sorts de las signaturas.
 
-Si tenemos un símbolo de función |f| en |Σₛ| con tipo |([sᵗ₁,...,sᵗₙ] , sᵗ)|, daremos una regla
+Sea |ts : sorts↝|, si tenemos un símbolo de función |f| en |Σₛ| con tipo |([sˢ₁,...,sˢₙ] , s)|, daremos una regla
 que permita interpretar al símbolo |f| en un álgebra |A| definida para la signatura |Σₜ|.
 La interpretación de |f| es una función que va de un vector |⟨v₁,...,vₙ⟩|, donde cada |vᵢ| pertenece
-a la interpretación en |A| del sort |sorts↝ sᵗᵢ|, a un elemento en la interpretación en |A| del sort
-|sorts↝ sᵗ|.
+a la interpretación en |A| del sort |(ts sˢᵢ)|, a un elemento en la interpretación en |A| del sort
+|(ts s)|.
 Podemos dar una regla que diga cómo definir esta interpretación para cualquier |Σₜ|-álgebra. Al símbolo
-|f| lo transformamos en una expresión consistente de combinar símbolos de función de |Σₜ| de manera que respeten
-el tipo de |f|.
+|f| lo traducimos a una expresión consistente de combinar símbolos de función de |Σₜ| de manera que respeten
+el tipo de |f|. En esta expresión pueden ocurrir referencias a los parámetros de la interpretación de la función
+o aplicación de símbolos de función en la signatura target a un vector de expresiones, donde también podrán
+ocurrir referencias a parámetros.
+Damos una definición recursiva para estas expresiones, que llamamos |ΣExpr|:
+
+\begin{spec}
+data ΣExpr (Σ : Signature) (ar : Arity Σ) : (sorts Σ) → Set where
+  #      : (n : Fin (length ar)) → ΣExpr Σ ar (ar ‼ n)
+  _∣$∣_   : ∀ {ar'} {s} → (f : funcs Σ (ar' , s)) →
+             (es : VecH (sorts Σ) (ΣExpr Σ ar) ar') → ΣExpr Σ ar s
+\end{spec}
+
+Un elemento |e : ΣExpr Σ ar s| será una expresión en la cual pueden ocurrir
+referencias a parámetros correspondiéndose con la aridad |ar| y el sort resultante
+es |s|. La expresión |e| puede ser una referencia al parámetro |i|-ésimo (|# i|), en cuyo
+caso |s| será igual a |(ar ‼ i)|. O puede ser la aplicación de un símbolo de función con alguna aridad
+|ar'| y sort |s|, aplicado a un vector de |ΣExpr|.
+
+Un ejemplo de |ΣExpr| podría ser el siguiente:
+
+\medskip
+\noindent Sean
+\begin{spec}
+Σ : Signature
+
+s₁ s₂ s₃ s : sorts Σ
+
+ar = s₁ ∷ s₂ ∷ [ s₃ ]
+
+ar' = s₂
+
+g : funcs Σ (ar' , s)
+\end{spec}
+
+\noindent Podemos definir:
+
+\begin{spec}
+e : ΣExpr Σ ar s
+e = g ∣$∣ (# (suc zero))
+\end{spec}
+
+\noindent La expresión |e| representa una regla para definir una interpretación,
+la cual consistirá de aplicar la interpretación de la operación |g| al segundo
+argumento. Observemos que la única forma posible de escribir estas reglas es con
+los tipos correctos.
+
+Definamos entonces la traducción de signaturas:
+
+\begin{spec}
+record _↝_ (Σₛ : Signature) (Σₜ : Signature) : Set where
+  field
+    ↝ₛ  : sorts Σₛ → sorts Σₜ
+    ↝f : ∀ {ar} {s} → (f : funcs Σₛ (ar , s)) →
+                        ΣExpr Σₜ (map ↝ₛ ar) (↝ₛ s)
+\end{spec}
+
+\noindent Para traducir una signatura debemos definir una traducción de sorts |↝ₛ| y
+una traducción de símbolos de función, que consiste en asignar para cada símbolo |f| de
+la signatura |Σₛ| con tipo |(ar , s)|, una |ΣExpr| de |Σₜ| donde cada sort es traducido con
+la función |↝ₛ|.
+
+\paragraph{Ejemplo}
+
+Veamos un ejemplo de traducción, donde la signatura source corresponde a la lógica proposicional
+con los conectivos ``conjunción'' y ``negación'', la constante ``True'' y variables proposicionales;
+y la signatura target corresponde a la lógica proposicional con
+los conectivos ``disyunción'' y ``negación'', la constante ``False'' y las variables
+proposicionales.
+
+
+\begin{spec}
+data Sₛ : Sorts where
+  bool : Sₛ
+
+data Fₛ : Funcs Sₛ where
+  varₛ   : (v : Var) → Fₛ ([] , bool)
+  trueₛ  : Fₛ ([] , bool)
+  andₛ   : Fₛ (bool ∷ [ bool ] , bool)
+  negₛ   : Fₛ ([ bool ] , bool)
+
+Σₛ : Signature
+Σₛ = record { sorts = Sₛ ; funcs = Fₛ }
+\end{spec}
+
+\begin{spec}
+Sₜ : Sorts
+Sₜ = Sₛ
+
+data Fₜ : Funcs Sₜ where
+  varₜ   : (v : Var) → Fₜ ([] , bool)
+  falseₜ : Fₜ ([] , bool)
+  orₜ    : Fₜ (bool ∷ [ bool ] , bool)
+  negₜ   : Fₜ ([ bool ] , bool)
+
+Σₜ : Signature
+Σₜ = record { sorts = Sₜ ; funcs = Fₜ }
+\end{spec}
+
+Para dar la traducción tenemos que dar una función de los sorts de |Σₛ| en
+los sorts de |Σₜ|. Como en este caso coinciden, es simplemente la identidad:
+
+\begin{spec}
+sₛ↝sₜ : sorts Σₛ → sorts Σₜ
+sₛ↝sₜ = id
+\end{spec}
+
+Y ahora damos la traducción de los símbolos de función:
+
+\begin{spec}
+fₛ↝fₜ : ∀ {ar} {s} →  (f : funcs Σₛ (ar , s)) →
+                      ΣExpr Σₜ (map sₛ↝sₜ ar) (sₛ↝sₜ s)
+fₛ↝fₜ (varₛ v)  = varₜ v ∣$∣ ⟨⟩
+fₛ↝fₜ trueₛ     = negₜ ∣$∣ ((falseₜ ∣$∣ ⟨⟩) ▹ ⟨⟩)
+fₛ↝fₜ negₛ      = negₜ ∣$∣ ((# zero) ▹ ⟨⟩)
+fₛ↝fₜ andₛ      = negₜ ∣$∣  (orₜ ∣$∣  ((negₜ ∣$∣ ((# zero) ▹ ⟨⟩)) ▹
+                                      ((negₜ ∣$∣ ((# (suc zero)) ▹ ⟨⟩))
+                                      ▹ ⟨⟩))
+                            ▹ ⟨⟩)
+\end{spec}
+
+Finalmente la traducción de las signaturas será:
+
+\begin{spec}
+ΣₛtoΣₜ : Σₛ ↝ Σₜ
+ΣₛtoΣₜ = record  { ↝ₛ = sₛ↝sₜ
+                 ; ↝f = fₛ↝fₜ
+                 }
+\end{spec}
+
+\subsection*{Transformación de álgebras}
+
+Teniendo una traducción de una signatura |Σₛ| a otra |Σₜ|, podemos definir
+una |Σₛ|-álgebra a partir de una |Σₜ|-álgebra.
+
+Sean |sˢ₁,...,sˢₙ| y |fˢ₁,...,fˢₖ| los sorts y símbolos de función de |Σₛ|;
+|sᵗ₁,...,sᵗₘ| y |fᵗ₁,...,fᵗⱼ| los sorts y símbolos de función de |Σₜ|;
+y |t↝ : Σₛ ↝ Σₜ|. A partir de una |Σₜ|-álgebra |A| podemos definir una
+|Σₛ|-álgebra de la siguiente manera:
+
+\begin{itemize}
+  \item Interpretamos a cada sort |sˢᵢ| con |a ⟦ ↝ₛ t↝ sˢᵢ ⟧|.
+  \item Para cada símbolo de función |fˢᵢ| con aridad |arᵢ|, definimos la interpretación de la siguiente manera:
+    \begin{itemize}
+    \item Si |↝f t↝ fˢᵢ| es |# h|, con |h : Fin (length arᵢ)| definiremos la interpretación
+          \begin{spec}
+            ifˢᵢ vs = vs ‼ h
+          \end{spec}
+    \item Si |↝f t↝ fˢᵢ| es |g ∣$∣ ⟨ e₁ , ... , eₚ ⟩ |, donde |g : funcs Σₜ ar' s'| y |e₁ , ... , eₚ| son
+          |ΣExpr|:
+          \begin{spec}
+            ifˢᵢ vs = A ⟦ g ⟧ ⟨$⟩ ies
+          \end{spec}
+
+          donde |ivs| es el vector resultante de interpretar cada expresión |e₁,...,eₚ|, y posiblemente
+          ocurran elementos de |vs|.
+    \end{itemize}
+\end{itemize}
+
+Con estas ideas intuitivas podemos definir formalmente la transformación de álgebras. No mostraremos
+los detalles, pueden encontrarse en (CITA).
+
+\begin{spec}
+_〈_〉 : ∀  {Σ₀} {Σ₁} → (t : Σ₀ ↝ Σ₁) →
+            (a : Algebra Σ₁) → Algebra Σ₀
+t 〈 a 〉 =  (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥
+           (λ f → iFun↝ f (↝f t f) a)
+\end{spec}
+
+\noindent La definición de |iFun↝| formaliza la idea intuitiva explicada previamente.
+
+Tenemos entonces que a partir de una traducción |t : Σₛ ↝ Σₜ| y una |Σₜ|-álgebra A podemos
+obtener una |Σₛ|-álgebra, y esta es t 〈 A 〉.
+
+Podremos también transformar un homomorfismo |h| entre dos |Σₜ|-álgebras |A| y |A'| a un homomorfismo
+entre |t 〈 A 〉| y |t 〈 A' 〉|, cuya notación será |t 〈 h 〉ₕ|. Los detalles también se pueden ver en
+(CITA).
 
 
 

@@ -80,12 +80,12 @@ mutual
 
 
 {- Transformación de la interpretación de un símbolo de función -}
-interpFunTrans : ∀ {l₀ l₁} {Σ₀ Σ₁ : Signature} {ar : Arity Σ₀}
+iFun↝ : ∀ {l₀ l₁} {Σ₀ Σ₁ : Signature} {ar : Arity Σ₀}
                    {s : sorts Σ₀} {fₛ : sorts Σ₀ → sorts Σ₁} →
                    (f : funcs Σ₀ (ar , s)) → (e : ΣExpr Σ₁ (map fₛ ar) (fₛ s)) →
                    (a : Algebra {l₀} {l₁} Σ₁) → 
                    IFuncs Σ₀ (ar , s) (_⟦_⟧ₛ a ∘ fₛ)
-interpFunTrans {Σ₀ = Σ₀} {Σ₁} {ar} {s} {fₛ} f e a =
+iFun↝ {Σ₀ = Σ₀} {Σ₁} {ar} {s} {fₛ} f e a =
                    record { _⟨$⟩_ = λ vs → iΣExpr a
                                            (vecTransf fₛ (Carrier ∘ _⟦_⟧ₛ a) ar vs) e
                           ; cong = λ vs≈vs' → fTransCong e (∼vtransf fₛ vs≈vs') }
@@ -105,17 +105,11 @@ interpFunTrans {Σ₀ = Σ₀} {Σ₁} {ar} {s} {fₛ} f e a =
                                                  (≈mapvec ar' ws)
 
 
-funAlgTransf : ∀ {l₀ l₁} {Σ₀ Σ₁} {ty : ΣType Σ₀} (t : Σ₀ ↝ Σ₁) →
-                 (a : Algebra {l₀} {l₁} Σ₁) →
-                 (f : funcs Σ₀ ty) →
-                 IFuncs Σ₀ ty (_⟦_⟧ₛ a ∘ (↝ₛ t))
-funAlgTransf {Σ₀ = Σ₀} {Σ₁ = Σ₁} t a f = interpFunTrans {Σ₀ = Σ₀} f (↝f t f) a
-
-
 -- Transformación de un álgebra de Σ₁ en una de Σ₀
 _〈_〉 : ∀ {l₀} {l₁} {Σ₀} {Σ₁} → (t : Σ₀ ↝ Σ₁) →
             (a : Algebra {l₀} {l₁} Σ₁) → Algebra {l₀} {l₁} Σ₀
-t 〈 a 〉 = (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥ funAlgTransf t a
+_〈_〉 {Σ₀ = Σ₀} t a = (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥
+                     (λ f → iFun↝ {Σ₀ = Σ₀} f (↝f t f) a)
 
 
 

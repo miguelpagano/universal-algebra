@@ -16,6 +16,11 @@
 \DeclareUnicodeCharacter{9001}{\ensuremath{\langle}}
 \DeclareUnicodeCharacter{9002}{\ensuremath{\rangle}}
 \DeclareUnicodeCharacter{8348}{\ensuremath{_t}}
+\DeclareUnicodeCharacter{738}{\ensuremath{^s}}
 \DeclareUnicodeCharacter{7511}{\ensuremath{^t}}
 \DeclareUnicodeCharacter{8345}{\ensuremath{_n}}
 \DeclareUnicodeCharacter{7522}{\ensuremath{_i}}
+\DeclareUnicodeCharacter{8252}{\ensuremath{!!}}
+\DeclareUnicodeCharacter{8342}{\ensuremath{_k}}
+\DeclareUnicodeCharacter{11388}{\ensuremath{_j}}
+\DeclareUnicodeCharacter{8346}{\ensuremath{_p}}

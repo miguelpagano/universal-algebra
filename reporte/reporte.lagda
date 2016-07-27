@@ -9,8 +9,8 @@
 
 \begin{document}
 
-\title{Formalización de Álgebras Universales en Agda y su utilización
-       para la traducción correcta de lenguajes}
+\title{Formalización de un framework algebraico para
+       traducción correcta de lenguajes}
 
 \author{Emmanuel Gunther}
        
@@ -20,8 +20,8 @@
 
 En el presente trabajo presentamos una formalización en el lenguaje
 Agda \cite{agda} de Álgebras Universales Heterogéneas, definiendo
-los conceptos de signatura, álgebras, homomorfismo, inicialidad y ál-
-gebra de términos. Con estos conceptos formalizamos un framework
+los conceptos de signatura, álgebras, homomorfismo, inicialidad y álgebra
+de términos. Con estos conceptos formalizamos un framework
 para traducción de lenguajes de acuerdo al esquema que presenta Jansen
 \cite{jansen-98} y lo utilizamos para construir un compilador sencillo
 probando su corrección.
@@ -30,11 +30,11 @@ probando su corrección.
 
 \section{Introduction}
 
-Una manera de pensar la sintaxis y semántica de los lenguajes es mediante
-Álgebras Universales. La sintaxis de un lenguaje es el álgebra de términos $T$
-de una signatura $\Sigma$ y un álgebra $A$ de $\Sigma$ es un dominio
-semántico. La función semántica es el único homomorfismo que existe entre
-$T$ y $A$, que está dado por inicialidad del álgebra de términos.
+Una manera de definir sintaxis y semántica de lenguajes es mediante Álgebras
+Universales. La sintaxis de un lenguaje es el álgebra de términos $T$
+de una signatura $\Sigma$ y una semántica está definida por el único
+homomorfismo que existe entre $T$ y una $\Sigma$-álgebra $A$, dado
+por inicialidad de $T$, \cite{goguen-77}.
 
 Varios trabajos han explorado el enfoque algebraico para dar un framework
 general para la traducción de lenguajes de manera correcta, y en particular
@@ -44,23 +44,28 @@ diversos enfoques y se propone un marco general para la traducción de lenguajes
 En este trabajo formalizamos un enfoque similar al que se propone en \cite{jansen-98}.
 Se puede resumir con el siguiente diagrama:
 
-DIAGRAMA
-%% \begin{diagram}
-
-%% \end{diagram}
-
+\begin{diagram}
+  T_s     &\rTo^{trad}  &\theta(T_t)\\
+  \dTo_{hSem_s} &          &\dTo_{\theta(hSem_t)}\\
+  Sem_s        & \pile{\rTo^{Enc} \\ \lTo_{Dec}}  &\theta(Sem_t)\\
+\end{diagram}
 $T_s$ y $T_t$ son el álgebra de términos de dos signaturas $\Sigma_s$ y $\Sigma_t$
 respectivamente, y se corresponden con la sintaxis abstracta de los lenguajes fuente y
 target. La semántica de ambos lenguajes está definida mediante las álgebras $Sem_s$ y
 $Sem_t$, y los homomorfismos $hSem_s$ y $hSem_t$ dados por inicialidad. Un
 \textit{transformador de álgebras} $\delta$ permite llevar las álgebras $T_t$ y $Sem_t$
 a la signatura $\Sigma_s$ y el traductor $Tr$ es el homomorfismo dado por inicialidad
-de $T_s$. Por último un homomorfismo $Dec$ entre $\delta(Sem_t)$ y $Sem_s$ hace conmutar
-al diagrama obteniendo la corrección del traductor.
+de $T_s$. Por último un homomorfismo $Enc$ o $Dec$ entre $\delta(Sem_t)$ y $Sem_s$ hace conmutar
+al diagrama obteniendo la corrección del traductor \footnote{En \cite{jansen-98} se analiza
+  si la noción de un traductor correcto requiere de una función $Enc$ o $Dec$ concluyendo que esta
+  última es la correcta (a diferencia de lo que utiliza \cite{thatcher-79}), para el framework que
+  presentamos podremos definir cualquiera de las dos}.
 
-El concepto de \textit{transformador de álgebras} lo definiremos formalmente y se
-corresponde con lo que se denomina \textit{polynomial derivor} en \cite{jansen-98},
-o \textit{interpretación} en alguna literatura sobre álgebra universal (buscar referencia).
+El concepto de \textit{transformador de álgebras} lo definiremos formalmente, dando
+un (meta)-lenguaje para definir traducción de signaturas, mediante el cual puede
+transformarse automáticamente álgebras de la signatura target en la signatura source.
+
+\subsection*{Organización del texto}
 
 En la primera sección de este artículo formalizamos los conceptos de signatura, álgebra,
 homomorfismo, inicialidad y álgebra de términos, obteniendo
@@ -70,9 +75,9 @@ Venanzio Capretta en \cite{capretta-99}, con su formalización de álgebras univ
 Coq (\cite{coq}), utilizando setoides para los carrier de las álgebras; sin
 embargo presenta algunas diferencias de implementación, como el uso de vectores heterogéneos.
 
-En la segunda sección formalizamos el concepto de transformación de álge-
-bras, para llevar un álgebra de una signatura $\Sigma_1$ en una de la signatura
-$\Sigma_0$, y probamos que los homomorfismos se preservan.
+En la segunda sección formalizamos el concepto de transformación de álgebras,
+para llevar álgebras de la signatura target a la signatura source,
+y probamos que los homomorfismos se preservan.
 
 En la tercera sección damos un ejemplo de un compilador de un lenguaje
 de expresiones aritméticas y booleanas simple, en un lenguaje que manipula
@@ -85,11 +90,10 @@ una pila, y mostramos su corrección mediante el framework de traducción con
 
 Presentamos una formalización de Álgebra Universal en Agda.
 Se asume familiaridad con algún lenguaje con tipos dependientes de parte del lector. Para
-evitar complicaciones técnicas del lenguaje Agda en particular obviamos algunos
+evitar complicaciones técnicas del lenguaje en particular obviamos algunos
 detalles en las definiciones, facilitando su lectura. Por ejemplo algunos parámetros
 implícitos no son detallados en este texto. La librería completa de álgebras
-universales puede verse en UniversalAlgebra.agda (referencia al archivo cuando
-esté publicado).
+universales puede verse en \cite{univAlgebra}.
 
 \subsection*{Signatura}
 
@@ -125,7 +129,7 @@ $(w:[s_1,...,s_n] \rightarrow s)$ consistente de un nombre, una lista de sorts y
 Llamaremos \textit{aridad} a la lista de sorts $[s_1,...,s_n]$, \textit{target sort} al sort $s$ y
 $tipo$ al par $([s_1,...,s_n],s)$ \footnote{En la bibliografía sobre álgebras heterogéneas varía
   la noción de aridad. En el handbook se denomina aridad a lo que aquí llamamos tipo, y sorts argumento
-  a lo que aquí llamamos aridad.}
+  a lo que aquí llamamos aridad.}.
 
 Formalizamos el concepto de signatura en Agda definiendo un record con dos campos. |sorts| es cualquier
 tipo y |funcs| una familia indexada en los tipos de las operaciones:
@@ -152,15 +156,15 @@ open Signature
 
 \end{code}
 
-Una ventaja de tener definido de esta forma la signatura es que el mismo sis-
-tema de tipos de Agda nos permite definir propiedades sólo para las operaciones
+Una ventaja de tener definido de esta forma la signatura es que el mismo sistema
+de tipos de Agda nos permite definir propiedades sólo para las operaciones
 de determinada aridad, por ejemplo podríamos definir:
 
 \begin{spec}
   p : ∀ {Σ : Signature} {ty : ΣType Σ} → funcs Σ ty → P
 \end{spec}
 
-\noindent una propiedad que sólo está definida para las operaciones con tipo |ty|
+\noindent una propiedad que sólo está definida para las operaciones con tipo |ty|.
 En una implementación donde se define a las operaciones como una lista de tipos
 (como en \cite{capretta-99}) sería bastante más complicado definir una propiedad
 restringiendo el tipo de la operación. Notemos también que con esta definición
@@ -197,7 +201,7 @@ $w$ con tipo $[s_1,...,s_n],s$ una función total $w_A : A_{s_1} \times ... \tim
 Llamaremos \textit{interpretación} de $w$ a esta función.
 
 Para implementar los carriers de las álgebras utilizamos setoides.
-En teoría de tipos, un setoide es un tipo que tiene definido una relación de equivalencia:
+Un setoide es un tipo que tiene definido una relación de equivalencia sobre sus elementos:
 
 \begin{spec}
 record Setoid c ℓ : Set (suc (c ⊔ ℓ)) where
@@ -232,7 +236,7 @@ ISorts : ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → Set _
 ISorts {ℓ₁} {ℓ₂} Σ = (sorts Σ) → Setoid ℓ₁ ℓ₂
 \end{code}
 
-En una $\Sigma$-álgebra $A$ entonces, para un sort $s$ de $\Sigma$, su interpretación
+En una $\Sigma$-álgebra $A$, para un sort $s$ de $\Sigma$, su interpretación
 será un setoide. Para definir la interpretación de una operación utilizaremos
 \textit{vectores heterogéneos}.
 
@@ -262,7 +266,7 @@ El carrier de este setoide es el tipo de los vectores con índices en |I|, lista
 |is| y elementos en |Carrier (A i)|, donde cada |i| es un elemento de |is|.
 La relación de equivalencia es la extensión a vectores de la familia de relaciones |_≈_ ∘ A|.
 
-En |VecH.agda| está implementada la librería de vectores heterogéneos con estas definiciones
+En \cite{vecH} está implementada la librería de vectores heterogéneos con estas definiciones
 y más propiedades del tipo.
 
 Podemos entonces definir la interpretación de las operaciones. Dada una operación $f$ con tipo
@@ -307,12 +311,12 @@ Definamos primero la noción de \textit{función entre} $\Sigma$\textit{-álgebr
 dos $\Sigma$-álgebras $A$ y $B$, definimos la función entre ambas como una familia de funciones
 indexada en los sorts de $\Sigma$ entre los carriers:
 
-\begin{code}
-_⟿_ : ∀  {Σ : Signature} {ℓ₁} {ℓ₂} {ℓ₃} {ℓ₄} →
-         (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
+\begin{spec}
+_⟿_ : ∀  {Σ : Signature}  →
+         (A : Algebra Σ) → (A' : Algebra Σ) →
          Set _
 _⟿_ {Σ} A A' = (s : sorts Σ) → A ⟦ s ⟧ₛ ⟶ A' ⟦ s ⟧ₛ
-\end{code}
+\end{spec}
 
 Procedamos ahora a definir la condición de homomorfismo. Tenemos varias
 cosas que intervienen en la ecuación (1). Primero, dado un símbolo
@@ -334,7 +338,7 @@ es una aridad y |A| un álgebra), llamaremos a esta función |map⟿| (no daremo
 detalles).
 
 Podemos entonces formalizar la condición de homomorfismo |homCond|: Si
-|h : A ⟿ A'| y |f : funcs Σ (ar , s)|, para todo |as : idom ar A|, debe darse
+|h : A ⟿ A'| y |f : funcs Σ (ar , s)|, para todo |(as : idom ar A)|, debe darse
 la igualdad en el setoide correspondiente a la interpretación de |s| en |A'|, entre
 la aplicación de |h| al resultado de aplicar la interpretación de |f| en |A| al vector
 |as| y la aplicación de la interpretación de |f| en |A'| al resultado de mapear
@@ -443,7 +447,7 @@ de función |f| aplicado a un vector |vs| será el término |term f vs|:
 
 \begin{spec}
 ∣T∣ : (Σ : Signature) → Algebra Σ
-∣T∣ Σ = record  { _⟦_⟧ₛ = PE.setoid ∘ HU Σ
+∣T∣ Σ = record  { _⟦_⟧ₛ = setoid ∘ HU Σ
                 ; _⟦_⟧  = λ f → termFuns f
                 }
   where termFuns f = record  { _⟨$⟩_ = term f
@@ -564,7 +568,7 @@ traductor.
 Si podemos transformar las álgebras $T_t$ y $Sem_t$ en álgebras de la signatura $\Sigma_s$
 (es decir, interpretar los sorts y símbolos de función de $\Sigma_s$ en los carriers de dichas
 álgebras), al homomorfismo $hSem_t$ como un homomorfismo entre estas álgebras transformadas (digamos
-$\theta(T_t)$, $\theta(Sem_t)$ y $\theta(hSem_t)$) y si damos un homomorfismo $h$ entre $Sem_s$
+$\theta(T_t)$, $\theta(Sem_t)$ y $\theta(hSem_t)$) y si damos un homomorfismo $Enc$ o $Dec$ entre $Sem_s$
 y $\theta(Sem_t)$, el traductor quedará definido por el único homomorfismo que hay entre $T_s$ y
 $\theta(T_t)$, y su corrección por la conmutación del diagrama resultante, gracias a la inicialidad
 de $T_s$:
@@ -572,7 +576,7 @@ de $T_s$:
 \begin{diagram}
   T_s     &\rTo^{trad}  &\theta(T_t)\\
   \dTo_{hSem_s} &          &\dTo_{\theta(hSem_t)}\\
-  Sem_s        &\rTo^{h}  &\theta(Sem_t)\\
+  Sem_s        &\pile{\rTo^{Enc} \\ \lTo{Dec}}  &\theta(Sem_t)\\
 \end{diagram}
 
 Podemos definir cada álgebra transformada, interpretando los sorts y los símbolos de función
@@ -584,7 +588,7 @@ En lugar de hacer eso, definiremos un (meta)lenguaje para traducir cualquier ál
 
 \subsection*{Traducción de signaturas}
 
-Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, para llevar álgebras de $\Sigma_t$ en $\Sigma_s$, definimos
+Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, para llevar álgebras de $\Sigma_t$ en $\Sigma_s$ definimos
 una \textit{traducción} de $\Sigma_s$ a $\Sigma_t$. Ésta consiste en una función que lleve sorts
 de $\Sigma_s$ en $\Sigma_t$ y \textit{reglas} para traducir los símbolos de función.
 
@@ -738,30 +742,30 @@ una |Σₛ|-álgebra a partir de una |Σₜ|-álgebra.
 
 Sean |sˢ₁,...,sˢₙ| y |fˢ₁,...,fˢₖ| los sorts y símbolos de función de |Σₛ|;
 |sᵗ₁,...,sᵗₘ| y |fᵗ₁,...,fᵗⱼ| los sorts y símbolos de función de |Σₜ|;
-y |t↝ : Σₛ ↝ Σₜ|. A partir de una |Σₜ|-álgebra |A| podemos definir una
+y |t : Σₛ ↝ Σₜ|. A partir de una |Σₜ|-álgebra |A| podemos definir una
 |Σₛ|-álgebra de la siguiente manera:
 
 \begin{itemize}
-  \item Interpretamos a cada sort |sˢᵢ| con |a ⟦ ↝ₛ t↝ sˢᵢ ⟧|.
+  \item Interpretamos a cada sort |sˢᵢ| con |a ⟦ ↝ₛ t sˢᵢ ⟧|.
   \item Para cada símbolo de función |fˢᵢ| con aridad |arᵢ|, definimos la interpretación de la siguiente manera:
     \begin{itemize}
-    \item Si |↝f t↝ fˢᵢ| es |# h|, con |h : Fin (length arᵢ)| definiremos la interpretación
+    \item Si |↝f t fˢᵢ| es |# h|, con |h : Fin (length arᵢ)| definiremos la interpretación
           \begin{spec}
             ifˢᵢ vs = vs ‼ h
           \end{spec}
-    \item Si |↝f t↝ fˢᵢ| es |g ∣$∣ ⟨ e₁ , ... , eₚ ⟩ |, donde |g : funcs Σₜ ar' s'| y |e₁ , ... , eₚ| son
+    \item Si |↝f t fˢᵢ| es |g ∣$∣ ⟨ e₁ , ... , eₚ ⟩ |, donde |g : funcs Σₜ ar' s'| y |e₁ , ... , eₚ| son
           |ΣExpr|:
           \begin{spec}
             ifˢᵢ vs = A ⟦ g ⟧ ⟨$⟩ ies
           \end{spec}
 
-          donde |ivs| es el vector resultante de interpretar cada expresión |e₁,...,eₚ|, y posiblemente
+          donde |ies| es el vector resultante de interpretar cada expresión |e₁,...,eₚ|, y posiblemente
           ocurran elementos de |vs|.
     \end{itemize}
 \end{itemize}
 
 Con estas ideas intuitivas podemos definir formalmente la transformación de álgebras. No mostraremos
-los detalles, pueden encontrarse en (CITA).
+los detalles, pueden encontrarse en \cite{algTransf}.
 
 \begin{spec}
 _〈_〉 : ∀  {Σ₀} {Σ₁} → (t : Σ₀ ↝ Σ₁) →
@@ -818,6 +822,8 @@ y pone la el resultado de sumarlos.
 Podemos definir la sintaxis de ambos lenguajes a partir de dos signaturas |Σₑ| y |Σₘ|,
 obteniendo las respectivas álgebras de términos:
 
+\subsubsection*{Sintaxis del lenguaje source}
+
 \begin{spec}
 data Sortsₑ : Sorts where
   ExprN : Sortsₑ
@@ -838,6 +844,7 @@ ExprAlg = ∣T∣ Σₑ
 
 \end{spec}
 
+\subsubsection*{Sintaxis del lenguaje target}
 
 \begin{spec}
 data Sortsₘ : Sorts where
@@ -860,6 +867,8 @@ CodeAlg = ∣T∣ Σₘ
 
 Las semánticas de ambos lenguajes las definimos a partir de álgebras
 de las signaturas, obteniendo un homomorfismo desde el álgebra de términos:
+
+\subsubsection*{Semántica del lenguaje source}
 
 \begin{spec}
 State : Set
@@ -885,6 +894,9 @@ Semₑ = iSortsₑ ∥ iFuncsₑ
 hSem : Homomorphism ExprAlg Semₑ
 hSem = ∣T∣ₕ Semₑ
 \end{spec}
+
+
+\subsubsection*{Semántica del lenguaje target}
 
 \begin{spec}
 data Stack : Set where
@@ -933,7 +945,23 @@ Tenemos entonces el siguiente diagrama:
 
 Para poder traducir un lenguaje a otro, necesitamos llevar
 |CodeAlg| y |Exec| a la signatura |Σₑ|. Para ello definimos
-una transformación.
+una traducción. Como tenemos un sólo sort en cada lenguaje hay una
+única opción para definir la traducción de sorts: |ExprN| se traduce
+en |Codeₛ|.
+La traducción de símbolos de función dará las reglas que se apliquen
+cada vez que se deban interpretar los símbolos de |Σₑ| en una |Σₘ|-álgebra.
+
+
+\begin{itemize}
+\item Al símbolo de función |valN n| (con |n| natural) lo interpretamos
+      con el símbolo |pushₘ n|.
+\item Para interpretar |plus| debemos dar una función que toma como parámetro
+      dos valores, digamos $v_1$ y $v_2$; y su interpretación será
+      la secuencia 
+\end{itemize}
+
+
+\subsubsection*{Traducción}
 
 \begin{spec}
 sₑ↝sₘ : sorts Σₑ → sorts Σₘ

@@ -168,7 +168,7 @@ Conf = Stack × State
 
 
 iSortsₘ : ISorts Σₘ
-iSortsₘ Codeₛ = Conf →-setoid Maybe Conf
+iSortsₘ Codeₛ = Conf →-setoid Maybe Stack
 
 open import Category.Monad
 open import Category.Monad.Indexed
@@ -178,12 +178,12 @@ open RawMonad {lzero} Data.Maybe.monad
 
 ifₘ : ∀ {ar} {s} → (f : funcs Σₘ (ar , s)) → VecH Sortsₘ (Carrier ∘ iSortsₘ) ar →
                    Carrier (iSortsₘ s)
-ifₘ (pushₘ n) ⟨⟩ = λ {(s , σ) → just (n ▸ s , σ) }
-ifₘ (loadₘ v) ⟨⟩ = λ {(s , σ) → just (σ v ▸ s , σ)}
-ifₘ addₘ ⟨⟩ = λ { (n₀ ▸ n₁ ▸ s , σ) → just ((n₀ + n₁ ▸ s) , σ) ;
+ifₘ (pushₘ n) ⟨⟩ = λ {(s , σ) → just (n ▸ s) }
+ifₘ (loadₘ v) ⟨⟩ = λ {(s , σ) → just (σ v ▸ s)}
+ifₘ addₘ ⟨⟩ = λ { (n₀ ▸ n₁ ▸ s , σ) → just (n₀ + n₁ ▸ s) ;
                  (_ , σ) → nothing
                }
-ifₘ seqₘ (v₀ ▹ v₁ ▹ ⟨⟩) = λ sσ → v₀ sσ >>= v₁
+ifₘ seqₘ (v₀ ▹ v₁ ▹ ⟨⟩) = λ {(s , σ) → v₀ (s , σ) >>= λ s' → v₁ (s' , σ)}
 
 ifcongₘ : ∀ {ar} {s} → (f : funcs Σₘ (ar , s)) →
            {vs₀ vs₁ : VecH Sortsₘ (Carrier ∘ iSortsₘ) ar} →
@@ -192,11 +192,12 @@ ifcongₘ : ∀ {ar} {s} → (f : funcs Σₘ (ar , s)) →
 ifcongₘ (pushₘ n) {⟨⟩} ∼⟨⟩ = λ _ → refl
 ifcongₘ (loadₘ v) {⟨⟩} ∼⟨⟩ = λ _ → refl 
 ifcongₘ addₘ {⟨⟩} ∼⟨⟩ = λ _ → refl
-ifcongₘ seqₘ {v₀ ▹ v₁ ▹ ⟨⟩} {v₀' ▹ v₁' ▹ ⟨⟩} (∼▹ v₀≈v₀' (∼▹ v₁≈v₁' ∼⟨⟩)) sσ =
-        PropEq.trans (cong (λ mc → mc >>= v₁) (v₀≈v₀' sσ))
-                     (ifcseq' (v₀' sσ))
-  where ifcseq' : (mc : Maybe Conf) → (mc >>= v₁) ≡ (mc >>= v₁')
-        ifcseq' (just sσ') = v₁≈v₁' sσ'
+ifcongₘ seqₘ {v₀ ▹ v₁ ▹ ⟨⟩} {v₀' ▹ v₁' ▹ ⟨⟩} (∼▹ v₀≈v₀' (∼▹ v₁≈v₁' ∼⟨⟩)) (s , σ) =
+             PropEq.trans (cong (λ ms → ms >>= λ s' → v₁ (s' , σ)) (v₀≈v₀' (s , σ)))
+                          (ifcseq' (v₀' (s , σ)))
+  where ifcseq' : (ms : Maybe Stack) → (ms >>= λ s' → v₁ (s' , σ))
+                                        ≡ (ms >>= λ s' → v₁' (s' , σ))
+        ifcseq' (just s') = v₁≈v₁' (s' , σ)
         ifcseq' nothing = refl
 
 
@@ -287,11 +288,10 @@ entre Sem y Exec.
 -}
 
 Sem→Execₑ : Semₑ ⟿ Execₑ
-Sem→Execₑ ExprN = record { _⟨$⟩_ = λ {fₑ (s , σ) → just (fₑ σ ▸ s , σ)}
+Sem→Execₑ ExprN = record { _⟨$⟩_ = λ {fₑ (s , σ) → just (fₑ σ ▸ s)}
                          ; cong = λ { {f₀} {f₁} f₀≈f₁ (s , σ) →
-                                      cong (λ n → just (n ▸ s , σ)) (f₀≈f₁ σ) }
+                                      cong (λ n → just (n ▸ s)) (f₀≈f₁ σ) }
                          }
-
 
 
 condhₛₑₘ : ∀ {ty} (f : funcs Σₑ ty) →
@@ -305,36 +305,6 @@ hₛₑₘ = record { ′_′ = Sem→Execₑ
              ; cond = condhₛₑₘ }
 
 
-{- DUDA: Para definir este homomorfismo, cómo puedo asegurar que
-un elemento en Execₑ siempre deja un natural en el tope y da just???
-Esa propiedad la tienen los códigos compilados, así que debería
-poder probarse.
-Aunque puesto que los que dan nothing o no dejan natural en el tope
-no son alcanzados, podríamos devolver cualquier cosa. Por ejemplo zero-}
-
-fDec : (Conf → Maybe Conf) → State → ℕ
-fDec fc σ with fc (ε , σ)
-fDec fc σ | nothing = zero -- no alcanzado, devuelvo zero
-fDec fc σ | just (n ▸ _ , _) = n
-fDec fc σ | just _           = zero
-
-fDecCong : ∀ {fc₁ fc₂} → ((sσ : Conf) → fc₁ sσ ≡ fc₂ sσ) →
-             (σ : State) → fDec fc₁ σ ≡ fDec fc₂ σ
-fDecCong {fc₁} {fc₂} eq σ rewrite PropEq.sym (eq (ε , σ)) with fc₁ (ε , σ)
-... | just x = refl
-... | nothing = refl
-
-Execₑ→Sem : Execₑ ⟿ Semₑ
-Execₑ→Sem ExprN = record { _⟨$⟩_ = fDec
-                         ; cong = fDecCong }
-
-
-condhDec : ∀ {ty} (f : funcs Σₑ ty) →
-                       homCond Execₑ Semₑ Execₑ→Sem f
-condhDec (valN n) ⟨⟩ = λ σ → refl
-condhDec plus (v₀ ▹ v₁ ▹ ⟨⟩) = λ σ → {!!}
-condhDec (varN v) ⟨⟩ = λ σ → refl 
-
 
 -- Tengo también un homomorfismo entre Codeₑ y Execₑ
 hexecₑ : Homomorphism CodeAlgₑ Execₑ
@@ -342,14 +312,15 @@ hexecₑ = ΣₑtoΣₘ 〈 hexec 〉ₕ
 
 
 -- Función de ejecución:
-⟪_⟫ : Code → Conf → Maybe Conf
+⟪_⟫ : Code → Conf → Maybe Stack
 ⟪ c ⟫ = ′ hexecₑ ′ ExprN ⟨$⟩ c
 
 
 -- Corrección del compilador: trivial por inicialidad y
 -- definición de hₛₑₘ
-correct : ∀ (e : Expr) → (σ : State) → 
-            ⟪ compₑ e ⟫ (ε , σ) ≡ just ((⟦ e ⟧ σ) ▸ ε , σ)
-correct e σ = (elim≈ₕ unic ExprN e e refl) (ε , σ)
+correct : ∀ (e : Expr) → (s : Stack) → (σ : State) → 
+            ⟪ compₑ e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ) ▸ s)
+correct e s σ = (elim≈ₕ unic ExprN e e refl) (s , σ)
   where unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
         unic = unique (∣T∣init Σₑ) Execₑ (hexecₑ ∘ₕ homc) (hₛₑₘ ∘ₕ homSem)
+

@@ -22,8 +22,8 @@ En el presente trabajo presentamos una formalización en el lenguaje
 Agda \cite{agda} de Álgebras Universales Heterogéneas, definiendo
 los conceptos de signatura, álgebras, homomorfismo, inicialidad y álgebra
 de términos. Con estos conceptos formalizamos un framework
-para traducción de lenguajes de acuerdo al esquema que presenta Jansen
-\cite{jansen-98} y lo utilizamos para construir un compilador sencillo
+para traducción de lenguajes de acuerdo al esquema que presenta Janssen
+\cite{janssen-98} y lo utilizamos para construir un compilador sencillo
 probando su corrección.
 
 \end{abstract}
@@ -38,10 +38,10 @@ por inicialidad de $T$, \cite{goguen-77}.
 
 Varios trabajos han explorado el enfoque algebraico para dar un framework
 general para la traducción de lenguajes de manera correcta, y en particular
-para la construcción de compiladores correctos. En \cite{jansen-98} se analizan
+para la construcción de compiladores correctos. En \cite{janssen-98} se analizan
 diversos enfoques y se propone un marco general para la traducción de lenguajes.
 
-En este trabajo formalizamos un enfoque similar al que se propone en \cite{jansen-98}.
+En este trabajo formalizamos un enfoque similar al que se propone en \cite{janssen-98}.
 Se puede resumir con el siguiente diagrama:
 
 \begin{diagram}
@@ -56,9 +56,9 @@ $Sem_t$, y los homomorfismos $hSem_s$ y $hSem_t$ dados por inicialidad. Un
 \textit{transformador de álgebras} $\delta$ permite llevar las álgebras $T_t$ y $Sem_t$
 a la signatura $\Sigma_s$ y el traductor $Tr$ es el homomorfismo dado por inicialidad
 de $T_s$. Por último un homomorfismo $Enc$ o $Dec$ entre $\delta(Sem_t)$ y $Sem_s$ hace conmutar
-al diagrama obteniendo la corrección del traductor \footnote{En \cite{jansen-98} se analiza
+al diagrama obteniendo la corrección del traductor \footnote{En \cite{janssen-98} se analiza
   si la noción de un traductor correcto requiere de una función $Enc$ o $Dec$ concluyendo que esta
-  última es la correcta (a diferencia de lo que utiliza \cite{thatcher-79}), para el framework que
+  última es la correcta (a diferencia de lo que utiliza \cite{thatcher-80}), para el framework que
   presentamos podremos definir cualquiera de las dos}.
 
 El concepto de \textit{transformador de álgebras} lo definiremos formalmente, dando
@@ -86,14 +86,14 @@ una pila, y mostramos su corrección mediante el framework de traducción con
 
 \section{Álgebras Universales}
 
-\subsection{Signatura, álgebra y homomorfismo}
-
 Presentamos una formalización de Álgebra Universal en Agda.
 Se asume familiaridad con algún lenguaje con tipos dependientes de parte del lector. Para
 evitar complicaciones técnicas del lenguaje en particular obviamos algunos
 detalles en las definiciones, facilitando su lectura. Por ejemplo algunos parámetros
 implícitos no son detallados en este texto. La librería completa de álgebras
 universales puede verse en \cite{univAlgebra}.
+
+\subsection{Signatura, álgebra y homomorfismo}
 
 \subsection*{Signatura}
 
@@ -813,11 +813,25 @@ $ c  ::=  \;\; push\,n  \;\; || \;\; load\, v \;\; || \;\; c_1 ; c_2 \;\; || \
 \noindent donde $n$ es una constante natural y $v$ una variable.
 
 Informalmente, la ejecución de un código del lenguaje target modificará una pila de elementos
-naturales y un estado de asignación de valores a las variables.
+naturales utilizando también un estado de asignación de valores a las variables.
 $push\,n$ pone en el tope de la pila el valor $n$; $load\,v$ pone en el tope de la pila el valor
 de la variable $v$ en el estado; $c_1 ; c_2$ ejecuta $c_1$ y luego $c_2$ a partir del stack resultante;
 y por último $add$ a partir de una pila que tiene al menos dos elementos en el tope, los quita de la pila
-y pone la el resultado de sumarlos.
+y pone el resultado de sumarlos.
+
+El compilador lo definiríamos de esta forma:
+
+\begin{align*}
+  comp\;n  &= push\;n\\
+  comp\;v  &= load\;v\\
+  comp\;e_1 \oplus e_2 &= comp\;e_1 ; comp\;e_2 ; add
+\end{align*}
+
+
+Procedamos a definir este compilador de manera correcta utilizando el framework presentado
+en las secciones anteriores.
+
+\subsection{Sintaxis}
 
 Podemos definir la sintaxis de ambos lenguajes a partir de dos signaturas |Σₑ| y |Σₘ|,
 obteniendo las respectivas álgebras de términos:
@@ -844,6 +858,14 @@ ExprAlg = ∣T∣ Σₑ
 
 \end{spec}
 
+\noindent La expresión $3 \oplus ``x''$ del lenguaje source se corresponde con
+
+\begin{spec}
+term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩)
+\end{spec}
+
+\noindent en el álgebra de términos |ExprAlg|.
+
 \subsubsection*{Sintaxis del lenguaje target}
 
 \begin{spec}
@@ -865,10 +887,29 @@ CodeAlg : Algebra Σₘ
 CodeAlg = ∣T∣ Σₘ
 \end{spec}
 
+\noindent La expresión $push\;3;load\;``x'';add$ del lenguaje target se corresponde con
+
+\begin{spec}
+  term seqₘ  (term (pushₘ 3) ⟨⟩ ▹
+             (term seqₘ  (term (loadₘ `` x '') ⟨⟩ ▹
+                         term add ⟨⟩ ▹
+                         ⟨⟩)) ▹
+             ⟨⟩)
+\end{spec}
+
+\noindent en el álgebra de términos |CodeAlg|.
+
+\subsection{Semántica}
+
 Las semánticas de ambos lenguajes las definimos a partir de álgebras
-de las signaturas, obteniendo un homomorfismo desde el álgebra de términos:
+de las signaturas, obteniendo un homomorfismo desde el álgebra de términos.
 
 \subsubsection*{Semántica del lenguaje source}
+
+La semántica del lenguaje source para cada expresión es una función
+que va de un estado en un natural. El setoide de estas funciones podemos
+definirlo con la función |→-setoid| de la librería estándar, y será
+la interpretación del sort |ExprN|.
 
 \begin{spec}
 State : Set
@@ -895,8 +936,21 @@ hSem : Homomorphism ExprAlg Semₑ
 hSem = ∣T∣ₕ Semₑ
 \end{spec}
 
+De esta forma el valor semántico para la expresión $3 \oplus ``x''$ será:
+
+\begin{spec}
+  ′ hSem ′ ExprN ⟨$⟩ e = λ σ → 3
+\end{spec}
+
+\noindent donde |e = term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩)|.
 
 \subsubsection*{Semántica del lenguaje target}
+
+En el lenguaje target la semántica para cada expresión es una función parcial que va
+de un par consistente de una ``pila'' de naturales y un estado de asignación
+de valores a las variables (que llamaremos |Conf|), a otra pila. Esta función es parcial ya que la expresión $add$
+puede ejecutarse sólamente si en la pila hay por lo menos dos elementos.
+Implementaremos esta parcialidad utilizando el tipo |Maybe|:
 
 \begin{spec}
 data Stack : Set where
@@ -908,18 +962,18 @@ Conf = Stack × State
 
 
 iSortsₘ : ISorts Σₘ
-iSortsₘ Codeₛ = Conf →-setoid Maybe Conf
+iSortsₘ Codeₛ = Conf →-setoid Maybe Stack
 
 
 ifₘ : ∀ {ar} {s} →  (f : funcs Σₘ (ar , s)) →
                     VecH Sortsₘ (Carrier ∘ iSortsₘ) ar →
                     Carrier (iSortsₘ s)
-ifₘ (pushₘ n) ⟨⟩  = λ {(s , σ) → just (n ▸ s , σ) }
-ifₘ (loadₘ v) ⟨⟩  = λ {(s , σ) → just (σ v ▸ s , σ)}
-ifₘ addₘ ⟨⟩       = λ {  (n₀ ▸ n₁ ▸ s , σ) → just ((n₀ + n₁ ▸ s) , σ) ;
-                         (_ , σ) → nothing
-               }
-ifₘ seqₘ (v₀ ▹ v₁ ▹ ⟨⟩) = λ sσ → v₀ sσ >>= v₁
+ifₘ (pushₘ n) ⟨⟩  = λ {(s , σ) → just (n ▸ s)}
+ifₘ (loadₘ v) ⟨⟩  = λ {(s , σ) → just (σ v ▸ s)}
+ifₘ addₘ ⟨⟩       = λ  {  (n₀ ▸ n₁ ▸ s , σ)  → just (n₀ + n₁ ▸ s) ;
+                          (_ , σ)            → nothing
+                       }
+ifₘ seqₘ (v₀ ▹ v₁ ▹ ⟨⟩) = λ {(s , σ) → v₀ (s , σ) >>= λ s' → v₁ (s' , σ)}
 
 
 iFuncsₘ : ∀ {ty} → (f : funcs Σₘ ty) → IFuncs Σₘ ty iSortsₘ
@@ -933,8 +987,28 @@ hexec : Homomorphism CodeAlg Exec
 hexec = ∣T∣ₕ Exec
 \end{spec}
 
+Como ejemplo consideremos el término
 
-Tenemos entonces el siguiente diagrama:
+\begin{spec}
+c = term seqₘ  (term (pushₘ 3) ⟨⟩ ▹
+               (term seqₘ  (term (loadₘ `` x '') ⟨⟩ ▹
+                           term add ⟨⟩ ▹
+                           ⟨⟩)) ▹
+               ⟨⟩)
+\end{spec}
+
+
+\noindent su semántica se obtendrá con el homomorfismo |hexec|:
+
+\begin{spec}
+  ′ hexec ′ Codeₛ ⟨$⟩ c = λ {(s , σ) → just (σ " x " + 3 ▸ s)
+\end{spec}
+
+
+\subsection{Traducción}
+
+Tenemos los lenguajes source y target definidos con sus respectivas
+semánticas. Podemos graficarlo en el siguiente diagrama:
 
 \begin{diagram}
   |ExprAlg|     &     &   &  &    &|CodeAlg|\\
@@ -943,44 +1017,48 @@ Tenemos entonces el siguiente diagrama:
 \end{diagram}
 
 
-Para poder traducir un lenguaje a otro, necesitamos llevar
-|CodeAlg| y |Exec| a la signatura |Σₑ|. Para ello definimos
-una traducción. Como tenemos un sólo sort en cada lenguaje hay una
+Para poder traducir correctamente un lenguaje a otro según el framework que
+presentamos, necesitamos llevar |CodeAlg| y |Exec| a la signatura |Σₑ|. Para ello definimos
+una \textbf{traducción}. Como tenemos un sólo sort en cada lenguaje hay una
 única opción para definir la traducción de sorts: |ExprN| se traduce
 en |Codeₛ|.
 La traducción de símbolos de función dará las reglas que se apliquen
 cada vez que se deban interpretar los símbolos de |Σₑ| en una |Σₘ|-álgebra.
+Estas reglas siguen las ideas para definir el compilador intuitivamente,
+como lo mostramos previamente:
+
+\begin{align*}
+  comp\;n  &= push\;n\\
+  comp\;v  &= load\;v\\
+  comp\;e_1 \oplus e_2 &= comp\;e_1 ; comp\;e_2 ; add
+\end{align*}
 
 
-\begin{itemize}
-\item Al símbolo de función |valN n| (con |n| natural) lo interpretamos
-      con el símbolo |pushₘ n|.
-\item Para interpretar |plus| debemos dar una función que toma como parámetro
-      dos valores, digamos $v_1$ y $v_2$; y su interpretación será
-      la secuencia 
-\end{itemize}
-
-
-\subsubsection*{Traducción}
+\subsubsection*{Traducción de la signatura}
 
 \begin{spec}
 sₑ↝sₘ : sorts Σₑ → sorts Σₘ
 sₑ↝sₘ ExprN = Codeₛ
 
-fₑ↝fₘ : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) →
+fₑ↝fₘ : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
                       ΣExpr Σₘ (map sₑ↝sₘ ar) (sₑ↝sₘ s)
-fₑ↝fₘ (valN n) = pushₘ n ∣$∣ ⟨⟩
-fₑ↝fₘ plus     = seqₘ ∣$∣ (# (suc zero) ▹ (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹ ⟨⟩)
-fₑ↝fₘ (varN v) = loadₘ v ∣$∣ ⟨⟩
+fₑ↝fₘ (valN n)  = pushₘ n ∣$∣ ⟨⟩
+fₑ↝fₘ plus      = seqₘ ∣$∣  (# (suc zero) ▹
+                            (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹
+                            ⟨⟩)
+fₑ↝fₘ (varN v)  = loadₘ v ∣$∣ ⟨⟩
 
 ΣₑtoΣₘ : Σₑ ↝ Σₘ
 ΣₑtoΣₘ = record { ↝ₛ = sₑ↝sₘ
                 ; ↝f = fₑ↝fₘ
                 }
 \end{spec}
-(explicar un poco más la transformación, con un ejemplo informal antes)
 
-Podemos entonces llevar las álgebras |CodeAlg| y |Exec| a |Σₑ|:
+\subsubsection*{Transformación de las álgebras}
+
+Habiendo definido la traducción |ΣₑtoΣₘ| podemos automáticamente
+transformar cualquier |Σₘ|-álgebra en una |Σₑ|-álgebra.
+Transformamos entonces |CodeAlg| y |Exec|:
 
 \begin{spec}
 CodeAlgₑ : Algebra Σₑ
@@ -988,14 +1066,6 @@ CodeAlgₑ = ΣₑtoΣₘ 〈 CodeAlg 〉
 
 Execₑ : Algebra Σₑ
 Execₑ = ΣₑtoΣₘ 〈 Exec 〉
-\end{spec}
-
-Tenemos por inicialidad un homomorfismo entre |ExprAlg| y
-|CodeAlgₑ|:
-
-\begin{spec}
-homc : Homomorphism ExprAlg CodeAlgₑ
-homc = ∣T∣ₕ CodeAlgₑ
 \end{spec}
 
 \noindent y podemos llevar el homomorfismo |hexec| a la signatura
@@ -1006,6 +1076,15 @@ hexecₑ : Homomorphism CodeAlgₑ Execₑ
 hexecₑ = ΣₑtoΣₘ 〈 hexec 〉ₕ
 \end{spec}
 
+El compilador quedará definido por el único homomorfismo que existe
+entre |ExprAlg| y |CodeAlgₑ|, ya que la primera de éstas es inicial:
+
+\begin{spec}
+homc : Homomorphism ExprAlg CodeAlgₑ
+homc = ∣T∣ₕ CodeAlgₑ
+\end{spec}
+
+
 El diagrama ahora puede verse así:
 
 \begin{diagram}
@@ -1015,17 +1094,21 @@ El diagrama ahora puede verse así:
 \end{diagram}
 
 Para completar el diagrama necesitamos definir un homomorfismo entre
-|Semₑ| y |Execₑ| (Jansen dice que debería ser al revés, pero es bastante
-más complicado. VER ESTO):
+|Semₑ| y |Execₑ| (o al revés). Veremos que para nuestro ejemplo
+dar un homomorfismo de |Semₑ| a |Execₑ| ($Enc$ en la terminología
+de \cite{janssen-98}) obtiene la corrección del compilador.
+
+Este homomorfismo relaciona las semánticas de cada lenguaje. Puesto que la semántica
+del lenguaje source es una función que dado un estado obtiene un natural, en la semántica
+del lenguaje target corresponde con poner ese natural en el tope de la pila:
 
 \begin{spec}
 Sem→Execₑ : Semₑ ⟿ Execₑ
 Sem→Execₑ ExprN =
-         record  { _⟨$⟩_ = λ {fₑ (s , σ) → just (fₑ σ ▸ s , σ)}
-                 ; cong =  λ { {f₀} {f₁} f₀≈f₁ (s , σ) →
-                           cong (λ n → just (n ▸ s , σ)) (f₀≈f₁ σ) }
+         record  { _⟨$⟩_  = λ {fₑ (s , σ) → just (fₑ σ ▸ s)}
+                 ; cong   =  λ {  {f₀} {f₁} f₀≈f₁ (s , σ) →
+                                  cong (λ n → just (n ▸ s)) (f₀≈f₁ σ) }
                  }
-
 
 
 condhₛₑₘ : ∀ {ty}  (f : funcs Σₑ ty) →
@@ -1039,7 +1122,9 @@ hₛₑₘ = record  { ′_′ = Sem→Execₑ
                ; cond = condhₛₑₘ }
 \end{spec}
 
-Con este homomorfismo tenemos que el siguiente diagrama conmuta:
+\noindent la prueba de condición de homomorfismo resulta trivial.
+
+Ahora tenemos que el siguiente diagrama conmuta, por inicialidad de |ExprAlg|:
 
 \begin{diagram}
   |ExprAlg|     &\rTo^{|homc|}  &|CodeAlgₑ|\\
@@ -1047,8 +1132,10 @@ Con este homomorfismo tenemos que el siguiente diagrama conmuta:
   |Semₑ|        &\rTo^{|hₛₑₘ|}  &|Execₑ|\\
 \end{diagram}
 
-Veamos entonces cómo podemos obtener la prueba de corrección del compilador
-a partir del enfoque algebraico.
+\subsection{Extracción de la prueba de corrección}
+
+Veamos cómo podemos obtener la prueba de corrección del compilador
+a partir del desarrollo presentado.
 
 El lenguaje de expresiones está definido a partir del álgebra de términos
 |ExprAlg|:
@@ -1058,14 +1145,6 @@ Expr : Set
 Expr = Carrier (ExprAlg ⟦ ExprN ⟧ₛ)
 \end{spec}
 
-La función semántica está definida por el homomorfismo |hSem|, y podemos dar una sintaxis
-más sencilla:
-
-\begin{spec}
-⟦_⟧_ : Expr → State → ℕ
-⟦ e ⟧ σ = (′ hSem ′ ExprN ⟨$⟩ e) σ
-\end{spec}
-
 El resultado de compilar expresiones serán los elementos del álgebra |CodeAlgₑ|:
 
 \begin{spec}
@@ -1073,23 +1152,48 @@ Code : Set
 Code = Carrier (CodeAlgₑ ⟦ ExprN ⟧ₛ)
 \end{spec}
 
-Podemos extraer el compilador a partir del homomofirmos |homc|:
+La función semántica del lenguaje source está definida por el homomorfismo |hSem|, y podemos dar una sintaxis
+más sencilla:
+
+\begin{spec}
+⟦_⟧_ : Expr → State → ℕ
+⟦ e ⟧ σ = (′ hSem ′ ExprN ⟨$⟩ e) σ
+\end{spec}
+
+Podemos hacer lo mismo para la semántica del lenguaje target:
+
+\begin{spec}
+⟪_⟫ : Code → Conf → Maybe Stack
+⟪ c ⟫ = ′ hexecₑ ′ ExprN ⟨$⟩ c
+\end{spec}
+
+
+El compilador está definido por el homomorfismo |homc|:
 
 \begin{spec}
 compₑ : Expr → Code
 compₑ e = ′ homc ′ ExprN ⟨$⟩ e 
 \end{spec}
 
-Finalmente, la corrección del compilador se extrae del desarrollo presentado:
+La prueba de corrección del compilador expresa que si compilamos una expresión y
+ejecutamos el código resultante a partir de la pila |s| y un estado |σ|, el
+resultado será la pila |s| con el valor semántico de la expresión agregado en el tope:
+
 
 \begin{spec}
-correct : ∀  (e : Expr) → (σ : State) → 
-             ⟪ compₑ e ⟫ (ε , σ) ≡ just ((⟦ e ⟧ σ) ▸ ε , σ)
-correct e σ = (elim≈ₕ unic ExprN e e refl) (ε , σ)
-  where  unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
-         unic = unique (∣T∣init Σₑ) Execₑ  (hexecₑ ∘ₕ homc)
-                                           (hₛₑₘ ∘ₕ homSem)
+correct : ∀  (e : Expr) → (s : Stack) → (σ : State) → 
+             ⟪ compₑ e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ) ▸ s)
 \end{spec}
+
+A partir del framework algebraico se puede extraer esta prueba:
+
+\begin{spec}
+correct e s σ = (elim≈ₕ unic ExprN e e refl) (s , σ)
+  where  unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
+         unic = unique (∣T∣init Σₑ) Execₑ (hexecₑ ∘ₕ homc) (hₛₑₘ ∘ₕ homSem)
+\end{spec}
+
+El desarrollo completo del ejemplo puede verse en \cite{ejemploCorrectC}.
 
 \bibliographystyle{abbrvnat}
 \begin{flushleft}

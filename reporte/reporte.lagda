@@ -3,6 +3,7 @@
 \usepackage{mathpartir}
 \usepackage[small,nohug,heads=vee]{diagrams}
 \diagramstyle[labelstyle=\scriptstyle]
+\usepackage{authblk}
 
 %include agda.fmt
 %include unicode.fmt
@@ -13,6 +14,10 @@
        traducción correcta de lenguajes}
 
 \author{Emmanuel Gunther}
+\affil{FaMAF, UNC}
+\affil{CONICET}
+
+\date{}
        
 \maketitle
 
@@ -223,10 +228,8 @@ es decir, si $s_1$ |≈|$_{S_1}$ $s_1'$ entonces $f \, s_1$ |≈|$_{S_2}$ $f \, 
 
 Una diferencia importante entre usar setoides en lugar de |Sets| es que podemos tener
 carriers de álgebras con una noción de igualdad que no sea simplemente la igualdad
-proposicional. En particular si quisiéramos definir como
-carrier un tipo funcional, no podríamos tener la igualdad extensional que uno
-esperaría, ya que no puede probarse en Agda (explicar mejor esto).
-Con setoides se puede definir la relación extensional y probar que es de equivalencia.
+proposicional. Por ejemplo, se puede definir el setoide de las funciones de |A| en |B|,
+donde la igualdad subyacente sea la extensional, probando que es una relación de equivalencia.
 También fácilmente se podrían definir álgebras cocientes.
 
 Para definir los carriers de una $\Sigma$-álgebra entonces usaremos setoides:
@@ -712,7 +715,15 @@ sₛ↝sₜ : sorts Σₛ → sorts Σₜ
 sₛ↝sₜ = id
 \end{spec}
 
-Y ahora damos la traducción de los símbolos de función:
+Y ahora damos la traducción de los símbolos de función. En el caso de las
+variables y la negación, tenemos el símbolo en la signatura target. Para el caso
+de la constante |trueₛ| la traducción consiste en aplicar negación sobre la constante
+|falseₜ|, y para traducir la conjunción utilizamos la regla de De Morgan:
+
+\begin{center}
+  $a \wedge b = \neg ((\neg a) \vee (\neg b))$
+\end{center}
+
 
 \begin{spec}
 fₛ↝fₜ : ∀ {ar} {s} →  (f : funcs Σₛ (ar , s)) →
@@ -765,7 +776,7 @@ y |t : Σₛ ↝ Σₜ|. A partir de una |Σₜ|-álgebra |A| podemos definir un
 \end{itemize}
 
 Con estas ideas intuitivas podemos definir formalmente la transformación de álgebras. No mostraremos
-los detalles, pueden encontrarse en \cite{algTransf}.
+los detalles, pueden encontrarse en el archivo |AlgTransf.agda|, en \cite{univAlgebra}.
 
 \begin{spec}
 _〈_〉 : ∀  {Σ₀} {Σ₁} → (t : Σ₀ ↝ Σ₁) →
@@ -1193,7 +1204,7 @@ correct e s σ = (elim≈ₕ unic ExprN e e refl) (s , σ)
          unic = unique (∣T∣init Σₑ) Execₑ (hexecₑ ∘ₕ homc) (hₛₑₘ ∘ₕ homSem)
 \end{spec}
 
-El desarrollo completo del ejemplo puede verse en \cite{ejemploCorrectC}.
+El desarrollo completo del ejemplo puede verse en |Ejemplos/CorrectC.agda|, en \cite{univAlgebra}.
 
 \bibliographystyle{abbrvnat}
 \begin{flushleft}

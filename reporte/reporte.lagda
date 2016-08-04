@@ -4,7 +4,9 @@
 \usepackage[small,nohug,heads=vee]{diagrams}
 \diagramstyle[labelstyle=\scriptstyle]
 \usepackage{authblk}
-
+\usepackage{ dsfont }
+\usepackage{ upgreek }
+\usepackage{ hyperref }
 %include agda.fmt
 %include unicode.fmt
 
@@ -23,80 +25,159 @@
 
 \begin{abstract}
 
-En el presente trabajo presentamos una formalización en el lenguaje
-Agda \cite{agda} de Álgebras Universales Heterogéneas, definiendo
-los conceptos de signatura, álgebras, homomorfismo, inicialidad y álgebra
-de términos. Con estos conceptos formalizamos un framework
-para traducción de lenguajes de acuerdo al esquema que presenta Janssen
-\cite{janssen-98} y lo utilizamos para construir un compilador sencillo
-probando su corrección.
+  Un enfoque para abordar el desarrollo de traductores correctos de lenguajes es mediante
+  álgebras universales. En este trabajo presentamos una formalización en teoría de tipos
+  de un framework algebraico para traducir lenguajes, realizado en el lenguaje
+  Agda. Para ello definimos conceptos básicos de álgebras universales heterogéneas, como
+  Signatura, Álgebra, Homomorfismo, llegando a probar que el álgebra de términos es inicial.
+  Definimos también un metalenguaje para traducir signaturas de manera general y damos un
+  ejemplo de un compilador de expresiones a un lenguaje de máquina sencillo que manipula
+  un stack.
 
 \end{abstract}
 
-\section{Introduction}
+\section{Introducción}
 
-Una manera de definir sintaxis y semántica de lenguajes es mediante Álgebras
-Universales. La sintaxis de un lenguaje es el álgebra de términos $T$
-de una signatura $\Sigma$ y una semántica está definida por el único
-homomorfismo que existe entre $T$ y una $\Sigma$-álgebra $A$, dado
-por inicialidad de $T$, \cite{goguen-77}.
+El desarrollo de compiladores correctos es un tema de interés en Ciencias de la Computación
+que se ha estudiado desde épocas tempranas. Morris (\cite{morris-73}) presentó un esquema
+en el cual propone utilizar álgebras universales heterogéneas (\cite{birkhoff-70}) para probar la corrección
+de un compilador, trabajo que luego extendió Thatcher (\cite{thatcher-80}). En
+\cite{janssen-98} se realiza un análisis de los distintos trabajos existentes en el momento
+con el objetivo de dar un esquema general para la traducción de lenguajes (no sólo lenguajes
+de programación, sino que abarca distintas áreas). En este trabajo formalizamos un framework
+similar al que propone Janssen.
+El enfoque se basa en considerar la sintaxis abstracta de un lenguaje como el álgebra inicial
+de una signatura multisort, y a cualquier otra álgebra como un posible dominio semántico,
+teniendo definido por inicialidad un único homomorfismo (la semántica). El grupo conocido
+como ADJ presentan esta manera de ver la sintaxis y semántica de los lenguajes en \cite{goguen-77}.
 
-Varios trabajos han explorado el enfoque algebraico para dar un framework
-general para la traducción de lenguajes de manera correcta, y en particular
-para la construcción de compiladores correctos. En \cite{janssen-98} se analizan
-diversos enfoques y se propone un marco general para la traducción de lenguajes.
+Introduzcamos un ejemplo sencillo para explicar el enfoque que formalizaremos, un compilador
+de expresiones aritméticas en un código de máquina que manipula un stack.
 
-En este trabajo formalizamos un enfoque similar al que se propone en \cite{janssen-98}.
-Se puede resumir con el siguiente diagrama:
+\paragraph{Lenguaje fuente}
+El lenguaje fuente son expresiones aritméticas simples: constantes, variables y suma. 
+
+\begin{quote}
+$ Expr  ::=  \;\; Nat  \;\; || \;\;  Var \;\; || \;\; Expr ⊕ Expr $
+\end{quote}
+
+\paragraph{Lenguaje target}
+El lenguaje target es un código de máquina cuya ejecución manipulará una pila de números naturales. 
+
+\begin{quote}
+$ Code  ::=  \;\; push\,Nat  \;\; || \;\; load\, Var \;\; || \;\; Code \,;\, Code \;\; || \;\; add $
+\end{quote}
+
+\noindent En ambos casos, $Nat$ corresponde a las constantes naturales y $Var$ a variables.
+
+
+\paragraph{Semántica fuente}
+La semántica del lenguaje fuente podemos definirla como una función que asigna a cada expresión
+una función que va de un estado de asignación de valores a variables, a un natural:
+
+\begin{align*}
+  &eval     :\;Expr \rightarrow State \rightarrow \mathds{N}\\
+  &eval\;n \;=\; \lambda\,\upsigma \rightarrow n\\
+  &eval\;v \;=\;\lambda\,\upsigma \rightarrow \upsigma\,v\\
+  &eval\;(e_1 \oplus e_2)\;=\;\lambda\,\upsigma \rightarrow (eval\,e_1\,\upsigma) + (eval\,e_1\,\upsigma)\\
+\end{align*}
+
+\paragraph{Semántica target}
+La semántica del lenguaje target asignará a cada código una función que va de un par consistente de un estado
+y una pila, a otra pila. Podemos representar la pila con una lista de naturales:
+
+\begin{align*}
+  &exec     :\;Code \rightarrow State \times Stack \rightarrow Stack\\
+  &exec\;(push\,n) \;=\; \lambda\,(\upsigma , s) \rightarrow (s : n)\\
+  &exec\;(load\,v) \;=\;\lambda\,(\upsigma , s) \rightarrow (\upsigma\,v\,:\,s)\\
+  &exec\;(c_1\,;\,c_2)\;=\;\lambda\,(\upsigma , s) \rightarrow exec\;c_2\;(\upsigma,exec\;c_1\;(\upsigma,s))\\
+\end{align*}
+
+\paragraph{Compilador}
+El compilador llevará expresiones en $Expr$ a códigos en $Code$:
+
+\begin{align*}
+  &comp     :\;Expr \rightarrow Code\\
+  &comp\;n \;=\; push\,n\\
+  &comp\;v \;=\;load\,v\\
+  &comp\;(e_1 \oplus e_2)\;=\;comp\,e_2\,;\,comp\,e_1\,;\,add\\
+\end{align*}
+
+\paragraph{Corrección}
+Este compilador es correcto si se puede probar:
+    \begin{center}
+      $exec\,(comp\,e)\,(\upsigma,s)\,=\,eval\,e\,:\,s$
+    \end{center}
+
+En el enfoque que presentamos los lenguajes están definidos a partir
+de dos signaturas $\Sigma_e$ y $\Sigma_c$, obteniendo sus álgebras de términos
+$T_e$ y $T_c$. Los dominios semánticos, digamos $Sem$ y $Exec$, serán álgebras de
+cada signatura respectivamente. En el primer caso cada elemento del carrier
+del álgebra $Sem$ será una función con tipo $State \rightarrow \mathds{N}$, en el
+segundo una función con tipo $State \times Stack \rightarrow Stack$. Las semánticas
+quedan determinadas por el único homomorfismo que existe entre el álgebra de términos
+y cada álgebra, por inicialidad. Tenemos entonces el siguiente diagrama:
 
 \begin{diagram}
-  T_s     &\rTo^{trad}  &\theta(T_t)\\
-  \dTo_{hSem_s} &          &\dTo_{\theta(hSem_t)}\\
-  Sem_s        & \pile{\rTo^{Enc} \\ \lTo_{Dec}}  &\theta(Sem_t)\\
+  T_e     &     &   &  &    &T_c\\
+  \dTo_{hsem} &     &   &  &   &\dTo_{hexec}\\
+  Sem      &     &   &  &    &Exec\\
 \end{diagram}
-$T_s$ y $T_t$ son el álgebra de términos de dos signaturas $\Sigma_s$ y $\Sigma_t$
-respectivamente, y se corresponden con la sintaxis abstracta de los lenguajes fuente y
-target. La semántica de ambos lenguajes está definida mediante las álgebras $Sem_s$ y
-$Sem_t$, y los homomorfismos $hSem_s$ y $hSem_t$ dados por inicialidad. Un
-\textit{transformador de álgebras} $\delta$ permite llevar las álgebras $T_t$ y $Sem_t$
-a la signatura $\Sigma_s$ y el traductor $Tr$ es el homomorfismo dado por inicialidad
-de $T_s$. Por último un homomorfismo $Enc$ o $Dec$ entre $\delta(Sem_t)$ y $Sem_s$ hace conmutar
-al diagrama obteniendo la corrección del traductor \footnote{En \cite{janssen-98} se analiza
-  si la noción de un traductor correcto requiere de una función $Enc$ o $Dec$ concluyendo que esta
-  última es la correcta (a diferencia de lo que utiliza \cite{thatcher-80}), para el framework que
-  presentamos podremos definir cualquiera de las dos}.
 
-El concepto de \textit{transformador de álgebras} lo definiremos formalmente, dando
-un (meta)-lenguaje para definir traducción de signaturas, mediante el cual puede
-transformarse automáticamente álgebras de la signatura target en la signatura source.
+La clave del enfoque consiste en poder ver a las álgebras (y homomorfismos) de la signatura $\Sigma_c$
+como álgebras (y homomorfismos) de la signatura fuente $\Sigma_e$, para ello introduciremos
+el concepto de \textit{transformador de álgebras} (similar a \textit{polynomial derivor},
+que nombra Janssen, o \textit{derived signature morphism} en teoría de instituciones, \cite{mossakowski-15}).
+Si $A$ es una $\Sigma_c$-álgebra, llamemos $A\sim$ a su transformada en $\Sigma_e$. Tenemos
+entonces el siguiente diagrama:
 
-\subsection*{Organización del texto}
+\begin{diagram}
+  T_e     &\rTo^{comp}    &T_c\sim\\
+  \dTo_{hsem} & &\dTo_{hexec\sim}\\
+  Sem      &  &Exec\sim\\
+\end{diagram}
 
-En la primera sección de este artículo formalizamos los conceptos de signatura, álgebra,
+El compilador queda definido por el único homomorfismo que existe entre $T_e$ y $T_c\sim$.
+Si podemos definir un homomorfismo $enc$ (o $dec$) entre $Sem$ y $Exec\sim$ (o viceversa), el diagrama conmuta
+por inicialidad de $T_e$:
+
+\begin{diagram}
+  T_e     &\rTo^{comp}    &T_c\sim\\
+  \dTo_{hsem} & &\dTo_{hexec\sim}\\
+  Sem      & \pile{\rTo^{enc} \\ \lTo_{dec}}   &Exec\sim\\
+\end{diagram}
+
+\paragraph{Organización del texto}
+
+En la segunda sección de este artículo formalizamos los conceptos de signatura, álgebra,
 homomorfismo, inicialidad y álgebra de términos, obteniendo
 una librería en Agda para el uso de álgebras universales en general. Se discuten
 algunas decisiones de implementación. El resultado es similar al que obtiene
-Venanzio Capretta en \cite{capretta-99}, con su formalización de álgebras universales en
-Coq (\cite{coq}), utilizando setoides para los carrier de las álgebras; sin
-embargo presenta algunas diferencias de implementación, como el uso de vectores heterogéneos.
+Venanzio Capretta en \cite{capretta-99}.
 
-En la segunda sección formalizamos el concepto de transformación de álgebras,
+En la tercera sección introducimos el concepto de transformación de álgebras,
 para llevar álgebras de la signatura target a la signatura source,
-y probamos que los homomorfismos se preservan.
+y probamos que los homomorfismos se preservan. Este concepto no está
+en la bibliografía existente sobre formalización de álgebras universales.
 
-En la tercera sección damos un ejemplo de un compilador de un lenguaje
-de expresiones aritméticas y booleanas simple, en un lenguaje que manipula
-una pila, y mostramos su corrección mediante el framework de traducción con
-álgebras universales.
+En la cuarta sección damos el ejemplo completo del compilador de un lenguaje
+de expresiones aritméticas simple presentado anteriormente, utilizando el
+framework.
 
 \section{Álgebras Universales}
 
-Presentamos una formalización de Álgebra Universal en Agda.
-Se asume familiaridad con algún lenguaje con tipos dependientes de parte del lector. Para
-evitar complicaciones técnicas del lenguaje en particular obviamos algunos
-detalles en las definiciones, facilitando su lectura. Por ejemplo algunos parámetros
-implícitos no son detallados en este texto. La librería completa de álgebras
-universales puede verse en \cite{univAlgebra}.
+Presentamos una formalización de los conceptos de álgebra universal necesarios para
+probar que el álgebra de términos es inicial, en el lenguaje Agda.
+
+\paragraph{Agda}
+Agda es un lenguaje de programación funcional con tipos dependientes, basado
+en la teoría de tipos intuicionista de Martin Löf. ...
+
+En el presente texto mostraremos las principales definiciones de la formalización,
+omitiendo algunos detalles técnicos. Puede encontrarse el texto completo en
+\url{https://git.cs.famaf.unc.edu.ar/semantica-de-la-programacion/algebras-universales/UnivAlgebra.agda}.
+
+Las definiciones que formalizamos están basadas en el \textit{Handbook of Logic in Computer Science}, (\cite{handbook}).
 
 \subsection{Signatura, álgebra y homomorfismo}
 
@@ -126,15 +207,13 @@ open Setoid
 \end{code}
 %endif
 
-De acuerdo al \textit{Handbook of Logic in Computer Science} (\cite{handbook}), una
-\textbf{signatura} es un par $(S,F)$ de conjuntos, el primero llamado \textit{sorts} y el segundo
-\textit{operaciones} (también llamados \textit{símbolos de función}). Una operación es una 3-upla
-$(w:[s_1,...,s_n] \rightarrow s)$ consistente de un nombre, una lista de sorts y un sort.
-
-Llamaremos \textit{aridad} a la lista de sorts $[s_1,...,s_n]$, \textit{target sort} al sort $s$ y
-$tipo$ al par $([s_1,...,s_n],s)$ \footnote{En la bibliografía sobre álgebras heterogéneas varía
+Una \textbf{signatura} es un par $(S,F)$ de conjuntos, el primero llamado \textit{sorts} y el segundo
+\textit{operaciones} (también llamados \textit{símbolos de función}). Una operación es una tripla
+$(w,[s_1,...,s_n],s)$ consistente de un nombre, una lista de sorts y un sort, usualmente escrito como
+$(w : [s_1,...,s_n] \rightarrow s)$. Llamaremos \textit{aridad} a la lista de sorts $[s_1,...,s_n]$, \textit{target sort} al sort $s$ y
+$tipo$ al par $([s_1,...,s_n],s)$. \footnote{En la bibliografía sobre álgebras heterogéneas varía
   la noción de aridad. En el handbook se denomina aridad a lo que aquí llamamos tipo, y sorts argumento
-  a lo que aquí llamamos aridad.}.
+  a lo que aquí llamamos aridad.}
 
 Formalizamos el concepto de signatura en Agda definiendo un record con dos campos. |sorts| es cualquier
 tipo y |funcs| una familia indexada en los tipos de las operaciones:
@@ -154,30 +233,23 @@ record Signature : Set₁ where
   Arity : Set
   Arity = List sorts
 
-  ΣType : Set
-  ΣType = List sorts × sorts
-  
-open Signature
-
+  Type : Set
+  Type = List sorts × sorts
 \end{code}
 
 Una ventaja de tener definido de esta forma la signatura es que el mismo sistema
 de tipos de Agda nos permite definir propiedades sólo para las operaciones
-de determinada aridad, por ejemplo podríamos definir:
+de determinada aridad. Es decir, podemos expresar con un tipo en Agda a las operaciones
+de una signatura que tengan determinado tipo. Este enfoque es más type-theorético y veremos
+algunas ventajas importantes al definir la traducción de signaturas.
 
-\begin{spec}
-  p : ∀ {Σ : Signature} {ty : ΣType Σ} → funcs Σ ty → P
-\end{spec}
-
-\noindent una propiedad que sólo está definida para las operaciones con tipo |ty|.
 En una implementación donde se define a las operaciones como una lista de tipos
 (como en \cite{capretta-99}) sería bastante más complicado definir una propiedad
-restringiendo el tipo de la operación. Notemos también que con esta definición
-podríamos tener una signatura con ningún sort (el Set vacío) o también una con
-una cantidad infinita de sorts.
+restringiendo el tipo de la operación. También notemos que podemos tener una signatura con
+infinitas operaciones, como veremos en un ejemplo.
 
-Veamos un ejemplo de una signatura con dos sorts refiriendo a valores
-booleanos y naturales, con sus operaciones:
+\paragraph{Ejemplo 1} Veamos un ejemplo de un lenguaje de
+expresiones naturales y booleanas, para notar el uso de varios sorts. 
 
 \begin{code}
 data S : Sorts where
@@ -192,45 +264,87 @@ data F : Funcs S where
   feq    : F (nat ∷ [ nat ] , bool)
 
 Σ₁ : Signature
-Σ₁ = record { sorts = S
-            ; funcs = F
-            }
+Σ₁ = record  { sorts = S
+             ; funcs = F
+             }
 \end{code}
+
+\paragraph{Ejemplo 2} El segundo ejemplo es el lenguaje de expresiones aritméticas que presentamos en la introducción
+y para el cual daremos un compilador.
+
+\begin{spec}
+Var : Set
+Var = String  
+  
+data Sortsₑ : Sorts where
+  ExprN : Sortsₑ
+
+data Funcsₑ : Funcs Sortsₑ where
+  valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
+  plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
+  varN  : (v : Var) → Funcsₑ ([] , ExprN)
+
+
+Σₑ : Signature
+Σₑ = record  { sorts = Sortsₑ
+             ; funcs = Funcsₑ
+             }
+\end{spec}
+
+\noindent Notemos que en este último ejemplo tenemos infinitos símbolos de función, uno por
+cada natural (el constructor |valN|), y uno por cada variable (el constructor |varN|).
 
 \subsection*{Álgebra}
 
-Dada una signatura $\Sigma$, un \textbf{álgebra} $A$ de $\Sigma$ (o una $\Sigma$-álgebra)
+Dada una signatura $\Sigma$, un \textbf{álgebra} $\mathcal{A}$ de $\Sigma$ (o una $\Sigma$-álgebra)
 consta de una familia de conjuntos indexada en los sorts de $\Sigma$ llamado los
-\textit{carriers} (o \textit{interpretación de sorts}) de $A$ (llamaremos $A_s$ al carrier del sort $s$), y para cada operación
-$w$ con tipo $[s_1,...,s_n],s$ una función total $w_A : A_{s_1} \times ... \times A_{s_n} \rightarrow A_s$.
+\textit{carriers} (o \textit{interpretación de sorts}) de $\mathcal{A}$ (llamaremos $\mathcal{A}_s$ al carrier del sort $s$), y para cada operación
+$w$ con tipo $[s_1,...,s_n],s$ una función total $w_A : \mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$.
 Llamaremos \textit{interpretación} de $w$ a esta función.
 
-Para implementar los carriers de las álgebras utilizamos setoides.
-Un setoide es un tipo que tiene definido una relación de equivalencia sobre sus elementos:
+Para definir el carrier de un sort consideremos primero como ejemplo el álgebra correspondiente al dominio semántico del
+lenguaje de expresiones que introdujimos previamente. Habíamos visto que para
+cada expresión damos una función que va de un estado de asignación a variables en
+un natural. Es decir que cada elemento del carrier del álgebra será una función.
+Una dificultad que tenemos con estos conjuntos en Agda es para definir la igualdad
+de dos elementos. Decimos que dos funciones son iguales, si lo son punto a punto,
+lo que se conoce como \textit{igualdad extensional}. Sin embargo en Agda dos funciones
+que tengan esta propiedad no son iguales proposicionalmente (debería explicar qué es esta igualdad),
+por lo cual si para implementar los carriers utilizamos Sets dos funciones extensionalmente iguales,
+no serán el mismo elemento.
 
-\begin{spec}
-record Setoid c ℓ : Set (suc (c ⊔ ℓ)) where
-  infix 4 _≈_
-  field
-    Carrier       : Set c
-    _≈_           : Rel Carrier ℓ
-    isEquivalence : IsEquivalence _≈_
-\end{spec}
+Por esta razón necesitamos contar con un tipo más general que los Sets, de manera de poder definir,
+además del tipo de los elementos que lo conforman, la relación de igualdad. Para ello
+utilizamos \textbf{Setoides}.
 
-El |Carrier| del setoide es el tipo de los elementos que lo componen y |_≈_|
-una relación binaria sobre el carrier. También se requiere la prueba de que esta
-relación es de equivalencia.
-Dados dos setoides $S_1$ y $S_2$ se define el tipo $S_1 \longrightarrow S_2$, que
-consiste de la función que va del carrier de $S_1$ al carrier de $S_2$ (cuya notación
-en Agda será con el símbolo |_⟨$⟩_|) y una prueba de que conserva la relación de igualdad,
-es decir, si $s_1$ |≈|$_{S_1}$ $s_1'$ entonces $f \, s_1$ |≈|$_{S_2}$ $f \, s_1'$
-(|cong|, en Agda).
+\paragraph{Setoides} Aquí explicaré setoides.
 
-Una diferencia importante entre usar setoides en lugar de |Sets| es que podemos tener
-carriers de álgebras con una noción de igualdad que no sea simplemente la igualdad
-proposicional. Por ejemplo, se puede definir el setoide de las funciones de |A| en |B|,
-donde la igualdad subyacente sea la extensional, probando que es una relación de equivalencia.
-También fácilmente se podrían definir álgebras cocientes.
+%% Para implementar los carriers de las álgebras utilizamos setoides.
+%% Un setoide es un tipo que tiene definido una relación de equivalencia sobre sus elementos:
+
+%% \begin{spec}
+%% record Setoid c ℓ : Set (suc (c ⊔ ℓ)) where
+%%   infix 4 _≈_
+%%   field
+%%     Carrier       : Set c
+%%     _≈_           : Rel Carrier ℓ
+%%     isEquivalence : IsEquivalence _≈_
+%% \end{spec}
+
+%% El |Carrier| del setoide es el tipo de los elementos que lo componen y |_≈_|
+%% una relación binaria sobre el carrier. También se requiere la prueba de que esta
+%% relación es de equivalencia.
+%% Dados dos setoides $S_1$ y $S_2$ se define el tipo $S_1 \longrightarrow S_2$, que
+%% consiste de la función que va del carrier de $S_1$ al carrier de $S_2$ (cuya notación
+%% en Agda será con el símbolo |_⟨$⟩_|) y una prueba de que conserva la relación de igualdad,
+%% es decir, si $s_1$ |≈|$_{S_1}$ $s_1'$ entonces $f \, s_1$ |≈|$_{S_2}$ $f \, s_1'$
+%% (|cong|, en Agda).
+
+%% Una diferencia importante entre usar setoides en lugar de |Sets| es que podemos tener
+%% carriers de álgebras con una noción de igualdad que no sea simplemente la igualdad
+%% proposicional. Por ejemplo, se puede definir el setoide de las funciones de |A| en |B|,
+%% donde la igualdad subyacente sea la extensional, probando que es una relación de equivalencia.
+%% También fácilmente se podrían definir álgebras cocientes.
 
 Para definir los carriers de una $\Sigma$-álgebra entonces usaremos setoides:
 
@@ -239,7 +353,7 @@ ISorts : ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → Set _
 ISorts {ℓ₁} {ℓ₂} Σ = (sorts Σ) → Setoid ℓ₁ ℓ₂
 \end{code}
 
-En una $\Sigma$-álgebra $A$, para un sort $s$ de $\Sigma$, su interpretación
+En una $\Sigma$-álgebra $\mathcal{A}$, para un sort $s$ de $\Sigma$, su interpretación
 será un setoide. Para definir la interpretación de una operación utilizaremos
 \textit{vectores heterogéneos}.
 
@@ -1206,10 +1320,11 @@ correct e s σ = (elim≈ₕ unic ExprN e e refl) (s , σ)
 
 El desarrollo completo del ejemplo puede verse en |Ejemplos/CorrectC.agda|, en \cite{univAlgebra}.
 
-\bibliographystyle{abbrvnat}
+\bibliographystyle{apalike}
 \begin{flushleft}
 \bibliography{biblio}
 \end{flushleft}
+
 
 
 \end{document}

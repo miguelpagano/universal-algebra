@@ -87,11 +87,15 @@ La semántica del lenguaje target asignará a cada código una función que va d
 y una pila, a otra pila. Podemos representar la pila con una lista de naturales:
 
 \begin{align*}
-  &exec     :\;Code \rightarrow State \times Stack \rightarrow Stack\\
-  &exec\;(push\,n) \;=\; \lambda\,(\upsigma , s) \rightarrow (s : n)\\
-  &exec\;(load\,v) \;=\;\lambda\,(\upsigma , s) \rightarrow (\upsigma\,v\,:\,s)\\
-  &exec\;(c_1\,;\,c_2)\;=\;\lambda\,(\upsigma , s) \rightarrow exec\;c_2\;(\upsigma,exec\;c_1\;(\upsigma,s))\\
+  &exec     :\;Code \rightarrow Stack \times State \rightarrow Stack\\
+  &exec\;(push\,n) \;=\; \lambda\,(s , \upsigma) \rightarrow (s : n)\\
+  &exec\;(load\,v) \;=\;\lambda\,(s , \upsigma) \rightarrow (\upsigma\,v\,:\,s)\\
+  &exec\;(c_1\,;\,c_2)\;=\;\lambda\,(s , \upsigma) \rightarrow exec\;c_2\;(\upsigma,exec\;c_1\;(\upsigma,s))\\
+  &exec\;add \;\;\;\;\;\;\;=\;\lambda\,(n \, : \, m \, : \, s , \upsigma) \rightarrow (n \, + \, m \, : \, s)\\
 \end{align*}
+
+\noindent Observemos que $exec$ es una función parcial, ya que para el caso de $add$ sólo está definida
+si en la pila hay por lo menos dos elementos.
 
 \paragraph{Compilador}
 El compilador llevará expresiones en $Expr$ a códigos en $Code$:
@@ -114,7 +118,7 @@ de dos signaturas $\Sigma_e$ y $\Sigma_c$, obteniendo sus álgebras de términos
 $T_e$ y $T_c$. Los dominios semánticos, digamos $Sem$ y $Exec$, serán álgebras de
 cada signatura respectivamente. En el primer caso cada elemento del carrier
 del álgebra $Sem$ será una función con tipo $State \rightarrow \mathds{N}$, en el
-segundo una función con tipo $State \times Stack \rightarrow Stack$. Las semánticas
+segundo una función con tipo $Stack \times State \rightarrow Stack$. Las semánticas
 quedan determinadas por el único homomorfismo que existe entre el álgebra de términos
 y cada álgebra, por inicialidad. Tenemos entonces el siguiente diagrama:
 
@@ -430,7 +434,8 @@ Si una operación tiene aridad |ar|, su interpretación será una función entre
 dominio son los vectores heterogéneos con aridad |ar| e interpretación |_⟦_⟧ₛ A|.
 
 \begin{spec}
-_⟦_⟧ₛ* : ∀ {Σ} {ℓ₁} {ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (ar : Arity Σ) → Set _
+_⟦_⟧ₛ* : ∀ {Σ} {ℓ₁} {ℓ₂}  → (A : Algebra {ℓ₁} {ℓ₂} Σ)
+                          → (ar : Arity Σ) → Set _
 _⟦_⟧ₛ* {Σ} A ar = Carrier (VecSet (sorts Σ) (_⟦_⟧ₛ A) ar)
 \end{spec}
 
@@ -534,7 +539,7 @@ _⟿_ {Σ} A A' = (s : sorts Σ) → A ⟦ s ⟧ₛ ⟶ A' ⟦ s ⟧ₛ
 correspondientes a su interpretación en cada álgebra.
 
 Procedamos ahora a definir la condición de homomorfismo. En la parte derecha de la ecuación (1) tenemos
-la aplicación de la función $h$ en cada elemento de $(a_1,...,a_n)$. Definimos esta notación en Agda. Si
+la aplicación de la función $h$ en cada elemento de $(a_1,...,a_n)$. Definimos esta noción en Agda. Si
 |ar| es una aridad y |A| una |Σ|-álgebra, definimos como mapear una función entre álgebras |h| a un
 vector en |A ⟦ ar ⟧ₛ*|. A esta función la notaremos con |map⟿| y no pondremos en este texto
 su definición.
@@ -693,7 +698,7 @@ Esta definición formaliza la definición de $HU_s$ que vimos previamente:
 \begin{itemize}
 \item Si |k : funcs Σ ([] , s)|, entonces |term k ⟨⟩ : HU Σ s|.
 \item Si |f : funcs Σ ([s₁ ,..., sₙ] , s)| y |ts = ⟨ t_1,...,t_n ⟩|, donde
-      |t₁ : HU Σ s₁|,...,|tₙ : HU Σ sₙ|, entonces |term f ts : HU Σ s|.
+      |t₁ : HU Σ s₁| , ... ,|tₙ : HU Σ sₙ|, entonces |term f ts : HU Σ s|.
 \end{itemize}
 
 \paragraph{Ejemplo}
@@ -724,7 +729,7 @@ Podemos formalizarlo así:
 \begin{spec}
 ∣T∣ : (Σ : Signature) → Algebra Σ
 ∣T∣ Σ = record  { _⟦_⟧ₛ = setoid ∘ HU Σ
-               ; _⟦_⟧  = λ f → termFuns f
+                ; _⟦_⟧  = λ f → termFuns f
                 }
   where termFuns f = record  { _⟨$⟩_ = term f
                              ; cong = ...
@@ -732,7 +737,7 @@ Podemos formalizarlo así:
 \end{spec}
 
 \noindent Evitamos detallar en este texto la prueba de preservación de igualdad
-de la función de interpretación por motivos de simplicidad.
+de la función de interpretación por cuestiones de simplicidad.
 
 Gracias a esta definición podemos entonces, a partir de cualquier signatura |Σ|, obtener
 el álgebra de términos |∣T∣ Σ : Algebra Σ|. En lo que resta de esta sección explicaremos
@@ -770,6 +775,7 @@ mutual
   ∣T∣→A {A = A} s (term {s₀ ∷ _} f (t₀ ▹ ts)) =
                  A ⟦ f ⟧ ⟨$⟩ (∣T∣→A s₀ t₀) ▹ map∣T∣→A ts
 
+
   map∣T∣→A :  ∀ {Σ} {A : Algebra Σ} {ar : Arity Σ} →
               VecH (sorts Σ) (HU Σ) ar →
               VecH (sorts Σ) (Carrier ∘ _⟦_⟧ₛ A) ar
@@ -793,12 +799,20 @@ de la condición de homomorfismo ni la preservación de igualdad en el setoide):
                  ; cond = ...}
 \end{spec}
 
-Finalmente sólo resta mostrar que este homomorfismo es único. Para ello, probamos
-que dados dos homomorfismos |h₁| y |h₂| entre |∣T∣ Σ| y |A|, ambos son extensionalmente
-iguales, es decir que |′ h₁ ′ s ⟨$⟩ term f ts| es igual a |′ h₂ ′ s ⟨$⟩ term f ts|, en el
-setoide |A ⟦ s ⟧ₛ|, donde |f| es un símbolo de función con tipo |(ar , s)| y |ts| un
-vector de |HU| indexado en cada elemento de |ar|. La prueba en Agda puede escribirse
-así:
+Finalmente sólo resta mostrar que este homomorfismo es único con respecto a la igualdad
+|_≈ₕ_|, salvo equivalencias. Es decir, debemos probar que dados dos homomorfismos |h₁| y |h₂|
+entre |∣T∣ Σ| y |A|, para todo elemento |term f ts : HU Σ s| se da:
+
+\begin{spec}
+    ′ h₁ ′ s ⟨$⟩ term f ts
+    ≈ₛ
+    ′ h₂ ′ s ⟨$⟩ term f ts
+\end{spec}
+
+\noindent donde |≈ₛ| es la relación de igualdad del carrier del sort |s| en el álgebra |A|,
+es decir |_≈_ A ⟦ s ⟧ₛ|.
+
+Podemos dar la prueba en Agda así:
 
 \begin{spec}
 uni :  (h₁ : Homomorphism (∣T∣ Σ) A) →
@@ -815,81 +829,207 @@ uni h₁ h₂ s (term {ar} f ts) ._ refl =
                               ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond h₂ f ts) ⟩ 
                             ′ h₂ ′ s ⟨$⟩ term f ts
                           ∎
-                  where mapV≡ :  (ar : Arity Σ) → (ts₀ : VecH (sorts Σ) (HU Σ) ar) →
+                  where  mapV≡ :  (ar : Arity Σ) → (ts₀ : VecH (sorts Σ) (HU Σ) ar) →
                                  (mapV (_⟨$⟩_ ∘ ′ h₁ ′) ts₀) ∼v
                                  (mapV (_⟨$⟩_ ∘ ′ h₂ ′) ts₀)
+                         mapV≡ = ...
 \end{spec}
+
+\noindent mapV≡ es la extensión de la prueba |uni| a vectores, y es mutuamente recursiva con ésta.
+No damos su definición por cuestiones de simplicidad.
 
 \section{Transformación de álgebras}
 
-Con el desarrollo algebraico presentado en la sección anterior se puede
-probar la corrección de un traductor de lenguajes.
 
-Un lenguaje puede definirse a partir de una signatura. Los sorts se corresponden
-con las distintas categorías sintácticas del lenguaje, y los símbolos de función
-con constructores (las constantes son símbolos de función con aridad vacía).
-Los términos del lenguaje para un sort $S$ serán los elementos del carrier de sort
-$S$ en el álgebra de términos.
+Con todo lo formalizado en la sección anterior podemos definir los lenguajes
+source y target como álgebras de términos de dos signaturas, sus dominios
+semánticos como álgebras, y las funciones semánticas como homomorfismos, que son
+únicos por inicialidad.
 
-El problema de traducir expresiones de un lenguaje $L_s$ en expresiones de un lenguaje
-$L_t$ puede verse desde un enfoque algebraico. La sintaxis de los lenguajes está
-definida por las signaturas y sus correspondientes álgebras de términos. La semántica
-queda definida por álgebras junto con los homomorfismos dados por inicialidad del álgebra
-de términos:
+El enfoque algebraico para definir un traductor correcto se basa en poder
+ver al lenguaje target y su semántica, como álgebras de la signatura source.
+
+Para ver cómo pueden transformarse álgebras de una signatura a otra consideremos
+el ejemplo del compilador de expresiones. Tenemos los lenguajes $Expr$ y
+$Code$ que pueden definirse a partir de dos signaturas:
+
+\begin{itemize}
+
+\item $\Sigma_e$, con un único sort $E$ y símbolos de función:
+  \begin{itemize}
+    \item Para cada $n \in \mathds{N}$, $val\,n$, cuyo tipo es $[] \rightarrow E$
+    \item Para cada $v \in Var$, $var\,v$, con tipo $[] \rightarrow E$
+    \item $plus$, con tipo $[E , E] \rightarrow E$.
+  \end{itemize}
+\item $\Sigma_m$, con un único sort $C$ y símbolos de función:
+  \begin{itemize}
+    \item Para cada $n \in \mathds{N}$, $push\,n$, cuyo tipo es $[] \rightarrow C$
+    \item Para cada $v \in Var$, $load\,v$, con tipo $[] \rightarrow C$
+    \item $seq$, con tipo $[C , C] \rightarrow C$
+    \item $add$, con tipo $[] \rightarrow C$
+  \end{itemize}
+\end{itemize}  
+
+A partir de estas signaturas tenemos sus álgebras de términos $T(\Sigma_e)$ y
+$T(\Sigma_m)$ que representan la sintaxis de ambos lenguajes.
+
+También podemos definir las semánticas a partir de dos álgebras $Sem$ y $Exec$ de
+cada signatura respectivamente, con los homomorfismos $h_{sem} : T(\Sigma_e) \rightarrow Sem$ y
+$h_{exec} : T(\Sigma_m) \rightarrow Exec$ que están definidos por inicialidad del álgebra de términos.
 
 \begin{diagram}
-  T_s     &     &   &  &    &T_t\\
-  \dTo_{hSem_s} &     &   &  &   &\dTo_{hSem_t}\\
-  Sem_s        &     &   &  &    &Sem_t\\
+  T_(\Sigma_e)     &     &   &  &    &T_(\Sigma_m)\\
+  \dTo_{hSem}  &     &   &  &   &\dTo_{hExec}\\
+  Sem         &     &   &  &    &Exec\\
 \end{diagram}
 
-A una función que lleve expresiones del lenguaje fuente al target la llamamos
-traductor.
-Si podemos transformar las álgebras $T_t$ y $Sem_t$ en álgebras de la signatura $\Sigma_s$
-(es decir, interpretar los sorts y símbolos de función de $\Sigma_s$ en los carriers de dichas
-álgebras), al homomorfismo $hSem_t$ como un homomorfismo entre estas álgebras transformadas (digamos
-$\theta(T_t)$, $\theta(Sem_t)$ y $\theta(hSem_t)$) y si damos un homomorfismo $Enc$ o $Dec$ entre $Sem_s$
-y $\theta(Sem_t)$, el traductor quedará definido por el único homomorfismo que hay entre $T_s$ y
-$\theta(T_t)$, y su corrección por la conmutación del diagrama resultante, gracias a la inicialidad
-de $T_s$:
 
-\begin{diagram}
-  T_s     &\rTo^{trad}  &\theta(T_t)\\
-  \dTo_{hSem_s} &          &\dTo_{\theta(hSem_t)}\\
-  Sem_s        &\pile{\rTo^{Enc} \\ \lTo{Dec}}  &\theta(Sem_t)\\
-\end{diagram}
+Podríamos definir una $\Sigma_e$-álgebra $T_m\sim$ donde la interpretación del sort $E$ sean
+los términos del álgebra de términos $T\,(\Sigma_m)$ de la siguiente manera:
 
-Podemos definir cada álgebra transformada, interpretando los sorts y los símbolos de función
-en los carriers correspondientes. Sin embargo este trabajo sería repetitivo y deberíamos hacerlo
-para cada álgebra de la signatura $\Sigma_t$ que querramos transformar. También deberíamos redefinir
-los homomorfismos, probando que se preserva la condición al cambiar de signatura.
+\begin{itemize}
+  \item $val_{T_m\sim}\,n$ $=$ $push\,n$, para cada $n \in \mathds{N}$.
+  \item $var_{T_m\sim}$  $=$ $load\,v$, para cara $v \in Var$.
+  \item $plus_{T_m\sim}\,c_1\,c_2$ $=$ $seq\,c_1\,(seq\,c_2\,add)$.
+\end{itemize}
 
-En lugar de hacer eso, definiremos un (meta)lenguaje para traducir cualquier álgebra de una signatura en otra.
+\noindent y podríamos también definir una $\Sigma_e$-álgebra $Exec\sim$ así:
+
+\begin{itemize}
+  \item $val_{Exec\sim}\,n$ $=$ $push_{Exec}\,n$, para cada $n \in \mathds{N}$.
+  \item $var_{Exec\sim}$  $=$ $load_{Exec}\,v$, para cara $v \in Var$.
+  \item $plus_{Exec\sim}\,c_1\,c_2$ $=$ $seq_{Exec}\,c_1\,(seq\,c_2\,add_{Exec})$.
+\end{itemize}
+
+De hecho podríamos definir cualquier $\Sigma_e$-álgebra $A\sim$ a partir de una
+$\Sigma_m$-álgebra $A$: Al carrier $E$ lo interpretamos con $C_{A}$. Al símbolo
+constante $val\,n$ lo interpretamos $push_{A}\,n$, al símbolo $var\,v$ con
+$load_{A}\,v$ y a $plus$, con la función que lleva dos elementos
+$a_1, a_2 \in C_{A}$ a $seq_{A}\,a_1\,(seq_{A}\,a_2\,add_{A})$.
+
+Es decir que podemos transformar cualquier $\Sigma_m$-álgebra a la signatura
+$\Sigma_e$ teniendo definido para cada sort de $\Sigma_e$, un sort de $\Sigma_m$,
+y reglas que nos indiquen cómo interpretar un símbolo de función de $\Sigma_e$ combinando
+símbolos de $\Sigma_m$, en este caso teníamos:
+
+\begin{itemize}
+  \item[sorts] $E \rightsquigarrow C$
+  \item[operaciones]
+    \begin{itemize}
+      \item $val\,n \rightsquigarrow push\,n$
+      \item $var\,v \rightsquigarrow load\,v$
+      \item $plus \rightsquigarrow seq\,\#0\,(seq\,\#1\,add)$
+    \end{itemize}  
+\end{itemize}
+
+\noindent En el caso de la interpretación de $plus$, teníamos que aplicar la interpretación
+de $seq$ a los argumentos de la función. Podemos dar la regla general indicando a qué
+argumento nos referimos. En este caso indicamos que debe aplicarse $seq$ al primer argumento
+y a la aplicación de $seq$ al segundo argumento y el símbolo $add$.
+
+Podemos definir en agda cómo dar estas reglas que nos indiquen cómo interpretar
+los sorts y símbolos de una signatura $\Sigma_s$ con sorts y símbolos de
+una signatura $\Sigma_t$, y lo llamaremos \textit{traducción de signaturas}.
+Este concepto se corresponde con la noción de \textit{derived signature morphism} en
+\cite{sannella2012foundations}. Teniendo definida una traducción de signaturas podemos
+transformar cualquier $\Sigma_t$-álgebra en una $\Sigma_e$-álgebra.
+
+
+
+
+
+%% \cite{sannella2012foundations}
+
+%% y $\Sigma_m$. Podríamos
+%% definir una $\Sigma_e$-álgebra que tenga como carrier del único sort a los términos
+%% de $\Sigma_m$.
+
+
+
+%% El framework de traducción algebraico que presentamos se basa en, viendo
+%% a los lenguajes como álgebras de términos 
+
+%% como álgebras de términos de una signatura
+
+%% poder probar la corrección
+%% de un traductor utilizando el resultado de que el álgebra de términos
+%% de una signatura es inicial, es decir, que existe un único homomorfismo
+%% entre ésta y cualquier otra álgebra. El
+
+%% Los lenguajes fuente y target pueden definirse mediante signaturas, y sus
+%% semánticas a partir de álgebras de estas. 
+
+
+
+%% Con el desarrollo algebraico presentado en la sección anterior se puede
+%% probar la corrección de un traductor de lenguajes.
+
+%% Un lenguaje puede definirse a partir de una signatura. Los sorts se corresponden
+%% con las distintas categorías sintácticas del lenguaje, y los símbolos de función
+%% con constructores (las constantes son símbolos de función con aridad vacía).
+%% Los términos del lenguaje para un sort $S$ serán los elementos del carrier de sort
+%% $S$ en el álgebra de términos.
+
+%% El problema de traducir expresiones de un lenguaje $L_s$ en expresiones de un lenguaje
+%% $L_t$ puede verse desde un enfoque algebraico. La sintaxis de los lenguajes está
+%% definida por las signaturas y sus correspondientes álgebras de términos. La semántica
+%% queda definida por álgebras junto con los homomorfismos dados por inicialidad del álgebra
+%% de términos:
+
+%% \begin{diagram}
+%%   T_s     &     &   &  &    &T_t\\
+%%   \dTo_{hSem_s} &     &   &  &   &\dTo_{hSem_t}\\
+%%   Sem_s        &     &   &  &    &Sem_t\\
+%% \end{diagram}
+
+%% A una función que lleve expresiones del lenguaje fuente al target la llamamos
+%% traductor.
+%% Si podemos transformar las álgebras $T_t$ y $Sem_t$ en álgebras de la signatura $\Sigma_s$
+%% (es decir, interpretar los sorts y símbolos de función de $\Sigma_s$ en los carriers de dichas
+%% álgebras), al homomorfismo $hSem_t$ como un homomorfismo entre estas álgebras transformadas (digamos
+%% $\theta(T_t)$, $\theta(Sem_t)$ y $\theta(hSem_t)$) y si damos un homomorfismo $Enc$ o $Dec$ entre $Sem_s$
+%% y $\theta(Sem_t)$, el traductor quedará definido por el único homomorfismo que hay entre $T_s$ y
+%% $\theta(T_t)$, y su corrección por la conmutación del diagrama resultante, gracias a la inicialidad
+%% de $T_s$:
+
+%% \begin{diagram}
+%%   T_s     &\rTo^{trad}  &\theta(T_t)\\
+%%   \dTo_{hSem_s} &          &\dTo_{\theta(hSem_t)}\\
+%%   Sem_s        &\pile{\rTo^{Enc} \\ \lTo{Dec}}  &\theta(Sem_t)\\
+%% \end{diagram}
+
+%% Podemos definir cada álgebra transformada, interpretando los sorts y los símbolos de función
+%% en los carriers correspondientes. Sin embargo este trabajo sería repetitivo y deberíamos hacerlo
+%% para cada álgebra de la signatura $\Sigma_t$ que querramos transformar. También deberíamos redefinir
+%% los homomorfismos, probando que se preserva la condición al cambiar de signatura.
+
+%% En lugar de hacer eso, definiremos un (meta)lenguaje para traducir cualquier álgebra de una signatura en otra.
 
 \subsection*{Traducción de signaturas}
 
-Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, para llevar álgebras de $\Sigma_t$ en $\Sigma_s$ definimos
-una \textit{traducción} de $\Sigma_s$ a $\Sigma_t$. Ésta consiste en una función que lleve sorts
-de $\Sigma_s$ en $\Sigma_t$ y \textit{reglas} para traducir los símbolos de función.
+Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, una traducción $\Sigma_s \rightsquigarrow \Sigma_t$ consiste
+de un mapeo de sorts de $\Sigma_s$ en sorts de $\Sigma_t$, y de reglas para traducir símbolos de función.
 
-\begin{spec}
-sorts↝ : (Σₛ Σₜ : Signature) → Set
-sorts↝ = sorts Σₛ → sorts Σₜ
-\end{spec}
+La traducción de símbolos de función será una función que lleve cada operación $f$ de la signatura
+$\Sigma_s$ a una \textit{expresión} consistente de combinar símbolos de función de $\Sigma_t$
+de manera que se respete el tipo de $f$. Estas expresiones pueden ser o bien un argumento de la
+interpretación de la función (en caso que $f$ no sea constante) o bien la aplicación de alguna operación
+$g$ de $\Sigma_t$ a expresiones con los sorts correspondientes:
 
-\noindent La traducción de sorts será una función entre los sorts de las signaturas.
 
-Sea |ts : sorts↝|, si tenemos un símbolo de función |f| en |Σₛ| con tipo |([sˢ₁,...,sˢₙ] , s)|, daremos una regla
-que permita interpretar al símbolo |f| en un álgebra |A| definida para la signatura |Σₜ|.
-La interpretación de |f| es una función que va de un vector |⟨v₁,...,vₙ⟩|, donde cada |vᵢ| pertenece
-a la interpretación en |A| del sort |(ts sˢᵢ)|, a un elemento en la interpretación en |A| del sort
-|(ts s)|.
-Podemos dar una regla que diga cómo definir esta interpretación para cualquier |Σₜ|-álgebra. Al símbolo
-|f| lo traducimos a una expresión consistente de combinar símbolos de función de |Σₜ| de manera que respeten
-el tipo de |f|. En esta expresión pueden ocurrir referencias a los parámetros de la interpretación de la función
-o aplicación de símbolos de función en la signatura target a un vector de expresiones, donde también podrán
-ocurrir referencias a parámetros.
-Damos una definición recursiva para estas expresiones, que llamamos |ΣExpr|:
+
+
+%% Sea |ts : sorts↝|, si tenemos un símbolo de función |f| en |Σₛ| con tipo |([sˢ₁,...,sˢₙ] , s)|, daremos una regla
+%% que permita interpretar al símbolo |f| en un álgebra |A| definida para la signatura |Σₜ|.
+%% La interpretación de |f| es una función que va de un vector |⟨v₁,...,vₙ⟩|, donde cada |vᵢ| pertenece
+%% a la interpretación en |A| del sort |(ts sˢᵢ)|, a un elemento en la interpretación en |A| del sort
+%% |(ts s)|.
+%% Podemos dar una regla que diga cómo definir esta interpretación para cualquier |Σₜ|-álgebra. Al símbolo
+%% |f| lo traducimos a una expresión consistente de combinar símbolos de función de |Σₜ| de manera que respeten
+%% el tipo de |f|. En esta expresión pueden ocurrir referencias a los parámetros de la interpretación de la función
+%% o aplicación de símbolos de función en la signatura target a un vector de expresiones, donde también podrán
+%% ocurrir referencias a parámetros.
+%% Damos una definición recursiva para estas expresiones, que llamamos |ΣExpr|:
 
 \begin{spec}
 data ΣExpr (Σ : Signature) (ar : Arity Σ) : (sorts Σ) → Set where
@@ -897,42 +1037,6 @@ data ΣExpr (Σ : Signature) (ar : Arity Σ) : (sorts Σ) → Set where
   _∣$∣_   : ∀ {ar'} {s} → (f : funcs Σ (ar' , s)) →
              (es : VecH (sorts Σ) (ΣExpr Σ ar) ar') → ΣExpr Σ ar s
 \end{spec}
-
-Un elemento |e : ΣExpr Σ ar s| será una expresión en la cual pueden ocurrir
-referencias a parámetros correspondiéndose con la aridad |ar| y el sort resultante
-es |s|. La expresión |e| puede ser una referencia al parámetro |i|-ésimo (|# i|), en cuyo
-caso |s| será igual a |(ar ‼ i)|. O puede ser la aplicación de un símbolo de función con alguna aridad
-|ar'| y sort |s|, aplicado a un vector de |ΣExpr|.
-
-Un ejemplo de |ΣExpr| podría ser el siguiente:
-
-\medskip
-\noindent Sean
-\begin{spec}
-Σ : Signature
-
-s₁ s₂ s₃ s : sorts Σ
-
-ar = s₁ ∷ s₂ ∷ [ s₃ ]
-
-ar' = s₂
-
-g : funcs Σ (ar' , s)
-\end{spec}
-
-\noindent Podemos definir:
-
-\begin{spec}
-e : ΣExpr Σ ar s
-e = g ∣$∣ (# (suc zero))
-\end{spec}
-
-\noindent La expresión |e| representa una regla para definir una interpretación,
-la cual consistirá de aplicar la interpretación de la operación |g| al segundo
-argumento. Observemos que la única forma posible de escribir estas reglas es con
-los tipos correctos.
-
-Definamos entonces la traducción de signaturas:
 
 \begin{spec}
 record _↝_ (Σₛ : Signature) (Σₜ : Signature) : Set where
@@ -942,10 +1046,47 @@ record _↝_ (Σₛ : Signature) (Σₜ : Signature) : Set where
                         ΣExpr Σₜ (map ↝ₛ ar) (↝ₛ s)
 \end{spec}
 
-\noindent Para traducir una signatura debemos definir una traducción de sorts |↝ₛ| y
-una traducción de símbolos de función, que consiste en asignar para cada símbolo |f| de
-la signatura |Σₛ| con tipo |(ar , s)|, una |ΣExpr| de |Σₜ| donde cada sort es traducido con
-la función |↝ₛ|.
+Un elemento |e : ΣExpr Σ ar s| será una expresión en la cual pueden ocurrir
+referencias a parámetros correspondiéndose con la aridad |ar| y el sort resultante
+es |s|. La expresión |e| puede ser una referencia al parámetro |i|-ésimo (|# i|), en cuyo
+caso |s| será igual a |(ar ‼ i)|. O puede ser la aplicación de un símbolo de función con alguna aridad
+|ar'| y sort |s|, aplicado a un vector de |ΣExpr|.
+
+%%Un ejemplo de |ΣExpr| podría ser el siguiente:
+
+%% \medskip
+%% \noindent Sean
+%% \begin{spec}
+%% Σ : Signature
+
+%% s₁ s₂ s₃ s : sorts Σ
+
+%% ar = s₁ ∷ s₂ ∷ [ s₃ ]
+
+%% ar' = s₂
+
+%% g : funcs Σ (ar' , s)
+%% \end{spec}
+
+%% \noindent Podemos definir:
+
+%% \begin{spec}
+%% e : ΣExpr Σ ar s
+%% e = g ∣$∣ (# (suc zero))
+%% \end{spec}
+
+%% \noindent La expresión |e| representa una regla para definir una interpretación,
+%% la cual consistirá de aplicar la interpretación de la operación |g| al segundo
+%% argumento. Observemos que la única forma posible de escribir estas reglas es con
+%% los tipos correctos.
+
+%%Definamos entonces la traducción de signaturas:
+
+
+%% \noindent Para traducir una signatura debemos definir una traducción de sorts |↝ₛ| y
+%% una traducción de símbolos de función, que consiste en asignar para cada símbolo |f| de
+%% la signatura |Σₛ| con tipo |(ar , s)|, una |ΣExpr| de |Σₜ| donde cada sort es traducido con
+%% la función |↝ₛ|.
 
 \paragraph{Ejemplo}
 
@@ -1025,463 +1166,466 @@ Finalmente la traducción de las signaturas será:
 
 \subsection*{Transformación de álgebras}
 
-Teniendo una traducción de una signatura |Σₛ| a otra |Σₜ|, podemos definir
-una |Σₛ|-álgebra a partir de una |Σₜ|-álgebra.
+Teniendo una traducción $\Sigma_s \rightsquigarrow \Sigma_t$, podemos definir
+una $\Sigma_s$-álgebra a partir de una $\Sigma_t$-álgebra. Llamaremos
+\textit{álgebra transformada} a la $\Sigma_s$-álgebra obtenida por una traducción.
+Este concepto se corresponde con \textit{reduct algebra w.r.t. a derived signature morphism}
+en \cite{sannella2012foundations}.
 
-Sean |sˢ₁,...,sˢₙ| y |fˢ₁,...,fˢₖ| los sorts y símbolos de función de |Σₛ|;
-|sᵗ₁,...,sᵗₘ| y |fᵗ₁,...,fᵗⱼ| los sorts y símbolos de función de |Σₜ|;
-y |t : Σₛ ↝ Σₜ|. A partir de una |Σₜ|-álgebra |A| podemos definir una
-|Σₛ|-álgebra de la siguiente manera:
+%% Sean |sˢ₁,...,sˢₙ| y |fˢ₁,...,fˢₖ| los sorts y símbolos de función de |Σₛ|;
+%% |sᵗ₁,...,sᵗₘ| y |fᵗ₁,...,fᵗⱼ| los sorts y símbolos de función de |Σₜ|;
+%% y |t : Σₛ ↝ Σₜ|. A partir de una |Σₜ|-álgebra |A| podemos definir una
+%% |Σₛ|-álgebra de la siguiente manera:
 
-\begin{itemize}
-  \item Interpretamos a cada sort |sˢᵢ| con |a ⟦ ↝ₛ t sˢᵢ ⟧|.
-  \item Para cada símbolo de función |fˢᵢ| con aridad |arᵢ|, definimos la interpretación de la siguiente manera:
-    \begin{itemize}
-    \item Si |↝f t fˢᵢ| es |# h|, con |h : Fin (length arᵢ)| definiremos la interpretación
-          \begin{spec}
-            ifˢᵢ vs = vs ‼ h
-          \end{spec}
-    \item Si |↝f t fˢᵢ| es |g ∣$∣ ⟨ e₁ , ... , eₚ ⟩ |, donde |g : funcs Σₜ ar' s'| y |e₁ , ... , eₚ| son
-          |ΣExpr|:
-          \begin{spec}
-            ifˢᵢ vs = A ⟦ g ⟧ ⟨$⟩ ies
-          \end{spec}
+%% \begin{itemize}
+%%   \item Interpretamos a cada sort |sˢᵢ| con |a ⟦ ↝ₛ t sˢᵢ ⟧|.
+%%   \item Para cada símbolo de función |fˢᵢ| con aridad |arᵢ|, definimos la interpretación de la siguiente manera:
+%%     \begin{itemize}
+%%     \item Si |↝f t fˢᵢ| es |# h|, con |h : Fin (length arᵢ)| definiremos la interpretación
+%%           \begin{spec}
+%%             ifˢᵢ vs = vs ‼ h
+%%           \end{spec}
+%%     \item Si |↝f t fˢᵢ| es |g ∣$∣ ⟨ e₁ , ... , eₚ ⟩ |, donde |g : funcs Σₜ ar' s'| y |e₁ , ... , eₚ| son
+%%           |ΣExpr|:
+%%           \begin{spec}
+%%             ifˢᵢ vs = A ⟦ g ⟧ ⟨$⟩ ies
+%%           \end{spec}
 
-          donde |ies| es el vector resultante de interpretar cada expresión |e₁,...,eₚ|, y posiblemente
-          ocurran elementos de |vs|.
-    \end{itemize}
-\end{itemize}
+%%           donde |ies| es el vector resultante de interpretar cada expresión |e₁,...,eₚ|, y posiblemente
+%%           ocurran elementos de |vs|.
+%%     \end{itemize}
+%% \end{itemize}
 
-Con estas ideas intuitivas podemos definir formalmente la transformación de álgebras. No mostraremos
-los detalles, pueden encontrarse en el archivo |AlgTransf.agda|, en \cite{univAlgebra}.
+%% Con estas ideas intuitivas podemos definir formalmente la transformación de álgebras. No mostraremos
+%% los detalles, pueden encontrarse en el archivo |AlgTransf.agda|, en \cite{univAlgebra}.
 
-\begin{spec}
-_〈_〉 : ∀  {Σ₀} {Σ₁} → (t : Σ₀ ↝ Σ₁) →
-            (a : Algebra Σ₁) → Algebra Σ₀
-t 〈 a 〉 =  (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥
-           (λ f → iFun↝ f (↝f t f) a)
-\end{spec}
+%% \begin{spec}
+%% _〈_〉 : ∀  {Σ₀} {Σ₁} → (t : Σ₀ ↝ Σ₁) →
+%%             (a : Algebra Σ₁) → Algebra Σ₀
+%% t 〈 a 〉 =  (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥
+%%            (λ f → iFun↝ f (↝f t f) a)
+%% \end{spec}
 
-\noindent La definición de |iFun↝| formaliza la idea intuitiva explicada previamente.
+%% \noindent La definición de |iFun↝| formaliza la idea intuitiva explicada previamente.
 
-Tenemos entonces que a partir de una traducción |t : Σₛ ↝ Σₜ| y una |Σₜ|-álgebra A podemos
-obtener una |Σₛ|-álgebra, y esta es t 〈 A 〉.
+%% Tenemos entonces que a partir de una traducción |t : Σₛ ↝ Σₜ| y una |Σₜ|-álgebra A podemos
+%% obtener una |Σₛ|-álgebra, y esta es t 〈 A 〉.
 
-Podremos también transformar un homomorfismo |h| entre dos |Σₜ|-álgebras |A| y |A'| a un homomorfismo
-entre |t 〈 A 〉| y |t 〈 A' 〉|, cuya notación será |t 〈 h 〉ₕ|. Los detalles también se pueden ver en
-(CITA).
+%% Podremos también transformar un homomorfismo |h| entre dos |Σₜ|-álgebras |A| y |A'| a un homomorfismo
+%% entre |t 〈 A 〉| y |t 〈 A' 〉|, cuya notación será |t 〈 h 〉ₕ|. Los detalles también se pueden ver en
+%% (CITA).
 
 
 
 \section{Corrección de un compilador de expresiones}
 
-En esta sección mostraremos la corrección de un compilador de un lenguaje
-de expresiones naturales sencillo, a un lenguaje de máquina, que manipula un
-stack.
+%% En esta sección mostraremos la corrección de un compilador de un lenguaje
+%% de expresiones naturales sencillo, a un lenguaje de máquina, que manipula un
+%% stack.
 
-El lenguaje fuente tiene la siguiente sintaxis:
+%% El lenguaje fuente tiene la siguiente sintaxis:
 
-\begin{quote}
-$ e  ::=  \;\; n  \;\; || \;\;  v \;\; || \;\; e_1 ⊕ e_2 $
-\end{quote}
+%% \begin{quote}
+%% $ e  ::=  \;\; n  \;\; || \;\;  v \;\; || \;\; e_1 ⊕ e_2 $
+%% \end{quote}
 
-\noindent donde $n$ es una constante natural y $v$ una variable.
+%% \noindent donde $n$ es una constante natural y $v$ una variable.
 
-La semántica de este lenguaje es la esperada, obteniendo un valor natural a partir
-de un estado de asignación de valores a las variables.
+%% La semántica de este lenguaje es la esperada, obteniendo un valor natural a partir
+%% de un estado de asignación de valores a las variables.
 
-\medskip
+%% \medskip
 
-El lenguaje target tiene la siguiente sintaxis:
+%% El lenguaje target tiene la siguiente sintaxis:
 
-\begin{quote}
-$ c  ::=  \;\; push\,n  \;\; || \;\; load\, v \;\; || \;\; c_1 ; c_2 \;\; || \;\; add $
-\end{quote}
+%% \begin{quote}
+%% $ c  ::=  \;\; push\,n  \;\; || \;\; load\, v \;\; || \;\; c_1 ; c_2 \;\; || \;\; add $
+%% \end{quote}
 
-\noindent donde $n$ es una constante natural y $v$ una variable.
+%% \noindent donde $n$ es una constante natural y $v$ una variable.
 
-Informalmente, la ejecución de un código del lenguaje target modificará una pila de elementos
-naturales utilizando también un estado de asignación de valores a las variables.
-$push\,n$ pone en el tope de la pila el valor $n$; $load\,v$ pone en el tope de la pila el valor
-de la variable $v$ en el estado; $c_1 ; c_2$ ejecuta $c_1$ y luego $c_2$ a partir del stack resultante;
-y por último $add$ a partir de una pila que tiene al menos dos elementos en el tope, los quita de la pila
-y pone el resultado de sumarlos.
+%% Informalmente, la ejecución de un código del lenguaje target modificará una pila de elementos
+%% naturales utilizando también un estado de asignación de valores a las variables.
+%% $push\,n$ pone en el tope de la pila el valor $n$; $load\,v$ pone en el tope de la pila el valor
+%% de la variable $v$ en el estado; $c_1 ; c_2$ ejecuta $c_1$ y luego $c_2$ a partir del stack resultante;
+%% y por último $add$ a partir de una pila que tiene al menos dos elementos en el tope, los quita de la pila
+%% y pone el resultado de sumarlos.
 
-El compilador lo definiríamos de esta forma:
+%% El compilador lo definiríamos de esta forma:
 
-\begin{align*}
-  comp\;n  &= push\;n\\
-  comp\;v  &= load\;v\\
-  comp\;e_1 \oplus e_2 &= comp\;e_1 ; comp\;e_2 ; add
-\end{align*}
+%% \begin{align*}
+%%   comp\;n  &= push\;n\\
+%%   comp\;v  &= load\;v\\
+%%   comp\;e_1 \oplus e_2 &= comp\;e_1 ; comp\;e_2 ; add
+%% \end{align*}
 
 
-Procedamos a definir este compilador de manera correcta utilizando el framework presentado
-en las secciones anteriores.
+%% Procedamos a definir este compilador de manera correcta utilizando el framework presentado
+%% en las secciones anteriores.
 
-\subsection{Sintaxis}
+%% \subsection{Sintaxis}
 
-Podemos definir la sintaxis de ambos lenguajes a partir de dos signaturas |Σₑ| y |Σₘ|,
-obteniendo las respectivas álgebras de términos:
+%% Podemos definir la sintaxis de ambos lenguajes a partir de dos signaturas |Σₑ| y |Σₘ|,
+%% obteniendo las respectivas álgebras de términos:
 
-\subsubsection*{Sintaxis del lenguaje source}
+%% \subsubsection*{Sintaxis del lenguaje source}
 
-\begin{spec}
-data Sortsₑ : Sorts where
-  ExprN : Sortsₑ
+%% \begin{spec}
+%% data Sortsₑ : Sorts where
+%%   ExprN : Sortsₑ
 
-data Funcsₑ : Funcs Sortsₑ where
-  valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
-  plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
-  varN  : (v : Var) → Funcsₑ ([] , ExprN)
+%% data Funcsₑ : Funcs Sortsₑ where
+%%   valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
+%%   plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
+%%   varN  : (v : Var) → Funcsₑ ([] , ExprN)
 
 
-Σₑ : Signature
-Σₑ = record  { sorts = Sortsₑ
-             ; funcs = Funcsₑ
-             }
+%% Σₑ : Signature
+%% Σₑ = record  { sorts = Sortsₑ
+%%              ; funcs = Funcsₑ
+%%              }
 
-ExprAlg : Algebra Σₑ
-ExprAlg = ∣T∣ Σₑ
+%% ExprAlg : Algebra Σₑ
+%% ExprAlg = ∣T∣ Σₑ
 
-\end{spec}
+%% \end{spec}
 
-\noindent La expresión $3 \oplus ``x''$ del lenguaje source se corresponde con
+%% \noindent La expresión $3 \oplus ``x''$ del lenguaje source se corresponde con
 
-\begin{spec}
-term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩)
-\end{spec}
+%% \begin{spec}
+%% term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩)
+%% \end{spec}
 
-\noindent en el álgebra de términos |ExprAlg|.
+%% \noindent en el álgebra de términos |ExprAlg|.
 
-\subsubsection*{Sintaxis del lenguaje target}
+%% \subsubsection*{Sintaxis del lenguaje target}
 
-\begin{spec}
-data Sortsₘ : Sorts where
-  Codeₛ : Sortsₘ
+%% \begin{spec}
+%% data Sortsₘ : Sorts where
+%%   Codeₛ : Sortsₘ
 
-data Funcsₘ : Funcs Sortsₘ where
-  pushₘ  : (n : ℕ) → Funcsₘ ([] , Codeₛ)
-  loadₘ  : (v : Var) → Funcsₘ ([] , Codeₛ)
-  addₘ   : Funcsₘ ([] , Codeₛ)
-  seqₘ   : Funcsₘ (Codeₛ ∷ Codeₛ ∷ [] , Codeₛ)
+%% data Funcsₘ : Funcs Sortsₘ where
+%%   pushₘ  : (n : ℕ) → Funcsₘ ([] , Codeₛ)
+%%   loadₘ  : (v : Var) → Funcsₘ ([] , Codeₛ)
+%%   addₘ   : Funcsₘ ([] , Codeₛ)
+%%   seqₘ   : Funcsₘ (Codeₛ ∷ Codeₛ ∷ [] , Codeₛ)
 
-Σₘ : Signature
-Σₘ = record  { sorts = Sortsₘ
-             ; funcs = Funcsₘ
-             }
+%% Σₘ : Signature
+%% Σₘ = record  { sorts = Sortsₘ
+%%              ; funcs = Funcsₘ
+%%              }
 
-CodeAlg : Algebra Σₘ
-CodeAlg = ∣T∣ Σₘ
-\end{spec}
+%% CodeAlg : Algebra Σₘ
+%% CodeAlg = ∣T∣ Σₘ
+%% \end{spec}
 
-\noindent La expresión $push\;3;load\;``x'';add$ del lenguaje target se corresponde con
+%% \noindent La expresión $push\;3;load\;``x'';add$ del lenguaje target se corresponde con
 
-\begin{spec}
-  term seqₘ  (term (pushₘ 3) ⟨⟩ ▹
-             (term seqₘ  (term (loadₘ `` x '') ⟨⟩ ▹
-                         term add ⟨⟩ ▹
-                         ⟨⟩)) ▹
-             ⟨⟩)
-\end{spec}
+%% \begin{spec}
+%%   term seqₘ  (term (pushₘ 3) ⟨⟩ ▹
+%%              (term seqₘ  (term (loadₘ `` x '') ⟨⟩ ▹
+%%                          term add ⟨⟩ ▹
+%%                          ⟨⟩)) ▹
+%%              ⟨⟩)
+%% \end{spec}
 
-\noindent en el álgebra de términos |CodeAlg|.
+%% \noindent en el álgebra de términos |CodeAlg|.
 
-\subsection{Semántica}
+%% \subsection{Semántica}
 
-Las semánticas de ambos lenguajes las definimos a partir de álgebras
-de las signaturas, obteniendo un homomorfismo desde el álgebra de términos.
+%% Las semánticas de ambos lenguajes las definimos a partir de álgebras
+%% de las signaturas, obteniendo un homomorfismo desde el álgebra de términos.
 
-\subsubsection*{Semántica del lenguaje source}
+%% \subsubsection*{Semántica del lenguaje source}
 
-La semántica del lenguaje source para cada expresión es una función
-que va de un estado en un natural. El setoide de estas funciones podemos
-definirlo con la función |→-setoid| de la librería estándar, y será
-la interpretación del sort |ExprN|.
+%% La semántica del lenguaje source para cada expresión es una función
+%% que va de un estado en un natural. El setoide de estas funciones podemos
+%% definirlo con la función |→-setoid| de la librería estándar, y será
+%% la interpretación del sort |ExprN|.
 
-\begin{spec}
-State : Set
-State = Var → ℕ
+%% \begin{spec}
+%% State : Set
+%% State = Var → ℕ
 
-iSortsₑ : ISorts Σₑ
-iSortsₑ ExprN = State →-setoid ℕ
+%% iSortsₑ : ISorts Σₑ
+%% iSortsₑ ExprN = State →-setoid ℕ
 
-if : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
-                   VecH Sortsₑ (Carrier ∘ iSortsₑ) ar →
-                   Carrier (iSortsₑ s)
-if (valN n) ⟨⟩           = λ σ → n
-if plus (v₀ ▹ v₁ ▹ ⟨⟩) σ = v₀ σ + v₁ σ
-if (varN x) ⟨⟩           = λ σ → σ x
+%% if : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
+%%                    VecH Sortsₑ (Carrier ∘ iSortsₑ) ar →
+%%                    Carrier (iSortsₑ s)
+%% if (valN n) ⟨⟩           = λ σ → n
+%% if plus (v₀ ▹ v₁ ▹ ⟨⟩) σ = v₀ σ + v₁ σ
+%% if (varN x) ⟨⟩           = λ σ → σ x
 
-iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
-iFuncsₑ f = record  { _⟨$⟩_ = if f
-                    ; cong = ... }
+%% iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
+%% iFuncsₑ f = record  { _⟨$⟩_ = if f
+%%                     ; cong = ... }
 
-Semₑ : Algebra Σₑ
-Semₑ = iSortsₑ ∥ iFuncsₑ
+%% Semₑ : Algebra Σₑ
+%% Semₑ = iSortsₑ ∥ iFuncsₑ
 
-hSem : Homomorphism ExprAlg Semₑ
-hSem = ∣T∣ₕ Semₑ
-\end{spec}
+%% hSem : Homomorphism ExprAlg Semₑ
+%% hSem = ∣T∣ₕ Semₑ
+%% \end{spec}
 
-De esta forma el valor semántico para la expresión $3 \oplus ``x''$ será:
+%% De esta forma el valor semántico para la expresión $3 \oplus ``x''$ será:
 
-\begin{spec}
-  ′ hSem ′ ExprN ⟨$⟩ e = λ σ → 3
-\end{spec}
+%% \begin{spec}
+%%   ′ hSem ′ ExprN ⟨$⟩ e = λ σ → 3
+%% \end{spec}
 
-\noindent donde |e = term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩)|.
+%% \noindent donde |e = term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩)|.
 
-\subsubsection*{Semántica del lenguaje target}
+%% \subsubsection*{Semántica del lenguaje target}
 
-En el lenguaje target la semántica para cada expresión es una función parcial que va
-de un par consistente de una ``pila'' de naturales y un estado de asignación
-de valores a las variables (que llamaremos |Conf|), a otra pila. Esta función es parcial ya que la expresión $add$
-puede ejecutarse sólamente si en la pila hay por lo menos dos elementos.
-Implementaremos esta parcialidad utilizando el tipo |Maybe|:
+%% En el lenguaje target la semántica para cada expresión es una función parcial que va
+%% de un par consistente de una ``pila'' de naturales y un estado de asignación
+%% de valores a las variables (que llamaremos |Conf|), a otra pila. Esta función es parcial ya que la expresión $add$
+%% puede ejecutarse sólamente si en la pila hay por lo menos dos elementos.
+%% Implementaremos esta parcialidad utilizando el tipo |Maybe|:
 
-\begin{spec}
-data Stack : Set where
-  ε   : Stack
-  _▸_ : ℕ → Stack → Stack
+%% \begin{spec}
+%% data Stack : Set where
+%%   ε   : Stack
+%%   _▸_ : ℕ → Stack → Stack
 
-Conf : Set
-Conf = Stack × State
+%% Conf : Set
+%% Conf = Stack × State
 
 
-iSortsₘ : ISorts Σₘ
-iSortsₘ Codeₛ = Conf →-setoid Maybe Stack
+%% iSortsₘ : ISorts Σₘ
+%% iSortsₘ Codeₛ = Conf →-setoid Maybe Stack
 
 
-ifₘ : ∀ {ar} {s} →  (f : funcs Σₘ (ar , s)) →
-                    VecH Sortsₘ (Carrier ∘ iSortsₘ) ar →
-                    Carrier (iSortsₘ s)
-ifₘ (pushₘ n) ⟨⟩  = λ {(s , σ) → just (n ▸ s)}
-ifₘ (loadₘ v) ⟨⟩  = λ {(s , σ) → just (σ v ▸ s)}
-ifₘ addₘ ⟨⟩       = λ  {  (n₀ ▸ n₁ ▸ s , σ)  → just (n₀ + n₁ ▸ s) ;
-                          (_ , σ)            → nothing
-                       }
-ifₘ seqₘ (v₀ ▹ v₁ ▹ ⟨⟩) = λ {(s , σ) → v₀ (s , σ) >>= λ s' → v₁ (s' , σ)}
+%% ifₘ : ∀ {ar} {s} →  (f : funcs Σₘ (ar , s)) →
+%%                     VecH Sortsₘ (Carrier ∘ iSortsₘ) ar →
+%%                     Carrier (iSortsₘ s)
+%% ifₘ (pushₘ n) ⟨⟩  = λ {(s , σ) → just (n ▸ s)}
+%% ifₘ (loadₘ v) ⟨⟩  = λ {(s , σ) → just (σ v ▸ s)}
+%% ifₘ addₘ ⟨⟩       = λ  {  (n₀ ▸ n₁ ▸ s , σ)  → just (n₀ + n₁ ▸ s) ;
+%%                           (_ , σ)            → nothing
+%%                        }
+%% ifₘ seqₘ (v₀ ▹ v₁ ▹ ⟨⟩) = λ {(s , σ) → v₀ (s , σ) >>= λ s' → v₁ (s' , σ)}
 
 
-iFuncsₘ : ∀ {ty} → (f : funcs Σₘ ty) → IFuncs Σₘ ty iSortsₘ
-iFuncsₘ f = record  { _⟨$⟩_ = ifₘ f
-                    ; cong = ... }
+%% iFuncsₘ : ∀ {ty} → (f : funcs Σₘ ty) → IFuncs Σₘ ty iSortsₘ
+%% iFuncsₘ f = record  { _⟨$⟩_ = ifₘ f
+%%                     ; cong = ... }
 
-Exec : Algebra Σₘ
-Exec = iSortsₘ ∥ iFuncsₘ
+%% Exec : Algebra Σₘ
+%% Exec = iSortsₘ ∥ iFuncsₘ
 
-hexec : Homomorphism CodeAlg Exec
-hexec = ∣T∣ₕ Exec
-\end{spec}
+%% hexec : Homomorphism CodeAlg Exec
+%% hexec = ∣T∣ₕ Exec
+%% \end{spec}
 
-Como ejemplo consideremos el término
+%% Como ejemplo consideremos el término
 
-\begin{spec}
-c = term seqₘ  (term (pushₘ 3) ⟨⟩ ▹
-               (term seqₘ  (term (loadₘ `` x '') ⟨⟩ ▹
-                           term add ⟨⟩ ▹
-                           ⟨⟩)) ▹
-               ⟨⟩)
-\end{spec}
+%% \begin{spec}
+%% c = term seqₘ  (term (pushₘ 3) ⟨⟩ ▹
+%%                (term seqₘ  (term (loadₘ `` x '') ⟨⟩ ▹
+%%                            term add ⟨⟩ ▹
+%%                            ⟨⟩)) ▹
+%%                ⟨⟩)
+%% \end{spec}
 
 
-\noindent su semántica se obtendrá con el homomorfismo |hexec|:
+%% \noindent su semántica se obtendrá con el homomorfismo |hexec|:
 
-\begin{spec}
-  ′ hexec ′ Codeₛ ⟨$⟩ c = λ {(s , σ) → just (σ " x " + 3 ▸ s)
-\end{spec}
+%% \begin{spec}
+%%   ′ hexec ′ Codeₛ ⟨$⟩ c = λ {(s , σ) → just (σ " x " + 3 ▸ s)
+%% \end{spec}
 
 
-\subsection{Traducción}
+%% \subsection{Traducción}
 
-Tenemos los lenguajes source y target definidos con sus respectivas
-semánticas. Podemos graficarlo en el siguiente diagrama:
+%% Tenemos los lenguajes source y target definidos con sus respectivas
+%% semánticas. Podemos graficarlo en el siguiente diagrama:
 
-\begin{diagram}
-  |ExprAlg|     &     &   &  &    &|CodeAlg|\\
-  \dTo_{|hSem|} &     &   &  &   &\dTo_{|hexec|}\\
-  |Semₑ|        &     &   &  &    &|Exec|\\
-\end{diagram}
+%% \begin{diagram}
+%%   |ExprAlg|     &     &   &  &    &|CodeAlg|\\
+%%   \dTo_{|hSem|} &     &   &  &   &\dTo_{|hexec|}\\
+%%   |Semₑ|        &     &   &  &    &|Exec|\\
+%% \end{diagram}
 
 
-Para poder traducir correctamente un lenguaje a otro según el framework que
-presentamos, necesitamos llevar |CodeAlg| y |Exec| a la signatura |Σₑ|. Para ello definimos
-una \textbf{traducción}. Como tenemos un sólo sort en cada lenguaje hay una
-única opción para definir la traducción de sorts: |ExprN| se traduce
-en |Codeₛ|.
-La traducción de símbolos de función dará las reglas que se apliquen
-cada vez que se deban interpretar los símbolos de |Σₑ| en una |Σₘ|-álgebra.
-Estas reglas siguen las ideas para definir el compilador intuitivamente,
-como lo mostramos previamente:
+%% Para poder traducir correctamente un lenguaje a otro según el framework que
+%% presentamos, necesitamos llevar |CodeAlg| y |Exec| a la signatura |Σₑ|. Para ello definimos
+%% una \textbf{traducción}. Como tenemos un sólo sort en cada lenguaje hay una
+%% única opción para definir la traducción de sorts: |ExprN| se traduce
+%% en |Codeₛ|.
+%% La traducción de símbolos de función dará las reglas que se apliquen
+%% cada vez que se deban interpretar los símbolos de |Σₑ| en una |Σₘ|-álgebra.
+%% Estas reglas siguen las ideas para definir el compilador intuitivamente,
+%% como lo mostramos previamente:
 
-\begin{align*}
-  comp\;n  &= push\;n\\
-  comp\;v  &= load\;v\\
-  comp\;e_1 \oplus e_2 &= comp\;e_1 ; comp\;e_2 ; add
-\end{align*}
+%% \begin{align*}
+%%   comp\;n  &= push\;n\\
+%%   comp\;v  &= load\;v\\
+%%   comp\;e_1 \oplus e_2 &= comp\;e_1 ; comp\;e_2 ; add
+%% \end{align*}
 
 
-\subsubsection*{Traducción de la signatura}
+%% \subsubsection*{Traducción de la signatura}
 
-\begin{spec}
-sₑ↝sₘ : sorts Σₑ → sorts Σₘ
-sₑ↝sₘ ExprN = Codeₛ
+%% \begin{spec}
+%% sₑ↝sₘ : sorts Σₑ → sorts Σₘ
+%% sₑ↝sₘ ExprN = Codeₛ
 
-fₑ↝fₘ : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
-                      ΣExpr Σₘ (map sₑ↝sₘ ar) (sₑ↝sₘ s)
-fₑ↝fₘ (valN n)  = pushₘ n ∣$∣ ⟨⟩
-fₑ↝fₘ plus      = seqₘ ∣$∣  (# (suc zero) ▹
-                            (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹
-                            ⟨⟩)
-fₑ↝fₘ (varN v)  = loadₘ v ∣$∣ ⟨⟩
+%% fₑ↝fₘ : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
+%%                       ΣExpr Σₘ (map sₑ↝sₘ ar) (sₑ↝sₘ s)
+%% fₑ↝fₘ (valN n)  = pushₘ n ∣$∣ ⟨⟩
+%% fₑ↝fₘ plus      = seqₘ ∣$∣  (# (suc zero) ▹
+%%                             (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹
+%%                             ⟨⟩)
+%% fₑ↝fₘ (varN v)  = loadₘ v ∣$∣ ⟨⟩
 
-ΣₑtoΣₘ : Σₑ ↝ Σₘ
-ΣₑtoΣₘ = record { ↝ₛ = sₑ↝sₘ
-                ; ↝f = fₑ↝fₘ
-                }
-\end{spec}
+%% ΣₑtoΣₘ : Σₑ ↝ Σₘ
+%% ΣₑtoΣₘ = record { ↝ₛ = sₑ↝sₘ
+%%                 ; ↝f = fₑ↝fₘ
+%%                 }
+%% \end{spec}
 
-\subsubsection*{Transformación de las álgebras}
+%% \subsubsection*{Transformación de las álgebras}
 
-Habiendo definido la traducción |ΣₑtoΣₘ| podemos automáticamente
-transformar cualquier |Σₘ|-álgebra en una |Σₑ|-álgebra.
-Transformamos entonces |CodeAlg| y |Exec|:
+%% Habiendo definido la traducción |ΣₑtoΣₘ| podemos automáticamente
+%% transformar cualquier |Σₘ|-álgebra en una |Σₑ|-álgebra.
+%% Transformamos entonces |CodeAlg| y |Exec|:
 
-\begin{spec}
-CodeAlgₑ : Algebra Σₑ
-CodeAlgₑ = ΣₑtoΣₘ 〈 CodeAlg 〉
+%% \begin{spec}
+%% CodeAlgₑ : Algebra Σₑ
+%% CodeAlgₑ = ΣₑtoΣₘ 〈 CodeAlg 〉
 
-Execₑ : Algebra Σₑ
-Execₑ = ΣₑtoΣₘ 〈 Exec 〉
-\end{spec}
+%% Execₑ : Algebra Σₑ
+%% Execₑ = ΣₑtoΣₘ 〈 Exec 〉
+%% \end{spec}
 
-\noindent y podemos llevar el homomorfismo |hexec| a la signatura
-|Σₑ|:
+%% \noindent y podemos llevar el homomorfismo |hexec| a la signatura
+%% |Σₑ|:
 
-\begin{spec}
-hexecₑ : Homomorphism CodeAlgₑ Execₑ
-hexecₑ = ΣₑtoΣₘ 〈 hexec 〉ₕ
-\end{spec}
+%% \begin{spec}
+%% hexecₑ : Homomorphism CodeAlgₑ Execₑ
+%% hexecₑ = ΣₑtoΣₘ 〈 hexec 〉ₕ
+%% \end{spec}
 
-El compilador quedará definido por el único homomorfismo que existe
-entre |ExprAlg| y |CodeAlgₑ|, ya que la primera de éstas es inicial:
+%% El compilador quedará definido por el único homomorfismo que existe
+%% entre |ExprAlg| y |CodeAlgₑ|, ya que la primera de éstas es inicial:
 
-\begin{spec}
-homc : Homomorphism ExprAlg CodeAlgₑ
-homc = ∣T∣ₕ CodeAlgₑ
-\end{spec}
+%% \begin{spec}
+%% homc : Homomorphism ExprAlg CodeAlgₑ
+%% homc = ∣T∣ₕ CodeAlgₑ
+%% \end{spec}
 
 
-El diagrama ahora puede verse así:
+%% El diagrama ahora puede verse así:
 
-\begin{diagram}
-  |ExprAlg|     &\rTo^{|homc|}  &|CodeAlgₑ|\\
-  \dTo_{|hSem|} &             &\dTo_{|hexecₑ|}\\
-  |Semₑ|        &              &|Execₑ|\\
-\end{diagram}
+%% \begin{diagram}
+%%   |ExprAlg|     &\rTo^{|homc|}  &|CodeAlgₑ|\\
+%%   \dTo_{|hSem|} &             &\dTo_{|hexecₑ|}\\
+%%   |Semₑ|        &              &|Execₑ|\\
+%% \end{diagram}
 
-Para completar el diagrama necesitamos definir un homomorfismo entre
-|Semₑ| y |Execₑ| (o al revés). Veremos que para nuestro ejemplo
-dar un homomorfismo de |Semₑ| a |Execₑ| ($Enc$ en la terminología
-de \cite{janssen-98}) obtiene la corrección del compilador.
+%% Para completar el diagrama necesitamos definir un homomorfismo entre
+%% |Semₑ| y |Execₑ| (o al revés). Veremos que para nuestro ejemplo
+%% dar un homomorfismo de |Semₑ| a |Execₑ| ($Enc$ en la terminología
+%% de \cite{janssen-98}) obtiene la corrección del compilador.
 
-Este homomorfismo relaciona las semánticas de cada lenguaje. Puesto que la semántica
-del lenguaje source es una función que dado un estado obtiene un natural, en la semántica
-del lenguaje target corresponde con poner ese natural en el tope de la pila:
+%% Este homomorfismo relaciona las semánticas de cada lenguaje. Puesto que la semántica
+%% del lenguaje source es una función que dado un estado obtiene un natural, en la semántica
+%% del lenguaje target corresponde con poner ese natural en el tope de la pila:
 
-\begin{spec}
-Sem→Execₑ : Semₑ ⟿ Execₑ
-Sem→Execₑ ExprN =
-         record  { _⟨$⟩_  = λ {fₑ (s , σ) → just (fₑ σ ▸ s)}
-                 ; cong   =  λ {  {f₀} {f₁} f₀≈f₁ (s , σ) →
-                                  cong (λ n → just (n ▸ s)) (f₀≈f₁ σ) }
-                 }
+%% \begin{spec}
+%% Sem→Execₑ : Semₑ ⟿ Execₑ
+%% Sem→Execₑ ExprN =
+%%          record  { _⟨$⟩_  = λ {fₑ (s , σ) → just (fₑ σ ▸ s)}
+%%                  ; cong   =  λ {  {f₀} {f₁} f₀≈f₁ (s , σ) →
+%%                                   cong (λ n → just (n ▸ s)) (f₀≈f₁ σ) }
+%%                  }
 
 
-condhₛₑₘ : ∀ {ty}  (f : funcs Σₑ ty) →
-                   homCond Semₑ Execₑ Sem→Execₑ f
-condhₛₑₘ (valN n) ⟨⟩          = λ _ → refl
-condhₛₑₘ plus (f₀ ▹ f₁ ▹ ⟨⟩)  = λ _ → refl
-condhₛₑₘ (varN v) ⟨⟩          = λ _ → refl
+%% condhₛₑₘ : ∀ {ty}  (f : funcs Σₑ ty) →
+%%                    homCond Semₑ Execₑ Sem→Execₑ f
+%% condhₛₑₘ (valN n) ⟨⟩          = λ _ → refl
+%% condhₛₑₘ plus (f₀ ▹ f₁ ▹ ⟨⟩)  = λ _ → refl
+%% condhₛₑₘ (varN v) ⟨⟩          = λ _ → refl
 
-hₛₑₘ : Homomorphism Semₑ Execₑ
-hₛₑₘ = record  { ′_′ = Sem→Execₑ
-               ; cond = condhₛₑₘ }
-\end{spec}
+%% hₛₑₘ : Homomorphism Semₑ Execₑ
+%% hₛₑₘ = record  { ′_′ = Sem→Execₑ
+%%                ; cond = condhₛₑₘ }
+%% \end{spec}
 
-\noindent la prueba de condición de homomorfismo resulta trivial.
+%% \noindent la prueba de condición de homomorfismo resulta trivial.
 
-Ahora tenemos que el siguiente diagrama conmuta, por inicialidad de |ExprAlg|:
+%% Ahora tenemos que el siguiente diagrama conmuta, por inicialidad de |ExprAlg|:
 
-\begin{diagram}
-  |ExprAlg|     &\rTo^{|homc|}  &|CodeAlgₑ|\\
-  \dTo_{|homSem|} &             &\dTo_{|hexecₑ|}\\
-  |Semₑ|        &\rTo^{|hₛₑₘ|}  &|Execₑ|\\
-\end{diagram}
+%% \begin{diagram}
+%%   |ExprAlg|     &\rTo^{|homc|}  &|CodeAlgₑ|\\
+%%   \dTo_{|homSem|} &             &\dTo_{|hexecₑ|}\\
+%%   |Semₑ|        &\rTo^{|hₛₑₘ|}  &|Execₑ|\\
+%% \end{diagram}
 
-\subsection{Extracción de la prueba de corrección}
+%% \subsection{Extracción de la prueba de corrección}
 
-Veamos cómo podemos obtener la prueba de corrección del compilador
-a partir del desarrollo presentado.
+%% Veamos cómo podemos obtener la prueba de corrección del compilador
+%% a partir del desarrollo presentado.
 
-El lenguaje de expresiones está definido a partir del álgebra de términos
-|ExprAlg|:
+%% El lenguaje de expresiones está definido a partir del álgebra de términos
+%% |ExprAlg|:
 
-\begin{spec}
-Expr : Set
-Expr = Carrier (ExprAlg ⟦ ExprN ⟧ₛ)
-\end{spec}
+%% \begin{spec}
+%% Expr : Set
+%% Expr = Carrier (ExprAlg ⟦ ExprN ⟧ₛ)
+%% \end{spec}
 
-El resultado de compilar expresiones serán los elementos del álgebra |CodeAlgₑ|:
+%% El resultado de compilar expresiones serán los elementos del álgebra |CodeAlgₑ|:
 
-\begin{spec}
-Code : Set
-Code = Carrier (CodeAlgₑ ⟦ ExprN ⟧ₛ)
-\end{spec}
+%% \begin{spec}
+%% Code : Set
+%% Code = Carrier (CodeAlgₑ ⟦ ExprN ⟧ₛ)
+%% \end{spec}
 
-La función semántica del lenguaje source está definida por el homomorfismo |hSem|, y podemos dar una sintaxis
-más sencilla:
+%% La función semántica del lenguaje source está definida por el homomorfismo |hSem|, y podemos dar una sintaxis
+%% más sencilla:
 
-\begin{spec}
-⟦_⟧_ : Expr → State → ℕ
-⟦ e ⟧ σ = (′ hSem ′ ExprN ⟨$⟩ e) σ
-\end{spec}
+%% \begin{spec}
+%% ⟦_⟧_ : Expr → State → ℕ
+%% ⟦ e ⟧ σ = (′ hSem ′ ExprN ⟨$⟩ e) σ
+%% \end{spec}
 
-Podemos hacer lo mismo para la semántica del lenguaje target:
+%% Podemos hacer lo mismo para la semántica del lenguaje target:
 
-\begin{spec}
-⟪_⟫ : Code → Conf → Maybe Stack
-⟪ c ⟫ = ′ hexecₑ ′ ExprN ⟨$⟩ c
-\end{spec}
+%% \begin{spec}
+%% ⟪_⟫ : Code → Conf → Maybe Stack
+%% ⟪ c ⟫ = ′ hexecₑ ′ ExprN ⟨$⟩ c
+%% \end{spec}
 
 
-El compilador está definido por el homomorfismo |homc|:
+%% El compilador está definido por el homomorfismo |homc|:
 
-\begin{spec}
-compₑ : Expr → Code
-compₑ e = ′ homc ′ ExprN ⟨$⟩ e 
-\end{spec}
+%% \begin{spec}
+%% compₑ : Expr → Code
+%% compₑ e = ′ homc ′ ExprN ⟨$⟩ e 
+%% \end{spec}
 
-La prueba de corrección del compilador expresa que si compilamos una expresión y
-ejecutamos el código resultante a partir de la pila |s| y un estado |σ|, el
-resultado será la pila |s| con el valor semántico de la expresión agregado en el tope:
+%% La prueba de corrección del compilador expresa que si compilamos una expresión y
+%% ejecutamos el código resultante a partir de la pila |s| y un estado |σ|, el
+%% resultado será la pila |s| con el valor semántico de la expresión agregado en el tope:
 
 
-\begin{spec}
-correct : ∀  (e : Expr) → (s : Stack) → (σ : State) → 
-             ⟪ compₑ e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ) ▸ s)
-\end{spec}
+%% \begin{spec}
+%% correct : ∀  (e : Expr) → (s : Stack) → (σ : State) → 
+%%              ⟪ compₑ e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ) ▸ s)
+%% \end{spec}
 
-A partir del framework algebraico se puede extraer esta prueba:
+%% A partir del framework algebraico se puede extraer esta prueba:
 
-\begin{spec}
-correct e s σ = (elim≈ₕ unic ExprN e e refl) (s , σ)
-  where  unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
-         unic = unique (∣T∣init Σₑ) Execₑ (hexecₑ ∘ₕ homc) (hₛₑₘ ∘ₕ homSem)
-\end{spec}
+%% \begin{spec}
+%% correct e s σ = (elim≈ₕ unic ExprN e e refl) (s , σ)
+%%   where  unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
+%%          unic = unique (∣T∣init Σₑ) Execₑ (hexecₑ ∘ₕ homc) (hₛₑₘ ∘ₕ homSem)
+%% \end{spec}
 
-El desarrollo completo del ejemplo puede verse en |Ejemplos/CorrectC.agda|, en \cite{univAlgebra}.
+%% El desarrollo completo del ejemplo puede verse en |Ejemplos/CorrectC.agda|, en \cite{univAlgebra}.
 
 \bibliographystyle{apalike}
 \begin{flushleft}

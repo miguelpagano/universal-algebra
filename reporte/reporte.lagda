@@ -1010,13 +1010,28 @@ transformar cualquier $\Sigma_t$-álgebra en una $\Sigma_e$-álgebra.
 Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, una traducción $\Sigma_s \rightsquigarrow \Sigma_t$ consiste
 de un mapeo de sorts de $\Sigma_s$ en sorts de $\Sigma_t$, y de reglas para traducir símbolos de función.
 
-La traducción de símbolos de función será una función que lleve cada operación $f$ de la signatura
-$\Sigma_s$ a una \textit{expresión} consistente de combinar símbolos de función de $\Sigma_t$
-de manera que se respete el tipo de $f$. Estas expresiones pueden ser o bien un argumento de la
-interpretación de la función (en caso que $f$ no sea constante) o bien la aplicación de alguna operación
-$g$ de $\Sigma_t$ a expresiones con los sorts correspondientes:
+Estas reglas asignan para cada símbolo de función una \textit{expresión} en la que pueden ocurrir símbolos
+de función de la signatura $\Sigma_t$ aplicados según su aridad. Dada una aridad $[s_0,...,s_n]$
+de una signatura $\Sigma$, definimos la familia $\Sigma Expr$ indexada en los sorts de $\Sigma$:
 
+\begin{itemize}
+  \item Sea $i$, tal que $0 \leq i \leq n$,
+    \begin{center}
+      $\#i \in \Sigma Expr_{s_i}$
+    \end{center}
+  \item Sea $g$ una operación de $\Sigma$ con tipo $[s'_0,...,s'_m] \rightarrow s$, y
+        sean $e_0 \in \Sigma Expr_{s'_0}$ , ... , $e_m \in \Sigma Expr_{s'_m}$,
+        \begin{center}
+          $g\,\$\,(e_0,...,e_m) \in \Sigma Expr_{s}$
+        \end{center}
+\end{itemize}
+  
+Para traducir entonces un símbolo de función $f$ de $\Sigma_s$ con tipo $[s_0,...,s_n] \rightarrow s$,
+damos una $\Sigma Expr$ de la signatura $\Sigma_t$ con aridad $[s_0\rightsquigarrow,...,s_n\rightsquigarrow]$
+(donde cada $s_i\rightsquigarrow$ es el resultado de mapear el sort $s_i$ de acuerdo a la traducción) y sort
+$s\rightsquigarrow$.
 
+Podemos definir en Agda el tipo $\Sigma Expr$:
 
 
 %% Sea |ts : sorts↝|, si tenemos un símbolo de función |f| en |Σₛ| con tipo |([sˢ₁,...,sˢₙ] , s)|, daremos una regla
@@ -1038,19 +1053,24 @@ data ΣExpr (Σ : Signature) (ar : Arity Σ) : (sorts Σ) → Set where
              (es : VecH (sorts Σ) (ΣExpr Σ ar) ar') → ΣExpr Σ ar s
 \end{spec}
 
-\begin{spec}
-record _↝_ (Σₛ : Signature) (Σₜ : Signature) : Set where
-  field
-    ↝ₛ  : sorts Σₛ → sorts Σₜ
-    ↝f : ∀ {ar} {s} → (f : funcs Σₛ (ar , s)) →
-                        ΣExpr Σₜ (map ↝ₛ ar) (↝ₛ s)
-\end{spec}
-
 Un elemento |e : ΣExpr Σ ar s| será una expresión en la cual pueden ocurrir
 referencias a parámetros correspondiéndose con la aridad |ar| y el sort resultante
 es |s|. La expresión |e| puede ser una referencia al parámetro |i|-ésimo (|# i|), en cuyo
 caso |s| será igual a |(ar ‼ i)|. O puede ser la aplicación de un símbolo de función con alguna aridad
 |ar'| y sort |s|, aplicado a un vector de |ΣExpr|.
+
+La traducción de signaturas la definimos con un record parametrizado en las
+signaturas source y target, conteniendo un campo para la traducción de sorts y
+otro para la traducción de símbolos de función:
+
+\begin{spec}
+record _↝_ (Σₛ : Signature) (Σₜ : Signature) : Set where
+  field
+    ↝ₛ  : sorts Σₛ → sorts Σₜ
+    ↝f : ∀ {ar} {s} →  (f : funcs Σₛ (ar , s)) →
+                       ΣExpr Σₜ (map ↝ₛ ar) (↝ₛ s)
+\end{spec}
+
 
 %%Un ejemplo de |ΣExpr| podría ser el siguiente:
 
@@ -1172,6 +1192,80 @@ una $\Sigma_s$-álgebra a partir de una $\Sigma_t$-álgebra. Llamaremos
 Este concepto se corresponde con \textit{reduct algebra w.r.t. a derived signature morphism}
 en \cite{sannella2012foundations}.
 
+Sea $t$ una traducción $\Sigma_s \rightsquigarrow \Sigma_t$, y sea $\mathcal{A}$ una $\Sigma_t$-álgebra,
+queremos definir una $\Sigma_s$-álgebra $\mathcal{A}\sim$. 
+
+\begin{itemize}
+  \item Para cada sort $s$ de $\Sigma_s$, $\mathcal{A}\sim_{s} = \mathcal{A}_{(t\,s)}$
+  \item Para cada $f$, operación de $\Sigma_s$, con tipo $[s_0,...,s_n] \rightarrow s$,
+        y sea $t\,f\,= e$, se define la interpretación
+        \begin{align*}
+          &f_{\mathcal{A}\sim} : \mathcal{A}\sim_{s_0} \times ... \times \mathcal{A}\sim_{s_n} \rightarrow \mathcal{A}\sim_s\\
+          &f_{\mathcal{A}\sim}\,(a_1,...,a_n)\,=\,\mathbf{i}\,e\\
+        \end{align*}
+        \noindent donde $\mathbf{i}$ se define recursivamente:
+    \begin{itemize}
+    \item Si $e = \#j$, con $0 \leq j \leq n$,
+      \begin{center}
+        $\mathbf{i}\,e$ $=$ $a_j$
+      \end{center}
+
+    \item Si $e = g\,(e_1,...,e_m)$, donde $g$ es un símbolo de función de $\Sigma_t$ y $e_1,...,e_m$
+          son $\Sigma$Expr con sorts de acuerdo a la aridad de $g$,
+          \begin{center}
+            $\mathbf{i}\,e$ $=$ $g_{\mathcal{A}}\,(\mathbf{i}\,e_1,...,\mathbf{i}\,e_m)$
+          \end{center}
+    \end{itemize}
+\end{itemize}
+
+Para formalizar la interpretación de símbolos de función en un álgebra
+transformada, definimos |iFun↝|, que captura la idea que explicamos previamente.
+Si |e| es la expresión correspondiente a la traducción de la operación |f| de |Σₛ|,
+Dada una |Σₜ|-álgebra |a|, |iFun↝ f e a| obtiene la interpretación de |f| en la
+transformación de |a|:
+
+\begin{spec}
+iFun↝ : ∀  {Σₛ Σₜ : Signature} {ar : Arity Σₛ}
+           {s : sorts Σₛ} {fs↝ : sorts Σₛ → sorts Σₜ} →
+           (f : funcs Σₛ (ar , s)) → (e : ΣExpr Σₜ (map fs↝ ar) (fs↝ s)) →
+           (a : Algebra Σₜ) → IFuncs Σₛ (ar , s) (_⟦_⟧ₛ a ∘ fs↝)
+iFun↝ = ...
+\end{spec}
+
+\noindent La definición contiene pequeñas dificultades técnicas y por ello no la incluimos
+en este texto.
+
+Podemos ahora definir la formalización de transformación de álgebras:
+
+\begin{spec}
+_〈_〉 : ∀ {Σₛ} {Σₜ} → (t : Σₛ ↝ Σₜ) →
+        (a : Algebra Σₜ) → Algebra Σₛ
+_〈_〉 t a =  (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥
+            (λ f → iFun↝ f (↝f t f) a)
+\end{spec}
+
+A partir de una traducción |t : Σₛ ↝ Σₜ| y un álgebra |a : Algebra Σₜ| obtenemos
+una |Σₛ|-álgebra |t 〈 a 〉|.
+
+Por último, también podemos ver un homomorfismo entre dos $\Sigma_t$-álgebras
+$\mathcal{A}$ y $\mathcal{A'}$ como un homomorfismo entre las dos $\Sigma_s$-álgebras
+transformadas. La siguiente definición formaliza este concepto, y se corresponde
+con \textit{reduct homomorphism w.r.t. a derived signature morphism} en
+\cite{sannella2012foundations}.
+
+\begin{spec}
+_〈_〉ₕ : ∀  {Σₛ Σₜ : Signature} {a a' : Algebra Σₜ} →
+             (t : Σₛ ↝ Σₜ) → (h : Homomorphism a a') →
+             Homomorphism (t 〈 a 〉) (t 〈 a' 〉)
+t 〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ t
+                   ; cond = ...
+                   }
+\end{spec}
+
+
+
+
+
 %% Sean |sˢ₁,...,sˢₙ| y |fˢ₁,...,fˢₖ| los sorts y símbolos de función de |Σₛ|;
 %% |sᵗ₁,...,sᵗₘ| y |fᵗ₁,...,fᵗⱼ| los sorts y símbolos de función de |Σₜ|;
 %% y |t : Σₛ ↝ Σₜ|. A partir de una |Σₜ|-álgebra |A| podemos definir una
@@ -1218,6 +1312,201 @@ en \cite{sannella2012foundations}.
 
 
 \section{Corrección de un compilador de expresiones}
+
+En esta sección mostraremos el desarrollo del compilador de expresiones
+aritméticas en un lenguaje de máquina cuya ejecución manipula un stack, que
+presentamos en la introducción, utilizando el framework algebraico.
+
+\subsection{Especificación del problema}
+
+Se quiere definir un compilador que traduzca expresiones del lenguaje de expresiones
+$Expr$ en el lenguaje $Code$ de manera que la semántica se preserve.
+
+\subsubsection*{Lenguaje fuente}
+
+\paragraph{Sintaxis}
+\begin{quote}
+$ Expr  ::=  \;\; Nat  \;\; || \;\;  Var \;\; || \;\; Expr ⊕ Expr $
+\end{quote}
+
+\noindent donde $Nat$ corresponde con los símbolos de los números naturales y $Var$ con
+símbolos para variables.
+
+\paragraph{Semántica}
+Para darle semántica a las variables necesitamos un \textit{estado} que asigne
+a cada una un natural. Sea $State = Var \rightarrow \mathds{N}$, definimos
+una función semántica para $Expr$, a la cual llamamos $eval$:
+
+\begin{align*}
+  &eval     :\;Expr \rightarrow State \rightarrow \mathds{N}\\
+  &eval\;n \;=\; \lambda\,\upsigma \rightarrow n\\
+  &eval\;v \;=\;\lambda\,\upsigma \rightarrow \upsigma\,v\\
+  &eval\;(e_1 \oplus e_2)\;=\;\lambda\,\upsigma \rightarrow (eval\,e_1\,\upsigma) + (eval\,e_1\,\upsigma)\\
+\end{align*}
+
+\subsubsection*{Lenguaje target}
+
+\paragraph{Sintaxis}
+\begin{quote}
+$ Code  ::=  \;\; push\,Nat  \;\; || \;\; load\, Var \;\; || \;\; Code \,;\, Code \;\; || \;\; add $
+\end{quote}
+
+\noindent donde $Nat$ corresponde con los símbolos de los números naturales y $Var$ con
+símbolos para variables.
+
+\paragraph{Semántica}
+La semántica de $Code$ representa la ejecución del código en una máquina que manipula
+una pila. Podemos representar las pilas con listas de naturales.
+
+\begin{align*}
+  &exec     :\;Code \rightarrow Stack \times State \rightarrow Stack\\
+  &exec\;(push\,n) \;=\; \lambda\,(s , \upsigma) \rightarrow (s : n)\\
+  &exec\;(load\,v) \;=\;\lambda\,(s , \upsigma) \rightarrow (\upsigma\,v\,:\,s)\\
+  &exec\;(c_1\,;\,c_2)\;=\;\lambda\,(s , \upsigma) \rightarrow exec\;c_2\;(\upsigma,exec\;c_1\;(\upsigma,s))\\
+  &exec\;add \;\;\;\;\;\;\;=\;\lambda\,(n \, : \, m \, : \, s , \upsigma) \rightarrow (n \, + \, m \, : \, s)\\
+\end{align*}
+
+\subsubsection*{Compilador correcto}
+El objetivo es definir un compilador que preserve la semántica, es decir,
+que se cumpla la siguiente igualdad:
+
+\begin{center}
+   $exec\,(comp\,e)\,(s,\upsigma)\,=\,eval\,e\,:\,s$
+\end{center}
+
+\subsection{Definición de los lenguajes}
+
+Definimos los lenguajes mediante signaturas y sus semánticas mediante
+álgebras de las mismas.
+
+\subsubsection*{Signatura fuente}
+
+\begin{spec}
+data Sortsₑ : Sorts where
+  E : Sortsₑ
+
+data Funcsₑ : Funcs Sortsₑ where
+  valN  : (n : ℕ) → Funcsₑ ([] , E)
+  varN  : (v : Var) → Funcsₑ ([] , E)
+  plus  : Funcsₑ ( E ∷ [ E ] , E )
+
+
+Σₑ : Signature
+Σₑ = record  { sorts = Sortsₑ
+             ; funcs = Funcsₑ
+             }
+\end{spec}
+
+El carrier del álgebra de términos |∣T∣ Σₑ| para el único sort |E| contiene los elementos
+del lenguaje $Expr$. La expresión $3 \oplus ``x''$ de $Expr$ se corresponde con el término:
+
+\begin{spec}
+term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩) : ∣T∣ Σₑ
+\end{spec}
+
+
+\subsubsection*{Álgebra para la semántica de $Expr$}
+
+La semántica del lenguaje $Expr$ asigna a cada expresión una función en $State \rightarrow \mathds{N}$.
+Definimos un álgebra en la cual interpretamos al único sort |E| con el setoide de las funciones
+de |State| en |ℕ|, para ello usamos la función |→-setoid| definida en la librería estándar:
+
+\begin{spec}
+State : Set
+State = Var → ℕ
+
+iSortsₑ : ISorts Σₑ
+iSortsₑ E = State →-setoid ℕ
+\end{spec}
+
+Para cada operación en |Σₑ| damos su interpretación, es decir un elemento en
+|IFuncs Σₑ ty iSortsₑ|, donde |ty| es el tipo de la operación:
+
+\begin{spec}
+iValN : (n : ℕ) → IFuncs Σₑ ([] , E) iSortsₑ
+iValN n = record  { _⟨$⟩_ = λ { ⟨⟩ σ → n }
+                  ; cong = ... }
+ 
+iVarN : (v : Var) → IFuncs Σₑ ([] , E) iSortsₑ
+iVarN v = record  { _⟨$⟩_ = λ { ⟨⟩ σ → σ v }
+                   ; cong = {!!} }
+
+iPlus : IFuncs Σₑ (E ∷ [ E ] , E) iSortsₑ
+iPlus = record  { _⟨$⟩_ = λ { (v₀ ▹ v₁ ▹ ⟨⟩) σ → v₀ σ + v₁ σ }
+                ; cong = {!!} }
+\end{spec}
+
+\begin{spec}
+iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
+iFuncsₑ (valN n)  = iValN n
+iFuncsₑ plus      = iPlus
+iFuncsₑ (varN v)  = iVarN v
+\end{spec}
+
+Podemos definir entonces el álgebra |Semₑ|, correspondiente al dominio semántico
+del lenguaje $Expr$:
+
+\begin{spec}
+Semₑ : Algebra Σₑ
+Semₑ = iSortsₑ ∥ iFuncsₑ
+\end{spec}
+
+La función semántica está dada por el homomorfismo |∣T∣ₕ Semₑ|, que es único por inicialidad
+de |∣T∣ Σₑ|.
+
+\subsubsection*{Signatura target}
+
+\begin{spec}
+data Sortsₘ : Sorts where
+  C : Sortsₘ
+
+data Funcsₘ : Funcs Sortsₘ where
+  pushₘ  : (n : ℕ) → Funcsₘ ([] , C)
+  loadₘ  : (v : Var) → Funcsₘ ([] , C)
+  addₘ   : Funcsₘ ([] , C)
+  seqₘ   : Funcsₘ (C ∷ C ∷ [] , C)
+
+Σₘ : Signature
+Σₘ = record  { sorts = Sortsₘ
+             ; funcs = Funcsₘ
+             }
+\end{spec}
+
+El carrier del álgebra de términos |∣T∣ Σₜ| para el único sort |C| contiene los elementos
+del lenguaje $Code$. La expresión $push\;3;load\;``x'';add$ de $Code$ se corresponde con
+
+\begin{spec}
+  term seqₘ  (term (pushₘ 3) ⟨⟩ ▹
+             (term seqₘ  (term (loadₘ `` x '') ⟨⟩ ▹
+                         term add ⟨⟩ ▹
+                         ⟨⟩)) ▹
+             ⟨⟩)
+\end{spec}
+
+\subsubsection*{Álgebra para la semántica de $Code$}
+
+
+%% if : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
+%%                    VecH Sortsₑ (Carrier ∘ iSortsₑ) ar →
+%%                    Carrier (iSortsₑ s)
+%% if (valN n) ⟨⟩           = λ σ → n
+%% if plus (v₀ ▹ v₁ ▹ ⟨⟩) σ = v₀ σ + v₁ σ
+%% if (varN x) ⟨⟩           = λ σ → σ x
+
+%% iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
+%% iFuncsₑ f = record  { _⟨$⟩_ = if f
+%%                     ; cong = ... }
+
+%% Semₑ : Algebra Σₑ
+%% Semₑ = iSortsₑ ∥ iFuncsₑ
+
+%% hSem : Homomorphism ExprAlg Semₑ
+%% hSem = ∣T∣ₕ Semₑ
+%% \end{spec}
+
+
+
+
 
 %% En esta sección mostraremos la corrección de un compilador de un lenguaje
 %% de expresiones naturales sencillo, a un lenguaje de máquina, que manipula un

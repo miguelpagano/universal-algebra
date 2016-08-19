@@ -1429,11 +1429,11 @@ iValN n = record  { _⟨$⟩_ = λ { ⟨⟩ σ → n }
  
 iVarN : (v : Var) → IFuncs Σₑ ([] , E) iSortsₑ
 iVarN v = record  { _⟨$⟩_ = λ { ⟨⟩ σ → σ v }
-                   ; cong = {!!} }
+                   ; cong = ... }
 
 iPlus : IFuncs Σₑ (E ∷ [ E ] , E) iSortsₑ
 iPlus = record  { _⟨$⟩_ = λ { (v₀ ▹ v₁ ▹ ⟨⟩) σ → v₀ σ + v₁ σ }
-                ; cong = {!!} }
+                ; cong = ... }
 \end{spec}
 
 \begin{spec}
@@ -1485,6 +1485,110 @@ del lenguaje $Code$. La expresión $push\;3;load\;``x'';add$ de $Code$ se corres
 
 \subsubsection*{Álgebra para la semántica de $Code$}
 
+La semántica del lenguaje $Code$ asigna a cada código una función \textbf{parcial} de
+$Stack \times State$ en $Stack$. Para representar esta parcialidad usamos el tipo |Maybe|,
+de manera que si la función no está definida para algún valor se obtendrá |nothing|.
+
+\begin{spec}
+Stack : Set
+Stack = List ℕ
+
+Conf : Set
+Conf = Stack × State
+\end{spec}
+
+\begin{spec}
+iSortsₘ : ISorts Σₘ
+iSortsₘ Codeₛ = Conf →-setoid Maybe Stack
+\end{spec}
+
+Definimos ahora la interpretación de cada símbolo de función de |Σₘ|:
+
+\begin{spec}
+iPushN : (n : ℕ) → IFuncs Σₘ ([] , C) iSortsₘ
+iPushN n = record  { _⟨$⟩_ = λ { ⟨⟩ (s , σ) → just (n ∷ s) }
+                   ; cong = ... }
+
+iLoadV : (v : Var) → IFuncs Σₘ ([] , Codeₛ) iSortsₘ
+iLoadV v = record  { _⟨$⟩_ = λ { ⟨⟩ (s , σ) → just (σ v ∷ s) }
+                   ; cong = ... }
+
+iAdd : IFuncs Σₘ ([] , C) iSortsₘ
+iAdd = record  { _⟨$⟩_ = λ { ⟨⟩ (n₀ ∷ n₁ ∷ s , σ) → just (n₁ + n₀ ∷ s) ;
+                            ⟨⟩ (_ , σ) → nothing}
+               ; cong = ... }
+
+iSeq : IFuncs Σₘ (Codeₛ ∷ [ Codeₛ ] , Codeₛ) iSortsₘ
+iSeq = record  { _⟨$⟩_ = λ {  (v₀ ▹ v₁ ▹ ⟨⟩) (s , σ) →
+                              v₀ (s , σ) >>= λ s' → v₁ (s' , σ) } 
+               ; cong = ... }
+\end{spec}
+
+En las interpretaciones de |addₘ| y |seqₘ| tenemos que lidiar con la parcialidad. En el
+primer caso si en la pila no hay por lo menos dos elementos damos |nothing|. En el segundo
+caso utilizamos la función \textit{bind} de la mónada Maybe, si al ejecutar la semántica correspondiente
+al primer código de la secuencia se obtiene |nothing|, entonces la semántica de toda la secuencia será
+nothing, de lo contrario se prosigue ejecutando la semántica del segundo código de la secuencia, a partir
+de la pila resultante y el mismo estado.
+
+Definimos entonces la interpretación de los símbolos de función y el álgebra |Exec|, correspondiente
+al dominio semántico del lenguaje $Code$:
+
+\begin{spec}
+iFuncsₘ : ∀ {ty} → (f : funcs Σₘ ty) → IFuncs Σₘ ty iSortsₘ
+iFuncsₘ (pushₘ n) = iPushN n
+iFuncsₘ (loadₘ v) = iLoadV v
+iFuncsₘ addₘ = iAdd
+iFuncsₘ seqₘ = iSeq
+\end{spec}
+
+\begin{spec}
+Exec : Algebra Σₘ
+Exec = iSortsₘ ∥ iFuncsₘ  
+\end{spec}
+
+La función semántica está dada por el homomorfismo |∣T∣ₕ Exec|.
+
+\subsection{Traducción}
+
+Tenemos definidos los lenguajes source y target mediante signaturas, y a sus
+semánticas como álgebras.
+
+\begin{diagram}
+  |∣T∣ Σₑ|     &     &   &  &    &|∣T∣ Σₘ|\\
+  \dTo_{|∣T∣ₕ Semₑ|} &     &   &  &   &\dTo_{|∣T∣ₕ Exec|}\\
+  |Semₑ|        &     &   &  &    &|Exec|\\
+\end{diagram}
+
+Procedemos ahora a definir una traducción |Σₑ ↝ Σₘ| y así poder llevar las álgebras
+y homomorfismos de |Σₘ| a |Σₑ|.
+
+\subsubsection*{Traducción de las signaturas}
+
+Definimos una traducción de la signatura |Σₑ| a |Σₘ|, para ello
+damos la traducción de sorts y de símbolos de función:
+
+\begin{spec}
+tsorts : sorts Σₑ → sorts Σₘ
+tsorts E = C
+\end{spec}
+
+\begin{spec}
+tfuncs : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
+                       ΣExpr Σₘ (map tsorts ar) (tsorts s)
+tfuncs (valN n)  = pushₘ n ∣$∣ ⟨⟩
+tfuncs plus      = seqₘ ∣$∣  (# (suc zero) ▹
+                             (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹
+                             ⟨⟩)
+tfuncs (varN v)  = loadₘ v ∣$∣ ⟨⟩
+\end{spec}
+
+\begin{spec}
+t : Σₑ ↝ Σₘ
+t = record  { ↝ₛ = tsorts
+            ; ↝f = tfuncs
+            }
+\end{spec}
 
 %% if : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
 %%                    VecH Sortsₑ (Carrier ∘ iSortsₑ) ar →

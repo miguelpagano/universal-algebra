@@ -1,4 +1,4 @@
-all: reporte.pdf
+all: correct-compiler.pdf
 
 
 reporte.tex : reporte.lagda unicode.fmt
@@ -12,5 +12,13 @@ reporte.pdf : reporte.tex  biblio.bib
 	bibtex reporte
 	pdflatex $(LTX_OPTS) reporte.tex
 
+correct-compiler.tex : correct-compiler.lagda unicode.fmt
+	lhs2TeX --agda correct-compiler.lagda -o correct-compiler.tex
+
+correct-compiler.pdf : correct-compiler.tex  biblio.bib
+	pdflatex $(LTX_OPTS) correct-compiler.tex
+	bibtex correct-compiler
+	pdflatex $(LTX_OPTS) correct-compiler.tex
+
 clean :
-	rm -f *.aux *.bbl *blg *.log *.ptb *.tex reporte.pdf
+	rm -f *.aux *.bbl *blg *.log *.ptb *.tex correct-compiler.pdf reporte.pdf

@@ -276,24 +276,7 @@ data F : Funcs S where
 \paragraph{Ejemplo 2} El segundo ejemplo es el lenguaje de expresiones aritméticas que presentamos en la introducción
 y para el cual daremos un compilador.
 
-\begin{spec}
-Var : Set
-Var = String  
-  
-data Sortsₑ : Sorts where
-  ExprN : Sortsₑ
-
-data Funcsₑ : Funcs Sortsₑ where
-  valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
-  plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
-  varN  : (v : Var) → Funcsₑ ([] , ExprN)
-
-
-Σₑ : Signature
-Σₑ = record  { sorts = Sortsₑ
-             ; funcs = Funcsₑ
-             }
-\end{spec}
+%include ejemplo2.lagda
 
 \noindent Notemos que en este último ejemplo tenemos infinitos símbolos de función, uno por
 cada natural (el constructor |valN|), y uno por cada variable (el constructor |varN|).

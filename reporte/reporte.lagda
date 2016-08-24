@@ -58,7 +58,7 @@ de expresiones aritméticas en un código de máquina que manipula un stack.
 El lenguaje fuente son expresiones aritméticas simples: constantes, variables y suma. 
 
 \begin{quote}
-$ Expr  ::=  \;\; Nat  \;\; || \;\;  Var \;\; || \;\; Expr ⊕ Expr $
+$ Expr  ::=  \;\; Nat  \;\; || \;\;  \mathit{Var} \;\; || \;\; Expr ⊕ Expr $
 \end{quote}
 
 \paragraph{Lenguaje target}
@@ -1319,8 +1319,9 @@ presentamos en la introducción, utilizando el framework algebraico.
 
 \subsection{Especificación del problema}
 
-Se quiere definir un compilador que traduzca expresiones del lenguaje de expresiones
-$Expr$ en el lenguaje $Code$ de manera que la semántica se preserve.
+Se quiere definir un compilador que traduzca expresiones del lenguaje 
+$Expr$ en expresiones (a las que llamaremos \textit{códigos}) del lenguaje $Code$ de manera que la semántica se preserve.
+Esta preservación estará especificada por una relación entre ambas semánticas.
 
 \subsubsection*{Lenguaje fuente}
 
@@ -1367,8 +1368,9 @@ una pila. Podemos representar las pilas con listas de naturales.
 \end{align*}
 
 \subsubsection*{Compilador correcto}
-El objetivo es definir un compilador que preserve la semántica, es decir,
-que se cumpla la siguiente igualdad:
+El objetivo es definir un compilador $comp\,:\,Expr \rightarrow Code$ tal que la ejecución del resultado
+de compilar una expresión $e$ a partir de una pila $s$ y un estado $\sigma$ obtenga la misma pila $s$ con el
+valor semántico de $e$ agregado en el tope:
 
 \begin{center}
    $exec\,(comp\,e)\,(s,\upsigma)\,=\,eval\,e\,:\,s$
@@ -1514,8 +1516,8 @@ iLoadV v = record  { _⟨$⟩_ = λ { ⟨⟩ (s , σ) → just (σ v ∷ s) }
                    ; cong = ... }
 
 iAdd : IFuncs Σₘ ([] , C) iSortsₘ
-iAdd = record  { _⟨$⟩_ = λ { ⟨⟩ (n₀ ∷ n₁ ∷ s , σ) → just (n₁ + n₀ ∷ s) ;
-                            ⟨⟩ (_ , σ) → nothing}
+iAdd = record  { _⟨$⟩_ = λ {  ⟨⟩ (n₀ ∷ n₁ ∷ s , σ)  → just (n₁ + n₀ ∷ s) ;
+                              ⟨⟩ (_ , σ)            → nothing}
                ; cong = ... }
 
 iSeq : IFuncs Σₘ (Codeₛ ∷ [ Codeₛ ] , Codeₛ) iSortsₘ
@@ -1566,21 +1568,63 @@ y homomorfismos de |Σₘ| a |Σₑ|.
 \subsubsection*{Traducción de las signaturas}
 
 Definimos una traducción de la signatura |Σₑ| a |Σₘ|, para ello
-damos la traducción de sorts y de símbolos de función:
+damos la traducción de sorts y de símbolos de función.
+
+
+\paragraph{Sorts} Como tenemos un sólo sort en cada signatura, hay una sóla forma
+de definir la traducción de sorts:
 
 \begin{spec}
 tsorts : sorts Σₑ → sorts Σₘ
 tsorts E = C
 \end{spec}
 
+
+\paragraph{Operaciones} Para cada símbolo de función de |Σₑ| debemos dar una expresión
+que respete el tipo. Aquí se puede notar la ventaja de tener los símbolos de función definidos
+como una familia indexada en sus tipos, ya que las expresiones que conforman
+la traducción sólo pueden definirse de manera que los tipos sean correctos.
+
+\begin{itemize}
+  \item Para cada natural |n| tenemos un símbolo |val n| con tipo |([] , E)|.
+        Damos entonces una expresión con aridad vacía y target sort |C| (ya que
+        |tsorts E = C|):
+
+\begin{spec}
+valN↝ : (n : ℕ) → ΣExpr Σₘ [] C
+valN↝ n = pushₘ n ∣$∣ ⟨⟩
+\end{spec}
+
+   \item Para el caso de las variables tenemos que dar una expresión también con aridad
+         vacía y sort |C|:
+
+\begin{spec}
+varN↝ : (v : Var) → ΣExpr Σₘ [] C
+varN↝ v = loadₘ v ∣$∣ ⟨⟩
+\end{spec}
+
+   \item Para la operación |plus|, cuyo tipo es |(E ∷ [ E ] , E)| tenemos que dar una expresión donde pueden ocurrir
+         referencias a parámetros según la aridad |C ∷ [ C ]| y el target sort debe ser
+         |C|:
+
+\begin{spec}
+plus↝ : ΣExpr Σₘ (C ∷ [ C ]) C
+plus↝ = seqₘ ∣$∣  (# (suc zero) ▹
+                  (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹
+                  ⟨⟩)
+\end{spec}
+\end{itemize}
+
+
+Podemos definir entonces la traducción de símbolos de función, y luego
+la traducción de signaturas:
+
 \begin{spec}
 tfuncs : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
                        ΣExpr Σₘ (map tsorts ar) (tsorts s)
-tfuncs (valN n)  = pushₘ n ∣$∣ ⟨⟩
-tfuncs plus      = seqₘ ∣$∣  (# (suc zero) ▹
-                             (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹
-                             ⟨⟩)
-tfuncs (varN v)  = loadₘ v ∣$∣ ⟨⟩
+tfuncs (valN n)  = valN↝ n
+tfuncs plus      = plus↝
+tfuncs (varN v)  = varN↝ v
 \end{spec}
 
 \begin{spec}
@@ -1589,6 +1633,144 @@ t = record  { ↝ₛ = tsorts
             ; ↝f = tfuncs
             }
 \end{spec}
+
+\subsubsection*{Transformación de las álgebras de |Σₘ|}
+
+Teniendo definida la traducción |t| podemos llevar las álgebras de |Σₘ| a
+álgebras de |Σₑ| y preservar los homomorfismos:
+
+\begin{spec}
+  Codeₑ : Algebra Σₑ
+  Codeₑ = t 〈 ∣T∣ Σₘ 〉
+\end{spec}
+
+\begin{spec}
+  Execₑ : Algebra Σₑ
+  Execₑ = t 〈 Exec 〉
+\end{spec}
+
+\begin{spec}
+  hexecₑ : Homomorphism Codeₑ Execₑ
+  hexecₑ = t 〈 ∣T∣ₕ Exec 〉ₕ
+\end{spec}
+
+Y por inicialidad del álgebra de términos de |Σₑ| tenemos un homomorfismo
+entre ésta y el álgebra |Codeₑ|:
+
+\begin{spec}
+  hcomp : Homomorphism (∣T∣ Σₑ) Codeₑ
+  hcomp = ∣T∣ₕ Codeₑ
+\end{spec}
+
+Ahora el diagrama se ve así:
+
+\begin{diagram}
+  |∣T∣ Σₑ|     &\rTo^{|homc|}  &|Codeₑ|\\
+  \dTo_{|∣T∣ₕ Semₑ|} &             &\dTo_{|hexecₑ|}\\
+  |Semₑ|        &              &|Execₑ|\\
+\end{diagram}
+
+Para completar el diagrama y tener la prueba de corrección del compilador
+tenemos que dar un homomorfismo entre |Semₑ| y |Execₑ|.
+
+\subsubsection*{Homomorfismo entre semánticas}
+
+Habíamos visto que la corrección del compilador está dada por la validez de la siguiente
+igualdad:
+
+\begin{center}
+   $exec\,(comp\,e)\,(s,\upsigma)\,=\,eval\,e\,\upsigma\,:\,s$
+\end{center}
+
+Podemos ver una relación entre las semánticas de los dos lenguajes. Si $f$ es
+una función en $State \rightarrow \mathds{N}$ correspondiente a la
+semántica de alguna expresión en $Expr$, la función semántica correspondiente
+en $Code$ será la siguiente:
+
+\begin{center}
+   $\lambda\,(s , \upsigma)\,.\,f\,\upsigma:s$
+\end{center}
+
+Con esta idea podemos definir un homomorfismo entre |Semₑ| y |Execₑ|. Para ello
+debemos dar una función los setoides correspondientes a la interpretación
+de |E| en |Semₑ| y la de |E| en |Execₑ|, es decir
+|(State → ℕ) ⟶ (Conf → Maybe Stack)|; y luego la prueba de condición de homomorfismo
+la cual resultará trivial:
+
+\begin{spec}
+Enc : Semₑ ⟿ Execₑ
+Enc E = record  { _⟨$⟩_ = λ {fₑ (s , σ) → just (fₑ σ ∷ s)}
+                ; cong = ...
+                }
+\end{spec}
+
+\begin{spec}
+condhEnc : ∀ {ty}  (f : funcs Σₑ ty) →
+                   homCond Semₑ Execₑ Enc f
+condhEnc (valN n) ⟨⟩          = λ _ → refl
+condhEnc plus (f₀ ▹ f₁ ▹ ⟨⟩)  = λ _ → refl
+condhEnc (varN v) ⟨⟩          = λ _ → refl
+\end{spec}
+
+\begin{spec}
+hEnc : Homomorphism Semₑ Execₑ
+hEnc = record  { ′_′ = Enc
+               ; cond = condhEnc
+               }
+\end{spec}
+
+Con este homomorfismo tenemos que el siguiente diagrama conmuta:
+
+\begin{diagram}
+  |∣T∣ Σₑ|     &\rTo^{|homc|}  &|Codeₑ|\\
+  \dTo_{|∣T∣ₕ Semₑ|} &             &\dTo_{|hexecₑ|}\\
+  |Semₑ|        &\rTo^{|hEnc|}  &|Execₑ|\\
+\end{diagram}
+
+\noindent es decir, |hexecₑ ∘ homc = hEnc ∘ ∣T∣ₕ Semₑ|.
+
+\subsubsection*{Extracción de la prueba de corrección}
+
+Podemos extraer a partir del desarrollo realizado con el framework
+algebraico, la prueba de corrección del compilador correcto, de la manera
+usual en que uno la realizaría.
+
+\begin{spec}
+Expr : Set
+Expr = Carrier (∣T∣ Σₑ ⟦ E ⟧ₛ)
+\end{spec}
+
+\begin{spec}
+⟦_⟧_ : Expr → State → ℕ
+⟦ e ⟧ σ = (′ ∣T∣ₕ Semₑ ′ E ⟨$⟩ e) σ
+\end{spec}
+
+\begin{spec}
+Code : Set
+Code = Carrier (Codeₑ ⟦ E ⟧ₛ)
+\end{spec}
+
+\begin{spec}
+⟪_⟫ : Code → Conf → Maybe Stack
+⟪ c ⟫ = ′ hexecₑ ′ E ⟨$⟩ c
+\end{spec}
+
+
+\begin{spec}
+compₑ : Expr → Code
+compₑ e = ′ homc ′ E ⟨$⟩ e 
+\end{spec}
+
+
+\begin{spec}
+correct : ∀  (e : Expr) → (s : Stack) → (σ : State) → 
+             ⟪ compₑ e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ) ∷ s)
+correct e s σ = (elim≈ₕ unic E e e refl) (s , σ)
+  where  unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
+         unic = unique (∣T∣init Σₑ) Execₑ  (hexecₑ ∘ₕ homc)
+                                           (hₛₑₘ ∘ₕ homSem)
+\end{spec}
+
 
 %% if : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
 %%                    VecH Sortsₑ (Carrier ∘ iSortsₑ) ar →

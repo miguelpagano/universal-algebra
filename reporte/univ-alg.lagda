@@ -1,21 +1,20 @@
-\section{Álgebras Universales}
+\section{Universal Algebra}
 
-Presentamos una formalización de los conceptos de álgebra universal necesarios para
-probar que el álgebra de términos es inicial, en el lenguaje Agda.
+We present a formalisation of some concepts of Universal Algebra, included the proof
+of initiality of the term algebra, in Agda.
 
 \paragraph{Agda}
-Agda es un lenguaje de programación funcional con tipos dependientes, basado
-en la teoría de tipos intuicionista de Martin Löf. ...
+Agda is a functional programming language with dependent types, based on the
+Martin Löf's intuitionistic type theory...
 
-En el presente texto mostraremos las principales definiciones de la formalización,
-omitiendo algunos detalles técnicos. Puede encontrarse el texto completo en
-\url{https://git.cs.famaf.unc.edu.ar/semantica-de-la-programacion/algebras-universales/UnivAlgebra.agda}.
+We show the main definitions of the development, ommiting some technical details.
+The full code is available to download on \url{https://git.cs.famaf.unc.edu.ar/semantica-de-la-programacion/algebras-universales/UnivAlgebra.agda}.
 
-Las definiciones que formalizamos están basadas en el \textit{Handbook of Logic in Computer Science}, (\cite{handbook}).
+All the definitions that we present in this section are based on the \textit{Handbook of Logic in Computer Science}, (\cite{handbook}).
 
-\subsection{Signatura, álgebra y homomorfismo}
+\subsection{Signature, algebra and homomorphism}
 
-\subsection*{Signatura}
+\subsection*{Signature}
 
 %if False
 \begin{code}
@@ -41,16 +40,10 @@ open Setoid
 \end{code}
 %endif
 
-Una \textbf{signatura} es un par $(S,F)$ de conjuntos, el primero llamado \textit{sorts} y el segundo
-\textit{operaciones} (también llamados \textit{símbolos de función}). Una operación es una tripla
-$(w,[s_1,...,s_n],s)$ consistente de un nombre, una lista de sorts y un sort, usualmente escrito como
-$(w : [s_1,...,s_n] \rightarrow s)$. Llamaremos \textit{aridad} a la lista de sorts $[s_1,...,s_n]$, \textit{target sort} al sort $s$ y
-$tipo$ al par $([s_1,...,s_n],s)$. \footnote{En la bibliografía sobre álgebras heterogéneas varía
-  la noción de aridad. En el handbook se denomina aridad a lo que aquí llamamos tipo, y sorts argumento
-  a lo que aquí llamamos aridad.}
+A \textbf{signature} is a pair $(S,F)$ of sets, called \textit{sorts} and \textit{operations} (or \textit{function symbols}) respectively. An operation is a 3-uple $(w,[s_1,...,s_n],s)$ that consists of a \textit{name}, a list of sorts, and another sort, usually writed $(w : [s_1,...,s_n] \rightarrow s)$. The list of sorts $[s_1,...,s_n]$ is called \textit{arity}, the sort $s$ is called the \textit{target sort} and \textit{type} is the pair $([s_1,...,s_n],s)$. \footnote{In the bibliography of heterogeneous universal algebras the notion of arity may change. In the handbook is called \textit{arity} to what we call \textit{type}.}
 
-Formalizamos el concepto de signatura en Agda definiendo un record con dos campos. |sorts| es cualquier
-tipo y |funcs| una familia indexada en los tipos de las operaciones:
+We define signature in Agda, with a record with two fields. |sorts| is a Set and
+|funcs| is a family of sets indexed in the types of operations:
 
 \begin{code}
 Sorts : Set _
@@ -71,19 +64,17 @@ record Signature : Set₁ where
   Type = List sorts × sorts
 \end{code}
 
-Una ventaja de tener definido de esta forma la signatura es que el mismo sistema
-de tipos de Agda nos permite definir propiedades sólo para las operaciones
-de determinada aridad. Es decir, podemos expresar con un tipo en Agda a las operaciones
-de una signatura que tengan determinado tipo. Este enfoque es más type-theorético y veremos
-algunas ventajas importantes al definir la traducción de signaturas.
+An adventage of defining signature of this way is that the type system of Agda
+allows to define properties of operations of a given arity. I.e., we can define a type
+in Agda referring to the operations of a particular arity or type. This approach is
+more type-theoretic than defining the operations with a list of arities, like in
+\cite{capretta-99}, and we'll see some important adventages when we define the
+translation of signatures.
 
-En una implementación donde se define a las operaciones como una lista de tipos
-(como en \cite{capretta-99}) sería bastante más complicado definir una propiedad
-restringiendo el tipo de la operación. También notemos que podemos tener una signatura con
-infinitas operaciones, como veremos en un ejemplo.
+We show two examples of signatures. The second one shows the posibility of define
+a signature with infinite operations.
 
-\paragraph{Ejemplo 1} Veamos un ejemplo de un lenguaje de
-expresiones naturales y booleanas, para notar el uso de varios sorts. 
+\paragraph{Example 1} A language with natural and boolean expressions.
 
 \begin{code}
 data S : Sorts where
@@ -103,119 +94,56 @@ data F : Funcs S where
              }
 \end{code}
 
-\paragraph{Ejemplo 2} El segundo ejemplo es el lenguaje de expresiones aritméticas que presentamos en la introducción
-y para el cual daremos un compilador.
+\paragraph{Ejemplo 2} The language of arithmetic expressions that we present at introduction.
 
 %include ejemplo2.lagda
 
-\noindent Notemos que en este último ejemplo tenemos infinitos símbolos de función, uno por
-cada natural (el constructor |valN|), y uno por cada variable (el constructor |varN|).
+\noindent Note that we have infinite function symbols, one for each natural number (constructor |valN|), and
+one for each variable (contructor |varN|).
 
-\subsection*{Álgebra}
+\subsection*{Algebra}
 
-Dada una signatura $\Sigma$, un \textbf{álgebra} $\mathcal{A}$ de $\Sigma$ (o una $\Sigma$-álgebra)
-consta de una familia de conjuntos indexada en los sorts de $\Sigma$ llamado los
-\textit{carriers} (o \textit{interpretación de sorts}) de $\mathcal{A}$ (llamaremos $\mathcal{A}_s$ al carrier del sort $s$), y para cada operación
-$w$ con tipo $[s_1,...,s_n],s$ una función total $w_A : \mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$.
-Llamaremos \textit{interpretación} de $w$ a esta función.
+Let $\Sigma$ be a signature, an \textbf{algebra} $\mathcal{A}$ of $\Sigma$, or a $\Sigma$-algebra, consists
+of a family of sets indexed on the sorts of $\Sigma$, called the \textit{carriers} (or \textit{sorts interpretation})
+of $\mathcal{A}$ (we call $\mathcal{A}_s$ the carrier of the sort $S$ in $\mathcal{A}$), and for each operation
+$w$ with type $[s_1,...,s_n],s$ a total function $w_A : \mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$.
+We call \textit{interpretation} of $w$ to this function.
 
-Para definir el carrier de un sort consideremos primero como ejemplo el álgebra correspondiente al dominio semántico del
-lenguaje de expresiones que introdujimos previamente. Habíamos visto que para
-cada expresión damos una función que va de un estado de asignación a variables en
-un natural. Es decir que cada elemento del carrier del álgebra será una función.
-Una dificultad que tenemos con estos conjuntos en Agda es para definir la igualdad
-de dos elementos. Decimos que dos funciones son iguales, si lo son punto a punto,
-lo que se conoce como \textit{igualdad extensional}. Sin embargo en Agda dos funciones
-que tengan esta propiedad no son iguales proposicionalmente (debería explicar qué es esta igualdad),
-por lo cual si para implementar los carriers utilizamos Sets, dos funciones extensionalmente iguales
-no serán el mismo elemento.
+We proceed to define the interpretation of sorts. Let's considere the algebra corresponding
+to the semantics of the expressions language that we introduced previoulsy. For each expression, the semantics
+is a function from states to natural numbers. Thus, each element of the interpretation of the sort of
+the expressions will be a function, and we have an issue to define equality of this elements in Agda. Two
+functions extensionally equal (i.e., pointwise equality) are not propositionally equals in Agda, so if we
+implement the carrier of sorts with Sets we lose the equality of functions.
 
-Por esta razón necesitamos contar con un tipo más general que los Sets, de manera de poder definir,
-además del tipo de los elementos que lo conforman, la relación de igualdad. Para ello
-utilizamos \textbf{Setoides}.
+We use \textbf{setoids}, so we can represent a set with an arbitrary equivalence relation.
 
-\paragraph{Setoides} Aquí explicaré setoides.
+\paragraph{Setoids} blabla
 
-%% Para implementar los carriers de las álgebras utilizamos setoides.
-%% Un setoide es un tipo que tiene definido una relación de equivalencia sobre sus elementos:
 
-%% \begin{spec}
-%% record Setoid c ℓ : Set (suc (c ⊔ ℓ)) where
-%%   infix 4 _≈_
-%%   field
-%%     Carrier       : Set c
-%%     _≈_           : Rel Carrier ℓ
-%%     isEquivalence : IsEquivalence _≈_
-%% \end{spec}
-
-%% El |Carrier| del setoide es el tipo de los elementos que lo componen y |_≈_|
-%% una relación binaria sobre el carrier. También se requiere la prueba de que esta
-%% relación es de equivalencia.
-%% Dados dos setoides $S_1$ y $S_2$ se define el tipo $S_1 \longrightarrow S_2$, que
-%% consiste de la función que va del carrier de $S_1$ al carrier de $S_2$ (cuya notación
-%% en Agda será con el símbolo |_⟨$⟩_|) y una prueba de que conserva la relación de igualdad,
-%% es decir, si $s_1$ |≈|$_{S_1}$ $s_1'$ entonces $f \, s_1$ |≈|$_{S_2}$ $f \, s_1'$
-%% (|cong|, en Agda).
-
-%% Una diferencia importante entre usar setoides en lugar de |Sets| es que podemos tener
-%% carriers de álgebras con una noción de igualdad que no sea simplemente la igualdad
-%% proposicional. Por ejemplo, se puede definir el setoide de las funciones de |A| en |B|,
-%% donde la igualdad subyacente sea la extensional, probando que es una relación de equivalencia.
-%% También fácilmente se podrían definir álgebras cocientes.
-
-\noindent Definimos entonces la interpretación de sorts (o carriers) en una $\Sigma-$-álgebra:
+Let's define the interpretation of sorts (or carriers):
 
 \begin{code}
 ISorts : ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → Set _
 ISorts {ℓ₁} {ℓ₂} Σ = (sorts Σ) → Setoid ℓ₁ ℓ₂
 \end{code}
 
-\noindent Un elemento en |ISorts Σ s| será un setoide, y representa la interpretación del sort
-|s| en una |Σ|-álgebra.
+\noindent An element in |ISorts Σ s| is a setoid, and it represents the interpretation of sort
+|s| in a |Σ|-algebra.
 
-Para interpretar un símbolo de función $f$, con tipo $[s_1,...,s_n] \rightarrow s$ tendremos que
-definir una función que tome como parámetros elementos de la interpretación de cada sort $s_i$,
-y devuelva un elemento en la interpretación de $s$. Para definir el tipo de los parámetros
-de la función utilizaremos vectores. Notemos que estos vectores contendrán elementos de distintos
-tipos, de acuerdo a la interpretación de los sorts según la aridad. Definimos entonces
-el tipo de los \textit{vectores heterogéneos}:
+In order to define the interpretation of a function symbol $f$, with type $[s_1,...,s_n] \rightarrow s$,
+in a $\Sigma$-algebra $\mathcal{A}$, we have to define a total function with domain
+$\mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n}$ and codomain $\mathcal{A}_{s}$. We use
+\textit{vectors} to implement the domain of function interpretations, but this vectors will
+contain element of different types, according to the arity. We define the type of
+\textit{heterogeneous vectors}.
 
-\paragraph{Vectores heterogéneos} blablabla
+\paragraph{Heterogeneous vectors} blablabla
 
-%% Dado un tipo $T$ indexado en $I$, y una lista de índices $[i_1,...,i_n]$,
-%% un vector heterogéneo es una colección de $n$ elementos, donde cada uno es de
-%% tipo $T\,i$:
-
-%% \begin{spec}
-%% data VecH (I : Set) (A : I -> Set _) : List I → Set _ where
-%%   ⟨⟩  : VecH I A []
-%%   _▹_ : ∀ {i} {is} → (v : A i) → (vs : VecH I A is) → VecH I A (i ∷ is)
-%% \end{spec}
-
-%% Dada una familia de relaciones $R$ indexada en un tipo $I$, podemos definir la
-%% relación de dos vectores extendiendo $R$. Nos referiremos a esta extensión con
-%% el símbolo |~v|. Si la relación es la correspondiente a la de un setoide para
-%% cada elemento |i : I| de una lista |is|, podemos definir el setoide de los
-%% vectores heterogéneos:
-
-%% \begin{spec}
-%% VecSet :  ∀ {ℓ₁ ℓ₂} → (I : Set) → (A : I → Setoid ℓ₁ ℓ₂) →
-%%           List I → Setoid _ _
-%% VecSet = ...
-%% \end{spec}
-
-%% El carrier de este setoide es el tipo de los vectores con índices en |I|, lista de índices
-%% |is| y elementos en |Carrier (A i)|, donde cada |i| es un elemento de |is|.
-%% La relación de equivalencia es la extensión a vectores de la familia de relaciones |_≈_ ∘ A|.
-
-%% En \cite{vecH} está implementada la librería de vectores heterogéneos con estas definiciones
-%% y más propiedades del tipo.
-
-Definimos entonces la interpretación de operaciones. Dada una operación $f$ con tipo
-$ty$, y dada una interpretación de sorts $is$, la intepretación de $f$ se define como una función
-entre el setoide de los vectores heterogéneos con los sorts de $\Sigma$ como índices, $is$ como
-la familia indexada en los sorts de $\Sigma$ y la aridad de $f$ como lista de índices de cada
-elemento:
+Let's define the interpretation of operations. Let $f$ be an operation with type $ty$,
+and let $is$ be the interpretation of sorts; the interpretation of $f$ is a function
+from the setoid of heterogeneous vectors to the interpretation of the target sort of
+$f$:
 
 \begin{code}
 IFuncs :  ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → (ty : ΣType Σ) →
@@ -223,10 +151,10 @@ IFuncs :  ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → (ty : ΣType Σ) →
 IFuncs Σ (ar , s) is = VecSet (sorts Σ) is ar ⟶ is s
 \end{code}
 
-\noindent Notemos que un elemento en |IFuncs Σ (ar , s) is| es una función entre setoides.
+\noindent Note that an element in |IFuncs Σ (ar , s) is| is a function between setoids.
 
-Finalmente definimos el tipo de las $\Sigma$-álgebras, como un record con dos campos, uno
-correspondiente a la interpretación de los sorts, y el otro para los símbolos de función:
+Let's define the type of $\Sigma$-algebras, with a record with two fields, one corresponding
+to the interpretation of sorts, and another to the interpretation of operations:
 
 \begin{code}
 record Algebra {ℓ₁ ℓ₂ : Level}  (Σ : Signature) :
@@ -237,14 +165,14 @@ record Algebra {ℓ₁ ℓ₂ : Level}  (Σ : Signature) :
     _⟦_⟧    : ∀ {ty : ΣType Σ} → (f : funcs Σ ty) → IFuncs Σ ty _⟦_⟧ₛ
 \end{code}
 
-Utilizamos operadores como nombres de los campos para tener una sintaxis
-más compacta. La interpretación del sort |s| en |A| se escribirá |A ⟦ s ⟧ₛ| y
-la de una operación |w|, |A ⟦ w ⟧|.
+We use a convenient notation for fields. The interpretation of sort |s| in
+|A| is writed |A ⟦ s ⟧ₛ|, and the interpretation of an operation |w|, |A ⟦ w ⟧|.
 
-Definamos también un tipo para el dominio de la función interpretación de una operación en una
-|Σ|-álgebra |A|, que nos será útil en definiciones posteriores.
-Si una operación tiene aridad |ar|, su interpretación será una función entre setoides, cuyo
-dominio son los vectores heterogéneos con aridad |ar| e interpretación |_⟦_⟧ₛ A|.
+
+We define too a type representing the domain of an interpretation of function symbol,
+wich will be useful in later definitions.
+If |ar| is the arity of an operation |f|, the interpretation will be a function between
+setoids, with domain the heterogeneous vectors with arity |ar| and interpretation |_⟦_⟧ₛ A|:
 
 \begin{spec}
 _⟦_⟧ₛ* : ∀ {Σ} {ℓ₁} {ℓ₂}  → (A : Algebra {ℓ₁} {ℓ₂} Σ)
@@ -254,64 +182,61 @@ _⟦_⟧ₛ* {Σ} A ar = Carrier (VecSet (sorts Σ) (_⟦_⟧ₛ A) ar)
 
 \medskip
 
-Como ejemplo de la formalización de álgebra, definamos una para la signatura |Σₑ|, correspondiente
-al lenguaje de expresiones aritméticas.
+Let see an example of a |Σₑ|-algebra, the semantics of the expression language that we
+introduced previously.
 
-\paragraph{Ejemplo} Definamos la |Σₑ|-álgebra |Semₑ|, correspondiente al dominio
-semántico del lenguaje de expresiones. Los elementos semánticos serán funciones
-que van de estados en naturales. Al estado de asignación de variables lo podemos
-implementar con funciones de |Var| en |ℕ|:
+\paragraph{Example} Let's define the |Σₑ|-algebra |Semₑ|. The elements of the carrier
+will be functions from states to natural numbers. 
 
 \begin{spec}
 State : Set
 State = Var → ℕ
 \end{spec}
 
-La interpretación del único sort |ExprN| es el setoide de las funciones de |State| en
-|ℕ|. Con |→-setoid| podemos definir una función entre dos setoides triviales, donde la relación
-de igualdad es la extensional:
 
 \begin{spec}
 iSortsₑ : ISorts Σₑ
-iSortsₑ ExprN = State →-setoid ℕ
+iSortsₑ E = State →-setoid ℕ
 \end{spec}
 
-Definamos la interpretación de cada símbolo de función, que será una función entre setoides.
-Como vimos previamente, una función entre setoides tiene dos campos: la función entre sus carriers, y la
-prueba de que preserva la igualdad. No mostraremos esta última.
+\noindent The function |→-setoid| allows us to define a function between two trivial
+setoids, where the equivalence relation is the extensional equality.
 
-Para cada |n : ℕ| tenemos un símbolo de función |valN n|. Esta operación tiene aridad vacía y target sort a
-|ExprN|.
+Let's define the interpretation of each operation. Like we saw previously, a function
+between setoids consists of two fields: the function of carriers, and de proof of
+congruence (if two elements are related, the elements resulting of applying the function
+are related too). We ommit this proof in this text.
+
+For each |n : ℕ| we have an operation |valN n|. The arity is empty and the target sort is
+|E|:
 
 \begin{spec}
-iValN : (n : ℕ) → IFuncs Σₑ ([] , ExprN) iSortsₑ
+iValN : (n : ℕ) → IFuncs Σₑ ([] , E) iSortsₑ
 iValN n = record  { _⟨$⟩_ = λ { ⟨⟩ σ → n }
                   ; cong = ... }
 \end{spec}
 
-La operación |plus| tiene tipo |(ExprN ∷ [ ExprN ] , ExprN)|. Por lo tanto la interpretación
-en el álgebra que queremos definir será una función que tome un vector de dos elementos
-de tipo |State → ℕ| y devolverá otro elemento con tipo |State → ℕ|:
+The operation |plus| have type |(E ∷ [ E ] , E)|. So, the interpretation will be a
+function from vectors of two elements of type |State → ℕ| to |State → ℕ|:
 
 \begin{spec}
-iPlus : IFuncs Σₑ (ExprN ∷ [ ExprN ] , ExprN) iSortsₑ
+iPlus : IFuncs Σₑ (E ∷ [ E ] , E) iSortsₑ
 iPlus = record  { _⟨$⟩_ = λ { (v₀ ▹ v₁ ▹ ⟨⟩) σ → v₀ σ + v₁ σ }
                 ; cong = ... }
 \end{spec}
 
-Por último, para cada variable |v| tenemos una operación |varN v|, con aridad vacía
-y target sort |ExprN|. Su interpretación entonces, será una función que toma como parámetro
-el vector vacío, y devuelve una función en |State → ℕ|. Su definición corresponde a aplicar
-el estado a la variable |v|:
+By last, for each variable |v| we have an operation |varN v|, with empty arity and
+target sort |E|. The interpretation is a function from empty vectors (corresponding to
+empty arity) to |State → ℕ| (corresponding to the interpretation of |E|). This function
+is the application of state to the variable |v|:
 
 \begin{spec}
-iVarN : (v : Var) → IFuncs Σₑ ([] , ExprN) iSortsₑ
+iVarN : (v : Var) → IFuncs Σₑ ([] , E) iSortsₑ
 iVarN v = record  { _⟨$⟩_ = λ { ⟨⟩ σ → σ v }
                   ; cong = ... }
 \end{spec}
 
-Podemos juntar estas tres definiciones para tener la interpretación de los símbolos
-de función:
+So, we can define the |Semₑ| algebra:
 
 \begin{spec}
 iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
@@ -320,14 +245,12 @@ iFuncsₑ plus = iPlus
 iFuncsₑ (varN v) = iVarN v
 \end{spec}
 
-Y definimos finalmente el álgebra |Semₑ|:
-
 \begin{spec}
 Semₑ : Algebra Σₑ
 Semₑ = iSortsₑ ∥ iFuncsₑ
 \end{spec}
 
-\subsection*{Homomorfismo}
+\subsection*{Homomorphism}
 
 Dadas dos $\Sigma$-álgebras $A$ y $B$, un \textbf{homomorfismo} $h$ de $A$ a $B$
 es una familia de funciones indexadas en los sorts de $\Sigma$, $h_s : A_s \rightarrow B_s$,
@@ -518,13 +441,13 @@ Esta definición formaliza la definición de $HU_s$ que vimos previamente:
 Consideremos como ejemplo algunos términos de la signatura |Σₑ|:
 
 \begin{spec}
-t₁ : HU Σₑ ExprN
+t₁ : HU Σₑ E
 t₁ = term (valN 2) ⟨⟩
 
-t₂ : HU Σₑ ExprN
+t₂ : HU Σₑ E
 t₂ = term (varN " x ") ⟨⟩
 
-t₃ : HU Σₑ ExprN
+t₃ : HU Σₑ E
 t₃ = term plus (t₁ ▹ t₂ ▹ ⟨⟩)
 \end{spec}
 

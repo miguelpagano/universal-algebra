@@ -12,7 +12,7 @@ reporte.pdf : reporte.tex  biblio.bib
 	bibtex reporte
 	pdflatex $(LTX_OPTS) reporte.tex
 
-correct-compiler.tex : correct-compiler.lagda unicode.fmt
+correct-compiler.tex : introduction.lagda univ-alg.lagda correct-compiler.lagda unicode.fmt
 	lhs2TeX --agda correct-compiler.lagda -o correct-compiler.tex
 
 correct-compiler.pdf : correct-compiler.tex  biblio.bib

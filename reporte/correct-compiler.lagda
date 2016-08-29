@@ -4,6 +4,7 @@
 \usepackage[small,nohug,heads=vee]{diagrams}
 \diagramstyle[labelstyle=\scriptstyle]
 \usepackage{authblk}
+\usepackage{natbib}
 \usepackage{ dsfont }
 \usepackage{ upgreek }
 \usepackage{ hyperref }
@@ -44,7 +45,7 @@
 %include conclusions.lagda
 
 
-\bibliographystyle{apalike}
+\bibliographystyle{plainnat}
 \bibliography{biblio}
 
 

@@ -15,79 +15,80 @@ popularized the use of universal algebra contributing the notion of
 \emph{initial algebra sematics} \citet{goguen-77} and expanded
 \cite{thatcher-80} Morris' work. %TODO: en qué sentido?
 % TODO: Es un salto medio grande del 80 al 98, quizás lo podamos
-% rellenar un poco?
+% rellenar un poco? 
+% - Meijer
+% - Rus?
+More recently \citet{janssen-98} proposed to use this algebraic framework
+more broadly, taking compilation as a particular case of a translation.
+
+The main idea behind this algebraic proof of correctness is to
+conceive both languages, source and target, as the initial algebras of
+their respective signatures; semantics of the languages are freely
+obtained by initiality after giving an interpretation for the
+corresponding function symbols. The trick to get correctness is
+to map the target language and its semantics as algebras for
+the source language and then provide an homomorphism from the
+high-level semantics to the low-level one. In this work we formalize
+enough heterogenous universal algebra in order to complete the
+definition of a correct compiler. Throgout the article we will use
+McCarthy and Painter's language as a guiding example.
+% TODO: Sería bueno encontrar una forma más vendedora para decir lo
+% que hacemos y también estaría muy bien si tenemos una formalización
+% del lenguaje imperativo simple, aunque no lo mostremos.
 
 
 
-El desarrollo de compiladores correctos es un tema de interés en
-Ciencias de la Computación que se ha estudiado desde épocas
-tempranas. Morris (\cite{morris-73}) presentó un esquema en el cual
-propone utilizar álgebras universales heterogéneas
-(\cite{birkhoff-70}) para probar la corrección de un compilador,
-trabajo que luego extendió Thatcher (\cite{thatcher-80}). En
-\cite{janssen-98} se realiza un análisis de los distintos trabajos
-existentes en el momento con el objetivo de dar un esquema general
-para la traducción de lenguajes (no sólo lenguajes de programación,
-sino que abarca distintas áreas). En este trabajo formalizamos un
-framework similar al que propone Janssen.  El enfoque se basa en
-considerar la sintaxis abstracta de un lenguaje como el álgebra
-inicial de una signatura multisort, y a cualquier otra álgebra como un
-posible dominio semántico, teniendo definido por inicialidad un único
-homomorfismo (la semántica). El grupo conocido como ADJ presentan esta
-manera de ver la sintaxis y semántica de los lenguajes en
-\cite{goguen-77}.
-
-Introduzcamos un ejemplo sencillo para explicar el enfoque que
-formalizaremos, un compilador de expresiones aritméticas en un código
-de máquina que manipula un stack.
-
-\paragraph{Lenguaje fuente} El lenguaje fuente son expresiones
-aritméticas simples: constantes, variables y suma.
-
-\begin{quote}
-  $ Expr  ::=  \;\; Nat  \;\; || \;\;  \mathit{Var} \;\; || \;\; Expr ⊕ Expr $
-\end{quote}
-
-\paragraph{Lenguaje target}
-El lenguaje target es un código de máquina
-cuya ejecución manipulará una pila de números naturales.
-
-\begin{quote}
-$ Code  ::=  \;\; push\,Nat  \;\; || \;\; load\, Var \;\; || \;\; Code \,;\, Code \;\; || \;\; add $
-\end{quote}
-
-\noindent En ambos casos, $Nat$ corresponde a las constantes naturales
-y $Var$ a variables.
-
-
-\paragraph{Semántica fuente}
-
-La semántica del lenguaje fuente podemos definirla como una función
-que asigna a cada expresión una función que va de un estado de
-asignación de valores a variables, a un natural:
-
+\newcommand{\expr}{\langle \mathit{expr}\rangle}
+\newcommand{\code}{\langle \mathit{code}\rangle}
+\newcommand{\instr}[1]{\mathsf{#1}}
+\paragraph{Source and target languages} The source language consists
+of natural constants, variables and addition. Let $X$ be a countable
+set of variables. Let $x,y,z$ be meta-variables over $X$ and $m,n$
+over $\mathbb{N}$.
+% TODO: por qué no tener las signaturas como funtores que dado un conjunto
+% de variables, genera la sintaxis?
 \begin{align*}
-  &eval     :\;Expr \rightarrow State \rightarrow \mathds{N}\\
-  &eval\;n \;=\; \lambda\,\upsigma \rightarrow n\\
-  &eval\;v \;=\;\lambda\,\upsigma \rightarrow \upsigma\,v\\
-  &eval\;(e_1 \oplus e_2)\;=\;\lambda\,\upsigma \rightarrow (eval\,e_1\,\upsigma) + (eval\,e_1\,\upsigma)\\
+    \expr \ni e,e' &::=\ n\ \mid\ x\ \mid e ⊕ e'
+\intertext{The target language consists of a sequence of instructions for a stack-machine.}
+  \code \ni c,c' & ::=  \instr{push}\,n \ \mid\ \instr{load}\,x \ \mid\ c\,;\, c' \ \mid\ \instr{add}
 \end{align*}
 
-\paragraph{Semántica target}
-La semántica del lenguaje target asignará a cada código una función que va de un par consistente de un estado
-y una pila, a otra pila. Podemos representar la pila con una lista de naturales:
+\newcommand{\state}{\Sigma}
+\newcommand{\evalExpr}{\mathit{eval}}
 
-\begin{align*}
-  &exec     :\;Code \rightarrow Stack \times State \rightarrow Stack\\
-  &exec\;(push\,n) \;=\; \lambda\,(s , \upsigma) \rightarrow (s : n)\\
-  &exec\;(load\,v) \;=\;\lambda\,(s , \upsigma) \rightarrow (\upsigma\,v\,:\,s)\\
-  &exec\;(c_1\,;\,c_2)\;=\;\lambda\,(s , \upsigma) \rightarrow exec\;c_2\;(\upsigma,exec\;c_1\;(\upsigma,s))\\
-  &exec\;add \;\;\;\;\;\;\;=\;\lambda\,(n \, : \, m \, : \, s , \upsigma) \rightarrow (n \, + \, m \, : \, s)\\
-\end{align*}
+The intended semantics for the source language is a function mapping
+states to natural numbers; let $\state = X \to \mathbb{N}$ and $\sigma$ a
+meta-variable over $\state$, the semantics is given by:
+\begin{equation*}
+\begin{array}{lllcl}
+  &\multicolumn{4}{l}{\evalExpr \colon\ \expr \to \state \to \mathbb{N}}\\
+  &\evalExpr &n                &=&\lambda\,\upsigma \rightarrow n\\
+  &\evalExpr &v                &=& \lambda\,\upsigma \rightarrow \upsigma\,v\\
+  &\evalExpr &(e_1 \oplus e_2) &=& \lambda\,\upsigma \rightarrow (\evalExpr\,e_1\,\upsigma) + (\evalExpr\,e_1\,\upsigma)
+\end{array}%
+\end{equation*}
 
-\noindent Observemos que $exec$ es una función parcial, ya que para el
-caso de $add$ sólo está definida si en la pila hay por lo menos dos
-elementos.
+
+\newcommand{\stack}{\mathit{Stack}}
+\newcommand{\execCode}{\mathit{exec}}
+%TODO: poner referencias para lo habitual respecto a low-level languages.
+Low-level languages semantics are usually given as a transition
+relation between configurations of the (abstract) machine. If the
+relation is deterministic, then one can infer a big-step semantics and
+from that a functional semantics as proposed by
+\citet{owens2016bigstep}. An initial configuration of our machine is
+a pair $(s, \upsigma)$ of a stack of numbers and a state, while the final
+configuration is a stack $s'$. We assume that $\stack$s are lists of numbers. 
+\newcommand{\consop}{\,\colon\!\!\!\colon}
+\[
+\begin{array}{lllcl}
+  &\multicolumn{4}{l}{\execCode \colon \code \rightarrow Stack \times State \rightarrow Stack}\\
+  &\execCode &(\instr{push}\,n)     &=&(s , \upsigma) \rightarrow (n \consop s)\\
+  &\execCode &(\instr{load}\,v)     &=&\lambda\,(s , \upsigma) \rightarrow (\upsigma\,v \consop s)\\
+  &\execCode &(c_1\,;\,c_2) &=&\lambda\,(s , \upsigma) \rightarrow \execCode\;c_2\;(\upsigma,\execCode\;c_1\;(\upsigma,s))\\
+  &\execCode &\instr{add}   &=&\lambda\,(n  \consop  m  \consop  s , \upsigma) \rightarrow (n \, + \, m  \consop s)\\
+\end{array}
+\]
 
 \paragraph{Compilador}
 El compilador llevará expresiones en $Expr$ a códigos en $Code$:

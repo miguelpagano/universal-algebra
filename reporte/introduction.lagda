@@ -53,6 +53,7 @@ over $\mathbb{N}$.
   \code \ni c,c' & ::=  \instr{push}\,n \ \mid\ \instr{load}\,x \ \mid\ c\,;\, c' \ \mid\ \instr{add}
 \end{align*}
 
+% TODO: cambiar \Sigma por \mathit{State}, así ahorramos el clash con signaturas.
 \newcommand{\state}{\Sigma}
 \newcommand{\evalExpr}{\mathit{eval}}
 
@@ -68,11 +69,10 @@ meta-variable over $\state$, the semantics is given by:
 \end{array}%
 \end{equation*}
 
-
 \newcommand{\stack}{\mathit{Stack}}
 \newcommand{\execCode}{\mathit{exec}}
 %TODO: poner referencias para lo habitual respecto a low-level languages.
-Low-level languages semantics are usually given as a transition
+Semantics of Low-level languages are usually given as a transition
 relation between configurations of the (abstract) machine. If the
 relation is deterministic, then one can infer a big-step semantics and
 from that a functional semantics as proposed by
@@ -82,46 +82,73 @@ configuration is a stack $s'$. We assume that $\stack$s are lists of numbers.
 \newcommand{\consop}{\,\colon\!\!\!\colon}
 \[
 \begin{array}{lllcl}
-  &\multicolumn{4}{l}{\execCode \colon \code \rightarrow Stack \times State \rightarrow Stack}\\
+  &\multicolumn{4}{l}{\execCode \colon \code \rightarrow \stack \times \state \rightarrow \stack}\\
   &\execCode &(\instr{push}\,n)     &=&(s , \upsigma) \rightarrow (n \consop s)\\
   &\execCode &(\instr{load}\,v)     &=&\lambda\,(s , \upsigma) \rightarrow (\upsigma\,v \consop s)\\
   &\execCode &(c_1\,;\,c_2) &=&\lambda\,(s , \upsigma) \rightarrow \execCode\;c_2\;(\upsigma,\execCode\;c_1\;(\upsigma,s))\\
   &\execCode &\instr{add}   &=&\lambda\,(n  \consop  m  \consop  s , \upsigma) \rightarrow (n \, + \, m  \consop s)\\
 \end{array}
 \]
+\newcommand{\comp}{\mathit{comp}}
 
-\paragraph{Compilador}
-El compilador llevará expresiones en $Expr$ a códigos en $Code$:
+A compiler $\comp \colon \expr \rightarrow \code$ is correct if for
+every expression $e$ the generated code $\comp\,e$ has the ``same''
+semantics of $e$. In our setting we can state correctness formally as
+\[
+  \execCode\,(\comp\,e)\,(\upsigma,s)\,=\,\evalExpr\,e\,\upsigma \consop s \enspace .
+\]
+It is straightforward to write a compiler and then prove its correctness by induction
+on the structure of expressions (we omit this proof):
+\[
+\begin{array}{lllcl}
+  &\multicolumn{4}{l}{\comp \colon \expr \rightarrow \code}\\
+  &\comp &n  & = &  push\,n\\
+  &\comp &v  & = & load\,v\\
+  &\comp &(e_1 \oplus e_2) & = & \comp\,e_2\,;\,\comp\,e_1\,;\,add
+\end{array}
+\]
 
-\begin{align*}
-  &comp     :\;Expr \rightarrow Code\\
-  &comp\;n \;=\; push\,n\\
-  &comp\;v \;=\;load\,v\\
-  &comp\;(e_1 \oplus e_2)\;=\;comp\,e_2\,;\,comp\,e_1\,;\,add\\
-\end{align*}
+\paragraph{The Algebraic Perspective} 
+Under the algebraic perspective, one does not start from an abstract
+grammar but only from a signature which defines the grammatical
+categories (sorts in the algebraic parlance) and the operators
+(terminals) together with their arities. The language corresponding to
+a signature $\Sigma_e$ is the \emph{term algebra} and it consists of
+the phrases freely generated from the operators. A semantics is
+nothing more than a algebra for the signature, which is completely
+determined by choosing an interpretation for (the sorts and) the
+operators. 
 
-\paragraph{Corrección}
-Este compilador es correcto si se puede probar:
-    \begin{center}
-      $exec\,(comp\,e)\,(\upsigma,s)\,=\,eval\,e\,:\,s$
-    \end{center}
+In our case we have two (monosorted) signatures $\Sigma_e$ and
+$\Sigma_c$ giving rise to their term algebras $T_e$ and $T_c$,
+respectively. We interpret the only sort of $\Sigma_e$ as the set of
+total functions $\mathit{Sem} = \state \to \mathbb{N}$ and the sort of
+$\Sigma_c$ as the set of partial functions from
+$\mathit{Exec} = \stack\times\state \to \stack$.
+%TODO: 
+% - poner la interpretación de símbolos para uno de los lenguajes
+% - casi no hablamos de homomorfismos hasta ahora! 
+ Once we choose an interpretation of the symbols we get, by a general
+result about algebras, the denotation of each phrase; for instance,
+we get a unique homomorpism $\mathit{hsem} \colon T_e \to \mathit{Sem}$
+from the interpretation:
+\[
+  \begin{array}{lcl}
+    i(n)&=&\lambda \upsigma \mapsto n\\
+    i(x)&=&\lambda \upsigma \mapsto \upsigma\,x\\
+    i(\oplus)(f,g)&=&\lambda \upsigma \mapsto f\,\upsigma + g\,\upsigma
+  \end{array}
+\]
+We can sketch the general picture as follows:
 
-En el enfoque que presentamos los lenguajes están definidos a partir
-de dos signaturas $\Sigma_e$ y $\Sigma_c$, obteniendo sus álgebras de
-términos $T_e$ y $T_c$. Los dominios semánticos, digamos $Sem$ y
-$Exec$, serán álgebras de cada signatura respectivamente. En el primer
-caso cada elemento del carrier del álgebra $Sem$ será una función con
-tipo $State \rightarrow \mathds{N}$, en el segundo una función con
-tipo $Stack \times State \rightarrow Stack$. Las semánticas quedan
-determinadas por el único homomorfismo que existe entre el álgebra de
-términos y cada álgebra, por inicialidad. Tenemos entonces el
-siguiente diagrama:
-
-\begin{diagram}
-  T_e     &     &   &  &    &T_c\\
-  \dTo_{hsem} &     &   &  &   &\dTo_{hexec}\\
-  Sem      &     &   &  &    &Exec\\
-\end{diagram}
+\begin{tikzpicture}[>=latex]
+  \node (te) at (0,2) {$T_e$};
+  \node (tc) at (4,2) {$T_c$};
+  \node (seme) at (0,0) {$\mathit{Sem}$} ;
+  \node (semc) at (4,0) {$\mathit{Exec}$} ;
+  \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme);
+  \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\mathit{hexec}$} (semc);
+\end{tikzpicture}
 
 La clave del enfoque consiste en poder ver a las álgebras (y
 homomorfismos) de la signatura $\Sigma_c$ como álgebras (y

@@ -1,6 +1,7 @@
 \documentclass[a4paper,twoside,12pt]{article}
 \usepackage{amsmath}
 \usepackage{mathpartir}
+\usepackage{tikz}
 \usepackage[small,nohug,heads=vee]{diagrams}
 \diagramstyle[labelstyle=\scriptstyle]
 \usepackage{authblk}

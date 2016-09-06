@@ -10,7 +10,7 @@ Martin Löf's intuitionistic type theory...
 We show the main definitions of the development, ommiting some technical details.
 The full code is available to download on \url{https://git.cs.famaf.unc.edu.ar/semantica-de-la-programacion/algebras-universales/UnivAlgebra.agda}.
 
-All the definitions that we present in this section are based on the \textit{Handbook of Logic in Computer Science}, (\cite{handbook}).
+The definitions that we present in this section are based on the \textit{Handbook of Logic in Computer Science}, (\cite{handbook}).
 
 \subsection{Signature, algebra and homomorphism}
 
@@ -216,7 +216,7 @@ iValN n = record  { _⟨$⟩_ = λ { ⟨⟩ σ → n }
                   ; cong = ... }
 \end{spec}
 
-The operation |plus| have type |(E ∷ [ E ] , E)|. So, the interpretation will be a
+The operation |plus| has type |(E ∷ [ E ] , E)|. So, the interpretation will be a
 function from vectors of two elements of type |State → ℕ| to |State → ℕ|:
 
 \begin{spec}
@@ -252,17 +252,15 @@ Semₑ = iSortsₑ ∥ iFuncsₑ
 
 \subsection*{Homomorphism}
 
-Dadas dos $\Sigma$-álgebras $A$ y $B$, un \textbf{homomorfismo} $h$ de $A$ a $B$
-es una familia de funciones indexadas en los sorts de $\Sigma$, $h_s : A_s \rightarrow B_s$,
-tal que para cada operación $w$ de $\Sigma$ con aridad $([s_1,...,s_n],s)$, se cumple:
+Let $\mathcal{A}$ and $\mathcal{B}$ be two $\Sigma$-algebras, a \textbf{homomorphism}
+$h$ from $\mathcal{A}$ to $\mathcal{B}$ is a indexed family $h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$,
+such that for each operation $w$ with type $([s_1,...,s_n],s)$, the following holds:
 
 \begin{center}
-  $h_s(f_A(a_1,...,a_n)) = f_B(h_{s_1}\,a_1,...,h_{s_n}\,a_n)$ \;\;\;(1)
+  $h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)$ \;\;\;(1)
 \end{center}
 
-Definamos primero la noción de \textit{función entre} $\Sigma$\textit{-álgebras}. Dadas
-dos $\Sigma$-álgebras $A$ y $B$, definimos la función entre ambas como una familia de funciones
-indexada en los sorts de $\Sigma$ entre los carriers:
+Let's define first the notion of \textit{function between} $\Sigma$\textit{-algebras}:
 
 \begin{spec}
 _⟿_ : ∀  {Σ : Signature}  →
@@ -271,41 +269,11 @@ _⟿_ : ∀  {Σ : Signature}  →
 _⟿_ {Σ} A A' = (s : sorts Σ) → A ⟦ s ⟧ₛ ⟶ A' ⟦ s ⟧ₛ
 \end{spec}
 
-\noindent Notemos que para cada sort tenemos una función entre los setoides
-correspondientes a su interpretación en cada álgebra.
+\noindent Note that for each sort $s$ we have a function between the setoids
+corresponding to the interpretation of $s$ in each algebra.
 
-Procedamos ahora a definir la condición de homomorfismo. En la parte derecha de la ecuación (1) tenemos
-la aplicación de la función $h$ en cada elemento de $(a_1,...,a_n)$. Definimos esta noción en Agda. Si
-|ar| es una aridad y |A| una |Σ|-álgebra, definimos como mapear una función entre álgebras |h| a un
-vector en |A ⟦ ar ⟧ₛ*|. A esta función la notaremos con |map⟿| y no pondremos en este texto
-su definición.
-
-%% Primero, dado un símbolo
-%% de función $f$ con aridad $[s_1,...,s_n]$, la interpretación $f$ en una
-%% $\Sigma$-álgebra $A$ toma como argumento vectores heterogéneos donde cada
-%% elemento $a_i$ pertenece a la interpretación de $s_i$ en $A$. Definamos
-%% el tipo de estos vectores para facilitar la notación. Sea |A| una $\Sigma$-álgebra
-%% y |ar| una aridad de $\Sigma$:
-
-%% \begin{spec}
-%% idom : _
-%% idom {Σ} ar A = VecH (sorts Σ) (Carrier ∘ _⟦_⟧ₛ A) ar
-%% \end{spec}
-
-%% En la parte derecha de la ecuación (1) tenemos la aplicación de la función $h$ en
-%% cada elemento de $(a_1,...,a_n)$. Definimos esta notación en Agda, correspondiente
-%% a ``mapear'' una función entre álgebras |h| a un vector en |idom ar A| (donde |ar|
-%% es una aridad y |A| un álgebra), llamaremos a esta función |map⟿| (no daremos los
-%% detalles).
-
-A continuación damos la definición de un tipo para la condición de homomorfismo de
-una función entre álgebras |h|. Si
-|h : A ⟿ A'| y |f : funcs Σ (ar , s)|, para todo |(as : A ⟦ ar ⟧ₛ*)|, debe darse
-la igualdad entre
-la aplicación de |h| al resultado de aplicar la interpretación de |f| en |A| al vector
-|as| y la aplicación de la interpretación de |f| en |A'| al resultado de mapear
-|h| a |as|. La relación de igualdad correspondiente es la de la interpretación del sort
-|s| en |A|:
+Let's define the condition of homomorphism. In the right side of the equation (1) we have the
+application of function $h$ to each element of $(a_1,...,a_n)$. The function |map⟿| allows us to apply a function to a vector.
 
 \begin{spec}
 homCond  A A' h f = (as : A ⟦ ar ⟧ₛ*) →  (h s ⟨$⟩ (A ⟦ f ⟧ ⟨$⟩ as))
@@ -315,8 +283,25 @@ homCond  A A' h f = (as : A ⟦ ar ⟧ₛ*) →  (h s ⟨$⟩ (A ⟦ f ⟧ ⟨$�
                 _≈ₛ_ = _≈_ (A' ⟦ s ⟧ₛ) 
 \end{spec}
 
-Finalmente definimos \textbf{homomorfismo} con un record con dos campos: la función
-entre álgebras y la condición de homomorfismo:
+
+%% Procedamos ahora a definir la condición de homomorfismo. En la parte derecha de la ecuación (1) tenemos
+%% la aplicación de la función $h$ en cada elemento de $(a_1,...,a_n)$. Definimos esta noción en Agda. Si
+%% |ar| es una aridad y |A| una |Σ|-álgebra, definimos como mapear una función entre álgebras |h| a un
+%% vector en |A ⟦ ar ⟧ₛ*|. A esta función la notaremos con |map⟿| y no pondremos en este texto
+%% su definición.
+
+
+%% A continuación damos la definición de un tipo para la condición de homomorfismo de
+%% una función entre álgebras |h|. Si
+%% |h : A ⟿ A'| y |f : funcs Σ (ar , s)|, para todo |(as : A ⟦ ar ⟧ₛ*)|, debe darse
+%% la igualdad entre
+%% la aplicación de |h| al resultado de aplicar la interpretación de |f| en |A| al vector
+%% |as| y la aplicación de la interpretación de |f| en |A'| al resultado de mapear
+%% |h| a |as|. La relación de igualdad correspondiente es la de la interpretación del sort
+%% |s| en |A|:
+
+Finally, let's define a type |Homomorphism| with a record with two fields: the
+function between algebras, and the condition of homomorphism:
 
 \begin{spec}
 record Homomorphism (A : Algebra Σ) (A' : Algebra Σ) : Set _ where
@@ -325,20 +310,24 @@ record Homomorphism (A : Algebra Σ) (A' : Algebra Σ) : Set _ where
     cond   : ∀ {ty} (f : funcs Σ ty) → homCond A A' ′_′ f
 \end{spec}
 
-También en esta definición utilizamos una notación  más compacta para referirnos
-a la función de un homomorfismo: |′ H ′|.
+\noindent Note the use of the notation of the function homomorphism: If |H|
+is an homomorphism, |′ H ′| is the field corresponding to the function
+between algebras.
 
-\subsection{Álgebra inicial y Álgebra de términos}
 
-\subsection*{Álgebra inicial}
+\subsection{Initial algebra and Term algebra}
 
-Una $\Sigma$-álgebra $A$ es llamada \textbf{inicial} si para toda otra
-$\Sigma$-álgebra $B$, existe un único homomorfismo de $A$ a $B$.
+\subsection*{Initial Algebra}
 
-Para formalizar este concepto tenemos que definir unicidad de un homomorfismo.
-Informalmente podemos decir que un elemento $e \in A$ es único si para todo
-otro elemento $e' \in A$ se da que $e = e'$. Podemos generalizar esta definición
-a cualquier relación de equivalencia. El tipo |Unicity| expresa esta noción:
+A $\Sigma$-algebra $\mathcal{A}$ is called \textbf{initial} if for all
+$\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism from
+$\mathcal{A}$ to $\mathcal{B}$.
+
+In order to formalize the concept of initial algebra in Agda, we proceed to
+define the notion of \textit{unicity} of an homomorphism. Informally, we can
+say that an element $e \in E$ is unique if for all element $e' \in E$ the
+equation $e = e'$ holds. We can generalize this definition to an arbitrary
+equivalence relation, and we define the type |Unicity|:
 
 \begin{spec}
 Unicity : ∀ {ℓ₁} {ℓ₂} →  (A : Set ℓ₁) → (rel : Rel A ℓ₂) →
@@ -346,25 +335,21 @@ Unicity : ∀ {ℓ₁} {ℓ₂} →  (A : Set ℓ₁) → (rel : Rel A ℓ₂) �
 Unicity A _≈_ p = Σ[ a ∈ A ] ((a' : A) → a ≈ a')
 \end{spec}
 
-Dado un tipo |A|, y una relación binaria |_≈_| entre elementos de |A|,
-un |a : A| es único (salvo equivalencia) con respecto a |_≈_| si para todo otro elemento |a' : A|,
-|a| y |a'| están relacionados.
+\noindent Given a type |A|, and a equivalence relation |_≈_| on |A|,
+an element |a : A| is unique (except equivalence) with respect to |_≈_| if for all element
+|a' : A|, |a| and |a'| are related by |_≈_|.
 
-Ahora deberíamos decir cuándo dos homomorfismos son iguales. La igualdad
-que consideramos será la extensional: Dos funciones $f$ y $g$ son iguales si,
-dados dos elementos $a$ y $b$ tales que $a = b$, entonces $f\,a = g\,b$.
-
-Definamos la igualdad extensional en Agda, generalizando las relaciones de igualdad:
+In order to define the equality of homomorphisms, let's define a type to represent the
+property of extensional equality. If |A| and |B| are sets, |_≈A_| and |_≈B_| are binary relations
+on |A| and |B| respectively, and |f| and |g| are functions from |A| to |B|, we define
+the property |ExtProp|:
 
 \begin{spec}
 ExtProp _≈A_ _≈B_ f g = (a a' : A) → a ≈A a' → f a ≈B g a'
 \end{spec}
 
-Y ahora definamos un tipo que contenga las condiciones necesarias que deben cumplirse
-para que dos homomorfismos sean extensionalmente iguales. Este tipo tendrá
-un único constructor |ext| que expresa la propiedad de igualdad extensional
-para la función del homomorfismo indexada en cada sort de la signatura:
-
+Two homomorphisms |H| and |H'| are equals if the functions |′ H ′| and |′ H' ′| are
+extensionally equals. Let's define the type |_≈ₕ_|:
 
 \begin{spec}
 data _≈ₕ_  {Σ} {A : Algebra Σ} {A' : Algebra Σ}
@@ -374,8 +359,8 @@ data _≈ₕ_  {Σ} {A : Algebra Σ} {A' : Algebra Σ}
          H ≈ₕ H'
 \end{spec}
 
-Esta relación es de equivalencia. La prueba |equiv≈ₕ| lo demuestra, no damos
-su definición por cuestiones de simplicidad:
+The relation |_≈ₕ_| is an equivalence relation. We can prove this, but we don't
+show the proof on this text:
 
 \begin{spec}
 equiv≈ₕ : ∀  {Σ} {A : Algebra Σ} {A' : Algebra Σ} →
@@ -383,10 +368,10 @@ equiv≈ₕ : ∀  {Σ} {A : Algebra Σ} {A' : Algebra Σ} →
 equiv≈ₕ = ...
 \end{spec}
 
-Con la relación igualdad de homomorfismos podemos expresar cuándo un homomorfismo
-es único (salvo equivalencias) con respecto a ella. Definimos entonces álgebra inicial,
-con un récord conteniendo el álgebra, y la prueba de que para toda otra álgebra hay
-un único homomorfismo:
+
+With all these definitions we can formalize the initial algebra of a signature |Σ|.
+Let's define the type |Initial| with a record with two fields: The algebra and the
+proof of initiality:
 
 \begin{spec}
 record Initial (Σ : Signature) : Set _ where
@@ -396,32 +381,20 @@ record Initial (Σ : Signature) : Set _ where
 \end{spec}
 
 
-\subsection*{Álgebra de términos}
+\subsection*{Term algebra}
 
-A partir de una signatura $\Sigma$ puede construirse un \textbf{álgebra de términos},
-donde los elementos que conforman los carriers de cada sort $s$ son los términos generados por los
-símbolos de función de $\Sigma$, con target sort $s$, también llamados \textit{ground terms}
-o \textit{Herbrand Universe} de sort $s$ (que podemos escribir como $HU_s$):
+From a signature $\Sigma$ can be defined an algebra called \textbf{term algebra}. The
+carriers of each sort $s$ of $\Sigma$ are the terms generated by the function symbols
+of $\Sigma$, with target sort $s$, called the \textit{ground terms} or \textit{Herbrand Universe}
+of sort $s$. 
 
 \begin{itemize}
-\item Sea $k$ una operación con tipo $[] \rightarrow s$, $k \in HU_s$
-\item Si $f$ es una operación con tipo $[s_1,...,s_n] \rightarrow s$ y
-      $t_i \in HU_{s_i}$ para cada $1 \leq i \leq n$, entonces $f\,(t_1,...,t_n) \in HU_s$
+\item Let $k$ be an operation with type $[] \rightarrow s$, $k \in HU_s$
+\item Let $f$ be an operation with type $[s_1,...,s_n] \rightarrow s$ and
+      $t_i \in HU_{s_i}$ for each $i$ such that $1 \leq i \leq n$, then $f\,(t_1,...,t_n) \in HU_s$
 \end{itemize}
 
-Podemos definir esta noción en Agda, con un tipo indexado en los sorts de la signatura,
-con un único constructor |term| que tomará un símbolo de función y un vector de acuerdo a la aridad del mismo:
-
-
-%% Estos carriers son llamados el \textit{Herbrand Universe}
-%% de $\Sigma$. Como ejemplo, consideremos la signatura $\Sigma_1$, definida anteriormente,
-%% la cual contenía dos sorts |bool| y |nat|. El carrier del álgebra de términos de $\Sigma_1$ para
-%% el sort |nat| contiene a los elementos |fzero|, |fsuc fzero|, |fusc (fsuc fzero)|, etc.
-
-%% Procedamos a definir el \textit{Herbrand Universe} de una signatura $\Sigma$ como un tipo indexado
-%% en los sorts de $\Sigma$. Un elemento de este tipo será un término, que consta de un símbolo
-%% de función y un vector heterogéneo donde cada elemento será un |HU| indexado en el sort correspondiente
-%% a la aridad de la función:
+We can define this on Agda, with a type indexed on the sorts of the signature:
 
 \begin{spec}
 data HU (Σ : Signature) : (s : sorts Σ) → Set where
@@ -429,16 +402,16 @@ data HU (Σ : Signature) : (s : sorts Σ) → Set where
                        (ts : VecH (sorts Σ) (HU Σ) ar) → HU Σ s
 \end{spec}
 
-Esta definición formaliza la definición de $HU_s$ que vimos previamente:
+The type |HU Σ s| formalizes the definition of $HU_s$ that we saw previously:
 
 \begin{itemize}
-\item Si |k : funcs Σ ([] , s)|, entonces |term k ⟨⟩ : HU Σ s|.
-\item Si |f : funcs Σ ([s₁ ,..., sₙ] , s)| y |ts = ⟨ t_1,...,t_n ⟩|, donde
-      |t₁ : HU Σ s₁| , ... ,|tₙ : HU Σ sₙ|, entonces |term f ts : HU Σ s|.
+\item Let |k : funcs Σ ([] , s)|, then |term k ⟨⟩ : HU Σ s|.
+\item Let |f : funcs Σ ([s₁ ,..., sₙ] , s)| and |ts = ⟨ t_1,...,t_n ⟩|, where
+      |t₁ : HU Σ s₁| , ... ,|tₙ : HU Σ sₙ|, then |term f ts : HU Σ s|.
 \end{itemize}
 
-\paragraph{Ejemplo}
-Consideremos como ejemplo algunos términos de la signatura |Σₑ|:
+\paragraph{Example}
+Let's define some terms of the signature |Σₑ|:
 
 \begin{spec}
 t₁ : HU Σₑ E
@@ -451,16 +424,9 @@ t₃ : HU Σₑ E
 t₃ = term plus (t₁ ▹ t₂ ▹ ⟨⟩)
 \end{spec}
 
-
-Dada una signatura $\Sigma$ podemos definir un álgebra que tenga como carrier de cada sort
-$s$ al conjunto $HU_s$ de manera trivial. La interpretación de cada símbolo de función
-será el término en la familia $HU$ correspondiente. A esta álgebra se la suele escribir $T(\Sigma)$.
-Podemos formalizarlo así:
-
-%% El álgebra de términos de $\Sigma$ tendrá como carrier de un sort $s$ al Herbrand Universe
-%% indexado en $s$. La igualdad de los elementos del carrier será la igualdad proposicional
-%% (dos elementos son iguales sólo si lo son sintácticamente). La interpretación de un símbolo
-%% de función |f| aplicado a un vector |vs| será el término |term f vs|:
+Let's define the term algebra of a signature $\Sigma$. The carrier of each sort $s$ is
+the set $HU_s$. The interpretation of each operation with target sort $s$ is a term in
+$HU_s$. This algebra is usually written $T(\Sigma)$.
 
 \begin{spec}
 ∣T∣ : (Σ : Signature) → Algebra Σ
@@ -472,37 +438,33 @@ Podemos formalizarlo así:
                              }
 \end{spec}
 
-\noindent Evitamos detallar en este texto la prueba de preservación de igualdad
-de la función de interpretación por cuestiones de simplicidad.
+\noindent We omit the proof of \textit{cong} in this text for simplicity.
 
-Gracias a esta definición podemos entonces, a partir de cualquier signatura |Σ|, obtener
-el álgebra de términos |∣T∣ Σ : Algebra Σ|. En lo que resta de esta sección explicaremos
-la formalización de la prueba de que el álgebra de términos |∣T∣ Σ| es inicial.
+In the rest of this section we show the formalization of the proof of initiality of
+term algebra.
 
-\subsection*{El álgebra de términos es inicial}
+\subsection*{The term algebra is initial}
 
-Para probar que el álgebra de términos $T(\Sigma)$ es inicial debemos dar para toda
-$\Sigma$-álgebra $\mathcal{A}$ un único homomorfismo de $T(\Sigma)$ a $\mathcal{A}$.
-
-Podemos definir este homomorfismo de la siguiente forma: Sea $s$ un sort de $\Sigma$,
+To prove that the term algebra is initial we must to give, for each $\Sigma$-algebra $\mathcal{A}$,
+an unique homomorphism from $T(\Sigma)$ to $\mathcal{A}$. Let's define this homomorphism. Let $s$
+be a sort of $\Sigma$:
 
 \begin{itemize}
-\item Si $k$ es un símbolo de función constante con target sort $s$, luego
+\item Let $k$ be an operation with empty arity and target sort $s$, then
       $h\,k\,=\,k_{\mathcal{A}}$
-\item Si $f$ es una operación con tipo $[s_1,...,s_n] \rightarrow s$, luego
+\item Let $f$ be an operation with type $[s_1,...,s_n] \rightarrow s$, then
       $h\,(f\,(t_1,...,t_n))\,=\,f_{\mathcal{A}}\,(h\,t_1,...,h\,t_n)$
 \end{itemize}
 
-Podríamos formalizar este homomorfismo así:
+We could formalize this homomorphism in the following way:
 
 \begin{spec}
 ∣T∣→A : ∀ {A : Algebra Σ} (s : sorts Σ) → HU Σ s → Carrier (A ⟦ s ⟧ₛ)
 ∣T∣→A {A = A} s (term f ts) = A ⟦ f ⟧ ⟨$⟩ (mapV ∣T∣→A ts)
 \end{spec}
 
-\noindent sin embargo el chequeador de terminación de Agda no puede asegurar la terminación.
-Lo resolvemos con dos funciones mutuamente recursivas donde vamos aplicando |∣T∣→A| en cada
-elemento del vector:
+\noindent However the termination checker of Agda can't ensure the termination.
+We solve this defining two mutually recursive functions:
 
 \begin{spec}
 mutual
@@ -519,14 +481,10 @@ mutual
   map∣T∣→A {ar = s₁ ∷ _} (t₁ ▹ ts₁) = ∣T∣→A s₁ t₁ ▹ map∣T∣→A ts₁
 \end{spec}
 
-Esta definición pasa el chequeo de terminación de Agda y podríamos
-probar que aplicar |map∣T∣→A| a un vector es igual a mapear |∣T∣→A| en
-ese vector, de manera trivial.
+\noindent Now, the termination checker accepts the definition.
 
-
-Con la función |∣T∣→A| podemos definir entonces el homomorfismo entre
-el álgebra de términos y cualquier otra álgebra (no mostramos la prueba
-de la condición de homomorfismo ni la preservación de igualdad en el setoide):
+With the function |∣T∣→A| we can define the homomorphism from the
+term algebra to any other algebra:
 
 \begin{spec}
 ∣T∣ₕ : ∀ {Σ} → (A : Algebra Σ) → Homomorphism (∣T∣ Σ) A
@@ -535,9 +493,12 @@ de la condición de homomorfismo ni la preservación de igualdad en el setoide):
                  ; cond = ...}
 \end{spec}
 
-Finalmente sólo resta mostrar que este homomorfismo es único con respecto a la igualdad
-|_≈ₕ_|, salvo equivalencias. Es decir, debemos probar que dados dos homomorfismos |h₁| y |h₂|
-entre |∣T∣ Σ| y |A|, para todo elemento |term f ts : HU Σ s| se da:
+\noindent We don't show the proofs of congruence and condition of homomorphism in this
+text.
+
+By last, it only remains to prove the uniqueness of the homomorphism |∣T∣ₕ|. Given two
+homomorphisms |h₁| and |h₂| from |∣T∣ Σ| to |A|, we must to prove that for each |term f ts : HU Σ s|
+the following holds:
 
 \begin{spec}
     ′ h₁ ′ s ⟨$⟩ term f ts
@@ -545,10 +506,10 @@ entre |∣T∣ Σ| y |A|, para todo elemento |term f ts : HU Σ s| se da:
     ′ h₂ ′ s ⟨$⟩ term f ts
 \end{spec}
 
-\noindent donde |≈ₛ| es la relación de igualdad del carrier del sort |s| en el álgebra |A|,
-es decir |_≈_ A ⟦ s ⟧ₛ|.
+\noindent where |≈ₛ| is the equivalence relation of the interpretation of sort |s|
+in |A|, i.e., |_≈_ A ⟦ s ⟧ₛ|.
 
-Podemos dar la prueba en Agda así:
+Let's define the proof on Agda:
 
 \begin{spec}
 uni :  (h₁ : Homomorphism (∣T∣ Σ) A) →
@@ -571,6 +532,6 @@ uni h₁ h₂ s (term {ar} f ts) ._ refl =
                          mapV≡ = ...
 \end{spec}
 
-\noindent mapV≡ es la extensión de la prueba |uni| a vectores, y es mutuamente recursiva con ésta.
-No damos su definición por cuestiones de simplicidad.
+\noindent mapV≡ is the extension of |uni| to vectors, and is mutually recursive with
+this.
 

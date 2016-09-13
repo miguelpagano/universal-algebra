@@ -1,4 +1,5 @@
 \section{Universal Algebra}
+\label{sec:univ-alg}
 
 We present a formalisation of some concepts of Universal Algebra, included the proof
 of initiality of the term algebra, in Agda.

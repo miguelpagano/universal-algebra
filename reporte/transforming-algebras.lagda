@@ -1,5 +1,5 @@
 \section{Transformación de álgebras}
-
+\label{sec:trans}
 
 Con todo lo formalizado en la sección anterior podemos definir los lenguajes
 source y target como álgebras de términos de dos signaturas, sus dominios

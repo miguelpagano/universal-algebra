@@ -1,4 +1,5 @@
 \section{Corrección de un compilador de expresiones}
+\label{sec:compiler}
 
 En esta sección mostraremos el desarrollo del compilador de expresiones
 aritméticas en un lenguaje de máquina cuya ejecución manipula un stack, que

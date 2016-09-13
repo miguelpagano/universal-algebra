@@ -117,21 +117,19 @@ a signature $\Sigma_e$ is the \emph{term algebra} and it consists of
 the phrases freely generated from the operators. A semantics is
 nothing more than a algebra for the signature, which is completely
 determined by choosing an interpretation for (the sorts and) the
-operators. 
+operators.
 
+\newcommand{\hsem}[1]{\mathit{hsem}(#1)}
 In our case we have two (monosorted) signatures $\Sigma_e$ and
 $\Sigma_c$ giving rise to their term algebras $T_e$ and $T_c$,
 respectively. We interpret the only sort of $\Sigma_e$ as the set of
-total functions $\mathit{Sem} = \state \to \mathbb{N}$ and the sort of
-$\Sigma_c$ as the set of partial functions from
-$\mathit{Exec} = \stack\times\state \to \stack$.
+total functions $\mathit{Sem} = \state \to \mathbb{N}$.
 %TODO: 
 % - poner la interpretación de símbolos para uno de los lenguajes
 % - casi no hablamos de homomorfismos hasta ahora! 
  Once we choose an interpretation of the symbols we get, by a general
-result about algebras, the denotation of each phrase; for instance,
-we get a unique homomorpism $\mathit{hsem} \colon T_e \to \mathit{Sem}$
-from the interpretation:
+result about algebras, the denotation of each phrase. For instance,
+from the following interpretation of the operators:
 \[
   \begin{array}{lcl}
     i(n)&=&\lambda \upsigma \mapsto n\\
@@ -139,59 +137,86 @@ from the interpretation:
     i(\oplus)(f,g)&=&\lambda \upsigma \mapsto f\,\upsigma + g\,\upsigma
   \end{array}
 \]
-We can sketch the general picture as follows:
+we get a unique homomorpism $\mathit{hsem} \colon T_e \to \mathit{Sem}$
+satisfying:
+\[
+  \begin{array}{lcl}
+    \hsem{n}&=&\lambda \upsigma \mapsto n\\
+    \hsem{x}&=&\lambda \upsigma \mapsto \upsigma\,x\\
+    \hsem{e_1 \oplus e_2}&=&\lambda \upsigma \mapsto \hsem{e_1}\,\upsigma + \hsem{e_2}\,\upsigma
+  \end{array}
+\]
+In parallel, we interpret the sort of $\Sigma_c$ as the set of partial
+functions from $\mathit{Exec} = \stack\times\state \to \stack$ and an
+intepretation for the symbols of $\Sigma_C$ leads to the semantics
+$\mathit{hexec} \colon T_C \to \mathit{Exec}$. We can picture the situation so far as: 
 
-\begin{tikzpicture}[>=latex]
-  \node (te) at (0,2) {$T_e$};
-  \node (tc) at (4,2) {$T_c$};
-  \node (seme) at (0,0) {$\mathit{Sem}$} ;
-  \node (semc) at (4,0) {$\mathit{Exec}$} ;
-  \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme);
-  \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\mathit{hexec}$} (semc);
-\end{tikzpicture}
+\begin{center}
+  \begin{tikzpicture}[>=latex]
+    \node (te) at (0,2) {$T_e$}; 
+    \node (tc) at (4,2) {$T_c$}; 
+    \node (seme) at (0,0) {$\mathit{Sem}$} ; 
+    \node (semc) at (4,0) {$\mathit{Exec}$} ; 
+    \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
+    \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\mathit{hexec}$} (semc);
+  \end{tikzpicture}
+\end{center}
 
-La clave del enfoque consiste en poder ver a las álgebras (y
-homomorfismos) de la signatura $\Sigma_c$ como álgebras (y
-homomorfismos) de la signatura fuente $\Sigma_e$, para ello
-introduciremos el concepto de \textit{transformador de álgebras}
-(similar a \textit{polynomial derivor}, que nombra Janssen, o
-\textit{derived signature morphism} en teoría de instituciones,
-\cite{mossakowski-15}).  Si $A$ es una $\Sigma_c$-álgebra, llamemos
-$A\sim$ a su transformada en $\Sigma_e$. Tenemos entonces el siguiente
-diagrama:
+Instead of defining ingeniously the translation $\comp$ and proving
+afterwards its correctness, we will obtain it from a more broader
+construction which will transform each algebra $A$ of $\Sigma_C$ into
+an algebra $\hat{A}$ of $\Sigma_e$ and also each homomorphism from
+$h \colon A \to B$ into an homomorphism
+$\hat{h}\colon \hat A \to \hat B$. These transformations will arise
+from an \emph{interpretation} of the signature $\Sigma_C$ in
+$\Sigma_e$. We use the term interpretation because it is related with
+the interpretability of similarity types in universal algebra (cf.\
+\cite{garcia-84}), but it is otherwise called in the literature:
+\citet{janssen-98} called it a \textit{polynomial derivor} and
+\citet{mossakowski-15} refer to it as a \textit{derived signature
+  morphism}, a generalization of the more restricted \textit{signature
+  morphisms} in the theory of institutions \cite{goguen-92}.
 
-\begin{diagram}
-  T_e     &\rTo^{comp}    &T_c\sim\\
-  \dTo_{hsem} & &\dTo_{hexec\sim}\\
-  Sem      &  &Exec\sim\\
-\end{diagram}
+The transformation brings the right side of the above diagram to the
+world of $\Sigma_e$ algebras, thus $\comp$ arises as the unique
+homomorphism from $T_e$ to $\hat{T_C}$. Correctness of the compiler
+follows abstractly as soon as we provide either an homomorphism
+$\mathit{enc} \colon \mathit{Sem} \to \hat{\mathit{Exec}}$ (as
+proposed by \citet{morris-73}) or an homomorphism
+$\mathit{enc} \colon \hat{\mathit{Exec}} \to \mathit{Sem}$ (after \cite{thatcher-80}).
 
-El compilador queda definido por el único homomorfismo que existe
-entre $T_e$ y $T_c\sim$.  Si podemos definir un homomorfismo $enc$ (o
-$dec$) entre $Sem$ y $Exec\sim$ (o viceversa), el diagrama conmuta por
-inicialidad de $T_e$:
+\begin{center}
+  \begin{tikzpicture}[>=latex]
+    \node (te) at (0,2) {$T_e$}; 
+    \node (tc) at (4,2) {$\hat{T_c}$}; 
+    \node (seme) at (0,0) {$\mathit{Sem}$} ; 
+    \node (semc) at (4,0) {$\hat{\mathit{Exec}}$} ; 
+    \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [above] {$\mathit{comp}$} (tc); 
+    \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
+    \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\hat{\mathit{hexec}}$} (semc);
+    \path [->,shorten <=2pt,shorten >=2pt] (seme.10) edge node [above] {$\mathit{enc}$} (semc.170);
+    \path [->,shorten <=2pt,shorten >=2pt] (semc.190) edge node [below] {$\mathit{dec}$} (seme.350);
+  \end{tikzpicture}
+\end{center}
 
-\begin{diagram}
-  T_e     &\rTo^{comp}    &T_c\sim\\
-  \dTo_{hsem} & &\dTo_{hexec\sim}\\
-  Sem      & \pile{\rTo^{enc} \\ \lTo_{dec}}   &Exec\sim\\
-\end{diagram}
+\paragraph{Outline}
 
-\paragraph{Organización del texto}
+In Sect. \ref{sec:univ-alg} we present our formalization in
+constructive type-theory of enough universal algebra, both concepts
+and results. We discuss our design implementation in Agda and compare
+it with other formalizations, in particular \citeauthor{capretta-99}'s
+in Coq.
 
-En la segunda sección de este artículo formalizamos los conceptos de
-signatura, álgebra, homomorfismo, inicialidad y álgebra de términos,
-obteniendo una librería en Agda para el uso de álgebras universales en
-general. Se discuten algunas decisiones de implementación. El
-resultado es similar al que obtiene Venanzio Capretta en
-\cite{capretta-99}.
+In Sect. \ref{sec:trans} we introduce the concept of \emph{interpretation}
+of signatures and prove that it induces a transformation of algebras
+and their homomorphisms. As far as we know, there is no formalization
+of heterogeneous algebras including these results.
 
-En la tercera sección introducimos el concepto de transformación de
-álgebras, para llevar álgebras de la signatura target a la signatura
-source, y probamos que los homomorfismos se preservan. Este concepto
-no está en la bibliografía existente sobre formalización de álgebras
-universales.
+Instantiating the abstract framework developed in the previous
+sections, we proceed to formalize in Sect. \ref{sec:compiler} the
+example shown in this introduction.
 
-En la cuarta sección damos el ejemplo completo del compilador de un
-lenguaje de expresiones aritméticas simple presentado anteriormente,
-utilizando el framework.
+Finally, we conclude in Sect. \ref{sec:conclusions} by discussing
+advantages and shortcomings of the algebraic construction of compilers,
+and pointing out possible future directions, specially concerning the
+formalization of universal algebra.

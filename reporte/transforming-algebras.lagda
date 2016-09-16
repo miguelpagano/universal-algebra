@@ -1,41 +1,36 @@
-\section{Transformación de álgebras}
+\section{Algebra transformation}
 \label{sec:trans}
 
-Con todo lo formalizado en la sección anterior podemos definir los lenguajes
-source y target como álgebras de términos de dos signaturas, sus dominios
-semánticos como álgebras, y las funciones semánticas como homomorfismos, que son
-únicos por inicialidad.
+With all definitions formalized in the previous section we can define signatures
+for the languages source, and the semantics are obtained by initiality, interpreting
+sorts and function symbols.
 
-El enfoque algebraico para definir un traductor correcto se basa en poder
-ver al lenguaje target y su semántica, como álgebras de la signatura source.
+The main aspect of algebraic approach to correct translation is being able to
+conceive both languages, source and target, as algebras of source signature.
 
-Para ver cómo pueden transformarse álgebras de una signatura a otra consideremos
-el ejemplo del compilador de expresiones. Tenemos los lenguajes $Expr$ y
-$Code$ que pueden definirse a partir de dos signaturas:
+Let's consider an example to introduce the ideas. We have languages $Expr$ and
+$Code$ defined by the following signatures:
 
 \begin{itemize}
 
-\item $\Sigma_e$, con un único sort $E$ y símbolos de función:
+\item $\Sigma_e$, with a sort $E$ and operations:
   \begin{itemize}
-    \item Para cada $n \in \mathds{N}$, $val\,n$, cuyo tipo es $[] \rightarrow E$
-    \item Para cada $v \in Var$, $var\,v$, con tipo $[] \rightarrow E$
-    \item $plus$, con tipo $[E , E] \rightarrow E$.
+    \item For each $n \in \mathds{N}$, $val\,n$, with type $[] \rightarrow E$.
+    \item For each $v \in Var$, $var\,v$, with type $[] \rightarrow E$.
+    \item $plus$, with type $[E , E] \rightarrow E$.
   \end{itemize}
-\item $\Sigma_m$, con un único sort $C$ y símbolos de función:
+\item $\Sigma_m$, with a sort $C$ and operations:
   \begin{itemize}
-    \item Para cada $n \in \mathds{N}$, $push\,n$, cuyo tipo es $[] \rightarrow C$
-    \item Para cada $v \in Var$, $load\,v$, con tipo $[] \rightarrow C$
-    \item $seq$, con tipo $[C , C] \rightarrow C$
-    \item $add$, con tipo $[] \rightarrow C$
+    \item For each $n \in \mathds{N}$, $push\,n$, with type $[] \rightarrow C$.
+    \item For each $v \in Var$, $load\,v$, with type $[] \rightarrow C$.
+    \item $seq$, with type $[C , C] \rightarrow C$.
+    \item $add$, with type $[] \rightarrow C$.
   \end{itemize}
 \end{itemize}  
 
-A partir de estas signaturas tenemos sus álgebras de términos $T(\Sigma_e)$ y
-$T(\Sigma_m)$ que representan la sintaxis de ambos lenguajes.
-
-También podemos definir las semánticas a partir de dos álgebras $Sem$ y $Exec$ de
-cada signatura respectivamente, con los homomorfismos $h_{sem} : T(\Sigma_e) \rightarrow Sem$ y
-$h_{exec} : T(\Sigma_m) \rightarrow Exec$ que están definidos por inicialidad del álgebra de términos.
+The semantics can be defined by algebras, say $Sem$ and $Exec$, of each signature respectively and
+there are unique homomorphisms from the term algebras to each one: $h_{sem} : T(\Sigma_e) \rightarrow Sem$,
+$h_{exec} : T(\Sigma_m) \rightarrow Exec$. 
 
 \begin{diagram}
   T_(\Sigma_e)     &     &   &  &    &T_(\Sigma_m)\\
@@ -43,38 +38,38 @@ $h_{exec} : T(\Sigma_m) \rightarrow Exec$ que están definidos por inicialidad d
   Sem         &     &   &  &    &Exec\\
 \end{diagram}
 
-
-Podríamos definir una $\Sigma_e$-álgebra $T_m\sim$ donde la interpretación del sort $E$ sean
-los términos del álgebra de términos $T\,(\Sigma_m)$ de la siguiente manera:
+We could define a $\Sigma_e$-algebra $\hat{T_m}$ where the interpretation of sort $E$ is the
+set of terms of the term algebra $T(\Sigma_m)$ and the interpretation of operations is defined
+in the following way:
 
 \begin{itemize}
-  \item $val_{T_m\sim}\,n$ $=$ $push\,n$, para cada $n \in \mathds{N}$.
-  \item $var_{T_m\sim}$  $=$ $load\,v$, para cara $v \in Var$.
+  \item $val_{T_m\sim}\,n$ $=$ $push\,n$, for each $n \in \mathds{N}$.
+  \item $var_{T_m\sim}$  $=$ $load\,v$, for each $v \in Var$.
   \item $plus_{T_m\sim}\,c_1\,c_2$ $=$ $seq\,c_1\,(seq\,c_2\,add)$.
 \end{itemize}
 
-\noindent y podríamos también definir una $\Sigma_e$-álgebra $Exec\sim$ así:
+\noindent and we could define a $\Sigma_e$-algebra $\hat{Exec}$:
 
 \begin{itemize}
-  \item $val_{Exec\sim}\,n$ $=$ $push_{Exec}\,n$, para cada $n \in \mathds{N}$.
-  \item $var_{Exec\sim}$  $=$ $load_{Exec}\,v$, para cara $v \in Var$.
+  \item $val_{Exec\sim}\,n$ $=$ $push_{Exec}\,n$, for each $n \in \mathds{N}$.
+  \item $var_{Exec\sim}$  $=$ $load_{Exec}\,v$, for each $v \in Var$.
   \item $plus_{Exec\sim}\,c_1\,c_2$ $=$ $seq_{Exec}\,c_1\,(seq\,c_2\,add_{Exec})$.
 \end{itemize}
 
-De hecho podríamos definir cualquier $\Sigma_e$-álgebra $A\sim$ a partir de una
-$\Sigma_m$-álgebra $A$: Al carrier $E$ lo interpretamos con $C_{A}$. Al símbolo
-constante $val\,n$ lo interpretamos $push_{A}\,n$, al símbolo $var\,v$ con
-$load_{A}\,v$ y a $plus$, con la función que lleva dos elementos
-$a_1, a_2 \in C_{A}$ a $seq_{A}\,a_1\,(seq_{A}\,a_2\,add_{A})$.
+Indeed, we can define any $\Sigma_e$-algebra $\hat{\mathcal{A}}$ from a $\Sigma_m$-algebra
+$\mathcal{A}$: The interpretation of sort $E$ is $C_{\mathcal{A}}$. Operation
+$val\,n$ is interpreted with $(push\,n)_{\mathcal{A}}$, symbol $var\,v$ with $(load\,v)_{\mathcal{A}}$
+and $plus$ with a function that takes two elements $a_1, a_2 \in C_{\mathcal{A}}$ and
+returns $seq_{\mathcal{A}}\,a_1\,(seq_{\mathcal{A}}\,a_2\,add_{\mathcal{A}})$.
 
-Es decir que podemos transformar cualquier $\Sigma_m$-álgebra a la signatura
-$\Sigma_e$ teniendo definido para cada sort de $\Sigma_e$, un sort de $\Sigma_m$,
-y reglas que nos indiquen cómo interpretar un símbolo de función de $\Sigma_e$ combinando
-símbolos de $\Sigma_m$, en este caso teníamos:
+So, we can transform a $\Sigma_m$-algebra to a $\Sigma_e$-algebra if we have
+a translation of sorts of $\Sigma_e$ in sorts of $\Sigma_m$, and rules for interpreting
+each function symbol of $\Sigma_e$ combining function symbols of $\Sigma_m$. In our
+example we have:
 
 \begin{itemize}
   \item[sorts] $E \rightsquigarrow C$
-  \item[operaciones]
+  \item[operations]
     \begin{itemize}
       \item $val\,n \rightsquigarrow push\,n$
       \item $var\,v \rightsquigarrow load\,v$
@@ -82,97 +77,23 @@ símbolos de $\Sigma_m$, en este caso teníamos:
     \end{itemize}  
 \end{itemize}
 
-\noindent En el caso de la interpretación de $plus$, teníamos que aplicar la interpretación
-de $seq$ a los argumentos de la función. Podemos dar la regla general indicando a qué
-argumento nos referimos. En este caso indicamos que debe aplicarse $seq$ al primer argumento
-y a la aplicación de $seq$ al segundo argumento y el símbolo $add$.
+\noindent For interpretation of $plus$ we have to apply the interpretation
+of $seq$ to the arguments of the function. We can give a general rule indicating
+the arguments with natural numbers. In this case, $seq$ is apply to the first argument,
+and the application of $seq$ to the second arguement and $add$ symbol.
 
-Podemos definir en agda cómo dar estas reglas que nos indiquen cómo interpretar
-los sorts y símbolos de una signatura $\Sigma_s$ con sorts y símbolos de
-una signatura $\Sigma_t$, y lo llamaremos \textit{traducción de signaturas}.
-Este concepto se corresponde con la noción de \textit{derived signature morphism} en
-\cite{sannella2012foundations}. Teniendo definida una traducción de signaturas podemos
-transformar cualquier $\Sigma_t$-álgebra en una $\Sigma_e$-álgebra.
+Let's define in Agda "Signature translation", concept that is known in the bibliography
+as \textit{polynomial derivor}, \cite{janssen-98} or \textit{derived signature morphism}
+in \cite{mossakowski-15}.
 
+\subsection*{Signature translation}
 
-
-
-
-%% \cite{sannella2012foundations}
-
-%% y $\Sigma_m$. Podríamos
-%% definir una $\Sigma_e$-álgebra que tenga como carrier del único sort a los términos
-%% de $\Sigma_m$.
+Let $\Sigma_s$ y $\Sigma_t$ be two signatures, a translation $\Sigma_s \rightsquigarrow \Sigma_t$ consists
+of a map of sorts of $\Sigma_s$ in sorts of $\Sigma_m$, and rules for translating function symbols.
+This rules consists of asigning each operation to an \textit{expression} in which can occur function
+symbols of signature $\Sigma_t$, applied according to the arity.
 
 
-
-%% El framework de traducción algebraico que presentamos se basa en, viendo
-%% a los lenguajes como álgebras de términos 
-
-%% como álgebras de términos de una signatura
-
-%% poder probar la corrección
-%% de un traductor utilizando el resultado de que el álgebra de términos
-%% de una signatura es inicial, es decir, que existe un único homomorfismo
-%% entre ésta y cualquier otra álgebra. El
-
-%% Los lenguajes fuente y target pueden definirse mediante signaturas, y sus
-%% semánticas a partir de álgebras de estas. 
-
-
-
-%% Con el desarrollo algebraico presentado en la sección anterior se puede
-%% probar la corrección de un traductor de lenguajes.
-
-%% Un lenguaje puede definirse a partir de una signatura. Los sorts se corresponden
-%% con las distintas categorías sintácticas del lenguaje, y los símbolos de función
-%% con constructores (las constantes son símbolos de función con aridad vacía).
-%% Los términos del lenguaje para un sort $S$ serán los elementos del carrier de sort
-%% $S$ en el álgebra de términos.
-
-%% El problema de traducir expresiones de un lenguaje $L_s$ en expresiones de un lenguaje
-%% $L_t$ puede verse desde un enfoque algebraico. La sintaxis de los lenguajes está
-%% definida por las signaturas y sus correspondientes álgebras de términos. La semántica
-%% queda definida por álgebras junto con los homomorfismos dados por inicialidad del álgebra
-%% de términos:
-
-%% \begin{diagram}
-%%   T_s     &     &   &  &    &T_t\\
-%%   \dTo_{hSem_s} &     &   &  &   &\dTo_{hSem_t}\\
-%%   Sem_s        &     &   &  &    &Sem_t\\
-%% \end{diagram}
-
-%% A una función que lleve expresiones del lenguaje fuente al target la llamamos
-%% traductor.
-%% Si podemos transformar las álgebras $T_t$ y $Sem_t$ en álgebras de la signatura $\Sigma_s$
-%% (es decir, interpretar los sorts y símbolos de función de $\Sigma_s$ en los carriers de dichas
-%% álgebras), al homomorfismo $hSem_t$ como un homomorfismo entre estas álgebras transformadas (digamos
-%% $\theta(T_t)$, $\theta(Sem_t)$ y $\theta(hSem_t)$) y si damos un homomorfismo $Enc$ o $Dec$ entre $Sem_s$
-%% y $\theta(Sem_t)$, el traductor quedará definido por el único homomorfismo que hay entre $T_s$ y
-%% $\theta(T_t)$, y su corrección por la conmutación del diagrama resultante, gracias a la inicialidad
-%% de $T_s$:
-
-%% \begin{diagram}
-%%   T_s     &\rTo^{trad}  &\theta(T_t)\\
-%%   \dTo_{hSem_s} &          &\dTo_{\theta(hSem_t)}\\
-%%   Sem_s        &\pile{\rTo^{Enc} \\ \lTo{Dec}}  &\theta(Sem_t)\\
-%% \end{diagram}
-
-%% Podemos definir cada álgebra transformada, interpretando los sorts y los símbolos de función
-%% en los carriers correspondientes. Sin embargo este trabajo sería repetitivo y deberíamos hacerlo
-%% para cada álgebra de la signatura $\Sigma_t$ que querramos transformar. También deberíamos redefinir
-%% los homomorfismos, probando que se preserva la condición al cambiar de signatura.
-
-%% En lugar de hacer eso, definiremos un (meta)lenguaje para traducir cualquier álgebra de una signatura en otra.
-
-\subsection*{Traducción de signaturas}
-
-Dadas dos signaturas $\Sigma_s$ y $\Sigma_t$, una traducción $\Sigma_s \rightsquigarrow \Sigma_t$ consiste
-de un mapeo de sorts de $\Sigma_s$ en sorts de $\Sigma_t$, y de reglas para traducir símbolos de función.
-
-Estas reglas asignan para cada símbolo de función una \textit{expresión} en la que pueden ocurrir símbolos
-de función de la signatura $\Sigma_t$ aplicados según su aridad. Dada una aridad $[s_0,...,s_n]$
-de una signatura $\Sigma$, definimos la familia $\Sigma Expr$ indexada en los sorts de $\Sigma$:
 
 \begin{itemize}
   \item Sea $i$, tal que $0 \leq i \leq n$,

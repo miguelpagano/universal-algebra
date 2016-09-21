@@ -50,6 +50,9 @@ arty {ar = ar} f = ar
 tgt : ∀ {Σ} {ar} {s} → (f : funcs Σ (ar , s)) → sorts Σ
 tgt {s = s} f = s
 
+type : ∀ {Σ} {ar} {s} → (f : funcs Σ (ar , s)) → ΣType Σ
+type {ar = ar} {s} f = ar , s
+
 {-
   Tipo que representa la interpretación de un sort de
   la signatura S.
@@ -71,9 +74,11 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
 open Algebra
 
 
-idom : ∀ {Σ} {ℓ₁} {ℓ₂} → (ar : Arity Σ) → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Set _ 
-idom {Σ} ar A = VecH (sorts Σ) (Carrier ∘ _⟦_⟧ₛ A) ar
+_⟦_⟧ₛ* : ∀ {Σ} {ℓ₁} {ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (ar : Arity Σ) → Set _
+_⟦_⟧ₛ* {Σ} A ar = Carrier (VecSet (sorts Σ) (_⟦_⟧ₛ A) ar)
 
+idom : ∀ {Σ} {ℓ₁} {ℓ₂} → (ar : Arity Σ) → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Set _ 
+idom {Σ} ar A = A ⟦ ar ⟧ₛ*
 
 -- Función entre dos álgebras
 _⟿_ : ∀ {Σ : Signature} {ℓ₁} {ℓ₂} {ℓ₃} {ℓ₄} →
@@ -89,6 +94,7 @@ map⟿ : ∀ {ℓ₁} {ℓ₂} {ℓ₃} {ℓ₄} {Σ : Signature}
                 (m : A ⟿ A') → (ts : idom ar A) → idom ar A'
 map⟿ {ar = ar} m ts = mapV (_⟨$⟩_ ∘ m) ts
 
+
 {- 
    Definición de la condición de homomorfismo para una función A ⟿ A'
 -}
@@ -96,9 +102,11 @@ homCond : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} {ty : ΣType Σ} �
             (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
             (h : A ⟿ A') → (f : funcs Σ ty) → Set _
 homCond {Σ = Σ} {ty = (ar , s)} A A' h f =
-           (as : idom ar A) → _≈_ (A' ⟦ s ⟧ₛ)
-                                  (h s ⟨$⟩ (A ⟦ f ⟧ ⟨$⟩ as))
-                                  (A' ⟦ f ⟧ ⟨$⟩ (map⟿ {Σ = Σ} {A} {A'} h as))
+           (as : A ⟦ ar ⟧ₛ*) → (h s ⟨$⟩ (A ⟦ f ⟧ ⟨$⟩ as))
+                               ≈ₛ 
+                               (A' ⟦ f ⟧ ⟨$⟩ (map⟿ {Σ = Σ} {A} {A'} h as))
+        where _≈ₛ_ : _
+              _≈ₛ_ = _≈_ (A' ⟦ s ⟧ₛ)
 
 --Homomorfismo.
 
@@ -133,6 +141,32 @@ elim≈ₕ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ} {A : Algebra {ℓ₁} {ℓ�
             _≈_ (A' ⟦ s ⟧ₛ) (′ H ′ s ⟨$⟩ a) (′ H' ′ s ⟨$⟩ b)
 elim≈ₕ (ext eq) s a b = eq s a b
 
+
+-- _≈ₕ_ es de equivalencia
+equiv≈ₕ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ} {A : Algebra {ℓ₁} {ℓ₂} Σ} {A' : Algebra {ℓ₃} {ℓ₄} Σ} →
+            IsEquivalence (_≈ₕ_ {A = A} {A' = A'})
+equiv≈ₕ {Σ = Σ} {A} {A'} =
+          record { refl = ≈ₕrefl 
+                 ; sym = ≈ₕsym
+                 ; trans = ≈ₕtrans
+                 }
+
+  where ≈ₕrefl : ∀ {h} → h ≈ₕ h
+        ≈ₕrefl {h} = ext (λ s a a' a≈a' → Π.cong (′ h ′ s) a≈a')
+        ≈ₕsym : ∀ {h₁} {h₂} → h₁ ≈ₕ h₂ → h₂ ≈ₕ h₁
+        ≈ₕsym {h₁} {h₂} h₁≈h₂ =
+              ext (λ s a a' a≈a' →
+                  Setoid.sym (A' ⟦ s ⟧ₛ)
+                             (elim≈ₕ h₁≈h₂ s a' a (Setoid.sym (A ⟦ s ⟧ₛ) a≈a')))
+        ≈ₕtrans : ∀ {h₁} {h₂} {h₃} → h₁ ≈ₕ h₂ → h₂ ≈ₕ h₃ → h₁ ≈ₕ h₃
+        ≈ₕtrans {h₁} {h₂} {h₃} h₁≈h₂ h₂≈h₃ = ext equ
+          where equ : (s : sorts Σ) →
+                        ExtProp (_≈_ (A ⟦ s ⟧ₛ)) (_≈_ (A' ⟦ s ⟧ₛ)) (_⟨$⟩_ (′ h₁ ′ s))
+                        (_⟨$⟩_ (′ h₃ ′ s))
+                equ s a a' a≈a' =
+                    Setoid.trans (A' ⟦ s ⟧ₛ)
+                                 (elim≈ₕ h₁≈h₂ s a a (Setoid.refl (A ⟦ s ⟧ₛ) {x = a}))
+                                 (elim≈ₕ h₂≈h₃ s a a' a≈a')
 
 ≡to≈ : ∀ {ℓ₁} {ℓ₂} {St : Setoid ℓ₁ ℓ₂} {x y : Carrier St} →
        x ≡ y → _≈_ St x y
@@ -178,36 +212,9 @@ _∘ₕ_ {Σ = Σ} {A₀} {A₁} {A₂} H₁ H₀ =
                       A₂ ⟦ f ⟧ ⟨$⟩ (map⟿ {A = A₀} {A' = A₂} comp as)
                     ∎
 
-
--- Los homomorfismos forman un setoide respecto a la igualdad ≈ₕ.
-hrefl : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ} {A₁ : Algebra {ℓ₁} {ℓ₂} Σ} {A₂ : Algebra {ℓ₃} {ℓ₄} Σ} →
-                          (H₁ : Homomorphism A₁ A₂) → H₁ ≈ₕ H₁
-hrefl {A₂ = A₂} H₁ = ext (λ s a b a=b → Π.cong (′ H₁ ′ s) a=b)
-
-hsym : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ} {A₁ : Algebra {ℓ₁} {ℓ₂} Σ} {A₂ : Algebra {ℓ₃} {ℓ₄} Σ} →
-                          (H₁ H₂ : Homomorphism A₁ A₂) → H₁ ≈ₕ H₂ → H₂ ≈ₕ H₁
-hsym {Σ = Σ} {A₁} {A₂} H₁ H₂ eq = ext equ
-  where equ : (s : sorts Σ) → (a b : Carrier (A₁ ⟦ s ⟧ₛ)) →
-              _≈_ (A₁ ⟦ s ⟧ₛ) a b →
-              _≈_ (A₂ ⟦ s ⟧ₛ) (′ H₂ ′ s ⟨$⟩ a) (′ H₁ ′ s ⟨$⟩ b)
-        equ s a b a=b = Setoid.sym (A₂ ⟦ s ⟧ₛ)
-                               (elim≈ₕ eq s b a (Setoid.sym (A₁ ⟦ s ⟧ₛ) a=b))
-
-htrans : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ} {A₁ : Algebra {ℓ₁} {ℓ₂} Σ} {A₂ : Algebra {ℓ₃} {ℓ₄} Σ} →
-                          (H₁ H₂ H₃ : Homomorphism A₁ A₂) →
-                           H₁ ≈ₕ H₂ → H₂ ≈ₕ H₃ → H₁ ≈ₕ H₃
-htrans {Σ = Σ} {A₁} {A₂} H₁ H₂ H₃ eq eq' = ext equ
-  where equ : (s : sorts Σ) → (a b : Carrier (A₁ ⟦ s ⟧ₛ)) →
-              _≈_ (A₁ ⟦ s ⟧ₛ) a b → _
-        equ s a b a=b = Setoid.trans (A₂ ⟦ s ⟧ₛ)
-                                 (elim≈ₕ eq s a a (Setoid.refl (A₁ ⟦ s ⟧ₛ) {x = a}))
-                                 (elim≈ₕ eq' s a b a=b)
-
-
-
 -- Definición de unicidad
-Unicity : ∀ {ℓ₁} {ℓ₂} → (A : Set ℓ₁) → Rel A ℓ₂ → Set _ 
-Unicity A _≈_ = Σ[ a ∈ A ] ((a' : A) → a ≈ a')
+Unicity : ∀ {ℓ₁} {ℓ₂} → (A : Set ℓ₁) → (rel : Rel A ℓ₂) → IsEquivalence rel → Set _
+Unicity A _≈_ p = Σ[ a ∈ A ] ((a' : A) → a ≈ a')
 
 
 -- Álgebra inicial
@@ -215,18 +222,18 @@ record Initial {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} (Σ : Signature) :
                              Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
   field
     alg      : Algebra {ℓ₁} {ℓ₂} Σ
-    init     : (A : Algebra {ℓ₃} {ℓ₄} Σ) → Unicity (Homomorphism alg A) (_≈ₕ_)
+    init     : (A : Algebra {ℓ₃} {ℓ₄} Σ) → Unicity (Homomorphism alg A) (_≈ₕ_) equiv≈ₕ
 
   homInit : (A : Algebra Σ) → Homomorphism alg A
   homInit A = proj₁ (init A)
 
   unique : (A : Algebra Σ) (h₁ h₂ : Homomorphism alg A) → h₁ ≈ₕ h₂
-  unique A h₁ h₂ = htrans h₁ (homInit A) h₂ h₁≈i i≈h₂
+  unique A h₁ h₂ = IsEquivalence.trans equiv≈ₕ h₁≈i i≈h₂
     where h₁≈i : _
-          h₁≈i = hsym (homInit A) h₁ (proj₂ (init A) h₁)
+          h₁≈i = IsEquivalence.sym equiv≈ₕ (proj₂ (init A) h₁)
           i≈h₂ : _
           i≈h₂ = proj₂ (init A) h₂
-
+          open IsEquivalence
 
 -- Algebra de términos
 
@@ -311,7 +318,7 @@ map∣T∣→A≡mapV {A = A} {s₀ ∷ ar} {t₀ ▹ ts} =
 ∣T∣init {ℓ₁} {ℓ₂} Σ = record { alg = ∣T∣ Σ
                               ; init = tinit }
   where tinit : (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-                Unicity (Homomorphism (∣T∣ Σ) A) (_≈ₕ_)
+                Unicity (Homomorphism (∣T∣ Σ) A) (_≈ₕ_) equiv≈ₕ
         tinit A = ∣T∣ₕ A , (λ h → ext (uni (∣T∣ₕ A) h))
           where uni : (h₁ : Homomorphism (∣T∣ Σ) A) →
                       (h₂ : Homomorphism (∣T∣ Σ) A) →
@@ -337,3 +344,45 @@ map∣T∣→A≡mapV {A = A} {s₀ ∷ ar} {t₀ ▹ ts} =
                         mapV≡ (s₀ ∷ ar₀) (t₀ ▹ ts₀) =
                                                 ∼▹ (uni h₁ h₂ s₀ t₀ t₀ PE.refl)
                                                    (mapV≡ ar₀ ts₀)
+
+
+-- Congruencia
+
+
+-- Pregunta: El nivel de la relación rel podría ser distinto al nivel de la relación
+-- del álgebra?
+record Congruence {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) : Set _ where
+  field
+    rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₂
+    welldef : ∀ {s} → (x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)) →
+                       _≈_ (A ⟦ s ⟧ₛ) x₁ x₂ → _≈_ (A ⟦ s ⟧ₛ) y₁ y₂ →
+                       rel s x₁ y₁ → rel s x₂ y₂
+    cequiv : (s : sorts Σ) → IsEquivalence (rel s)
+    csubst : ∀ {ar} {s} → (f : funcs Σ (ar , s)) → 
+              (_∼v_ {R = rel} {is = ar})  =[ _⟨$⟩_ (A ⟦ f ⟧) ]⇒ (rel s)
+
+
+open Congruence
+
+-- Álgebra Cociente
+
+Quotient : ∀ {ℓ₁ ℓ₂} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence A) →
+                            Algebra {ℓ₁} {ℓ₂} Σ
+Quotient A C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
+                              ; _≈_ = rel C s
+                              ; isEquivalence = cequiv C s })
+               ∥
+               (λ { {(ar , s)} f → record { _⟨$⟩_ = λ v → A ⟦ f ⟧ ⟨$⟩ v
+                                           ; cong = csubst C f } } )
+                          
+
+-- SUBALGEBRAS
+
+{- Definir subsetoid, probar que es setoid
+   Definir condición de subálgebra, probar que es álgebra
+-}
+
+
+
+
+

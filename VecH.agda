@@ -47,8 +47,7 @@ data _∈_ {l} {I} {A : I → Set l} : {i : I} {is : List I} → A i →
 Extensión de una relación a vectores.
 -}
 data _∼v_ {l₀ l₁} {I : Set} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} :
-          {is : List I} → (ts₁ : VecH I A is) →
-                          (ts₂ : VecH I A is) → Set (l₀ ⊔ l₁) where
+          {is : List I} → Rel (VecH I A is) (l₀ ⊔ l₁) where
      ∼⟨⟩ : ⟨⟩ ∼v ⟨⟩
      ∼▹  : ∀ {i} {is} {t₁} {t₂} {ts₁ : VecH I A is} {ts₂ : VecH I A is} →
            R i t₁ t₂ → _∼v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ∼v (t₂ ▹ ts₂)

@@ -1,19 +1,36 @@
+%if False
+\begin{code}
+module reporte.univ-alg where
+\end{code}
+%endif
 \section{Universal Algebra}
 \label{sec:univ-alg}
 
-We present a formalisation of some concepts of Universal Algebra, included the proof
-of initiality of the term algebra, in Agda.
+% Quizás podemos dejar la comparación para la conclusión.
+In this section we present our formalization in Agda of the core
+concepts of heterogenouos universal algebra, up to initiality of the
+term algebra. As far as we know, there are two formalizations of
+(multisorted) universal algebra: Capretta's implementation in Coq and
+\citet{kahl-2011} monumental formalization of allegories. In this
+work, we depart from Capretta at some points, both because of some
+(type-)theoretical considerations and also because our practical
+interest in using universal algebra for constructing a correct
+compiler.
 
-\paragraph{Agda}
-Agda is a functional programming language with dependent types, based on the
-Martin Löf's intuitionistic type theory...
+% \paragraph{Agda}
+% Agda is a functional programming language with dependent types, based on the
+% Martin Löf's intuitionistic type theory...
 
-We show the main definitions of the development, ommiting some technical details.
-The full code is available to download on \url{https://git.cs.famaf.unc.edu.ar/semantica-de-la-programacion/algebras-universales/UnivAlgebra.agda}.
-
-The definitions that we present in this section are based on the \textit{Handbook of Logic in Computer Science}, (\cite{handbook}).
+We will motivate some of the main definitions of the development and
+show its more interesting parts, while ommiting some technical
+details. The full code is available at
+\url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}.
 
 \subsection{Signature, algebra and homomorphism}
+
+We recall some basic definitions of multisorted universal algebra
+following the \textit{Handbook of Logic in Computer Science},
+\cite{handbook}.
 
 \subsection*{Signature}
 
@@ -29,7 +46,7 @@ open import Data.Product renaming (map to pmap)
 open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_)
 open import Data.Bool
-open import Data.List
+open import Data.List hiding ([_])
 open import Relation.Binary.PropositionalEquality as PE hiding ([_])
 open import Data.String
 open import Data.Fin
@@ -38,91 +55,96 @@ open import VecH
 
 open Setoid
 
+infixr 2 _➜_
+
+Ty : (S : Set) → Set
+Ty S = List S × S
+
+_➜_ : {S : Set} → List S → S → Ty S
+ls ➜ s = (ls , s)
+
+[_,_] : {S : Set} → S → S → List S
+[ a , b ] = a ∷ (b ∷ []) 
 \end{code}
 %endif
 
-A \textbf{signature} is a pair $(S,F)$ of sets, called \textit{sorts} and \textit{operations} (or \textit{function symbols}) respectively. An operation is a 3-uple $(w,[s_1,...,s_n],s)$ that consists of a \textit{name}, a list of sorts, and another sort, usually writed $(w : [s_1,...,s_n] \rightarrow s)$. The list of sorts $[s_1,...,s_n]$ is called \textit{arity}, the sort $s$ is called the \textit{target sort} and \textit{type} is the pair $([s_1,...,s_n],s)$. \footnote{In the bibliography of heterogeneous universal algebras the notion of arity may change. In the handbook is called \textit{arity} to what we call \textit{type}.}
+A \emph{signature} is a pair of sets $(S,F)$, called \textit{sorts} and \textit{operations} (or \textit{function symbols}) respectively. An operation is a triple $(f,[s_1,\ldots,s_n],s)$ consisting of a \textit{name}, a list of sorts (its \textit{arity)}, and another sort (its \textit{target sort}). We write operations as a type declaration $f : [s_1,...,s_n] \Rightarrow s$ and say ``$f$ has type $[s_1,...,s_n] \Rightarrow s$''. %\footnote{In the bibliography of heterogeneous universal algebras the notion of arity may change. In the handbook is called \textit{arity} to what we call \textit{type}.}
 
-We define signature in Agda, with a record with two fields. |sorts| is a Set and
-|funcs| is a family of sets indexed in the types of operations:
-
+There is one alternative way of specifying the operations, one that
+seems to us more type-theoretically, as a family of sets (of
+operations) indexed by (their) types. We use a record to represent
+signatures in Agda, the field |sorts| is a Set and |funcs| is a family
+of sets indexed by the types of operations:
 \begin{code}
-Sorts : Set _
-Sorts = Set
-
-Funcs : Sorts → Set _
-Funcs S = (List S) × S → Set
- 
 record Signature : Set₁ where
+  constructor ⟨_,_⟩
   field
-    sorts  : Sorts
-    funcs  : Funcs sorts
+    sorts  : Set
+    funcs  : List sorts × sorts → Set 
 
   Arity : Set
   Arity = List sorts
-
+  
   Type : Set
-  Type = List sorts × sorts
+  Type = Arity × sorts
 \end{code}
 
-An adventage of defining signature of this way is that the type system of Agda
-allows to define properties of operations of a given arity. I.e., we can define a type
-in Agda referring to the operations of a particular arity or type. This approach is
-more type-theoretic than defining the operations with a list of arities, like in
-\cite{capretta-99}, and we'll see some important adventages when we define the
-translation of signatures.
-
-We show two examples of signatures. The second one shows the posibility of define
-a signature with infinite operations.
-
-\paragraph{Example 1} A language with natural and boolean expressions.
-
+%if False
 \begin{code}
-data S : Sorts where
-  bool : S
-  nat  : S
-
-data F : Funcs S where
-  fzero  : F ([] , nat)
-  fsuc   : F ([ nat ] , nat)
-  ftrue  : F ([] , bool)
-  ffalse : F ([] , bool)
-  feq    : F (nat ∷ [ nat ] , bool)
-
-Σ₁ : Signature
-Σ₁ = record  { sorts = S
-             ; funcs = F
-             }
+open Signature 
 \end{code}
+%endif
 
-\paragraph{Ejemplo 2} The language of arithmetic expressions that we present at introduction.
 
-%include ejemplo2.lagda
+\noindent This way of defining the set of operations offers two
+advantages. On the one hand, we can have an infinite number of sorts
+and also of operations; and, more important, we can naturally
+define functions or predicates over operations of a given type. 
 
-\noindent Note that we have infinite function symbols, one for each natural number (constructor |valN|), and
-one for each variable (contructor |varN|).
+An example of a signature with infinite operations, a constant for
+each natural number and a constant for each (program) variable,  
+is that of arithmetic expressions presented in the introduction. 
+\begin{code}
+Var : Set
+Var = String  
+  
+data Sortsₑ : Set where
+  ExprN : Sortsₑ
+
+data Funcsₑ : List Sortsₑ × Sortsₑ → Set where
+  valN  : (n : ℕ)   → Funcsₑ ([] ➜ ExprN)
+  varN  : (v : Var) → Funcsₑ ([] ➜ ExprN)
+  plus  : Funcsₑ ([ ExprN , ExprN ] ➜ ExprN )
+
+Σₑ : Signature
+Σₑ = ⟨ Sortsₑ , Funcsₑ ⟩
+\end{code}
 
 \subsection*{Algebra}
 
-Let $\Sigma$ be a signature, an \textbf{algebra} $\mathcal{A}$ of $\Sigma$, or a $\Sigma$-algebra, consists
-of a family of sets indexed on the sorts of $\Sigma$, called the \textit{carriers} (or \textit{sorts interpretation})
-of $\mathcal{A}$ (we call $\mathcal{A}_s$ the carrier of the sort $S$ in $\mathcal{A}$), and for each operation
-$w$ with type $[s_1,...,s_n],s$ a total function $w_A : \mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$.
-We call \textit{interpretation} of $w$ to this function.
 
-We proceed to define the interpretation of sorts. Let's considere the algebra corresponding
-to the semantics of the expressions language that we introduced previoulsy. For each expression, the semantics
-is a function from states to natural numbers. Thus, each element of the interpretation of the sort of
-the expressions will be a function, and we have an issue to define equality of this elements in Agda. Two
-functions extensionally equal (i.e., pointwise equality) are not propositionally equals in Agda, so if we
-implement the carrier of sorts with Sets we lose the equality of functions.
+Usually, an \emph{algebra} $\mathcal{A}$ of a signature $\Sigma$, or a $\Sigma$-algebra, consists
+of a family of sets indexed by the sorts of $\Sigma$ and a family of functions indexed by the operations of $\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or the \emph{carrier} of the sort $s$; given an operation $f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a total function $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. 
 
-We use \textbf{setoids}, so we can represent a set with an arbitrary equivalence relation.
+We proceed to define the interpretation of sorts. The commutativity of
+the diagram expressing the correctness of the compiler ammounts to
+show that two functions, namely
+$\mathit{enc}\, \mathbin{\circ}\, \mathit{hsem}$ and
+$\widehat{\mathit{hexec}}\, \mathbin{\circ}\, \mathit{comp}$, applied
+to the same expression are equal. But the result are functions and it
+is likely to happen that they are extensional equal, but not
+convertible. The well-known solution (for a detailed discussion see
+\citet{barthe-setoids-2003}) is to let the carriers be setoids, \ie a
+type equipped with an equivalence relation. In this way we can set the
+carrier $\widehat{\mathit{Exec}}$ be the appropiate set of functions
+whose equivalence relation is extensional equality.
 
-\paragraph{Setoids} blabla
+%TODO: ver si decimos algo más de setoides; quizás citar el paper
+% de Thorsten Altenkirch.
 
+% \paragraph{Setoids} blabla
 
-Let's define the interpretation of sorts (or carriers):
+% Let's define the interpretation of sorts (or carriers):
 
 \begin{code}
 ISorts : ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → Set _
@@ -147,7 +169,7 @@ from the setoid of heterogeneous vectors to the interpretation of the target sor
 $f$:
 
 \begin{code}
-IFuncs :  ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → (ty : ΣType Σ) →
+IFuncs :  ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → (ty : Type Σ) →
           ISorts {ℓ₁} {ℓ₂} Σ → Set _
 IFuncs Σ (ar , s) is = VecSet (sorts Σ) is ar ⟶ is s
 \end{code}
@@ -163,7 +185,7 @@ record Algebra {ℓ₁ ℓ₂ : Level}  (Σ : Signature) :
   constructor _∥_
   field
     _⟦_⟧ₛ    : ISorts {ℓ₁} {ℓ₂} Σ
-    _⟦_⟧    : ∀ {ty : ΣType Σ} → (f : funcs Σ ty) → IFuncs Σ ty _⟦_⟧ₛ
+    _⟦_⟧    : ∀ {ty : Type Σ} → (f : funcs Σ ty) → IFuncs Σ ty _⟦_⟧ₛ
 \end{code}
 
 We use a convenient notation for fields. The interpretation of sort |s| in

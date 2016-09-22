@@ -244,11 +244,11 @@ La función semántica está dada por el homomorfismo |∣T∣ₕ Exec|.
 Tenemos definidos los lenguajes source y target mediante signaturas, y a sus
 semánticas como álgebras.
 
-\begin{diagram}
-  |∣T∣ Σₑ|     &     &   &  &    &|∣T∣ Σₘ|\\
-  \dTo_{|∣T∣ₕ Semₑ|} &     &   &  &   &\dTo_{|∣T∣ₕ Exec|}\\
-  |Semₑ|        &     &   &  &    &|Exec|\\
-\end{diagram}
+%\begin{diagram}
+%  |∣T∣ Σₑ|     &     &   &  &    &|∣T∣ Σₘ|\\
+%  \dTo_{|∣T∣ₕ Semₑ|} &     &   &  &   &\dTo_{|∣T∣ₕ Exec|}\\
+%  |Semₑ|        &     &   &  &    &|Exec|\\
+%\end{diagram}
 
 Procedemos ahora a definir una traducción |Σₑ ↝ Σₘ| y así poder llevar las álgebras
 y homomorfismos de |Σₘ| a |Σₑ|.
@@ -352,11 +352,11 @@ entre ésta y el álgebra |Codeₑ|:
 
 Ahora el diagrama se ve así:
 
-\begin{diagram}
-  |∣T∣ Σₑ|     &\rTo^{|homc|}  &|Codeₑ|\\
-  \dTo_{|∣T∣ₕ Semₑ|} &             &\dTo_{|hexecₑ|}\\
-  |Semₑ|        &              &|Execₑ|\\
-\end{diagram}
+%\begin{diagram}
+%  |∣T∣ Σₑ|     &\rTo^{|homc|}  &|Codeₑ|\\
+%  \dTo_{|∣T∣ₕ Semₑ|} &             &\dTo_{|hexecₑ|}\\
+%  |Semₑ|        &              &|Execₑ|\\
+%\end{diagram}
 
 Para completar el diagrama y tener la prueba de corrección del compilador
 tenemos que dar un homomorfismo entre |Semₑ| y |Execₑ|.
@@ -409,11 +409,11 @@ hEnc = record  { ′_′ = Enc
 
 Con este homomorfismo tenemos que el siguiente diagrama conmuta:
 
-\begin{diagram}
-  |∣T∣ Σₑ|     &\rTo^{|homc|}  &|Codeₑ|\\
-  \dTo_{|∣T∣ₕ Semₑ|} &             &\dTo_{|hexecₑ|}\\
-  |Semₑ|        &\rTo^{|hEnc|}  &|Execₑ|\\
-\end{diagram}
+%\begin{diagram}
+%  |∣T∣ Σₑ|     &\rTo^{|homc|}  &|Codeₑ|\\
+%  \dTo_{|∣T∣ₕ Semₑ|} &             &\dTo_{|hexecₑ|}\\
+%  |Semₑ|        &\rTo^{|hEnc|}  &|Execₑ|\\
+%\end{diagram}
 
 \noindent es decir, |hexecₑ ∘ homc = hEnc ∘ ∣T∣ₕ Semₑ|.
 

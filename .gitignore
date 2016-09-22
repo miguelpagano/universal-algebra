@@ -1,0 +1,8 @@
+*.agdai
+*.pdf
+*.aux
+*.log
+*~
+*.bbl
+*.blg
+*.ptb

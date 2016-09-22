@@ -32,11 +32,22 @@ The semantics can be defined by algebras, say $Sem$ and $Exec$, of each signatur
 there are unique homomorphisms from the term algebras to each one: $h_{sem} : T(\Sigma_e) \rightarrow Sem$,
 $h_{exec} : T(\Sigma_m) \rightarrow Exec$. 
 
-\begin{diagram}
-  T_(\Sigma_e)     &     &   &  &    &T_(\Sigma_m)\\
-  \dTo_{hSem}  &     &   &  &   &\dTo_{hExec}\\
-  Sem         &     &   &  &    &Exec\\
-\end{diagram}
+\begin{center}
+  \begin{tikzpicture}[>=latex]
+    \node (te) at (0,2) {$T_e$}; 
+    \node (tc) at (4,2) {$T_c$}; 
+    \node (seme) at (0,0) {$\mathit{Sem}$} ; 
+    \node (semc) at (4,0) {$\mathit{Exec}$} ; 
+    \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
+    \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\mathit{hexec}$} (semc);
+  \end{tikzpicture}
+\end{center}
+
+%\begin{diagram}
+%  T_(\Sigma_e)     &     &   &  &    &T_(\Sigma_m)\\
+%  \dTo_{hSem}  &     &   &  &   &\dTo_{hExec}\\
+%  Sem         &     &   &  &    &Exec\\
+%\end{diagram}
 
 We could define a $\Sigma_e$-algebra $\hat{T_m}$ where the interpretation of sort $E$ is the
 set of terms of the term algebra $T(\Sigma_m)$ and the interpretation of operations is defined

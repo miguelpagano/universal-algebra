@@ -1,4 +1,4 @@
-\begin{spec}
+\begin{code}
 Var : Set
 Var = String  
   
@@ -7,12 +7,9 @@ data Sortsₑ : Sorts where
 
 data Funcsₑ : Funcs Sortsₑ where
   valN  : (n : ℕ) → Funcsₑ ([] , ExprN)
-  plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
   varN  : (v : Var) → Funcsₑ ([] , ExprN)
-
+  plus  : Funcsₑ ( ExprN ∷ [ ExprN ] , ExprN )
 
 Σₑ : Signature
-Σₑ = record  { sorts = Sortsₑ
-             ; funcs = Funcsₑ
-             }
-\end{spec}
+Σₑ = ⟨ Sortsₑ , Funcsₑ ⟩
+\end{code}

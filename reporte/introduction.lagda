@@ -54,7 +54,7 @@ over $\mathbb{N}$.
 \end{align*}
 
 % TODO: cambiar \Sigma por \mathit{State}, así ahorramos el clash con signaturas.
-\newcommand{\state}{\Sigma}
+\newcommand{\state}{\mathit{State}}
 \newcommand{\evalExpr}{\mathit{eval}}
 
 The intended semantics for the source language is a function mapping
@@ -85,7 +85,7 @@ configuration is a stack $s'$. We assume that $\stack$s are lists of numbers.
   &\multicolumn{4}{l}{\execCode \colon \code \rightarrow \stack \times \state \rightarrow \stack}\\
   &\execCode &(\instr{push}\,n)     &=&(s , \upsigma) \rightarrow (n \consop s)\\
   &\execCode &(\instr{load}\,v)     &=&\lambda\,(s , \upsigma) \rightarrow (\upsigma\,v \consop s)\\
-  &\execCode &(c_1\,;\,c_2) &=&\lambda\,(s , \upsigma) \rightarrow \execCode\;c_2\;(\upsigma,\execCode\;c_1\;(\upsigma,s))\\
+  &\execCode &(c_1\,;\,c_2) &=&\lambda\,(s , \upsigma) \rightarrow \execCode\;c_2\;(\execCode\;c_1\;(s,\upsigma),\upsigma)\\
   &\execCode &\instr{add}   &=&\lambda\,(n  \consop  m  \consop  s , \upsigma) \rightarrow (n \, + \, m  \consop s)\\
 \end{array}
 \]
@@ -165,9 +165,9 @@ $\mathit{hexec} \colon T_C \to \mathit{Exec}$. We can picture the situation so f
 Instead of defining ingeniously the translation $\comp$ and proving
 afterwards its correctness, we will obtain it from a more broader
 construction which will transform each algebra $A$ of $\Sigma_C$ into
-an algebra $\hat{A}$ of $\Sigma_e$ and also each homomorphism from
+an algebra $\widehat{A}$ of $\Sigma_e$ and also each homomorphism from
 $h \colon A \to B$ into an homomorphism
-$\hat{h}\colon \hat A \to \hat B$. These transformations will arise
+$\widehat{h}\colon \widehat A \to \widehat B$. These transformations will arise
 from an \emph{interpretation} of the signature $\Sigma_C$ in
 $\Sigma_e$. We use the term interpretation because it is related with
 the interpretability of similarity types in universal algebra (cf.\
@@ -179,21 +179,21 @@ the interpretability of similarity types in universal algebra (cf.\
 
 The transformation brings the right side of the above diagram to the
 world of $\Sigma_e$ algebras, thus $\comp$ arises as the unique
-homomorphism from $T_e$ to $\hat{T_C}$. Correctness of the compiler
+homomorphism from $T_e$ to $\widehat{T_C}$. Correctness of the compiler
 follows abstractly as soon as we provide either an homomorphism
-$\mathit{enc} \colon \mathit{Sem} \to \hat{\mathit{Exec}}$ (as
+$\mathit{enc} \colon \mathit{Sem} \to \widehat{\mathit{Exec}}$ (as
 proposed by \citet{morris-73}) or an homomorphism
-$\mathit{enc} \colon \hat{\mathit{Exec}} \to \mathit{Sem}$ (after \cite{thatcher-80}).
+$\mathit{enc} \colon \widehat{\mathit{Exec}} \to \mathit{Sem}$ (after \cite{thatcher-80}).
 
 \begin{center}
   \begin{tikzpicture}[>=latex]
     \node (te) at (0,2) {$T_e$}; 
-    \node (tc) at (4,2) {$\hat{T_c}$}; 
+    \node (tc) at (4,2) {$\widehat{T_c}$}; 
     \node (seme) at (0,0) {$\mathit{Sem}$} ; 
-    \node (semc) at (4,0) {$\hat{\mathit{Exec}}$} ; 
+    \node (semc) at (4,0) {$\widehat{\mathit{Exec}}$} ; 
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [above] {$\mathit{comp}$} (tc); 
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
-    \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\hat{\mathit{hexec}}$} (semc);
+    \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\widehat{\mathit{hexec}}$} (semc);
     \path [->,shorten <=2pt,shorten >=2pt] (seme.10) edge node [above] {$\mathit{enc}$} (semc.170);
     \path [->,shorten <=2pt,shorten >=2pt] (semc.190) edge node [below] {$\mathit{dec}$} (seme.350);
   \end{tikzpicture}

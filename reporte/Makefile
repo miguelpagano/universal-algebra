@@ -19,6 +19,7 @@ correct-compiler.pdf : correct-compiler.tex  biblio.bib
 	pdflatex $(LTX_OPTS) correct-compiler.tex
 	bibtex correct-compiler
 	pdflatex $(LTX_OPTS) correct-compiler.tex
+	pdflatex $(LTX_OPTS) correct-compiler.tex
 
 clean :
 	rm -f *.aux *.bbl *blg *.log *.ptb *.tex correct-compiler.pdf reporte.pdf

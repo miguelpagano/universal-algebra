@@ -6,6 +6,7 @@ open import Level
 open import Data.Fin
 open import Function
 open import Relation.Binary.PropositionalEquality
+open import Data.Product hiding (map)
 
 {-
 Vectores Heterogéneos. Dado un conjunto de índices I y
@@ -43,6 +44,19 @@ data _∈_ {l} {I} {A : I → Set l} : {i : I} {is : List I} → A i →
   there : ∀ {i i'} {is} {v : A i} {w : A i'} {vs : VecH I A is}
                    (v∈vs : v ∈ vs) → v ∈ w ▹ vs
 
+
+{-
+Extensión de un predicado a vectores.
+-}
+_⇨v_ : ∀ {l₀ l₁} {I : Set} {A : I → Set l₀} → (P : (i : I) → A i → Set l₁) →
+                {is : List I} → VecH I A is → Set (l₀ ⊔ l₁)
+_⇨v_ {I = I} {A} P {is} vs = VecH I (λ i → Σ[ ai ∈ (A i) ] (P i ai)) is
+
+{-
+     ⇨v⟨⟩ : P ⇨v ⟨⟩
+     ⇨v▹ : ∀ {i} {is} {t₁} {ts₁ : VecH I A is} →
+              P i t₁ → P ⇨v ts₁ → P ⇨v (t₁ ▹ ts₁)
+-}
 {-
 Extensión de una relación a vectores.
 -}

@@ -91,6 +91,18 @@ iSortsₑ : ISorts Σₑ
 iSortsₑ ExprN = State →-setoid ℕ
 
 
+-- iValN : (n : ℕ) → IFuncs Σₑ ([] , ExprN) iSortsₑ
+-- iValN n = record { _⟨$⟩_ = λ { ⟨⟩ σ → n }
+--                  ; cong = λ { {⟨⟩} ∼⟨⟩ x₁ → refl } }
+
+-- iPlus : IFuncs Σₑ (ExprN ∷ [ ExprN ] , ExprN) iSortsₑ
+-- iPlus = record { _⟨$⟩_ = λ { (v₀ ▹ v₁ ▹ ⟨⟩) σ → v₀ σ + v₁ σ }
+--                ; cong = {!!} }
+
+-- iVarN : (v : Var) → IFuncs Σₑ ([] , ExprN) iSortsₑ
+-- iVarN v = record { _⟨$⟩_ = λ { ⟨⟩ σ → σ v }
+--                  ; cong = {!!} }
+
 if : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) → VecH Sortsₑ (Carrier ∘ iSortsₑ) ar →
                    Carrier (iSortsₑ s)
 if (valN n) ⟨⟩ = λ σ → n
@@ -155,13 +167,9 @@ CodeAlg = ∣T∣ Σₘ
 
 -- Semántica del lenguaje de bajo nivel
 
+Stack : Set
+Stack = List ℕ
 
-
-data Stack : Set where
-  ε   : Stack
-  _▸_ : ℕ → Stack → Stack
-
-infixr 5 _▸_
 
 Conf : Set
 Conf = Stack × State
@@ -174,13 +182,37 @@ open import Category.Monad
 open import Category.Monad.Indexed
 open RawMonad {lzero} Data.Maybe.monad
 
+-- iPushN : (n : ℕ) → IFuncs Σₘ ([] , Codeₛ) iSortsₘ
+-- iPushN n = record { _⟨$⟩_ = λ { ⟨⟩ (s , σ) → just (n ∷ s) }
+--                   ; cong = {!!} }
+
+-- iLoadV : (v : Var) → IFuncs Σₘ ([] , Codeₛ) iSortsₘ
+-- iLoadV v = record { _⟨$⟩_ = λ { ⟨⟩ (s , σ) → just (σ v ∷ s) }
+--            ; cong = {!!} }
+
+-- iAdd : IFuncs Σₘ ([] , Codeₛ) iSortsₘ
+-- iAdd = record  { _⟨$⟩_ = λ { ⟨⟩ (n₀ ∷ n₁ ∷ s , σ) → just (n₁ + n₀ ∷ s) ;
+--                             ⟨⟩ (_ , σ) → nothing}
+--                ; cong = {!!} }
+
+-- iSeq : IFuncs Σₘ (Codeₛ ∷ [ Codeₛ ] , Codeₛ) iSortsₘ
+-- iSeq = record { _⟨$⟩_ = λ { (v₀ ▹ v₁ ▹ ⟨⟩) (s , σ) →
+--                              v₀ (s , σ) >>= λ s' → v₁ (s' , σ) } 
+--               ; cong = {!!} }
+
+
+-- iFuncsₘ : ∀ {ty} → (f : funcs Σₘ ty) → IFuncs Σₘ ty iSortsₘ
+-- iFuncsₘ (pushₘ n) = iPushN n
+-- iFuncsₘ (loadₘ v) = iLoadV v
+-- iFuncsₘ addₘ = iAdd
+-- iFuncsₘ seqₘ = iSeq
 
 
 ifₘ : ∀ {ar} {s} → (f : funcs Σₘ (ar , s)) → VecH Sortsₘ (Carrier ∘ iSortsₘ) ar →
                    Carrier (iSortsₘ s)
-ifₘ (pushₘ n) ⟨⟩ = λ {(s , σ) → just (n ▸ s) }
-ifₘ (loadₘ v) ⟨⟩ = λ {(s , σ) → just (σ v ▸ s)}
-ifₘ addₘ ⟨⟩ = λ { (n₀ ▸ n₁ ▸ s , σ) → just (n₀ + n₁ ▸ s) ;
+ifₘ (pushₘ n) ⟨⟩ = λ {(s , σ) → just (n ∷ s) }
+ifₘ (loadₘ v) ⟨⟩ = λ {(s , σ) → just (σ v ∷ s)}
+ifₘ addₘ ⟨⟩ = λ { (n₀ ∷ n₁ ∷ s , σ) → just (n₀ + n₁ ∷ s) ;
                  (_ , σ) → nothing
                }
 ifₘ seqₘ (v₀ ▹ v₁ ▹ ⟨⟩) = λ {(s , σ) → v₀ (s , σ) >>= λ s' → v₁ (s' , σ)}
@@ -226,6 +258,16 @@ open _↝_
 
 sₑ↝sₘ : sorts Σₑ → sorts Σₘ
 sₑ↝sₘ ExprN = Codeₛ
+
+
+valN↝ : (n : ℕ) → ΣExpr Σₘ [] Codeₛ
+valN↝ n = pushₘ n ∣$∣ ⟨⟩
+
+plus↝ : ΣExpr Σₘ (Codeₛ ∷ [ Codeₛ ]) Codeₛ
+plus↝ = seqₘ ∣$∣ (# (suc zero) ▹ (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹ ⟨⟩)
+
+varN↝ : (v : Var) → ΣExpr Σₘ [] Codeₛ
+varN↝ v = loadₘ v ∣$∣ ⟨⟩
 
 fₑ↝fₘ : ∀ {ar} {s} → (f : funcs Σₑ (ar , s)) →
                       ΣExpr Σₘ (map sₑ↝sₘ ar) (sₑ↝sₘ s)
@@ -288,9 +330,9 @@ entre Sem y Exec.
 -}
 
 Sem→Execₑ : Semₑ ⟿ Execₑ
-Sem→Execₑ ExprN = record { _⟨$⟩_ = λ {fₑ (s , σ) → just (fₑ σ ▸ s)}
+Sem→Execₑ ExprN = record { _⟨$⟩_ = λ {fₑ (s , σ) → just (fₑ σ ∷ s)}
                          ; cong = λ { {f₀} {f₁} f₀≈f₁ (s , σ) →
-                                      cong (λ n → just (n ▸ s)) (f₀≈f₁ σ) }
+                                      cong (λ n → just (n ∷ s)) (f₀≈f₁ σ) }
                          }
 
 
@@ -319,8 +361,40 @@ hexecₑ = ΣₑtoΣₘ 〈 hexec 〉ₕ
 -- Corrección del compilador: trivial por inicialidad y
 -- definición de hₛₑₘ
 correct : ∀ (e : Expr) → (s : Stack) → (σ : State) → 
-            ⟪ compₑ e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ) ▸ s)
+            ⟪ compₑ e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ) ∷ s)
 correct e s σ = (elim≈ₕ unic ExprN e e refl) (s , σ)
   where unic : (hexecₑ ∘ₕ homc) ≈ₕ (hₛₑₘ ∘ₕ homSem)
         unic = unique (∣T∣init Σₑ) Execₑ (hexecₑ ∘ₕ homc) (hₛₑₘ ∘ₕ homSem)
 
+
+data S : Sorts where
+  bool : S
+  nat  : S
+
+data F : Funcs S where
+  fzero  : F ([] , nat)
+  fsuc   : F ([ nat ] , nat)
+  ftrue  : F ([] , bool)
+  ffalse : F ([] , bool)
+  feq    : F (nat ∷ [ nat ] , bool)
+
+Σ₁ : Signature
+Σ₁ = record  { sorts = S
+             ; funcs = F
+             }
+
+iS : ISorts Σ₁
+iS bool = setoid Bool
+iS nat  = setoid ℕ
+
+A : Algebra Σ₁
+A = {!!} ∥ {!!}
+
+t₁ : HU Σₑ ExprN
+t₁ = term (valN 2) ⟨⟩
+
+t₂ : HU Σₑ ExprN
+t₂ = term (varN " x ") ⟨⟩
+
+t₃ : HU Σₑ ExprN
+t₃ = term plus (t₁ ▹ t₂ ▹ ⟨⟩)

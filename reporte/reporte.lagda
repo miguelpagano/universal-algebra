@@ -15,7 +15,7 @@
 \title{Formalización de un framework algebraico para
        traducción correcta de lenguajes}
 
-\author{Emmanuel Gunther}
+\author{Emmanuel Gunther, Miguel Pagano}
 \affil{FaMAF, UNC}
 \affil{CONICET}
 

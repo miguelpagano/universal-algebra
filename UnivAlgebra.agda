@@ -1,6 +1,7 @@
 module UnivAlgebra where
 
 open import Relation.Binary
+open import Relation.Unary
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
@@ -351,7 +352,8 @@ map∣T∣→A≡mapV {A = A} {s₀ ∷ ar} {t₀ ▹ ts} =
 
 -- Pregunta: El nivel de la relación rel podría ser distinto al nivel de la relación
 -- del álgebra?
-record Congruence {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) : Set _ where
+record Congruence {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) :
+                                                       Set (lsuc ℓ₂ ⊔ ℓ₁) where
   field
     rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₂
     welldef : ∀ {s} → (x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)) →
@@ -359,7 +361,7 @@ record Congruence {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂
                        rel s x₁ y₁ → rel s x₂ y₂
     cequiv : (s : sorts Σ) → IsEquivalence (rel s)
     csubst : ∀ {ar} {s} → (f : funcs Σ (ar , s)) → 
-              (_∼v_ {R = rel} {is = ar})  =[ _⟨$⟩_ (A ⟦ f ⟧) ]⇒ (rel s)
+              _∼v_ {R = rel} {is = ar}  =[ _⟨$⟩_ (A ⟦ f ⟧) ]⇒ rel s
 
 
 open Congruence
@@ -382,7 +384,40 @@ Quotient A C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
    Definir condición de subálgebra, probar que es álgebra
 -}
 
+record SetoidPredicate {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) : Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃))  where
+  field
+    predicate   : Pred (Carrier S) ℓ₃
+    predWellDef : ∀ {x y : Carrier S} → (_≈_ S) x y →
+                                      predicate x → predicate y
+
+open SetoidPredicate
+
+SubSetoid : ∀ {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) → (P : SetoidPredicate {ℓ₃ = ℓ₃} S) →
+                         Setoid _ _
+SubSetoid S P = record { Carrier = Σ[ e ∈ Carrier S ] (predicate P e)
+                       ; _≈_ = λ { (e₁ , _) (e₂ , _) → (_≈_ S) e₁ e₂ }
+                       ; isEquivalence = pequiv
+                       }
+  where pequiv : _
+        pequiv = record { refl = λ {x} → Setoid.refl S
+                        ; sym = λ x → Setoid.sym S x
+                        ; trans = λ x₀ x₁ → Setoid.trans S x₀ x₁ }
 
 
+subalgcond : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+                   (Pₛ : (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)) →
+                   Set _
+subalgcond {Σ} A Pₛ = ∀ {ar} {s} → (f : funcs Σ (ar , s)) →
+                  (_⇨v_ (predicate ∘ Pₛ) ⟨→⟩ predicate (Pₛ s)) (_⟨$⟩_ (A ⟦ f ⟧))
 
 
+SubAlgebra : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+                   (Pₛ : (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)) →
+                   subalgcond A Pₛ → Algebra Σ
+SubAlgebra {Σ} A Pₛ cond = (λ s → SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s))
+                         ∥ if
+  where if : ∀ {ar} {s} → (f : funcs Σ (ar , s)) → _
+        if {ar} {s} f = record { _⟨$⟩_ = λ v → (A ⟦ f ⟧ ⟨$⟩ mapV (λ _ → proj₁) v)
+                                       , cond f v
+                               ; cong = λ { {v₁} {v₂} eq → Π.cong (A ⟦ f ⟧) {!eq!} }
+                               }

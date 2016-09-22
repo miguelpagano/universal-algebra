@@ -28,6 +28,7 @@ urlcolor=blue]{ hyperref }
 
 \newcommand{\cL}{{\cal L}}
 \newcommand{\ie}{i.e.\@@ }
+
 \begin{document}
 
 \special{papersize=8.5in,11in}

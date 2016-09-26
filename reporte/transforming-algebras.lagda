@@ -15,13 +15,13 @@ $Code$ defined by the following signatures:
 
 \item $\Sigma_e$, with a sort $E$ and operations:
   \begin{itemize}
-    \item For each $n \in \mathds{N}$, $val\,n$, with type $[] \rightarrow E$.
+    \item For each $n \in \mathbb{N}$, $val\,n$, with type $[] \rightarrow E$.
     \item For each $v \in Var$, $var\,v$, with type $[] \rightarrow E$.
     \item $plus$, with type $[E , E] \rightarrow E$.
   \end{itemize}
 \item $\Sigma_m$, with a sort $C$ and operations:
   \begin{itemize}
-    \item For each $n \in \mathds{N}$, $push\,n$, with type $[] \rightarrow C$.
+    \item For each $n \in \mathbb{N}$, $push\,n$, with type $[] \rightarrow C$.
     \item For each $v \in Var$, $load\,v$, with type $[] \rightarrow C$.
     \item $seq$, with type $[C , C] \rightarrow C$.
     \item $add$, with type $[] \rightarrow C$.
@@ -54,7 +54,7 @@ set of terms of the term algebra $T(\Sigma_m)$ and the interpretation of operati
 in the following way:
 
 \begin{itemize}
-  \item $val_{T_m\sim}\,n$ $=$ $push\,n$, for each $n \in \mathds{N}$.
+  \item $val_{T_m\sim}\,n$ $=$ $push\,n$, for each $n \in \mathbb{N}$.
   \item $var_{T_m\sim}$  $=$ $load\,v$, for each $v \in Var$.
   \item $plus_{T_m\sim}\,c_1\,c_2$ $=$ $seq\,c_1\,(seq\,c_2\,add)$.
 \end{itemize}
@@ -62,7 +62,7 @@ in the following way:
 \noindent and we could define a $\Sigma_e$-algebra $\hat{Exec}$:
 
 \begin{itemize}
-  \item $val_{Exec\sim}\,n$ $=$ $push_{Exec}\,n$, for each $n \in \mathds{N}$.
+  \item $val_{Exec\sim}\,n$ $=$ $push_{Exec}\,n$, for each $n \in \mathbb{N}$.
   \item $var_{Exec\sim}$  $=$ $load_{Exec}\,v$, for each $v \in Var$.
   \item $plus_{Exec\sim}\,c_1\,c_2$ $=$ $seq_{Exec}\,c_1\,(seq\,c_2\,add_{Exec})$.
 \end{itemize}

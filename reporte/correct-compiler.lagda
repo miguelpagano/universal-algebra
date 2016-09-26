@@ -9,9 +9,7 @@
 
 
 
-
 \usepackage{amsmath}
-\usepackage{ dsfont }
 \usepackage{mathpartir}
 \usepackage{tikz}
 \usepackage{natbib}
@@ -25,6 +23,7 @@ urlcolor=blue]{ hyperref }
 %include unicode.fmt
 
 \DeclareUnicodeCharacter{10140}{\ensuremath{\Rightarrow}}
+\DeclareUnicodeCharacter{10035}{\ensuremath{\ast}}
 
 \newcommand{\cL}{{\cal L}}
 \newcommand{\ie}{i.e.\@@ }
@@ -52,10 +51,10 @@ urlcolor=blue]{ hyperref }
 
 \authorinfo{Emmanuel Gunther}
            {FaMAF, UNC - CONICET}
-           {gunther famaf.unc.edu.ar}
+           {gunther@@famaf.unc.edu.ar}
 \authorinfo{Miguel Pagano}
            {FaMAF, UNC}
-           {pagano famaf.unc.edu.ar}
+           {pagano@@famaf.unc.edu.ar}
 
 \maketitle
 
@@ -77,7 +76,7 @@ urlcolor=blue]{ hyperref }
 term1, term2
 
 \keywords
-keyword1, keyword2
+correct compiler, universal algebra, formalization of mathematics
 
 %include introduction.lagda
 %include univ-alg.lagda

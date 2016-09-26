@@ -23,11 +23,11 @@ símbolos para variables.
 
 \paragraph{Semántica}
 Para darle semántica a las variables necesitamos un \textit{estado} que asigne
-a cada una un natural. Sea $State = Var \rightarrow \mathds{N}$, definimos
+a cada una un natural. Sea $State = Var \rightarrow \mathbb{N}$, definimos
 una función semántica para $Expr$, a la cual llamamos $eval$:
 
 \begin{align*}
-  &eval     :\;Expr \rightarrow State \rightarrow \mathds{N}\\
+  &eval     :\;Expr \rightarrow State \rightarrow \mathbb{N}\\
   &eval\;n \;=\; \lambda\,\upsigma \rightarrow n\\
   &eval\;v \;=\;\lambda\,\upsigma \rightarrow \upsigma\,v\\
   &eval\;(e_1 \oplus e_2)\;=\;\lambda\,\upsigma \rightarrow (eval\,e_1\,\upsigma) + (eval\,e_1\,\upsigma)\\
@@ -97,7 +97,7 @@ term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩) : ∣
 
 \subsubsection*{Álgebra para la semántica de $Expr$}
 
-La semántica del lenguaje $Expr$ asigna a cada expresión una función en $State \rightarrow \mathds{N}$.
+La semántica del lenguaje $Expr$ asigna a cada expresión una función en $State \rightarrow \mathbb{N}$.
 Definimos un álgebra en la cual interpretamos al único sort |E| con el setoide de las funciones
 de |State| en |ℕ|, para ello usamos la función |→-setoid| definida en la librería estándar:
 
@@ -371,7 +371,7 @@ igualdad:
 \end{center}
 
 Podemos ver una relación entre las semánticas de los dos lenguajes. Si $f$ es
-una función en $State \rightarrow \mathds{N}$ correspondiente a la
+una función en $State \rightarrow \mathbb{N}$ correspondiente a la
 semántica de alguna expresión en $Expr$, la función semántica correspondiente
 en $Code$ será la siguiente:
 

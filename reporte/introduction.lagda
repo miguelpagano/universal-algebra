@@ -132,8 +132,8 @@ result about algebras, the denotation of each phrase. For instance,
 from the following interpretation of the operators:
 \[
   \begin{array}{lcl}
-    i(n)&=&\lambda \upsigma \mapsto n\\
-    i(x)&=&\lambda \upsigma \mapsto \upsigma\,x\\
+    i(n)()&=&\lambda \upsigma \mapsto n\\
+    i(x)()&=&\lambda \upsigma \mapsto \upsigma\,x\\
     i(\oplus)(f,g)&=&\lambda \upsigma \mapsto f\,\upsigma + g\,\upsigma
   \end{array}
 \]

@@ -13,7 +13,7 @@ term algebra. As far as we know, there are two formalizations of
 (multisorted) universal algebra: Capretta's implementation in Coq and
 \citet{kahl-2011} monumental formalization of allegories. In this
 work, we depart from Capretta at some points, both because of some
-(type-)theoretical considerations and also because our practical
+theoretical considerations and also because our practical
 interest in using universal algebra for constructing a correct
 compiler.
 
@@ -49,8 +49,8 @@ open import Data.Bool
 open import Data.List hiding ([_])
 open import Relation.Binary.PropositionalEquality as PE hiding ([_])
 open import Data.String
-open import Data.Fin
-
+open import Data.Fin hiding (_+_)
+ 
 open import VecH
 
 open Setoid
@@ -91,7 +91,12 @@ record Signature : Set₁ where
 
 %if False
 \begin{code}
-open Signature 
+_✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) →
+                                 List I → Setoid _ _
+_✳_ {I = I} = VecSet I
+
+∥_∥ : ∀ {l₁ l₂} → (Setoid l₁ l₂) → Set l₁
+∥_∥ {l₁} {l₂} S = Carrier S
 \end{code}
 %endif
 
@@ -104,10 +109,14 @@ define functions or predicates over operations of a given type.
 An example of a signature with infinite operations, a constant for
 each natural number and a constant for each (program) variable,  
 is that of arithmetic expressions presented in the introduction. 
+Let us set |Var = String| for concreteness.
+%if False
 \begin{code}
 Var : Set
-Var = String  
-  
+Var = String
+\end{code}
+%endif
+\begin{code}
 data Sortsₑ : Set where
   ExprN : Sortsₑ
 
@@ -118,6 +127,7 @@ data Funcsₑ : List Sortsₑ × Sortsₑ → Set where
 
 Σₑ : Signature
 Σₑ = ⟨ Sortsₑ , Funcsₑ ⟩
+open Signature
 \end{code}
 
 \subsection*{Algebra}
@@ -126,18 +136,18 @@ data Funcsₑ : List Sortsₑ × Sortsₑ → Set where
 Usually, an \emph{algebra} $\mathcal{A}$ of a signature $\Sigma$, or a $\Sigma$-algebra, consists
 of a family of sets indexed by the sorts of $\Sigma$ and a family of functions indexed by the operations of $\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or the \emph{carrier} of the sort $s$; given an operation $f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a total function $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. 
 
-We proceed to define the interpretation of sorts. The commutativity of
-the diagram expressing the correctness of the compiler ammounts to
-show that two functions, namely
-$\mathit{enc}\, \mathbin{\circ}\, \mathit{hsem}$ and
-$\widehat{\mathit{hexec}}\, \mathbin{\circ}\, \mathit{comp}$, applied
-to the same expression are equal. But the result are functions and it
-is likely to happen that they are extensional equal, but not
-convertible. The well-known solution (for a detailed discussion see
-\citet{barthe-setoids-2003}) is to let the carriers be setoids, \ie a
-type equipped with an equivalence relation. In this way we can set the
-carrier $\widehat{\mathit{Exec}}$ be the appropiate set of functions
-whose equivalence relation is extensional equality.
+In type-theory, however types are not enough. The commutativity of the
+diagram expressing the correctness of the compiler ammounts to show
+that two functions, namely $\mathit{enc}\, \mathbin{\circ}\,
+\mathit{hsem}$ and $\widehat{\mathit{hexec}}\, \mathbin{\circ}\,
+\mathit{comp}$, applied to the same expression are equal. But the
+result are functions and it is likely to happen that they are
+extensional equal, but not convertible. The well-known solution (for a
+detailed discussion see \citet{barthe-setoids-2003}) is to let the
+carriers be setoids, \ie a type equipped with an equivalence
+relation. In this way we can set the carrier $\widehat{\mathit{Exec}}$
+be the appropiate set of functions whose equivalence relation is
+extensional equality.
 
 %TODO: ver si decimos algo más de setoides; quizás citar el paper
 % de Thorsten Altenkirch.
@@ -146,151 +156,134 @@ whose equivalence relation is extensional equality.
 
 % Let's define the interpretation of sorts (or carriers):
 
+%TODO: encajar esto mejor.
+As far as possible, we use the standard library
+\citep{danielsson-agdalib} definitions; for instance, setoids are
+defined as a record with fields: the |Carrier : Set|, the
+relation |_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|.
+
+Once sorts are interpreted as setoids, operations should be
+interpreted as setoid morphisms; \ie. functions which preserve the
+equivalence relation.  Given two setoids |(A,_≈_,_)| and |(B,_≈'_,_)|,
+the type |A ⟶ B| corresponds to the type of functions |f : A → B| that
+come with a proof of the preservation, \ie 
+|prf : (a a' : A) → a ≈ a' → f a ≈' f a'|. 
+
+We formalize the product $\mathcal{A}_{s_1} \times ... \times
+\mathcal{A}_{s_n}$ as the setoid of \emph{heterogeneous vectors}. The
+type of heterogeneous vectors is parameterized by a set of codes
+(sorts) and a family of sets indexed by those codes and indexed over a
+list of codes:
 \begin{code}
-ISorts : ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → Set _
-ISorts {ℓ₁} {ℓ₂} Σ = (sorts Σ) → Setoid ℓ₁ ℓ₂
+data HVec {I} (A : I -> Set) : List I → Set where
+  ⟨⟩   : HVec {I} A []
+  _▹_  :  ∀ {i is} → (v : A i) →
+          (vs : HVec A is) → HVec A (i ∷ is)
 \end{code}
+When |A| is a family of setoids |I → Setoid| it is straightforward to
+promote this construction to setoids and we use |A ✳ is| to refer to
+the setoid of heterogeneous vectors where the equivalence relation is
+the point-wisely induced. The interpretation of the operation $f
+\colon [s_1,…,s_n] \Rightarrow s$ should be a setoid morphism |A ✳
+[s₁,…,sₙ] ⟶ A s|.
 
-\noindent An element in |ISorts Σ s| is a setoid, and it represents the interpretation of sort
-|s| in a |Σ|-algebra.
-
-In order to define the interpretation of a function symbol $f$, with type $[s_1,...,s_n] \rightarrow s$,
-in a $\Sigma$-algebra $\mathcal{A}$, we have to define a total function with domain
-$\mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n}$ and codomain $\mathcal{A}_{s}$. We use
-\textit{vectors} to implement the domain of function interpretations, but this vectors will
-contain element of different types, according to the arity. We define the type of
-\textit{heterogeneous vectors}.
-
-\paragraph{Heterogeneous vectors} blablabla
-
-Let's define the interpretation of operations. Let $f$ be an operation with type $ty$,
-and let $is$ be the interpretation of sorts; the interpretation of $f$ is a function
-from the setoid of heterogeneous vectors to the interpretation of the target sort of
-$f$:
-
+An algebra for a signature $\Sigma$ is a record with two fields: the
+interpretation for sorts and the interpretation for operations.
 \begin{code}
-IFuncs :  ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → (ty : Type Σ) →
-          ISorts {ℓ₁} {ℓ₂} Σ → Set _
-IFuncs Σ (ar , s) is = VecSet (sorts Σ) is ar ⟶ is s
-\end{code}
-
-\noindent Note that an element in |IFuncs Σ (ar , s) is| is a function between setoids.
-
-Let's define the type of $\Sigma$-algebras, with a record with two fields, one corresponding
-to the interpretation of sorts, and another to the interpretation of operations:
-
-\begin{code}
-record Algebra {ℓ₁ ℓ₂ : Level}  (Σ : Signature) :
+record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) :
                                 Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
-  constructor _∥_
+  constructor ⟪_,_⟫
   field
-    _⟦_⟧ₛ    : ISorts {ℓ₁} {ℓ₂} Σ
-    _⟦_⟧    : ∀ {ty : Type Σ} → (f : funcs Σ ty) → IFuncs Σ ty _⟦_⟧ₛ
+    _⟦_⟧ₛ   : sorts Σ → Setoid ℓ₁ ℓ₂
+    _⟦_⟧    : ∀ {ar s} → (f : funcs Σ (ar , s)) →
+                _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 \end{code}
+%if False
+\begin{code}
+  _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
+  _⟦_⟧ₛ*  ar = Carrier ( _⟦_⟧ₛ ✳ ar)
+\end{code}
+%endif
 
-We use a convenient notation for fields. The interpretation of sort |s| in
-|A| is writed |A ⟦ s ⟧ₛ|, and the interpretation of an operation |w|, |A ⟦ w ⟧|.
+% TODO: sacar esto y poner algo más conciso?
 
+%We define too a type representing the domain of an interpretation of function symbol,
+%wich will be useful in later definitions.
+%If |ar| is the arity of an operation |f|, the interpretation will be a function between
+%setoids, with domain the heterogeneous vectors with arity |ar| and interpretation |_⟦_⟧ₛ A|:
+%
+%\begin{spec}
+%_⟦_⟧ₛ* : ∀ {Σ} {ℓ₁} {ℓ₂}  → (A : Algebra {ℓ₁} {ℓ₂} Σ)
+%                          → (ar : Arity Σ) → Set _
+%_⟦_⟧ₛ* {Σ} A ar = Carrier (VecSetoid (sorts Σ) (_⟦_⟧ₛ A) ar)
+%\end{spec}
+%
+%\medskip
 
-We define too a type representing the domain of an interpretation of function symbol,
-wich will be useful in later definitions.
-If |ar| is the arity of an operation |f|, the interpretation will be a function between
-setoids, with domain the heterogeneous vectors with arity |ar| and interpretation |_⟦_⟧ₛ A|:
-
-\begin{spec}
-_⟦_⟧ₛ* : ∀ {Σ} {ℓ₁} {ℓ₂}  → (A : Algebra {ℓ₁} {ℓ₂} Σ)
-                          → (ar : Arity Σ) → Set _
-_⟦_⟧ₛ* {Σ} A ar = Carrier (VecSet (sorts Σ) (_⟦_⟧ₛ A) ar)
-\end{spec}
-
-\medskip
-
-Let see an example of a |Σₑ|-algebra, the semantics of the expression language that we
-introduced previously.
-
-\paragraph{Example} Let's define the |Σₑ|-algebra |Semₑ|. The elements of the carrier
-will be functions from states to natural numbers. 
-
-\begin{spec}
+Let see an example of a |Σₑ|-algebra, the semantics of the expression
+language that we introduced previously. We let |State = Var → ℕ| and
+intepret the only sort |ExprN| as the setoid whose carrier are
+functions in |State → ℕ| with |f ≈ g| if for every state |σ|, 
+|f σ ≡ g σ|; this last equality is the definitional equality of Agda.
+%if False
+\begin{code}
 State : Set
 State = Var → ℕ
-\end{spec}
-
-
-\begin{spec}
-iSortsₑ : ISorts Σₑ
-iSortsₑ E = State →-setoid ℕ
-\end{spec}
-
-\noindent The function |→-setoid| allows us to define a function between two trivial
-setoids, where the equivalence relation is the extensional equality.
-
-Let's define the interpretation of each operation. Like we saw previously, a function
-between setoids consists of two fields: the function of carriers, and de proof of
-congruence (if two elements are related, the elements resulting of applying the function
-are related too). We ommit this proof in this text.
-
-For each |n : ℕ| we have an operation |valN n|. The arity is empty and the target sort is
-|E|:
-
-\begin{spec}
-iValN : (n : ℕ) → IFuncs Σₑ ([] , E) iSortsₑ
-iValN n = record  { _⟨$⟩_ = λ { ⟨⟩ σ → n }
-                  ; cong = ... }
-\end{spec}
-
-The operation |plus| has type |(E ∷ [ E ] , E)|. So, the interpretation will be a
-function from vectors of two elements of type |State → ℕ| to |State → ℕ|:
-
-\begin{spec}
-iPlus : IFuncs Σₑ (E ∷ [ E ] , E) iSortsₑ
-iPlus = record  { _⟨$⟩_ = λ { (v₀ ▹ v₁ ▹ ⟨⟩) σ → v₀ σ + v₁ σ }
-                ; cong = ... }
-\end{spec}
-
-By last, for each variable |v| we have an operation |varN v|, with empty arity and
-target sort |E|. The interpretation is a function from empty vectors (corresponding to
-empty arity) to |State → ℕ| (corresponding to the interpretation of |E|). This function
-is the application of state to the variable |v|:
-
-\begin{spec}
-iVarN : (v : Var) → IFuncs Σₑ ([] , E) iSortsₑ
-iVarN v = record  { _⟨$⟩_ = λ { ⟨⟩ σ → σ v }
-                  ; cong = ... }
-\end{spec}
-
-So, we can define the |Semₑ| algebra:
-
-\begin{spec}
-iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
-iFuncsₑ (valN n) = iValN n
-iFuncsₑ plus = iPlus
-iFuncsₑ (varN v) = iVarN v
-\end{spec}
-
-\begin{spec}
+open Signature
+pattern ⟨⟨_,_⟩⟩ a b = a ▹ (b ▹ ⟨⟩) 
+\end{code}
+%endif
+We use the function |→-setoid| from the standard library that builds
+the setoid we just described.
+\begin{code}
+⟦_⟧ : sorts Σₑ → Setoid _ _
+⟦ _ ⟧ = State →-setoid ℕ
+\end{code}
+The interpretation of operations is piecewise-defined according to
+their types. Remember that besides the function, one must provide the
+proof of preservation of equalities; we omit these proofs as they
+are utterly uninteresting.
+\begin{code}
+i : ∀ {ar s} → funcs Σₑ (ar , s) → ⟦_⟧ ✳ ar ⟶ ⟦ s ⟧
+i (valN n) = record  { _⟨$⟩_ = λ {⟨⟩ σ → n }
+                     ; cong = {!!} }
+i (varN v) = record  { _⟨$⟩_ = λ {⟨⟩ σ → σ v }
+                     ; cong = {!!} }
+i plus = record  { _⟨$⟩_ = λ {⟨⟨ f , g ⟩⟩  σ → f σ + g σ}
+                 ; cong = {!!}}
+\end{code}
+Notice that Agda infers that there are no arguments for nullary
+operators; since |plus| has arity |[ExprN,ExprN]| and we can
+pattern-matching on |⟦_⟧ ✳ [ExprN,ExprN]| and define the
+interpretation as we did in the introduction. We have thus
+defined the algebra $\mathit{Sem}$:
+\begin{code}
 Semₑ : Algebra Σₑ
-Semₑ = iSortsₑ ∥ iFuncsₑ
-\end{spec}
+Semₑ = ⟪ ⟦_⟧ , i ⟫
+\end{code}
+%if False
+\begin{code}
+open Algebra
+\end{code}
+%endif
 
 \subsection*{Homomorphism}
 
 Let $\mathcal{A}$ and $\mathcal{B}$ be two $\Sigma$-algebras, a \textbf{homomorphism}
-$h$ from $\mathcal{A}$ to $\mathcal{B}$ is a indexed family $h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$,
-such that for each operation $w$ with type $([s_1,...,s_n],s)$, the following holds:
+$h$ from $\mathcal{A}$ to $\mathcal{B}$ is a family of functions indexed by the
+sorts $h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$,
+such that for each operation $f : [s_1,...,s_n] \Rightarrow s$, the following holds:
+\begin{equation}
+  h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)\label{eq:homcond}
+\end{equation}
 
-\begin{center}
-  $h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)$ \;\;\;(1)
-\end{center}
+Let's define first the notion of \textit{function between} $\Sigma$-algebras:
 
-Let's define first the notion of \textit{function between} $\Sigma$\textit{-algebras}:
-
-\begin{spec}
-_⟿_ : ∀  {Σ : Signature}  →
-         (A : Algebra Σ) → (A' : Algebra Σ) →
+\begin{code}
+_⟿_ :  ∀ {ℓ₁ ℓ₂} Σ → (A B : Algebra {ℓ₁} {ℓ₂} Σ) →
          Set _
-_⟿_ {Σ} A A' = (s : sorts Σ) → A ⟦ s ⟧ₛ ⟶ A' ⟦ s ⟧ₛ
-\end{spec}
+_⟿_ Σ A B = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
+\end{code}
 
 \noindent Note that for each sort $s$ we have a function between the setoids
 corresponding to the interpretation of $s$ in each algebra.

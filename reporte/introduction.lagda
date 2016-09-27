@@ -63,9 +63,9 @@ meta-variable over $\state$, the semantics is given by:
 \begin{equation*}
 \begin{array}{lllcl}
   &\multicolumn{4}{l}{\evalExpr \colon\ \expr \to \state \to \mathbb{N}}\\
-  &\evalExpr &n                &=&\lambda\,\upsigma \rightarrow n\\
-  &\evalExpr &v                &=& \lambda\,\upsigma \rightarrow \upsigma\,v\\
-  &\evalExpr &(e_1 \oplus e_2) &=& \lambda\,\upsigma \rightarrow (\evalExpr\,e_1\,\upsigma) + (\evalExpr\,e_1\,\upsigma)
+  &\evalExpr &n                &=&\lambda\,\sigma \rightarrow n\\
+  &\evalExpr &v                &=& \lambda\,\sigma \rightarrow \sigma\,v\\
+  &\evalExpr &(e_1 \oplus e_2) &=& \lambda\,\sigma \rightarrow (\evalExpr\,e_1\,\sigma) + (\evalExpr\,e_1\,\sigma)
 \end{array}%
 \end{equation*}
 
@@ -77,16 +77,16 @@ relation between configurations of the (abstract) machine. If the
 relation is deterministic, then one can infer a big-step semantics and
 from that a functional semantics as proposed by
 \citet{owens2016bigstep}. An initial configuration of our machine is
-a pair $(s, \upsigma)$ of a stack of numbers and a state, while the final
+a pair $(s, \sigma)$ of a stack of numbers and a state, while the final
 configuration is a stack $s'$. We assume that $\stack$s are lists of numbers. 
 \newcommand{\consop}{\,\colon\!\!\!\colon}
 \[
 \begin{array}{lllcl}
   &\multicolumn{4}{l}{\execCode \colon \code \rightarrow \stack \times \state \rightarrow \stack}\\
-  &\execCode &(\instr{push}\,n)     &=&(s , \upsigma) \rightarrow (n \consop s)\\
-  &\execCode &(\instr{load}\,v)     &=&\lambda\,(s , \upsigma) \rightarrow (\upsigma\,v \consop s)\\
-  &\execCode &(c_1\,;\,c_2) &=&\lambda\,(s , \upsigma) \rightarrow \execCode\;c_2\;(\execCode\;c_1\;(s,\upsigma),\upsigma)\\
-  &\execCode &\instr{add}   &=&\lambda\,(n  \consop  m  \consop  s , \upsigma) \rightarrow (n \, + \, m  \consop s)\\
+  &\execCode &(\instr{push}\,n)     &=&(s , \sigma) \rightarrow (n \consop s)\\
+  &\execCode &(\instr{load}\,v)     &=&\lambda\,(s , \sigma) \rightarrow (\sigma\,v \consop s)\\
+  &\execCode &(c_1\,;\,c_2) &=&\lambda\,(s , \sigma) \rightarrow \execCode\;c_2\;(\execCode\;c_1\;(s,\sigma),\sigma)\\
+  &\execCode &\instr{add}   &=&\lambda\,(n  \consop  m  \consop  s , \sigma) \rightarrow (n \, + \, m  \consop s)\\
 \end{array}
 \]
 \newcommand{\comp}{\mathit{comp}}
@@ -95,7 +95,7 @@ A compiler $\comp \colon \expr \rightarrow \code$ is correct if for
 every expression $e$ the generated code $\comp\,e$ has the ``same''
 semantics of $e$. In our setting we can state correctness formally as
 \[
-  \execCode\,(\comp\,e)\,(\upsigma,s)\,=\,\evalExpr\,e\,\upsigma \consop s \enspace .
+  \execCode\,(\comp\,e)\,(\sigma,s)\,=\,\evalExpr\,e\,\sigma \consop s \enspace .
 \]
 It is straightforward to write a compiler and then prove its correctness by induction
 on the structure of expressions (we omit this proof):
@@ -132,18 +132,18 @@ result about algebras, the denotation of each phrase. For instance,
 from the following interpretation of the operators:
 \[
   \begin{array}{lcl}
-    i(n)()&=&\lambda \upsigma \mapsto n\\
-    i(x)()&=&\lambda \upsigma \mapsto \upsigma\,x\\
-    i(\oplus)(f,g)&=&\lambda \upsigma \mapsto f\,\upsigma + g\,\upsigma
+    i(n)()&=&\lambda \sigma \mapsto n\\
+    i(x)()&=&\lambda \sigma \mapsto \sigma\,x\\
+    i(\oplus)(f,g)&=&\lambda \sigma \mapsto f\,\sigma + g\,\sigma
   \end{array}
 \]
 we get a unique homomorpism $\mathit{hsem} \colon T_e \to \mathit{Sem}$
 satisfying:
 \[
   \begin{array}{lcl}
-    \hsem{n}&=&\lambda \upsigma \mapsto n\\
-    \hsem{x}&=&\lambda \upsigma \mapsto \upsigma\,x\\
-    \hsem{e_1 \oplus e_2}&=&\lambda \upsigma \mapsto \hsem{e_1}\,\upsigma + \hsem{e_2}\,\upsigma
+    \hsem{n}&=&\lambda \sigma \mapsto n\\
+    \hsem{x}&=&\lambda \sigma \mapsto \sigma\,x\\
+    \hsem{e_1 \oplus e_2}&=&\lambda \sigma \mapsto \hsem{e_1}\,\sigma + \hsem{e_2}\,\sigma
   \end{array}
 \]
 In parallel, we interpret the sort of $\Sigma_c$ as the set of partial

@@ -39,7 +39,7 @@ following the \textit{Handbook of Logic in Computer Science},
 
 module reporte where
 
-open import Relation.Binary
+open import Relation.Binary hiding (_⇒_;Total)
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
@@ -47,7 +47,7 @@ open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_)
 open import Data.Bool
 open import Data.List hiding ([_])
-open import Relation.Binary.PropositionalEquality as PE hiding ([_])
+open import Relation.Binary.PropositionalEquality as PE hiding ([_];isEquivalence)
 open import Data.String
 open import Data.Fin hiding (_+_)
  
@@ -56,6 +56,8 @@ open import VecH
 open Setoid
 
 infixr 2 _➜_
+
+pattern _⇒_ ar s = (ar , s)
 
 Ty : (S : Set) → Set
 Ty S = List S × S
@@ -73,20 +75,21 @@ A \emph{signature} is a pair of sets $(S,F)$, called \textit{sorts} and \textit{
 There is one alternative way of specifying the operations, one that
 seems to us more type-theoretically, as a family of sets (of
 operations) indexed by (their) types. We use a record to represent
-signatures in Agda, the field |sorts| is a Set and |funcs| is a family
+signatures in Agda, the field |sorts| is a Set and |ops| is a family
 of sets indexed by the types of operations:
 \begin{code}
 record Signature : Set₁ where
   constructor ⟨_,_⟩
   field
     sorts  : Set
-    funcs  : List sorts × sorts → Set 
+    ops  : List sorts × sorts → Set 
 
   Arity : Set
   Arity = List sorts
   
   Type : Set
   Type = Arity × sorts
+  
 \end{code}
 
 %if False
@@ -120,13 +123,13 @@ Var = String
 data Sortsₑ : Set where
   ExprN : Sortsₑ
 
-data Funcsₑ : List Sortsₑ × Sortsₑ → Set where
-  valN  : (n : ℕ)   → Funcsₑ ([] ➜ ExprN)
-  varN  : (v : Var) → Funcsₑ ([] ➜ ExprN)
-  plus  : Funcsₑ ([ ExprN , ExprN ] ➜ ExprN )
+data Opsₑ : List Sortsₑ × Sortsₑ → Set where
+  valN  : (n : ℕ)   → Opsₑ ([] ➜ ExprN)
+  varN  : (v : Var) → Opsₑ ([] ➜ ExprN)
+  plus  : Opsₑ ([ ExprN , ExprN ] ➜ ExprN )
 
 Σₑ : Signature
-Σₑ = ⟨ Sortsₑ , Funcsₑ ⟩
+Σₑ = ⟨ Sortsₑ , Opsₑ ⟩
 open Signature
 \end{code}
 
@@ -195,7 +198,7 @@ record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) :
   constructor ⟪_,_⟫
   field
     _⟦_⟧ₛ   : sorts Σ → Setoid ℓ₁ ℓ₂
-    _⟦_⟧    : ∀ {ar s} → (f : funcs Σ (ar , s)) →
+    _⟦_⟧ₒ    : ∀ {ar s} → (f : ops Σ (ar ➜ s)) →
                 _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 \end{code}
 %if False
@@ -219,7 +222,6 @@ record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) :
 %\end{spec}
 %
 %\medskip
-
 Let see an example of a |Σₑ|-algebra, the semantics of the expression
 language that we introduced previously. We let |State = Var → ℕ| and
 intepret the only sort |ExprN| as the setoid whose carrier are
@@ -244,7 +246,7 @@ their types. Remember that besides the function, one must provide the
 proof of preservation of equalities; we omit these proofs as they
 are utterly uninteresting.
 \begin{code}
-i : ∀ {ar s} → funcs Σₑ (ar , s) → ⟦_⟧ ✳ ar ⟶ ⟦ s ⟧
+i : ∀ {ar s} → ops Σₑ (ar ➜ s) → ⟦_⟧ ✳ ar ⟶ ⟦ s ⟧
 i (valN n) = record  { _⟨$⟩_ = λ {⟨⟩ σ → n }
                      ; cong = {!!} }
 i (varN v) = record  { _⟨$⟩_ = λ {⟨⟩ σ → σ v }
@@ -277,124 +279,203 @@ such that for each operation $f : [s_1,...,s_n] \Rightarrow s$, the following ho
   h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)\label{eq:homcond}
 \end{equation}
 
-Let's define first the notion of \textit{function between} $\Sigma$-algebras:
-
+We formalize an homomorphism as a record with the family of functions
+and a proof that it satisfies condition \eqref{eq:homcond}. In order to
+avoid repetition of the same parameters over and over again, we declare
+a module parameterized over the signature and the algebras.
 \begin{code}
-_⟿_ :  ∀ {ℓ₁ ℓ₂} Σ → (A B : Algebra {ℓ₁} {ℓ₂} Σ) →
-         Set _
-_⟿_ Σ A B = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
+module Homo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ}
+        (A : Algebra {ℓ₁} {ℓ₂} Σ) 
+        (B : Algebra {ℓ₃} {ℓ₄} Σ) where
+  
+  _⟿_ : Set _
+  _⟿_ = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
+\end{code}
+An element of |h : A ⟿ B| will be a family of setoid morphisms between
+the interpretation of each sort in the source and target algebras.  In
+order to encode condition \eqref{eq:homcond} we need to map |h| over
+the heterogeneous vector |as : A ⟦ ar ⟧ₛ*|. We let |map⟿ h ts = mapV
+(_⟨$⟩_ ∘ h) ts|, where |mapV| is mapping over heterogeneous vectors.
+%if False
+\begin{code}
+  map⟿ : ∀ {ar} → (h : _⟿_) → (ts : A ⟦ ar ⟧ₛ* ) → B ⟦ ar ⟧ₛ*
+  map⟿ h ts = mapV (_⟨$⟩_ ∘ h) ts
+\end{code}
+%endif
+\noindent Now we can state condition \eqref{eq:homcond} replacing
+equality by the corresponding equivalence relation, so let |_≈ₛ_ = _≈_ (B ⟦ s ⟧ₛ)|:
+\begin{code}
+  homCond : ∀ ty → _⟿_ → ops Σ ty → Set _
+  homCond (ar ⇒ s) h f = (as : A ⟦ ar ⟧ₛ*) →
+       h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as) ≈ₛ B ⟦ f ⟧ₒ ⟨$⟩ map⟿ h as
+\end{code}
+%if False
+\begin{code}
+         where  _≈ₛ_ : _
+                _≈ₛ_ = _≈_ (B ⟦ s ⟧ₛ)
+                infixr 0 _≈ₛ_ 
+\end{code}
+%endif
+
+\noindent For |H : Homo A B|, the setoid morphism is |′ H ′ : A ⟿ B| and
+|cond H| is the proof that |′ H ′| satisfies \eqref{eq:homcond}.
+%if False
+\begin{code}
+  ℓ' : _
+  ℓ' = lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)
+\end{code}
+%endif
+\begin{code}
+  record Homo : Set ℓ' where
+    field
+      ′_′  : _⟿_
+      cond : ∀ {ty} (f : ops Σ ty) → homCond ty ′_′ f
 \end{code}
 
-\noindent Note that for each sort $s$ we have a function between the setoids
-corresponding to the interpretation of $s$ in each algebra.
 
-Let's define the condition of homomorphism. In the right side of the equation (1) we have the
-application of function $h$ to each element of $(a_1,...,a_n)$. The function |map⟿| allows us to apply a function to a vector.
-
-\begin{spec}
-homCond  A A' h f = (as : A ⟦ ar ⟧ₛ*) →  (h s ⟨$⟩ (A ⟦ f ⟧ ⟨$⟩ as))
-                                         ≈ₛ 
-                                         (A' ⟦ f ⟧ ⟨$⟩ (map⟿ h as))
-         where  _≈ₛ_ : _
-                _≈ₛ_ = _≈_ (A' ⟦ s ⟧ₛ) 
-\end{spec}
-
-
-%% Procedamos ahora a definir la condición de homomorfismo. En la parte derecha de la ecuación (1) tenemos
-%% la aplicación de la función $h$ en cada elemento de $(a_1,...,a_n)$. Definimos esta noción en Agda. Si
-%% |ar| es una aridad y |A| una |Σ|-álgebra, definimos como mapear una función entre álgebras |h| a un
-%% vector en |A ⟦ ar ⟧ₛ*|. A esta función la notaremos con |map⟿| y no pondremos en este texto
-%% su definición.
-
-
-%% A continuación damos la definición de un tipo para la condición de homomorfismo de
-%% una función entre álgebras |h|. Si
-%% |h : A ⟿ A'| y |f : funcs Σ (ar , s)|, para todo |(as : A ⟦ ar ⟧ₛ*)|, debe darse
-%% la igualdad entre
-%% la aplicación de |h| al resultado de aplicar la interpretación de |f| en |A| al vector
-%% |as| y la aplicación de la interpretación de |f| en |A'| al resultado de mapear
-%% |h| a |as|. La relación de igualdad correspondiente es la de la interpretación del sort
-%% |s| en |A|:
-
-Finally, let's define a type |Homomorphism| with a record with two fields: the
-function between algebras, and the condition of homomorphism:
-
-\begin{spec}
-record Homomorphism (A : Algebra Σ) (A' : Algebra Σ) : Set _ where
-  field
-    ′_′    : A ⟿ A'
-    cond   : ∀ {ty} (f : funcs Σ ty) → homCond A A' ′_′ f
-\end{spec}
-
-\noindent Note the use of the notation of the function homomorphism: If |H|
-is an homomorphism, |′ H ′| is the field corresponding to the function
-between algebras.
-
-
-\subsection{Initial algebra and Term algebra}
-
-\subsection*{Initial Algebra}
+\subsection{The Term Algebra is Initial}
 
 A $\Sigma$-algebra $\mathcal{A}$ is called \textbf{initial} if for all
-$\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism from
-$\mathcal{A}$ to $\mathcal{B}$.
+$\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
+from $\mathcal{A}$ to $\mathcal{B}$. This universal condition should be
+stated with respect to some underlying notion of equality.
 
-In order to formalize the concept of initial algebra in Agda, we proceed to
-define the notion of \textit{unicity} of an homomorphism. Informally, we can
-say that an element $e \in E$ is unique if for all element $e' \in E$ the
-equation $e = e'$ holds. We can generalize this definition to an arbitrary
-equivalence relation, and we define the type |Unicity|:
+Informally, if $≈$ is an equivalence relation over $A$,
+we can say that an element $a \in A$ is unique if $A = [a]_{≈}$;
+from which we can easily deduce that uniqueness is contagious: if someone
+is unique, everyone is! Less picturesque we define uniqueness through
+totality:
+\begin{code}
+Total : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _ 
+Total _≈_ = ∀ a a' → a ≈ a'
+\end{code}
+%if False
+\begin{code}
+data False : Set where
 
-\begin{spec}
-Unicity : ∀ {ℓ₁} {ℓ₂} →  (A : Set ℓ₁) → (rel : Rel A ℓ₂) →
-                         IsEquivalence rel → Set _ 
-Unicity A _≈_ p = Σ[ a ∈ A ] ((a' : A) → a ≈ a')
-\end{spec}
+TotalEmpty : ∀ {ℓ₁} → (r : Rel False ℓ₁) → Total r
+TotalEmpty _≈_ () _
+\end{code}
+%endif
+Since we cannot extract a witness from a proof that a relation
+is total (notice that every relation over the empty type is total),
+we ask for a concrete witness of uniqueness:
+\begin{code}
+Unique : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _
+Unique {A = A} _≈_ = A × Total _≈_ 
+\end{code}
+%if False
+\begin{code}
+UniqueContagious : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → (_≈_ : Rel A ℓ₂) →
+  (a : A) → Unique _≈_ → ∃ {A = Unique {A = A} _≈_} (λ p → (proj₁ p) ≡ a)
+UniqueContagious _≈_ a prf = (a , proj₂ prf) , _≡_.refl
+\end{code}
+%endif
 
-\noindent Given a type |A|, and a equivalence relation |_≈_| on |A|,
-an element |a : A| is unique (except equivalence) with respect to |_≈_| if for all element
-|a' : A|, |a| and |a'| are related by |_≈_|.
+As we have explained to justify the use of setoids, the appropiate
+notion of equality between homomorphisms is extensional equality.  We
+define a type to represent the property of extensional equality. If
+|A,≈A| and |B,≈B| are setoids and |f g : A ⟶ B| are setoid morphisms,
+we say that they are extensionally equal if they are equal point-wise.
+%if False
+\begin{code}
+module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoid ℓ₃ ℓ₄} where
+  private
+    _≈B_ : _
+    _≈B_ = _≈_ B
 
-In order to define the equality of homomorphisms, let's define a type to represent the
-property of extensional equality. If |A| and |B| are sets, |_≈A_| and |_≈B_| are binary relations
-on |A| and |B| respectively, and |f| and |g| are functions from |A| to |B|, we define
-the property |ExtProp|:
+    _≈A_ : _
+    _≈A_ = _≈_ A
 
-\begin{spec}
-ExtProp _≈A_ _≈B_ f g = (a a' : A) → a ≈A a' → f a ≈B g a'
-\end{spec}
+\end{code}
+%endif
+\begin{code}
+  _≈→_ : Rel (A ⟶ B) _
+  f ≈→ g  = ∀ (a : Carrier A) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
+\end{code}
+We can deduce that |a ≈A a'| implies |f a ≈B g a'| by a simple equational
+reasoning. Moreover, we can prove that |_≈→_| is an equivalence relation.
+\begin{code}
+  Equiv≈→ : IsEquivalence (_≈→_)
+  Equiv≈→ = {!!}
+\end{code}
+%if False
+\begin{code}
 
-Two homomorphisms |H| and |H'| are equals if the functions |′ H ′| and |′ H' ′| are
-extensionally equals. Let's define the type |_≈ₕ_|:
+  ≈→-preserves-≈ : ∀ a a' f g → f ≈→ g → a ≈A a' → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a')
+  ≈→-preserves-≈ a a' f g f≈g a≈a' = begin⟨ B ⟩
+                                     f ⟨$⟩ a
+                                     ≈⟨ Π.cong f a≈a' ⟩
+                                     f ⟨$⟩ a'
+                                     ≈⟨ f≈g a' ⟩
+                                     g ⟨$⟩ a'
+                                     ∎
 
-\begin{spec}
-data _≈ₕ_  {Σ} {A : Algebra Σ} {A' : Algebra Σ}
-           (H H' : Homomorphism A A') : Set _ where
-  ext :  ((s : sorts Σ) → ExtProp  (_≈_ (A ⟦ s ⟧ₛ)) (_≈_ (A' ⟦ s ⟧ₛ))
-                                   (_⟨$⟩_ (′ H ′ s)) (_⟨$⟩_ (′ H' ′ s))) →
-         H ≈ₕ H'
-\end{spec}
+    where open import Relation.Binary.SetoidReasoning 
+    
+  Equiv≈→' : IsEquivalence (_≈→_)
+  Equiv≈→' = record { refl = λ {f} → isRefl {f}
+                                    ; sym = λ {f} {g} prf → isSym {f} {g} prf
+                                    ; trans = λ {f} {g} {h} p q → isTrans {f} {g} {h} p q }
+    where isRefl : Reflexive (_≈→_)
+          isRefl {f} a = Setoid.refl B {f ⟨$⟩ a}
+          isSym : Symmetric (_≈→_)
+          isSym {f} {g} p a = Setoid.sym B (p a)
+          isTrans : Transitive (_≈→_)
+          isTrans {f} {g} {h} p q a = Setoid.trans B (p a) (q a)
+\end{code}
+%endif
+Two homomorphisms |H G : Homo A B| are equals if for every sort |s|,
+its corresponding setoid morphisms are extensional equal, that is
+|′ H ′ s ≈→ ′ G ′ s|.
+%if False
+\begin{code}
+module EqHomo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} Σ {A : Algebra {ℓ₁} {ℓ₂} Σ} {B : Algebra {ℓ₃} {ℓ₄} Σ} where
+  open Homo
+  open Homo.Homo
+  open Algebra
+  open ExtEq
+  open IsEquivalence renaming (refl to ref;sym to symm;trans to tran)
+\end{code}
+%endif
+\begin{code}
+  _≈ₕ_  : (H G : Homo A B) → Set _
+  H ≈ₕ G = (s : sorts Σ) → ′ H ′ s ≈→ ′ G ′ s
+\end{code}
 
-The relation |_≈ₕ_| is an equivalence relation. We can prove this, but we don't
-show the proof on this text:
+The relation |_≈ₕ_| is an equivalence relation, which easily follows from
+|_≈→_| being an equivalence.
+\begin{code}
+  equiv≈ₕ : IsEquivalence _≈ₕ_
+  equiv≈ₕ = {!!}
+\end{code}
+%if False
+\begin{code}
+  ≈A→B : (s : sorts Σ) → IsEquivalence (_≈→_ {A = A ⟦ s ⟧ₛ} {B = B ⟦ s ⟧ₛ})
+  ≈A→B s = Equiv≈→' {A = A ⟦ s ⟧ₛ} {B = B ⟦ s ⟧ₛ}
+  equiv≈ₕ' : IsEquivalence _≈ₕ_
+  equiv≈ₕ' = record { refl = λ {h} s a → ref (≈A→B s)  {′ h ′ s} a
+                   ; sym = λ {h} {g} eq s a → symm (≈A→B s) {′ h ′ s} {′ g ′ s} (eq s) a
+                   ; trans = λ {f} {g} {h} eq eq' s a →
+                           tran (≈A→B s) {′ f ′ s} {′ g ′ s} {′ h ′ s} (eq s) (eq' s) a }
+open Homo
+open EqHomo
+\end{code}
+%endif
 
-\begin{spec}
-equiv≈ₕ : ∀  {Σ} {A : Algebra Σ} {A' : Algebra Σ} →
-              IsEquivalence (_≈ₕ_ {A = A} {A' = A'})
-equiv≈ₕ = ...
-\end{spec}
-
-
-With all these definitions we can formalize the initial algebra of a signature |Σ|.
-Let's define the type |Initial| with a record with two fields: The algebra and the
-proof of initiality:
-
-\begin{spec}
-record Initial (Σ : Signature) : Set _ where
+In order to construct an initial algebra (we could say ``the initial
+algebra'' up to isomorphism), we have to provide the algebra, say
+$\mathcal{I}$ and a proof of uniqueness for the homomorphism from
+$\mathcal{I}$ to any other algebra $\mathcal{A}$. Thus, in the formalization
+this notion is captured by the following record:
+\begin{code}
+record Initial {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} (Σ : Signature) : 
+                             Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
   field
-    alg      : Algebra Σ
-    init     : (A : Algebra Σ) → Unicity (Homomorphism alg A) (_≈ₕ_) equiv≈ₕ
-\end{spec}
+    alg   : Algebra {ℓ₁} {ℓ₂} Σ
+    init  : (A : Algebra {ℓ₃} {ℓ₄} Σ) →
+                  Unique (_≈ₕ_ Σ {alg} {A})
+\end{code}
 
 
 \subsection*{Term algebra}
@@ -414,15 +495,15 @@ We can define this on Agda, with a type indexed on the sorts of the signature:
 
 \begin{spec}
 data HU (Σ : Signature) : (s : sorts Σ) → Set where
-  term : ∀ {ar} {s} →  (f : funcs Σ (ar , s)) →
+  term : ∀ {ar} {s} →  (f : ops Σ (ar , s)) →
                        (ts : VecH (sorts Σ) (HU Σ) ar) → HU Σ s
 \end{spec}
 
 The type |HU Σ s| formalizes the definition of $HU_s$ that we saw previously:
 
 \begin{itemize}
-\item Let |k : funcs Σ ([] , s)|, then |term k ⟨⟩ : HU Σ s|.
-\item Let |f : funcs Σ ([s₁ ,..., sₙ] , s)| and |ts = ⟨ t_1,...,t_n ⟩|, where
+\item Let |k : ops Σ ([] , s)|, then |term k ⟨⟩ : HU Σ s|.
+\item Let |f : ops Σ ([s₁ ,..., sₙ] , s)| and |ts = ⟨ t_1,...,t_n ⟩|, where
       |t₁ : HU Σ s₁| , ... ,|tₙ : HU Σ sₙ|, then |term f ts : HU Σ s|.
 \end{itemize}
 

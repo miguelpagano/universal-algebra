@@ -7,24 +7,25 @@
 % 11pt          To set in 11-point type instead of 9-point.
 % numbers       To obtain numeric citation style instead of author/year.
 
-
-
 \usepackage{amsmath}
 \usepackage{mathpartir}
 \usepackage{tikz}
-\usepackage{natbib}
 \usepackage{ upgreek }
 \usepackage[bookmarksopen,
 bookmarksdepth=2,
 breaklinks=true
 colorlinks=true,
 urlcolor=blue]{ hyperref }
+%format ⟨⟨ = "\langle\!"
+%format ⟩⟩ = "\!\rangle"
+%format ≈A = "≈_{A}"
+%format ≈B = "≈_{B}"
 %include agda.fmt
 %include unicode.fmt
 
 \DeclareUnicodeCharacter{10140}{\ensuremath{\Rightarrow}}
 \DeclareUnicodeCharacter{10035}{\ensuremath{\ast}}
-
+\DeclareUnicodeCharacter{8338}{\ensuremath{_{o}}}
 \newcommand{\cL}{{\cal L}}
 \newcommand{\ie}{i.e.\@@ }
 

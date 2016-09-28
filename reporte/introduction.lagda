@@ -153,10 +153,10 @@ $\mathit{hexec} \colon T_C \to \mathit{Exec}$. We can picture the situation so f
 
 \begin{center}
   \begin{tikzpicture}[>=latex]
-    \node (te) at (0,2) {$T_e$}; 
-    \node (tc) at (4,2) {$T_c$}; 
+    \node (te) at (0,1.5) {$T_e$}; 
+    \node (tc) at (3,1.5) {$T_c$}; 
     \node (seme) at (0,0) {$\mathit{Sem}$} ; 
-    \node (semc) at (4,0) {$\mathit{Exec}$} ; 
+    \node (semc) at (3,0) {$\mathit{Exec}$} ; 
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
     \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\mathit{hexec}$} (semc);
   \end{tikzpicture}
@@ -187,10 +187,10 @@ $\mathit{enc} \colon \widehat{\mathit{Exec}} \to \mathit{Sem}$ (after \cite{that
 
 \begin{center}
   \begin{tikzpicture}[>=latex]
-    \node (te) at (0,2) {$T_e$}; 
-    \node (tc) at (4,2) {$\widehat{T_c}$}; 
+    \node (te) at (0,1.5) {$T_e$}; 
+    \node (tc) at (3,1.5) {$\widehat{T_c}$}; 
     \node (seme) at (0,0) {$\mathit{Sem}$} ; 
-    \node (semc) at (4,0) {$\widehat{\mathit{Exec}}$} ; 
+    \node (semc) at (3,0) {$\widehat{\mathit{Exec}}$} ; 
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [above] {$\mathit{comp}$} (tc); 
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
     \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\widehat{\mathit{hexec}}$} (semc);

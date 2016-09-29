@@ -32,7 +32,7 @@ We recall some basic definitions of multisorted universal algebra
 following the \textit{Handbook of Logic in Computer Science},
 \cite{handbook}.
 
-\subsection*{Signature}
+\paragraph{Signature}
 
 %if False
 \begin{code}
@@ -132,9 +132,7 @@ data Opsₑ : List Sortsₑ × Sortsₑ → Set where
 Σₑ = ⟨ Sortsₑ , Opsₑ ⟩
 \end{code}
 
-\subsection*{Algebra}
-
-
+\paragraph{Algebra}
 Usually, an \emph{algebra} $\mathcal{A}$ of a signature $\Sigma$, or a $\Sigma$-algebra, consists
 of a family of sets indexed by the sorts of $\Sigma$ and a family of functions indexed by the operations of $\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or the \emph{carrier} of the sort $s$; given an operation $f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a total function $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. 
 
@@ -273,9 +271,9 @@ open Algebra
 \end{code}
 %endif
 
-\subsection*{Homomorphism}
+\paragraph{Homomorphism}
 
-Let $\mathcal{A}$ and $\mathcal{B}$ be two $\Sigma$-algebras, a \textbf{homomorphism}
+Let $\mathcal{A}$ and $\mathcal{B}$ be two $\Sigma$-algebras, a \emph{homomorphism}
 $h$ from $\mathcal{A}$ to $\mathcal{B}$ is a family of functions indexed by the
 sorts $h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$,
 such that for each operation $f : [s_1,...,s_n] \Rightarrow s$, the following holds:
@@ -288,7 +286,7 @@ and a proof that it satisfies condition \eqref{eq:homcond}. In order to
 avoid repetition of the same parameters over and over again, we declare
 a module parameterized over the signature and the algebras.
 \begin{code}
-module Homo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ}
+module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ}
         (A : Algebra {ℓ₁} {ℓ₂} Σ) 
         (B : Algebra {ℓ₃} {ℓ₄} Σ) where
   
@@ -339,7 +337,7 @@ equality by the corresponding equivalence relation, so let |_≈ₛ_ = _≈_ (B 
 
 \subsection{The Term Algebra is Initial}
 
-A $\Sigma$-algebra $\mathcal{A}$ is called \textbf{initial} if for all
+A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for all
 $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
 from $\mathcal{A}$ to $\mathcal{B}$. This universal condition should be
 stated with respect to some underlying notion of equality.
@@ -433,8 +431,8 @@ its corresponding setoid morphisms are extensional equal, that is
 %if False
 \begin{code}
 module EqHomo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} Σ {A : Algebra {ℓ₁} {ℓ₂} Σ} {B : Algebra {ℓ₃} {ℓ₄} Σ} where
+  open Hom
   open Homo
-  open Homo.Homo
   open Algebra
   open ExtEq
   open IsEquivalence renaming (refl to ref;sym to symm;trans to tran)
@@ -460,8 +458,6 @@ The relation |_≈ₕ_| is an equivalence relation, which easily follows from
                    ; sym = λ {h} {g} eq s a → symm (≈A→B s) {′ h ′ s} {′ g ′ s} (eq s) a
                    ; trans = λ {f} {g} {h} eq eq' s a →
                            tran (≈A→B s) {′ f ′ s} {′ g ′ s} {′ h ′ s} (eq s) (eq' s) a }
-open Homo
-open EqHomo
 \end{code}
 %endif
 
@@ -470,12 +466,18 @@ algebra'' up to isomorphism), we have to provide the algebra, say
 $\mathcal{I}$ and a proof of uniqueness for the homomorphism from
 $\mathcal{I}$ to any other algebra $\mathcal{A}$. Thus, in the formalization
 this notion is captured by the following record:
+%if False
 \begin{code}
-record Initial {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} (Σ : Signature) : 
-                             Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
-  field
-    alg   : Algebra {ℓ₁} {ℓ₂} Σ
-    init  : (A : Algebra {ℓ₃} {ℓ₄} Σ) →
+module Initial {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} (Σ : Signature) where
+  open Hom
+  open EqHomo
+\end{code}
+%endif
+\begin{code}
+  record Initial  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+    field
+      alg   : Algebra {ℓ₁} {ℓ₂} Σ
+      init  : (A : Algebra {ℓ₃} {ℓ₄} Σ) →
                   Unique (_≈ₕ_ Σ {alg} {A})
 \end{code}
 
@@ -523,13 +525,13 @@ module TermAlgebra (Σ : Signature) where
 \noindent We use propositional equality to turn each $\mathcal{T}_s$ in a
 setoid, thus completing the interpretation of sorts. To interpret
 an operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the
-tuple $⟨t_1,\ldots,t_n⟩$ to $f(t_1,\ldots,t_n)$. 
+tuple $⟨t_1,\ldots,t_n⟩$ to $f(t_1,\ldots,t_n)$; we omit the proof
+of |cong|.
 \begin{code}
-  ∣T∣ : Algebra Σ
-  ∣T∣ = record  { _⟦_⟧ₛ = setoid ∘ HU
-                ; _⟦_⟧ₒ  = λ f → record  { _⟨$⟩_ = term f
-                                         ; cong = {!!}
-                           }
+  |T| : Algebra Σ
+  |T| = record  { _⟦_⟧ₛ = setoid ∘ HU
+                ; _⟦_⟧ₒ = λ f → record
+                  { _⟨$⟩_ = term f ; cong = {!!}}
                 }
 \end{code}
 %if False
@@ -540,105 +542,121 @@ tuple $⟨t_1,\ldots,t_n⟩$ to $f(t_1,\ldots,t_n)$.
                 }
     where ∣_|ₒ : ∀ {ar s} → ops Σ (ar ⇒ s) → (setoid ∘ HU) ✳ ar ⟶ (setoid ∘ HU) s
           ∣ f |ₒ = record  { _⟨$⟩_ = term f
-                          ; cong = {!!}
+                          ; cong = λ x → {!!}
                           }
 \end{code}
 %endif
 
-\noindent We omit the proof of \textit{cong} in this text for simplicity.
+%\subsection*{The term algebra is initial}
 
-In the rest of this section we show the formalization of the proof of initiality of
-term algebra.
-
-\subsection*{The term algebra is initial}
-
-To prove that the term algebra is initial we must to give, for each $\Sigma$-algebra $\mathcal{A}$,
-an unique homomorphism from $T(\Sigma)$ to $\mathcal{A}$. Let's define this homomorphism. Let $s$
-be a sort of $\Sigma$:
-
-\begin{itemize}
-\item Let $k$ be an operation with empty arity and target sort $s$, then
-      $h\,k\,=\,k_{\mathcal{A}}$
-\item Let $f$ be an operation with type $[s_1,...,s_n] \rightarrow s$, then
-      $h\,(f\,(t_1,...,t_n))\,=\,f_{\mathcal{A}}\,(h\,t_1,...,h\,t_n)$
-\end{itemize}
-
-We could formalize this homomorphism in the following way:
-
+Now we turn to prove that the term algebra is initial; so for any
+$\Sigma$-algebra $\mathcal{A}$ we define the homomorphism $h_A \colon
+\mathcal{T} \to \mathcal{A}$ \[
+  h_A (f(t_1,\ldots,t_n)) = f_{\mathcal{A}}\,(h_A\,t_1,...,h_A\,t_n) \enspace .
+\] 
+\noindent One would like to define this map in Agda just like that:
 \begin{spec}
-∣T∣→A : ∀ {A : Algebra Σ} (s : sorts Σ) → HU Σ s → Carrier (A ⟦ s ⟧ₛ)
-∣T∣→A {A = A} s (term f ts) = A ⟦ f ⟧ ⟨$⟩ (mapV ∣T∣→A ts)
+  ∣h∣→A : ∀ {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
+  ∣h∣→A (term f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (mapV ∣h∣→A ts)
 \end{spec}
 
-\noindent However the termination checker of Agda can't ensure the termination.
-We solve this defining two mutually recursive functions:
+\noindent The termination checker, however, cannot ensure the
+termination; so we define two mutually recursive functions, one
+mappings terms to elements of $\mathcal{A}$ and the other mapping
+vectors of terms to vectors of $\mathcal{A}$, of course respecting
+the sorts.
+%if False
+\begin{code}
+module InitHomo {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} {Σ : Signature} (A : Algebra {ℓ₃} {ℓ₄} Σ) where
+  open TermAlgebra Σ
+  open Hom |T| A
+  open Homo
+  open EqHomo Σ {|T|} {A}
+\end{code}
+%endif
+\begin{code}
+  mutual
+    ∣h∣→A : {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
+    ∣h∣→A (term f ⟨⟩) = A ⟦ f ⟧ₒ ⟨$⟩ ⟨⟩
+    ∣h∣→A (term f (t ▹ ts)) = A ⟦ f ⟧ₒ ⟨$⟩ (∣h∣→A t ▹ map|h|→A ts)
 
-\begin{spec}
-mutual
-  ∣T∣→A : ∀ {Σ} {A : Algebra Σ} (s : sorts Σ) → HU Σ s → Carrier (A ⟦ s ⟧ₛ)
-  ∣T∣→A {A = A} s (term {[]} f ⟨⟩) = A ⟦ f ⟧ ⟨$⟩ ⟨⟩
-  ∣T∣→A {A = A} s (term {s₀ ∷ _} f (t₀ ▹ ts)) =
-                 A ⟦ f ⟧ ⟨$⟩ (∣T∣→A s₀ t₀) ▹ map∣T∣→A ts
+    map|h|→A : ∀ {ar} → |T| ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
+    map|h|→A ⟨⟩ = ⟨⟩
+    map|h|→A {s ∷ _} (t ▹ ts) = ∣h∣→A t ▹ map|h|→A ts
+\end{code}
+It is trivial to show that |∣h∣→A| respects the (trivial) equality on
+terms and also satisfies the homomorphism condition.
+\begin{code}
+  |h|A : Homo
+  |h|A = record  { ′_′  = λ s → record 
+                   {_⟨$⟩_ = ∣h∣→A {s} ; cong  = {!!}}
+                 ; cond = {!!}}
+\end{code}
+%if False
+\begin{code}
+  map|T|→A≡mapV : ∀ {ar} {ts : |T| ⟦ ar ⟧ₛ* } →
+                map|h|→A ts ≡ mapV (λ s → ∣h∣→A {s}) ts
+  map|T|→A≡mapV {ar = []} {⟨⟩} = PE.refl
+  map|T|→A≡mapV {s ∷ ar} {t ▹ ts} =
+                 PE.cong (λ ts' → ∣h∣→A t ▹ ts') map|T|→A≡mapV
+      
+  ≡to≈ : ∀ {ℓ₁} {ℓ₂} {St : Setoid ℓ₁ ℓ₂} {x y : Carrier St} →
+     x ≡ y → _≈_ St x y
+  ≡to≈ {St = St} PE.refl = Setoid.refl St
+
+  congfun : ∀ {s} {t₁ t₂ : HU s} →
+                  t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) (∣h∣→A t₁) (∣h∣→A t₂)
+  congfun {s} t₁≡t₂ = ≡to≈ {St = A ⟦ s ⟧ₛ} (PE.cong ∣h∣→A t₁≡t₂)
+  fun|T|ₕ : |T| Hom.⟿ A
+  fun|T|ₕ s = record { _⟨$⟩_ = ∣h∣→A {s} ; cong  = congfun}
+  |T|ₕcond : ∀ {ty} (f : ops Σ ty) → homCond ty fun|T|ₕ f
+  |T|ₕcond {_ ⇒ s} f ⟨⟩ = ≡to≈ {St = A ⟦ s ⟧ₛ} PE.refl
+  |T|ₕcond {_ ⇒ s} f (t ▹ ts) =
+           ≡to≈ {St = A ⟦ s ⟧ₛ}
+                (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩ (∣h∣→A t ▹ ts'))
+                         map|T|→A≡mapV)
 
 
-  map∣T∣→A :  ∀ {Σ} {A : Algebra Σ} {ar : Arity Σ} →
-              VecH (sorts Σ) (HU Σ) ar →
-              VecH (sorts Σ) (Carrier ∘ _⟦_⟧ₛ A) ar
-  map∣T∣→A {ar = []} ⟨⟩ = ⟨⟩
-  map∣T∣→A {ar = s₁ ∷ _} (t₁ ▹ ts₁) = ∣T∣→A s₁ t₁ ▹ map∣T∣→A ts₁
-\end{spec}
+  |h'|A : Homo
+  |h'|A = record { ′_′  = fun|T|ₕ
+                 ; cond = |T|ₕcond }
+  import Relation.Binary.EqReasoning as EqR
+\end{code}
+%endif
 
-\noindent Now, the termination checker accepts the definition.
+In order to complete the proof of initiality, it only remains to prove
+that any pair of homomorphisms $H,G \colon \mathcal{T} \to
+\mathcal{A}$ are equal; \ie if for any term $f(t_0,\ldots,t_{n-1})$,
+$H\,f(t_0,\ldots,t_{n-1}) ≈ f(t_0,\ldots,t_{n-1})$. 
+\begin{code}
+  total : Total _≈ₕ_
+  total H G s (term {ar = ar} f ts) = 
+            begin
+              ′ H ′ s ⟨$⟩ term f ts
+                ≈⟨ cond H f ts ⟩
+              A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ′ H ′ ts)
+                ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ ar ts) ⟩
+              A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ′ G ′ ts)
+                ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond G f ts) ⟩ 
+              ′ G ′ s ⟨$⟩ term f ts
+            ∎
+\end{code}
+\noindent In that proof we used the facilities for equational
+reasoning provided by the standard library. We omit the proof
+|map≈| showing |map H ts ≈ map G ts|.
+%if False
+\begin{code}
+    where open EqR (A ⟦ s ⟧ₛ)
+          map≈ : (ar : Arity Σ) → (ts : VecH (sorts Σ) (HU) ar) →
+                  (mapV (_⟨$⟩_ ∘ ′ H ′) ts) ∼v
+                  (mapV (_⟨$⟩_ ∘ ′ G ′) ts)
+          map≈ [] ⟨⟩ = ∼⟨⟩
+          map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (total H G s t)
+                                      (map≈ ar ts)
 
-With the function |∣T∣→A| we can define the homomorphism from the
-term algebra to any other algebra:
+  tinit : Unique _≈ₕ_
+  tinit = |h'|A , total
+\end{code}
+%endif
 
-\begin{spec}
-∣T∣ₕ : ∀ {Σ} → (A : Algebra Σ) → Homomorphism (∣T∣ Σ) A
-∣T∣ₕ A = record  { ′_′  = record  { _⟨$⟩_ = ∣T∣→A
-                                  ; cong  = ...}
-                 ; cond = ...}
-\end{spec}
-
-\noindent We don't show the proofs of congruence and condition of homomorphism in this
-text.
-
-By last, it only remains to prove the uniqueness of the homomorphism |∣T∣ₕ|. Given two
-homomorphisms |h₁| and |h₂| from |∣T∣ Σ| to |A|, we must to prove that for each |term f ts : HU Σ s|
-the following holds:
-
-\begin{spec}
-    ′ h₁ ′ s ⟨$⟩ term f ts
-    ≈ₛ
-    ′ h₂ ′ s ⟨$⟩ term f ts
-\end{spec}
-
-\noindent where |≈ₛ| is the equivalence relation of the interpretation of sort |s|
-in |A|, i.e., |_≈_ A ⟦ s ⟧ₛ|.
-
-Let's define the proof on Agda:
-
-\begin{spec}
-uni :  (h₁ : Homomorphism (∣T∣ Σ) A) →
-       (h₂ : Homomorphism (∣T∣ Σ) A) →
-       (s : sorts Σ) → (t₁ t₂ : HU Σ s) → t₁ ≡ t₂ →
-       _≈_ (A ⟦ s ⟧ₛ) (′ h₁ ′ s ⟨$⟩ t₁) (′ h₂ ′ s ⟨$⟩ t₂)
-uni h₁ h₂ s (term {ar} f ts) ._ refl =
-                          begin
-                            ′ h₁ ′ s ⟨$⟩ term f ts
-                              ≈⟨ cond h₁ f ts ⟩
-                            A ⟦ f ⟧ ⟨$⟩ (map⟿ ′ h₁ ′ ts)
-                              ≈⟨ Π.cong (A ⟦ f ⟧) (mapV≡ ar ts) ⟩
-                            A ⟦ f ⟧ ⟨$⟩ (map⟿ ′ h₂ ′ ts)
-                              ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond h₂ f ts) ⟩ 
-                            ′ h₂ ′ s ⟨$⟩ term f ts
-                          ∎
-                  where  mapV≡ :  (ar : Arity Σ) → (ts₀ : VecH (sorts Σ) (HU Σ) ar) →
-                                 (mapV (_⟨$⟩_ ∘ ′ h₁ ′) ts₀) ∼v
-                                 (mapV (_⟨$⟩_ ∘ ′ h₂ ′) ts₀)
-                         mapV≡ = ...
-\end{spec}
-
-\noindent mapV≡ is the extension of |uni| to vectors, and is mutually recursive with
-this.
 

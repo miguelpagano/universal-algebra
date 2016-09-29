@@ -18,8 +18,15 @@ colorlinks=true,
 urlcolor=blue]{ hyperref }
 %format ⟨⟨ = "\langle\!"
 %format ⟩⟩ = "\!\rangle"
-%format ≈A = "≈_{A}"
-%format ≈B = "≈_{B}"
+%format ≈A = "\ensuremath{≈_{A}}"
+%format ≈B = "\ensuremath{≈_{B}}"
+%format |T| = "\ensuremath{\mathcal{T}}"
+%format ∣h∣→A = "\ensuremath{h_{A}}"
+%format map|h|→A = "\ensuremath{h_{A}^{\ast}}"
+%format |h|A = "\ensuremath{H_{A}}"
+%format |h'|A = "\ensuremath{H_{A}}"
+
+
 %include agda.fmt
 %include unicode.fmt
 

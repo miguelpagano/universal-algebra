@@ -22,7 +22,9 @@ like we have shown in the example on section 4.
 We are currently extending the formalization of universal algebra, defining other concepts
 like congruences, subalgebra and proving theorems. We want to continue defining
 equational calculus and rewriting.
-On the other hand, we are working on other frameworks to develop correct compilers into
+On the other hand, we want to define others examples of translation into the
+algebraic framework that we developed in this work, and we are working
+on other frameworks to develop correct compilers into
 type theory.
 
 

@@ -39,19 +39,17 @@ following the \textit{Handbook of Logic in Computer Science},
 
 module reporte where
 
-open import Relation.Binary hiding (_⇒_;Total)
-open import Level renaming (suc to lsuc ; zero to lzero)
-open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
-open import Data.Product renaming (map to pmap)
-open import Function
-open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid)
-open import Data.Bool
-open import Data.List hiding ([_])
-open import Relation.Binary.PropositionalEquality as PE hiding ([_];isEquivalence)
-open import Data.String hiding (setoid)
-open import Data.Fin hiding (_+_)
+open import Relation.Binary hiding (_⇒_;Total) public
+open import Level renaming (suc to lsuc ; zero to lzero) public
+open import Data.Nat renaming (_⊔_ to _⊔ₙ_) public
+open import Data.Product renaming (map to pmap) public
+open import Function 
+open import Function.Equality using (_⟶_;_⟨$⟩_;Π) renaming (_∘_ to _∘ₛ_) 
+open import Data.List hiding ([_];zip) public
+open import Relation.Binary.PropositionalEquality as PE hiding ([_];isEquivalence;cong) public
+open import Data.String using (String) public
  
-open import VecH
+open import VecH public
 
 open Setoid
 
@@ -120,8 +118,7 @@ Var = String
 \end{code}
 %endif
 \begin{code}
-data Sortsₑ : Set where
-  ExprN : Sortsₑ
+data Sortsₑ : Set where ExprN : Sortsₑ
 
 data Opsₑ : List Sortsₑ × Sortsₑ → Set where
   valN  : (n : ℕ)   → Opsₑ ([] ➜ ExprN)
@@ -240,14 +237,15 @@ pattern ⟨⟨_,_⟩⟩ a b = a ▹ (b ▹ ⟨⟩)
 We use the function |→-setoid| from the standard library that builds
 the setoid we just described.
 \begin{code}
-⟦_⟧ : sorts Σₑ → Setoid _ _
-⟦ _ ⟧ = State →-setoid ℕ
+private 
+  ⟦_⟧ : sorts Σₑ → Setoid _ _
+  ⟦ _ ⟧ = State →-setoid ℕ
 \end{code}
 The interpretation of operations is piecewise-defined according to
 their types. Remember that besides the function, one must provide the
 proof of preservation of equalities; we omit these proofs as they
 are utterly uninteresting.
-\begin{code}
+\begin{spec}
 i : ∀ {ar s} → ops Σₑ (ar ➜ s) → ⟦_⟧ ✳ ar ⟶ ⟦ s ⟧
 i (valN n) = record  { _⟨$⟩_ = λ {⟨⟩ σ → n }
                      ; cong = {!!} }
@@ -255,7 +253,27 @@ i (varN v) = record  { _⟨$⟩_ = λ {⟨⟩ σ → σ v }
                      ; cong = {!!} }
 i plus = record  { _⟨$⟩_ = λ {⟨⟨ f , g ⟩⟩  σ → f σ + g σ}
                  ; cong = {!!}}
+\end{spec}
+%if False
+\begin{code}
+  iₒ : ∀ {ar s} → (f : ops Σₑ (ar ⇒ s)) → ∥ ⟦_⟧ ✳ ar ∥ → ∥ ⟦ s ⟧ ∥
+  iₒ (valN n) ⟨⟩ = λ σ → n
+  iₒ (plus) (v₀ ▹ (v₁ ▹ ⟨⟩)) = λ σ → v₀ σ + v₁ σ
+  iₒ (varN x) ⟨⟩ = λ σ → σ x
+
+  iₚ : ∀ {ar} {s} → (f : ops Σₑ (ar ⇒ s)) →
+           {vs vs' : ∥ ⟦_⟧ ✳ ar ∥ } →
+           _∼v_ {R = _≈_ ∘ ⟦_⟧} vs vs' →
+           _≈_ (⟦  s ⟧) (iₒ f vs) (iₒ f vs')
+  iₚ (valN n) {⟨⟩} ∼⟨⟩ = λ σ → _≡_.refl
+  iₚ plus {v₀ ▹ (v₀' ▹ ⟨⟩)} {v₁ ▹ (v₁' ▹ ⟨⟩)} (∼▹ v₀≈v₁ (∼▹ v₀'≈v₁' ∼⟨⟩)) =
+                           λ σ → cong₂ _+_ (v₀≈v₁ σ) (v₀'≈v₁' σ)
+  iₚ (varN v) {⟨⟩} ∼⟨⟩ = λ σ → _≡_.refl
+
+  i : ∀ {ar s} → ops Σₑ (ar ➜ s) → ⟦_⟧ ✳ ar ⟶ ⟦ s ⟧
+  i f = record  { _⟨$⟩_ = iₒ f ; cong = iₚ f }
 \end{code}
+%endif
 Notice that Agda infers that there are no arguments for nullary
 operators; since |plus| has arity |[ExprN,ExprN]| and we can
 pattern-matching on |⟦_⟧ ✳ [ExprN,ExprN]| and define the
@@ -397,10 +415,10 @@ module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoi
 \end{code}
 We can deduce that |a ≈A a'| implies |f a ≈B g a'| by a simple equational
 reasoning. Moreover, we can prove that |_≈→_| is an equivalence relation.
-\begin{code}
+\begin{spec}
   Equiv≈→ : IsEquivalence (_≈→_)
   Equiv≈→ = {!!}
-\end{code}
+\end{spec}
 %if False
 \begin{code}
   ≈→-preserves-≈ : ∀ a a' f g → f ≈→ g → a ≈A a' → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a')
@@ -413,8 +431,8 @@ reasoning. Moreover, we can prove that |_≈→_| is an equivalence relation.
                                      ∎
     where open import Relation.Binary.SetoidReasoning 
     
-  Equiv≈→' : IsEquivalence (_≈→_)
-  Equiv≈→' = record { refl = λ {f} → isRefl {f}
+  Equiv≈→ : IsEquivalence (_≈→_)
+  Equiv≈→ = record { refl = λ {f} → isRefl {f}
                                     ; sym = λ {f} {g} prf → isSym {f} {g} prf
                                     ; trans = λ {f} {g} {h} p q → isTrans {f} {g} {h} p q }
     where isRefl : Reflexive (_≈→_)
@@ -445,16 +463,16 @@ module EqHomo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} Σ {A : Algebra {ℓ₁} {ℓ₂} Σ
 
 The relation |_≈ₕ_| is an equivalence relation, which easily follows from
 |_≈→_| being an equivalence.
-\begin{code}
+\begin{spec}
   equiv≈ₕ : IsEquivalence _≈ₕ_
   equiv≈ₕ = {!!}
-\end{code}
+\end{spec}
 %if False
 \begin{code}
   ≈A→B : (s : sorts Σ) → IsEquivalence (_≈→_ {A = A ⟦ s ⟧ₛ} {B = B ⟦ s ⟧ₛ})
-  ≈A→B s = Equiv≈→' {A = A ⟦ s ⟧ₛ} {B = B ⟦ s ⟧ₛ}
-  equiv≈ₕ' : IsEquivalence _≈ₕ_
-  equiv≈ₕ' = record { refl = λ {h} s a → ref (≈A→B s)  {′ h ′ s} a
+  ≈A→B s = Equiv≈→ {A = A ⟦ s ⟧ₛ} {B = B ⟦ s ⟧ₛ}
+  equiv≈ₕ : IsEquivalence _≈ₕ_
+  equiv≈ₕ = record { refl = λ {h} s a → ref (≈A→B s)  {′ h ′ s} a
                    ; sym = λ {h} {g} eq s a → symm (≈A→B s) {′ h ′ s} {′ g ′ s} (eq s) a
                    ; trans = λ {f} {g} {h} eq eq' s a →
                            tran (≈A→B s) {′ f ′ s} {′ g ′ s} {′ h ′ s} (eq s) (eq' s) a }
@@ -527,29 +545,38 @@ setoid, thus completing the interpretation of sorts. To interpret
 an operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the
 tuple $⟨t_1,\ldots,t_n⟩$ to $f(t_1,\ldots,t_n)$; we omit the proof
 of |cong|.
-\begin{code}
+\begin{spec}
   |T| : Algebra Σ
   |T| = record  { _⟦_⟧ₛ = setoid ∘ HU
                 ; _⟦_⟧ₒ = λ f → record
                   { _⟨$⟩_ = term f ; cong = {!!}}
                 }
-\end{code}
+\end{spec}
 %if False
 \begin{code}
-  ∣T∣' : Algebra Σ
-  ∣T∣' = record  { _⟦_⟧ₛ = setoid ∘ HU
+  |T| : Algebra Σ
+  |T| = record  { _⟦_⟧ₛ = setoid ∘ HU
                 ; _⟦_⟧ₒ  = ∣_|ₒ
                 }
-    where ∣_|ₒ : ∀ {ar s} → ops Σ (ar ⇒ s) → (setoid ∘ HU) ✳ ar ⟶ (setoid ∘ HU) s
-          ∣ f |ₒ = record  { _⟨$⟩_ = term f
-                          ; cong = λ x → {!!}
+    where ≡vec : ∀ {ar}  → (ts₁ ts₂ : VecH _ HU ar) →
+                   _∼v_ {R = λ _ → _≡_} ts₁ ts₂ →
+                   ts₁ ≡ ts₂
+          ≡vec ⟨⟩ ⟨⟩ ≈⟨⟩ = PE.refl
+          ≡vec (t ▹ ts₁) (.t ▹ ts₂) (∼▹ PE.refl ts₁≈ts₂) =
+                                    PE.cong (λ ts → t ▹ ts) (≡vec ts₁ ts₂ ts₁≈ts₂)
+          fcong : ∀ {ar s} {f : ops Σ (ar ⇒ s)} →
+                              (ts₁ ts₂ : VecH _ HU ar) →
+                             _∼v_ {R = λ s₀ → _≡_} ts₁ ts₂ →
+                             term f ts₁ ≡ term f ts₂
+          fcong {f = f} ts₁ ts₂ ts₁≈ts₂ = PE.cong (term f) (≡vec ts₁ ts₂ ts₁≈ts₂)
+          ∣_|ₒ  : ∀ {ar s} → ops Σ (ar ⇒ s) → (setoid ∘ HU) ✳ ar ⟶ (setoid ∘ HU) s
+          ∣ f |ₒ = record { _⟨$⟩_ = term f
+                          ; cong = λ {ts₁} {ts₂} ts₁≈ts₂ → fcong ts₁ ts₂ ts₁≈ts₂
                           }
+                          
 \end{code}
 %endif
-
-%\subsection*{The term algebra is initial}
-
-Now we turn to prove that the term algebra is initial; so for any
+\noindent Now we turn to prove that the term algebra is initial; so for any
 $\Sigma$-algebra $\mathcal{A}$ we define the homomorphism $h_A \colon
 \mathcal{T} \to \mathcal{A}$ \[
   h_A (f(t_1,\ldots,t_n)) = f_{\mathcal{A}}\,(h_A\,t_1,...,h_A\,t_n) \enspace .
@@ -577,21 +604,21 @@ module InitHomo {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} {Σ : Signature} (A : Alge
 \begin{code}
   mutual
     ∣h∣→A : {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
-    ∣h∣→A (term f ⟨⟩) = A ⟦ f ⟧ₒ ⟨$⟩ ⟨⟩
-    ∣h∣→A (term f (t ▹ ts)) = A ⟦ f ⟧ₒ ⟨$⟩ (∣h∣→A t ▹ map|h|→A ts)
+    ∣h∣→A (term f ⟨⟩)         =   A ⟦ f ⟧ₒ ⟨$⟩ ⟨⟩
+    ∣h∣→A (term f (t ▹ ts))   =   A ⟦ f ⟧ₒ ⟨$⟩ (∣h∣→A t ▹ map|h|→A ts)
 
     map|h|→A : ∀ {ar} → |T| ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
     map|h|→A ⟨⟩ = ⟨⟩
-    map|h|→A {s ∷ _} (t ▹ ts) = ∣h∣→A t ▹ map|h|→A ts
+    map|h|→A (t ▹ ts) = ∣h∣→A t ▹ map|h|→A ts
 \end{code}
 It is trivial to show that |∣h∣→A| respects the (trivial) equality on
 terms and also satisfies the homomorphism condition.
-\begin{code}
+\begin{spec}
   |h|A : Homo
   |h|A = record  { ′_′  = λ s → record 
                    {_⟨$⟩_ = ∣h∣→A {s} ; cong  = {!!}}
                  ; cond = {!!}}
-\end{code}
+\end{spec}
 %if False
 \begin{code}
   map|T|→A≡mapV : ∀ {ar} {ts : |T| ⟦ ar ⟧ₛ* } →
@@ -617,17 +644,17 @@ terms and also satisfies the homomorphism condition.
                          map|T|→A≡mapV)
 
 
-  |h'|A : Homo
-  |h'|A = record { ′_′  = fun|T|ₕ
+  |h|A : Homo
+  |h|A = record { ′_′  = fun|T|ₕ
                  ; cond = |T|ₕcond }
   import Relation.Binary.EqReasoning as EqR
 \end{code}
 %endif
 
-In order to complete the proof of initiality, it only remains to prove
-that any pair of homomorphisms $H,G \colon \mathcal{T} \to
-\mathcal{A}$ are equal; \ie if for any term $f(t_0,\ldots,t_{n-1})$,
-$H\,f(t_0,\ldots,t_{n-1}) ≈ f(t_0,\ldots,t_{n-1})$. 
+The proof of initiality is finished once we prove that any pair of
+homomorphisms $H,G \colon \mathcal{T} \to \mathcal{A}$ are equal; \ie
+$H\,f(t_0,\ldots,t_{n-1}) ≈ f(t_0,\ldots,t_{n-1})$, for any term
+$f(t_0,\ldots,t_{n-1})$.
 \begin{code}
   total : Total _≈ₕ_
   total H G s (term {ar = ar} f ts) = 
@@ -655,8 +682,6 @@ reasoning provided by the standard library. We omit the proof
                                       (map≈ ar ts)
 
   tinit : Unique _≈ₕ_
-  tinit = |h'|A , total
+  tinit = |h|A , total
 \end{code}
 %endif
-
-

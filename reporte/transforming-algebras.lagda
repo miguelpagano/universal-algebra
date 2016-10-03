@@ -1,77 +1,93 @@
+%if False
+\begin{code}
+module reporte.transforming-algebras where
+open import reporte.univ-alg
+\end{code}
+%endif
 \section{Algebra transformation}
 \label{sec:trans}
 
-With all definitions formalized in the previous section we can define signatures
-for the languages source, and the semantics are obtained by initiality, interpreting
-sorts and function symbols.
+With our formalization thus far, the source language is given by the
+term algebra of the signature $\Sigma_e$ and, parallely, the target 
+language is the term algebra of the following signature:
+\begin{code}
+data Sortsₘ : Set where Code : Sortsₘ
 
-The main aspect of algebraic approach to correct translation is being able to
-conceive both languages, source and target, as algebras of source signature.
+data Opsₘ : List Sortsₘ × Sortsₘ → Set where
+  pushₘ  : (n : ℕ) → Opsₘ ([] ⇒ Code)
+  loadₘ  : (v : Var) → Opsₘ ([] ⇒ Code)
+  addₘ   : Opsₘ ([] ⇒ Code)
+  seqₘ   : Opsₘ ([ Code , Code ] ⇒ Code)
 
-Let's consider an example to introduce the ideas. We have languages $Expr$ and
-$Code$ defined by the following signatures:
+Σₘ : Signature
+Σₘ = ⟨ Sortsₘ , Opsₘ ⟩
+\end{code}
+ 
+The main aspect of the algebraic approach to correct translation is to
+conceive both languages as algebras of the source signature. We could
+define a $\Sigma_e$-algebra $\widehat{\mathcal{T}_m}$ where the interpretation of
+sort $E$ is the set of terms of the term algebra $\mathcal{T}_m$ and the
+interpretation of operations is defined in the following way:
+%if False
+\begin{code}
+open TermAlgebra Σₘ renaming (|T| to |Tc|)
+open Algebra
+open Signature
+push : ℕ → HU Code 
+push n = term (pushₘ n) ⟨⟩
+load : Var → HU Code
+load v = term (loadₘ v) ⟨⟩
+seq : HU Code → HU Code → HU Code
+seq c₀ c₁ = term seqₘ (c₀  ▹ (c₁ ▹ ⟨⟩))
+add : HU Code
+add = term addₘ ⟨⟩
+\end{code}
+%endif
+\begin{code}
+⟦_⟧ : Sortsₑ → Setoid _ _
+⟦ _ ⟧ = |Tc| ⟦ Code ⟧ₛ
 
-\begin{itemize}
+iₒ : ∀ {ar s} → (ops Σₑ (ar ⇒ s)) → ∥ ⟦_⟧ ✳ ar ∥ → ∥ ⟦ s ⟧ ∥
+iₒ (valN n) ⟨⟩ = push n
+iₒ (varN x) ⟨⟩ = load x
+iₒ (plus) ⟨⟨ c₀ , c₁ ⟩⟩ = seq c₀ (seq c₁ add)
 
-\item $\Sigma_e$, with a sort $E$ and operations:
-  \begin{itemize}
-    \item For each $n \in \mathbb{N}$, $val\,n$, with type $[] \rightarrow E$.
-    \item For each $v \in Var$, $var\,v$, with type $[] \rightarrow E$.
-    \item $plus$, with type $[E , E] \rightarrow E$.
-  \end{itemize}
-\item $\Sigma_m$, with a sort $C$ and operations:
-  \begin{itemize}
-    \item For each $n \in \mathbb{N}$, $push\,n$, with type $[] \rightarrow C$.
-    \item For each $v \in Var$, $load\,v$, with type $[] \rightarrow C$.
-    \item $seq$, with type $[C , C] \rightarrow C$.
-    \item $add$, with type $[] \rightarrow C$.
-  \end{itemize}
-\end{itemize}  
+→a : Algebra Σₘ → Algebra Σₑ
+→a ⟪ is , io ⟫ = ⟪ (λ x → ⟦ x ⟧) , (λ f → record { _⟨$⟩_ = iₒ f ; cong = {!!} }) ⟫
+\end{code}
 
-The semantics can be defined by algebras, say $Sem$ and $Exec$, of each signature respectively and
-there are unique homomorphisms from the term algebras to each one: $h_{sem} : T(\Sigma_e) \rightarrow Sem$,
-$h_{exec} : T(\Sigma_m) \rightarrow Exec$. 
+% The semantics can be defined by algebras, say $Sem$ and $Exec$, of each signature respectively and
+% there are unique homomorphisms from the term algebras to each one: $h_{sem} : T(\Sigma_e) \rightarrow Sem$,
+% $h_{exec} : T(\Sigma_m) \rightarrow Exec$. 
 
-\begin{center}
-  \begin{tikzpicture}[>=latex]
-    \node (te) at (0,2) {$T_e$}; 
-    \node (tc) at (4,2) {$T_c$}; 
-    \node (seme) at (0,0) {$\mathit{Sem}$} ; 
-    \node (semc) at (4,0) {$\mathit{Exec}$} ; 
-    \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
-    \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\mathit{hexec}$} (semc);
-  \end{tikzpicture}
-\end{center}
+% \begin{center}
+%   \begin{tikzpicture}[>=latex]
+%     \node (te) at (0,2) {$T_e$}; 
+%     \node (tc) at (4,2) {$T_c$}; 
+%     \node (seme) at (0,0) {$\mathit{Sem}$} ; 
+%     \node (semc) at (4,0) {$\mathit{Exec}$} ; 
+%     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
+%     \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\mathit{hexec}$} (semc);
+%   \end{tikzpicture}
+% \end{center}
 
-%\begin{diagram}
-%  T_(\Sigma_e)     &     &   &  &    &T_(\Sigma_m)\\
-%  \dTo_{hSem}  &     &   &  &   &\dTo_{hExec}\\
-%  Sem         &     &   &  &    &Exec\\
-%\end{diagram}
 
-We could define a $\Sigma_e$-algebra $\hat{T_m}$ where the interpretation of sort $E$ is the
-set of terms of the term algebra $T(\Sigma_m)$ and the interpretation of operations is defined
-in the following way:
 
-\begin{itemize}
-  \item $val_{T_m\sim}\,n$ $=$ $push\,n$, for each $n \in \mathbb{N}$.
-  \item $var_{T_m\sim}$  $=$ $load\,v$, for each $v \in Var$.
-  \item $plus_{T_m\sim}\,c_1\,c_2$ $=$ $seq\,c_1\,(seq\,c_2\,add)$.
-\end{itemize}
+% \noindent and we could define a $\Sigma_e$-algebra $\hat{Exec}$:
 
-\noindent and we could define a $\Sigma_e$-algebra $\hat{Exec}$:
+% \begin{itemize}
+%   \item $val_{Exec\sim}\,n$ $=$ $push_{Exec}\,n$, for each $n \in \mathbb{N}$.
+%   \item $var_{Exec\sim}$  $=$ $load_{Exec}\,v$, for each $v \in Var$.
+%   \item $plus_{Exec\sim}\,c_1\,c_2$ $=$ $seq_{Exec}\,c_1\,(seq\,c_2\,add_{Exec})$.
+% \end{itemize}
 
-\begin{itemize}
-  \item $val_{Exec\sim}\,n$ $=$ $push_{Exec}\,n$, for each $n \in \mathbb{N}$.
-  \item $var_{Exec\sim}$  $=$ $load_{Exec}\,v$, for each $v \in Var$.
-  \item $plus_{Exec\sim}\,c_1\,c_2$ $=$ $seq_{Exec}\,c_1\,(seq\,c_2\,add_{Exec})$.
-\end{itemize}
-
-Indeed, we can define any $\Sigma_e$-algebra $\hat{\mathcal{A}}$ from a $\Sigma_m$-algebra
-$\mathcal{A}$: The interpretation of sort $E$ is $C_{\mathcal{A}}$. Operation
-$val\,n$ is interpreted with $(push\,n)_{\mathcal{A}}$, symbol $var\,v$ with $(load\,v)_{\mathcal{A}}$
-and $plus$ with a function that takes two elements $a_1, a_2 \in C_{\mathcal{A}}$ and
-returns $seq_{\mathcal{A}}\,a_1\,(seq_{\mathcal{A}}\,a_2\,add_{\mathcal{A}})$.
+Indeed, from any $\Sigma_m$-algebra $\mathcal{A}$, we can define a
+$\Sigma_e$-algebra $\hat{\mathcal{A}}$ : the sort
+|ExprN| is interpreted as $\mathcal{A}\!\!$ |⟦ Code ⟧|. Operation $val\,n$ is interpreted with
+$(push\,n)_{\mathcal{A}}$, symbol $var\,v$ with
+$(load\,v)_{\mathcal{A}}$ and $plus$ with a function that takes two
+elements $a_1, a_2 \in C_{\mathcal{A}}$ and returns
+$seq_{\mathcal{A}}\,a_1\,(seq_{\mathcal{A}}\,a_2\,add_{\mathcal{A}})$.
 
 So, we can transform a $\Sigma_m$-algebra to a $\Sigma_e$-algebra if we have
 a translation of sorts of $\Sigma_e$ in sorts of $\Sigma_m$, and rules for interpreting

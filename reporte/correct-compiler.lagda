@@ -21,6 +21,7 @@ urlcolor=blue]{ hyperref }
 %format ≈A = "\ensuremath{≈_{A}}"
 %format ≈B = "\ensuremath{≈_{B}}"
 %format |T| = "\ensuremath{\mathcal{T}}"
+%format |Tc| = "\ensuremath{\mathcal{T}_m}"
 %format ∣h∣→A = "\ensuremath{h_{A}}"
 %format map|h|→A = "\ensuremath{h_{A}^{\ast}}"
 %format |h|A = "\ensuremath{H_{A}}"
@@ -63,17 +64,27 @@ urlcolor=blue]{ hyperref }
 \authorinfo{Miguel Pagano}
            {FaMAF, UNC}
            {pagano@@famaf.unc.edu.ar}
+\authorinfo{Alejandro Gadea}
+           {FaMAF, UNC - CONICET}
+           {gadea@@famaf.unc.edu.ar}
 
 \maketitle
 
 \begin{abstract}
   An interesting approach to construct correct compilers is given by
-  the framework of heterogeneous universal agebras. In this work, we
-  formalize in Agda enough universal algebra to get translations from
-  one language to another and prove the correctness of the compilation
-  by relating semantics of the source and target languages. As far as
-  we know, this is the first formalization in type-theory of the
-  concept of \emph{derived signature morphism}.
+  the framework of heterogeneous universal algebras. Although this is a
+  fairly old approach, we could not find any formalization in type
+  theory of this methodology.  Indeed, there seems that universal
+  algebra did not attracted a lot of attention in type theory.
+ 
+  In this work, we formalize in Agda enough universal algebra in order
+  to define languages and their semantics via initial algebra
+  semantics. The key notion to get a correct compiler within this
+  approach is to be able to translate algebras of the target signature
+  to the source signature. This concept is known as \emph{derived
+  signature morphism}, and as far as we know, this is the first
+  formalization in type-theory of it.
+
 \end{abstract}
 
 \category{CR-number}{subcategory}{third-level}

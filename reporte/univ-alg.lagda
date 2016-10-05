@@ -43,10 +43,10 @@ open import Relation.Binary hiding (_⇒_;Total) public
 open import Level renaming (suc to lsuc ; zero to lzero) public
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_) public
 open import Data.Product renaming (map to pmap) public
-open import Function 
-open import Function.Equality using (_⟶_;_⟨$⟩_;Π) renaming (_∘_ to _∘ₛ_) 
+open import Function public 
+open import Function.Equality using (_⟶_;_⟨$⟩_;Π) renaming (_∘_ to _∘ₛ_)  public
 open import Data.List hiding ([_];zip) public
-open import Relation.Binary.PropositionalEquality as PE hiding ([_];isEquivalence;cong) public
+open import Relation.Binary.PropositionalEquality as PE hiding ([_];isEquivalence) public
 open import Data.String using (String) public
  
 open import VecH public

@@ -48,7 +48,7 @@ add = term addₘ ⟨⟩
 ⟦_⟧ : Sortsₑ → Setoid _ _
 ⟦ _ ⟧ = |Tc| ⟦ Code ⟧ₛ
 
-iₒ : ∀ {ar s} → (ops Σₑ (ar ⇒ s)) → ∥ ⟦_⟧ ✳ ar ∥ → ∥ ⟦ s ⟧ ∥
+iₒ : ∀ {ar s} → ops Σₑ (ar ⇒ s) → ∥ ⟦_⟧ ✳ ar ∥ → ∥ ⟦ s ⟧ ∥
 iₒ (valN n) ⟨⟩ = push n
 iₒ (varN x) ⟨⟩ = load x
 iₒ (plus) ⟨⟨ c₀ , c₁ ⟩⟩ = seq c₀ (seq c₁ add)
@@ -65,362 +65,218 @@ iₚ plus {v₀ ▹ (v₀' ▹ ⟨⟩)} {v₁ ▹ (v₁' ▹ ⟨⟩)} (∼▹ v�
 iₚ (varN v) {⟨⟩} ∼⟨⟩ =  refl
 \end{code}
 %endif
-% The semantics can be defined by algebras, say $Sem$ and $Exec$, of each signature respectively and
-% there are unique homomorphisms from the term algebras to each one: $h_{sem} : T(\Sigma_e) \rightarrow Sem$,
-% $h_{exec} : T(\Sigma_m) \rightarrow Exec$. 
-
-% \begin{center}
-%   \begin{tikzpicture}[>=latex]
-%     \node (te) at (0,2) {$T_e$}; 
-%     \node (tc) at (4,2) {$T_c$}; 
-%     \node (seme) at (0,0) {$\mathit{Sem}$} ; 
-%     \node (semc) at (4,0) {$\mathit{Exec}$} ; 
-%     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
-%     \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\mathit{hexec}$} (semc);
-%   \end{tikzpicture}
-% \end{center}
-
-
-
-% \noindent and we could define a $\Sigma_e$-algebra $\hat{Exec}$:
-
-% \begin{itemize}
-%   \item $val_{Exec\sim}\,n$ $=$ $push_{Exec}\,n$, for each $n \in \mathbb{N}$.
-%   \item $var_{Exec\sim}$  $=$ $load_{Exec}\,v$, for each $v \in Var$.
-%   \item $plus_{Exec\sim}\,c_1\,c_2$ $=$ $seq_{Exec}\,c_1\,(seq\,c_2\,add_{Exec})$.
-% \end{itemize}
+\newcommand{\mapSort}[1]{\widehat{#1}}
+\newcommand{\mapOp}[1]{\widehat{#1}}
+\newcommand{\sdash}[1]{\vdash\!\!\!\!^{#1}}
 
 Notice that turning $\mathcal{T}_m$ into a $\Sigma_e$-algebra is not
 enough to transform any $\Sigma_m$-algebra, say $\mathcal{A}$ into a
-$\Sigma_e$-algebra, because terms are not formal words that can be
-interpreted further. To be precise, |c₀| and |c₁| in the third clause
+$\Sigma_e$-algebra, because terms are not formal words that can be further
+interpreted. To be precise, |c₀| and |c₁| in the third clause
 of |iₒ| are meta-variables ranging over terms and not object variables
 that could be later interpreted as projections.
-\newcommand{\mapSort}[1]{\widehat{#1}}
-\newcommand{\mapOp}[1]{\llcorner #1 \rrcorner}
-
-This can be solved by introducing a notion of \textit{formal terms}
-which are formal composition of variables and operations. We introduce
-a typing system ensuring the well-formedness of terms, where the
-contexts are arities, \ie lists of sorts, and refer to variables by
-positions (in the spirit of Benton). The typing rules for formal terms
+%TODO: esta construcción se parece a otras en la literatura:
+% buscar cuáles y citarlas, al menos decir que no es nada nuevo.
+This can be solved by introducing a notion of \textit{formal terms},
+relative to a signature, which are formal composition of variables and
+operations. We introduce a typing system ensuring the well-formedness
+of terms, where the contexts are arities, \ie lists of sorts, and
+refer to variables by positions. The typing rules for formal terms
 are:
-\[\inferrule[(var)]{ }{[s_{1},\ldots,s_{n}] \vdash \sharp i : s_i}\]
-\[
-\inferrule[(op)]{f : [s_0,...,s_{n-1}] \Rightarrow s\ \ \ \mathit{ar} \vdash t_0 : s_0\ \cdots\ \ \ \mathit{ar} \vdash t_{n-1} : s_{n-1} }
-{\mathit{ar} \vdash f\,(t_0,...,t_{n-1}) : s}
-\]
+\begin{gather*}
+\inferrule[(var)]{ }{[s_{1},\ldots,s_{n}] \sdash{\Sigma} \sharp i : s_i}\\
+\inferrule[(op)]{f : [s_1,...,s_{n}] \Rightarrow_{\Sigma} s\ \ \ 
+  \mathit{ar} \sdash{\Sigma} t_1 : s_1\ \cdots\ \ \ 
+  \mathit{ar} \sdash{\Sigma} t_{n} : s_{n} }
+{\mathit{ar} \sdash{\Sigma} f\,(t_1,...,t_{n}) : s}
+\end{gather*}
+This typing system can be formalized as an inductive family parameterized
+by arities and indexed by sorts. 
+%if False
+\begin{code}
+open import Data.Fin
+module FormalTerm (Σ : Signature) where
+\end{code}
+%endif
+\begin{code}
+ data _⊢_  (ar' : Arity Σ) : (sorts Σ) → Set where
+   var      : (n : Fin (length ar')) → ar' ⊢ (ar' ‼ n)
+   op  : ∀ {ar s} → ops Σ (ar ⇒ s) → 
+               Vec (ar' ⊢_) ar → ar' ⊢ s
+\end{code}
+A formal term $\mathit{ar} \sdash{\Sigma} t : s$ can be interpreted
+in any $\Sigma$-algebra as a function from |⟦ ar ⟧ₛ*| to  |⟦ s ⟧ₛ|;
+In fact, this function respects the equivalence relation of the setoid,
+being |congᵒ| the name of that proof. 
+%if False
+\begin{code}
+module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) where
+ open FormalTerm Σ
+ open Algebra
+ mutual
+\end{code}
+%endif
+\begin{code}
+  ⟦_⟧ᵒ : ∀ {ar s} → ar ⊢ s → ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ A ⟦ s ⟧ₛ ∥
+  ⟦ var n ⟧ᵒ    as =  as ‼v n
+  ⟦ op f ts ⟧ᵒ  as = A ⟦ f ⟧ₒ ⟨$⟩ ⟦ ts ⟧ᵒ* as
+\end{code}
+%if False
+\begin{code}
+  ⟦_⟧ᵒ* : ∀ {ar ar'} → Vec (ar ⊢_) ar' → ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ A ⟦ ar' ⟧ₛ* ∥
+  ⟦ ⟨⟩ ⟧ᵒ*      as = ⟨⟩
+  ⟦ t ▹ ts ⟧ᵒ*  as = ⟦ t ⟧ᵒ as ▹ ⟦ ts ⟧ᵒ*  as
 
+ mutual
+  congᵒ : ∀ {ar s} {vs vs' : ∥ A ⟦ ar ⟧ₛ* ∥ } →
+            (t : ar ⊢ s) →
+            _∼v_  {R = Setoid._≈_ ∘ _⟦_⟧ₛ A} vs vs' →
+            Setoid._≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧ᵒ vs) (⟦ t ⟧ᵒ vs')
+  congᵒ {vs = vs} {vs'} (var n) eq = ~v‼prop vs vs' eq n
+  congᵒ {ar} {_} {vs} {vs'} (op f ts) eq = Π.cong (A ⟦ f ⟧ₒ) (congᵒ* ts)
+    where  congᵒ* : ∀ {ar'} →
+                   (ts : Vec (ar ⊢_) ar') →
+                   (⟦ ts ⟧ᵒ* vs ) ∼v (⟦ ts ⟧ᵒ* vs' )
+           congᵒ* ⟨⟩ = ∼⟨⟩
+           congᵒ* (t ▹ ts) = ∼▹ (congᵒ t eq) (congᵒ* ts)
+\end{code}
+%endif
 
-reading the arity of operations as typing
-contexts; thus, given a map $\mapSort{\_} : \mathit{sorts}\,Σ \to
-\mathit{sorts}\,Σ'$, to translate an operation $f :
-[s_0,\ldots,s_{n-1}] \Rightarrow s$ one should produce a formal
-term $x_0 : \mapSort{s_0},\ldots,x_{n-1} : \mapSort{s_{n-1}} \vdash t:
-\mapSort{s}$, where one can use operations from $\Sigma'$ and
-variables $x_i : \mapSort{s_i}$. 
+We will use this denotation of formal terms to define the translation
+of algebras; however the translation of signatures involves only
+syntacticalities. In fact, it is given by a pair of functions
+$\mapSort{\_} : \mathit{sorts}\,Σ \to \mathit{sorts}\,Σ'$ and
+$\mapOp{\_}$ mapping any operation
+$f : [s_1,\ldots,s_{n}] \Rightarrow s$ to a $\Sigma'$-formal term:
+$ \mapSort{s_1},\ldots, \mapSort{s_{n}} \sdash{\Sigma'} t: \mapSort{s}$.
 
-
-Let $\Sigma_s$ y $\Sigma_t$ be two signatures, a translation $\Sigma_s \rightsquigarrow \Sigma_t$ consists
-of a map of sorts of $\Sigma_s$ in sorts of $\Sigma_m$, and rules for translating function symbols.
-This rules consists of asigning each operation to an \textit{expression} in which can occur function
-symbols of signature $\Sigma_t$, applied according to the arity.
-
-
-
-\begin{itemize}
-  \item Sea $i$, tal que $0 \leq i \leq n$,
-    \begin{center}
-      $\#i \in \Sigma Expr_{s_i}$
-    \end{center}
-  \item Sea $g$ una operación de $\Sigma$ con tipo $[s'_0,...,s'_m] \rightarrow s$, y
-        sean $e_0 \in \Sigma Expr_{s'_0}$ , ... , $e_m \in \Sigma Expr_{s'_m}$,
-        \begin{center}
-          $g\,\$\,(e_0,...,e_m) \in \Sigma Expr_{s}$
-        \end{center}
-\end{itemize}
-  
-Para traducir entonces un símbolo de función $f$ de $\Sigma_s$ con tipo $[s_0,...,s_n] \rightarrow s$,
-damos una $\Sigma Expr$ de la signatura $\Sigma_t$ con aridad $[s_0\rightsquigarrow,...,s_n\rightsquigarrow]$
-(donde cada $s_i\rightsquigarrow$ es el resultado de mapear el sort $s_i$ de acuerdo a la traducción) y sort
-$s\rightsquigarrow$.
-
-Podemos definir en Agda el tipo $\Sigma Expr$:
-
-
-%% Sea |ts : sorts↝|, si tenemos un símbolo de función |f| en |Σₛ| con tipo |([sˢ₁,...,sˢₙ] , s)|, daremos una regla
-%% que permita interpretar al símbolo |f| en un álgebra |A| definida para la signatura |Σₜ|.
-%% La interpretación de |f| es una función que va de un vector |⟨v₁,...,vₙ⟩|, donde cada |vᵢ| pertenece
-%% a la interpretación en |A| del sort |(ts sˢᵢ)|, a un elemento en la interpretación en |A| del sort
-%% |(ts s)|.
-%% Podemos dar una regla que diga cómo definir esta interpretación para cualquier |Σₜ|-álgebra. Al símbolo
-%% |f| lo traducimos a una expresión consistente de combinar símbolos de función de |Σₜ| de manera que respeten
-%% el tipo de |f|. En esta expresión pueden ocurrir referencias a los parámetros de la interpretación de la función
-%% o aplicación de símbolos de función en la signatura target a un vector de expresiones, donde también podrán
-%% ocurrir referencias a parámetros.
-%% Damos una definición recursiva para estas expresiones, que llamamos |ΣExpr|:
-
-\begin{spec}
-data ΣExpr (Σ : Signature) (ar : Arity Σ) : (sorts Σ) → Set where
-  #      : (n : Fin (length ar)) → ΣExpr Σ ar (ar ‼ n)
-  _∣$∣_   : ∀ {ar'} {s} → (f : funcs Σ (ar' , s)) →
-             (es : VecH (sorts Σ) (ΣExpr Σ ar) ar') → ΣExpr Σ ar s
-\end{spec}
-
-Un elemento |e : ΣExpr Σ ar s| será una expresión en la cual pueden ocurrir
-referencias a parámetros correspondiéndose con la aridad |ar| y el sort resultante
-es |s|. La expresión |e| puede ser una referencia al parámetro |i|-ésimo (|# i|), en cuyo
-caso |s| será igual a |(ar ‼ i)|. O puede ser la aplicación de un símbolo de función con alguna aridad
-|ar'| y sort |s|, aplicado a un vector de |ΣExpr|.
-
-La traducción de signaturas la definimos con un record parametrizado en las
-signaturas source y target, conteniendo un campo para la traducción de sorts y
-otro para la traducción de símbolos de función:
-
-\begin{spec}
-record _↝_ (Σₛ : Signature) (Σₜ : Signature) : Set where
-  field
-    ↝ₛ  : sorts Σₛ → sorts Σₜ
-    ↝f : ∀ {ar} {s} →  (f : funcs Σₛ (ar , s)) →
-                       ΣExpr Σₜ (map ↝ₛ ar) (↝ₛ s)
-\end{spec}
-
-
-%%Un ejemplo de |ΣExpr| podría ser el siguiente:
-
-%% \medskip
-%% \noindent Sean
-%% \begin{spec}
-%% Σ : Signature
-
-%% s₁ s₂ s₃ s : sorts Σ
-
-%% ar = s₁ ∷ s₂ ∷ [ s₃ ]
-
-%% ar' = s₂
-
-%% g : funcs Σ (ar' , s)
-%% \end{spec}
-
-%% \noindent Podemos definir:
-
-%% \begin{spec}
-%% e : ΣExpr Σ ar s
-%% e = g ∣$∣ (# (suc zero))
-%% \end{spec}
-
-%% \noindent La expresión |e| representa una regla para definir una interpretación,
-%% la cual consistirá de aplicar la interpretación de la operación |g| al segundo
-%% argumento. Observemos que la única forma posible de escribir estas reglas es con
-%% los tipos correctos.
-
-%%Definamos entonces la traducción de signaturas:
-
-
-%% \noindent Para traducir una signatura debemos definir una traducción de sorts |↝ₛ| y
-%% una traducción de símbolos de función, que consiste en asignar para cada símbolo |f| de
-%% la signatura |Σₛ| con tipo |(ar , s)|, una |ΣExpr| de |Σₜ| donde cada sort es traducido con
-%% la función |↝ₛ|.
-
-\paragraph{Ejemplo}
-
-Veamos un ejemplo de traducción, donde la signatura source corresponde a la lógica proposicional
-con los conectivos ``conjunción'' y ``negación'', la constante ``True'' y variables proposicionales;
-y la signatura target corresponde a la lógica proposicional con
-los conectivos ``disyunción'' y ``negación'', la constante ``False'' y las variables
-proposicionales.
-
+%if False
+\begin{code}
+record _↝_ (Σₛ Σₜ : Signature) : Set where
+ open FormalTerm Σₜ
+ field
+  ↝ₛ : sorts Σₛ → sorts Σₜ
+  ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → map ↝ₛ ar ⊢ ↝ₛ s
+\end{code}
+%endif
 
 \begin{spec}
-data Sₛ : Sorts where
-  bool : Sₛ
-
-data Fₛ : Funcs Sₛ where
-  varₛ   : (v : Var) → Fₛ ([] , bool)
-  trueₛ  : Fₛ ([] , bool)
-  andₛ   : Fₛ (bool ∷ [ bool ] , bool)
-  negₛ   : Fₛ ([ bool ] , bool)
-
-Σₛ : Signature
-Σₛ = record { sorts = Sₛ ; funcs = Fₛ }
+record _↝_ (Σₛ Σₜ : Signature) : Set where
+ field
+  ↝ₛ : sorts Σₛ → sorts Σₜ
+  ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → map ↝ₛ ar ⊢ ↝ₛ s
 \end{spec}
+\newcommand{\intSign}[2]{#1 \leadsto #2}
+\newcommand{\algTrans}[1]{\widetilde{\mathcal{#1}}}
 
-\begin{spec}
-Sₜ : Sorts
-Sₜ = Sₛ
+\paragraph{Translation of Algebras} A signature interpretation
+$\intSign{\Sigma_s}{\Sigma_t}$ induces a translation of
+$\Sigma_t$-algebras as $\Sigma_s$-algebras; notice the contravariance
+of the translation with respect to the interpretation. This is a
+well-known concept in the theory of institutions and
+\citet{sannella2012foundations} use the notion \textit{reduct algebra
+with respect to a derived signature morphism} for a translated algebra
+induced by a signature intepretation.
 
-data Fₜ : Funcs Sₜ where
-  varₜ   : (v : Var) → Fₜ ([] , bool)
-  falseₜ : Fₜ ([] , bool)
-  orₜ    : Fₜ (bool ∷ [ bool ] , bool)
-  negₜ   : Fₜ ([ bool ] , bool)
+Given a signature interpretation $\intSign{\Sigma_s}{\Sigma_t}$ and a
+$\Sigma_t$-algebra $\mathcal{A}$, we denote with $\algTrans{A}$ its
+translation as a $\Sigma_s$-algebra. It is clear that every sort $s$
+of $\Sigma_s$ can be interpreted via the interpretation of the sort:
+$\algTrans{A} \llbracket s \rrbracket_s = \mathcal{A} \llbracket
+\mapSort{s} \rrbracket_s $.  The denotation of an operation $f$ is
+obtained by the interpretation of the corresponding formal expression:
+$\algTrans{A} \llbracket f \rrbracket_o = \mathcal{A} \llbracket
+\mapOp{f}\, \rrbracket^o $. In Agda the first component of the
+translated algebra mimics that definition, however we need to convince
+Agda that any vector |vs : VecH' (A ⟦_⟧ₛ ∘ ↝ₛ) is| has also the type
+|VecH' A (map ↝ₛ is)|, this is accomplished with |reindex|.
 
-Σₜ : Signature
-Σₜ = record { sorts = Sₜ ; funcs = Fₜ }
-\end{spec}
+%if False
+\begin{code}
+module AlgTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} where
+ open _↝_
+\end{code}
+%endif
+\begin{code}
+ _⟨_⟩ₒ :  ∀ {l₀ l₁ ar s} →
+       (A : Algebra {l₀} {l₁} Σₜ) → ops Σₛ (ar ⇒ s) →
+       (A ⟦_⟧ₛ ∘ (↝ₛ i)) ✳ ar ⟶ A ⟦ ↝ₛ i s ⟧ₛ
+ A ⟨ f ⟩ₒ = record {  
+               _⟨$⟩_ = ⟦ ↝ₒ i f ⟧ᵒ ∘ reindex (↝ₛ i) 
+             ;  cong = congᵒ (↝ₒ i f) ∘ ∼v-reindex (↝ₛ i) }
+\end{code}
+%if False
+\begin{code}
+    where open FormalTermInt A
+\end{code}
+%endif
+\begin{code}
+ 〈_〉 : ∀ {l₀ l₁} → Algebra {l₀} {l₁} Σₜ → Algebra Σₛ
+ 〈 A 〉 = 〈 (A ⟦_⟧ₛ ∘ ↝ₛ i) , (A ⟨_⟩ₒ) 〉
+\end{code}
 
-Para dar la traducción tenemos que dar una función de los sorts de |Σₛ| en
-los sorts de |Σₜ|. Como en este caso coinciden, es simplemente la identidad:
+Furthermore, we can also translate any homomorphism $h : \mathcal{A}
+\to \mathcal{A'}$ to an homomorphism $\widehat{h} :
+\widehat{\mathcal{A}} \to \widehat{\mathcal{A'}}$, thus completing the
+definition of a functor from the category of $\Sigma_t$-algebras to the
+category of $\Sigma_s$-algebras.
 
-\begin{spec}
-sₛ↝sₜ : sorts Σₛ → sorts Σₜ
-sₛ↝sₜ = id
-\end{spec}
+%if False
+\begin{code}
+ open Hom
+ open Homo
+ open FormalTerm Σₜ
+ hcond↝ : ∀ {l₀ l₁ l₂ l₃}
+            {A : Algebra {l₀} {l₁} Σₜ}
+            {A' : Algebra {l₂} {l₃} Σₜ}
+            {ty : Type Σₛ} → (h : Homo A A') → 
+            (f : ops Σₛ ty) → homCond 〈 A 〉 〈 A' 〉 ty (′ h ′ ∘ ↝ₛ i) f 
+ hcond↝  {A = A} {A'} {ar ⇒ s} h f as = 
+                   subst (λ vec → Setoid._≈_ (A' ⟦ ↝ₛ i s ⟧ₛ)
+                                  (′ h ′ (↝ₛ i s) ⟨$⟩
+                                         ⟦_⟧ᵒ A (↝ₒ i f) (reindex (↝ₛ i) as))
+                                  (⟦_⟧ᵒ A' (↝ₒ i f) vec) 
+                                   )
+                     (≡maptransf (↝ₛ i) (Setoid.Carrier ∘ _⟦_⟧ₛ A)
+                                        (Setoid.Carrier ∘ _⟦_⟧ₛ A')
+                                 (_⟨$⟩_ ∘ ′ h ′) ar as)
+                     (homCond↝' (map (↝ₛ i) ar) (↝ₛ i s) (↝ₒ i f)
+                                 (reindex (↝ₛ i) as))
 
-Y ahora damos la traducción de los símbolos de función. En el caso de las
-variables y la negación, tenemos el símbolo en la signatura target. Para el caso
-de la constante |trueₛ| la traducción consiste en aplicar negación sobre la constante
-|falseₜ|, y para traducir la conjunción utilizamos la regla de De Morgan:
-
-\begin{center}
-  $a \wedge b = \neg ((\neg a) \vee (\neg b))$
-\end{center}
-
-
-\begin{spec}
-fₛ↝fₜ : ∀ {ar} {s} →  (f : funcs Σₛ (ar , s)) →
-                      ΣExpr Σₜ (map sₛ↝sₜ ar) (sₛ↝sₜ s)
-fₛ↝fₜ (varₛ v)  = varₜ v ∣$∣ ⟨⟩
-fₛ↝fₜ trueₛ     = negₜ ∣$∣ ((falseₜ ∣$∣ ⟨⟩) ▹ ⟨⟩)
-fₛ↝fₜ negₛ      = negₜ ∣$∣ ((# zero) ▹ ⟨⟩)
-fₛ↝fₜ andₛ      = negₜ ∣$∣  (orₜ ∣$∣  ((negₜ ∣$∣ ((# zero) ▹ ⟨⟩)) ▹
-                                      ((negₜ ∣$∣ ((# (suc zero)) ▹ ⟨⟩))
-                                      ▹ ⟨⟩))
-                            ▹ ⟨⟩)
-\end{spec}
-
-Finalmente la traducción de las signaturas será:
-
-\begin{spec}
-ΣₛtoΣₜ : Σₛ ↝ Σₜ
-ΣₛtoΣₜ = record  { ↝ₛ = sₛ↝sₜ
-                 ; ↝f = fₛ↝fₜ
-                 }
-\end{spec}
-
-\subsection*{Transformación de álgebras}
-
-Teniendo una traducción $\Sigma_s \rightsquigarrow \Sigma_t$, podemos definir
-una $\Sigma_s$-álgebra a partir de una $\Sigma_t$-álgebra. Llamaremos
-\textit{álgebra transformada} a la $\Sigma_s$-álgebra obtenida por una traducción.
-Este concepto se corresponde con \textit{reduct algebra w.r.t. a derived signature morphism}
-en \cite{sannella2012foundations}.
-
-Sea $t$ una traducción $\Sigma_s \rightsquigarrow \Sigma_t$, y sea $\mathcal{A}$ una $\Sigma_t$-álgebra,
-queremos definir una $\Sigma_s$-álgebra $\mathcal{A}\sim$. 
-
-\begin{itemize}
-  \item Para cada sort $s$ de $\Sigma_s$, $\mathcal{A}\sim_{s} = \mathcal{A}_{(t\,s)}$
-  \item Para cada $f$, operación de $\Sigma_s$, con tipo $[s_0,...,s_n] \rightarrow s$,
-        y sea $t\,f\,= e$, se define la interpretación
-        \begin{align*}
-          &f_{\mathcal{A}\sim} : \mathcal{A}\sim_{s_0} \times ... \times \mathcal{A}\sim_{s_n} \rightarrow \mathcal{A}\sim_s\\
-          &f_{\mathcal{A}\sim}\,(a_1,...,a_n)\,=\,\mathbf{i}\,e\\
-        \end{align*}
-        \noindent donde $\mathbf{i}$ se define recursivamente:
-    \begin{itemize}
-    \item Si $e = \#j$, con $0 \leq j \leq n$,
-      \begin{center}
-        $\mathbf{i}\,e$ $=$ $a_j$
-      \end{center}
-
-    \item Si $e = g\,(e_1,...,e_m)$, donde $g$ es un símbolo de función de $\Sigma_t$ y $e_1,...,e_m$
-          son $\Sigma$Expr con sorts de acuerdo a la aridad de $g$,
-          \begin{center}
-            $\mathbf{i}\,e$ $=$ $g_{\mathcal{A}}\,(\mathbf{i}\,e_1,...,\mathbf{i}\,e_m)$
-          \end{center}
-    \end{itemize}
-\end{itemize}
-
-Para formalizar la interpretación de símbolos de función en un álgebra
-transformada, definimos |iFun↝|, que captura la idea que explicamos previamente.
-Si |e| es la expresión correspondiente a la traducción de la operación |f| de |Σₛ|,
-Dada una |Σₜ|-álgebra |a|, |iFun↝ f e a| obtiene la interpretación de |f| en la
-transformación de |a|:
-
-\begin{spec}
-iFun↝ : ∀  {Σₛ Σₜ : Signature} {ar : Arity Σₛ}
-           {s : sorts Σₛ} {fs↝ : sorts Σₛ → sorts Σₜ} →
-           (f : funcs Σₛ (ar , s)) → (e : ΣExpr Σₜ (map fs↝ ar) (fs↝ s)) →
-           (a : Algebra Σₜ) → IFuncs Σₛ (ar , s) (_⟦_⟧ₛ a ∘ fs↝)
-iFun↝ = ...
-\end{spec}
-
-\noindent La definición contiene pequeñas dificultades técnicas y por ello no la incluimos
-en este texto.
-
-Podemos ahora definir la formalización de transformación de álgebras:
-
-\begin{spec}
-_〈_〉 : ∀ {Σₛ} {Σₜ} → (t : Σₛ ↝ Σₜ) →
-        (a : Algebra Σₜ) → Algebra Σₛ
-_〈_〉 t a =  (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥
-            (λ f → iFun↝ f (↝f t f) a)
-\end{spec}
-
-A partir de una traducción |t : Σₛ ↝ Σₜ| y un álgebra |a : Algebra Σₜ| obtenemos
-una |Σₛ|-álgebra |t 〈 a 〉|.
-
-Por último, también podemos ver un homomorfismo entre dos $\Sigma_t$-álgebras
-$\mathcal{A}$ y $\mathcal{A'}$ como un homomorfismo entre las dos $\Sigma_s$-álgebras
-transformadas. La siguiente definición formaliza este concepto, y se corresponde
-con \textit{reduct homomorphism w.r.t. a derived signature morphism} en
-\cite{sannella2012foundations}.
-
-\begin{spec}
-_〈_〉ₕ : ∀  {Σₛ Σₜ : Signature} {a a' : Algebra Σₜ} →
-             (t : Σₛ ↝ Σₜ) → (h : Homomorphism a a') →
-             Homomorphism (t 〈 a 〉) (t 〈 a' 〉)
-t 〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ t
-                   ; cond = ...
-                   }
-\end{spec}
+  where open FormalTermInt
+        homCond↝' : (ar' : Arity Σₜ) → (s' : sorts Σₜ) → (e : ar' ⊢ s') →
+                    (vs : ∥ A ⟦ ar' ⟧ₛ* ∥ ) →                   
+                    Setoid._≈_ (_⟦_⟧ₛ A' s')
+                           (′ h ′ s' ⟨$⟩ ⟦_⟧ᵒ A e vs)
+                           (⟦ A' ⟧ᵒ e (map⟿ A A' ′ h ′ vs))
+        homCond↝' [] _ (var ()) ⟨⟩                           
+        homCond↝' (s ∷ ar) .s (var zero) (v ▹ vs) = Setoid.refl (A' ⟦ s ⟧ₛ)
+        homCond↝' (s ∷ ar) .(ar ‼ n) (var (suc n)) (v ▹ vs) = homCond↝' ar (ar ‼ n) (var n) vs
+        homCond↝' ar s (op {ar₁} f₁ es) vs =
+                   Setoid.trans (A' ⟦ s ⟧ₛ) (cond h f₁ (⟦_⟧ᵒ* A es vs))
+                                            (Π.cong (A' ⟦ f₁ ⟧ₒ)
+                                                    (homCond↝'vec ar₁ es))
+          where homCond↝'vec : (ar₁ : Arity Σₜ) → 
+                               (es : Vec (_⊢_ ar) ar₁) →
+                               _∼v_ {R = Setoid._≈_ ∘ (A' ⟦_⟧ₛ) }
+                               (mapV (λ x → _⟨$⟩_ (′ h ′ x)) (⟦_⟧ᵒ* A es vs))
+                               (⟦_⟧ᵒ* A' es (mapV (λ x → _⟨$⟩_ (′ h ′ x)) vs))
+                homCond↝'vec .[] ⟨⟩ = ∼⟨⟩
+                homCond↝'vec (s₁ ∷ ar₁) (e ▹ es) = ∼▹ (homCond↝' ar s₁ e vs)
+                                                       (homCond↝'vec ar₁ es)
 
 
-
-
-
-%% Sean |sˢ₁,...,sˢₙ| y |fˢ₁,...,fˢₖ| los sorts y símbolos de función de |Σₛ|;
-%% |sᵗ₁,...,sᵗₘ| y |fᵗ₁,...,fᵗⱼ| los sorts y símbolos de función de |Σₜ|;
-%% y |t : Σₛ ↝ Σₜ|. A partir de una |Σₜ|-álgebra |A| podemos definir una
-%% |Σₛ|-álgebra de la siguiente manera:
-
-%% \begin{itemize}
-%%   \item Interpretamos a cada sort |sˢᵢ| con |a ⟦ ↝ₛ t sˢᵢ ⟧|.
-%%   \item Para cada símbolo de función |fˢᵢ| con aridad |arᵢ|, definimos la interpretación de la siguiente manera:
-%%     \begin{itemize}
-%%     \item Si |↝f t fˢᵢ| es |# h|, con |h : Fin (length arᵢ)| definiremos la interpretación
-%%           \begin{spec}
-%%             ifˢᵢ vs = vs ‼ h
-%%           \end{spec}
-%%     \item Si |↝f t fˢᵢ| es |g ∣$∣ ⟨ e₁ , ... , eₚ ⟩ |, donde |g : funcs Σₜ ar' s'| y |e₁ , ... , eₚ| son
-%%           |ΣExpr|:
-%%           \begin{spec}
-%%             ifˢᵢ vs = A ⟦ g ⟧ ⟨$⟩ ies
-%%           \end{spec}
-
-%%           donde |ies| es el vector resultante de interpretar cada expresión |e₁,...,eₚ|, y posiblemente
-%%           ocurran elementos de |vs|.
-%%     \end{itemize}
-%% \end{itemize}
-
-%% Con estas ideas intuitivas podemos definir formalmente la transformación de álgebras. No mostraremos
-%% los detalles, pueden encontrarse en el archivo |AlgTransf.agda|, en \cite{univAlgebra}.
-
-%% \begin{spec}
-%% _〈_〉 : ∀  {Σ₀} {Σ₁} → (t : Σ₀ ↝ Σ₁) →
-%%             (a : Algebra Σ₁) → Algebra Σ₀
-%% t 〈 a 〉 =  (_⟦_⟧ₛ a ∘ ↝ₛ t) ∥
-%%            (λ f → iFun↝ f (↝f t f) a)
-%% \end{spec}
-
-%% \noindent La definición de |iFun↝| formaliza la idea intuitiva explicada previamente.
-
-%% Tenemos entonces que a partir de una traducción |t : Σₛ ↝ Σₜ| y una |Σₜ|-álgebra A podemos
-%% obtener una |Σₛ|-álgebra, y esta es t 〈 A 〉.
-
-%% Podremos también transformar un homomorfismo |h| entre dos |Σₜ|-álgebras |A| y |A'| a un homomorfismo
-%% entre |t 〈 A 〉| y |t 〈 A' 〉|, cuya notación será |t 〈 h 〉ₕ|. Los detalles también se pueden ver en
-%% (CITA).
-
+module HomoTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} {l₀ l₁ l₂ l₃} 
+   {A : Algebra {l₀} {l₁} Σₜ}  
+   {A' : Algebra {l₂} {l₃} Σₜ} where
+   open AlgTrans {i = i}
+   open _↝_
+   open Hom
+   open Homo
+\end{code}
+%endif
+\begin{code}
+   〈_〉ₕ : Homo A A' → Homo 〈 A 〉 〈 A' 〉
+   〈 h 〉ₕ = record { ′_′ = ′ h ′ ∘ ↝ₛ i ; cond = hcond↝ h }
+\end{code}
 

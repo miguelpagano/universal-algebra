@@ -16,6 +16,9 @@ bookmarksdepth=2,
 breaklinks=true
 colorlinks=true,
 urlcolor=blue]{ hyperref }
+%format VecH' = Vec
+%format 〉 = ")"
+%format 〈 = "("
 %format ⟨⟨ = "\langle\!"
 %format ⟩⟩ = "\!\rangle"
 %format ≈A = "\ensuremath{≈_{A}}"
@@ -27,13 +30,16 @@ urlcolor=blue]{ hyperref }
 %format |h|A = "\ensuremath{H_{A}}"
 %format |h'|A = "\ensuremath{H_{A}}"
 
-
 %include agda.fmt
 %include unicode.fmt
 
 \DeclareUnicodeCharacter{10140}{\ensuremath{\Rightarrow}}
 \DeclareUnicodeCharacter{10035}{\ensuremath{\ast}}
 \DeclareUnicodeCharacter{8338}{\ensuremath{_{o}}}
+\DeclareUnicodeCharacter{7506}{\ensuremath{^{o}}}
+\DeclareUnicodeCharacter{8407}{\ensuremath{^{\rightarrow}}}
+\DeclareUnicodeCharacter{12296}{(}
+\DeclareUnicodeCharacter{12297}{)}
 \newcommand{\cL}{{\cal L}}
 \newcommand{\ie}{i.e.\@@ }
 

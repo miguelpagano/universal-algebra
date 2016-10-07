@@ -65,6 +65,9 @@ ls ➜ s = (ls , s)
 
 [_,_] : {S : Set} → S → S → List S
 [ a , b ] = a ∷ (b ∷ []) 
+
+Vec : ∀ {l} {I : Set} (A : I -> Set l) → List I → Set l
+Vec {l} {I} = VecH {l} I
 \end{code}
 %endif
 
@@ -87,11 +90,13 @@ record Signature : Set₁ where
   
   Type : Set
   Type = Arity × sorts
-  
 \end{code}
 
 %if False
 \begin{code}
+  dom : ∀ {ar s} → ops (ar ⇒ s) → Arity
+  dom {ar} _ = ar
+  
 _✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) →
                                  List I → Setoid _ _
 _✳_ {I = I} = VecSet I
@@ -172,10 +177,10 @@ type of heterogeneous vectors is parameterized by a set of codes
 (sorts) and a family of sets indexed by those codes and indexed over a
 list of codes:
 \begin{code}
-data HVec {I} (A : I -> Set) : List I → Set where
-  ⟨⟩   : HVec {I} A []
-  _▹_  :  ∀ {i is} → (v : A i) →
-          (vs : HVec A is) → HVec A (i ∷ is)
+data VecH' {I} (A : I -> Set) : List I → Set where
+  ⟨⟩   : VecH' {I} A []
+  _▹_  :  ∀ {i is} → A i →
+            VecH' A is → VecH' A (i ∷ is)
 \end{code}
 When |A| is a family of setoids |I → Setoid| it is straightforward to
 promote this construction to setoids and we use |A ✳ is| to refer to
@@ -194,16 +199,16 @@ open Signature
 \begin{code}
 record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) :
                                 Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
-  constructor ⟪_,_⟫
+  constructor 〈_,_〉
   field
     _⟦_⟧ₛ   : sorts Σ → Setoid ℓ₁ ℓ₂
-    _⟦_⟧ₒ    : ∀ {ar s} → (f : ops Σ (ar ➜ s)) →
+    _⟦_⟧ₒ    : ∀ {ar s} → ops Σ (ar ➜ s) →
                 _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 \end{code}
 %if False
 \begin{code}
-  _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
-  _⟦_⟧ₛ*  ar = Carrier ( _⟦_⟧ₛ ✳ ar)
+  _⟦_⟧ₛ* : (ar : Arity Σ) → Setoid _ _
+  _⟦_⟧ₛ*  ar = _⟦_⟧ₛ ✳ ar
 \end{code}
 %endif
 
@@ -234,10 +239,14 @@ open Signature
 pattern ⟨⟨_,_⟩⟩ a b = a ▹ (b ▹ ⟨⟩) 
 \end{code}
 %endif
-We use the function |→-setoid| from the standard library that builds
+The function |→-setoid| from the standard library builds
 the setoid we just described.
+%if False
 \begin{code}
 private 
+\end{code}
+%endif
+\begin{code}
   ⟦_⟧ : sorts Σₑ → Setoid _ _
   ⟦ _ ⟧ = State →-setoid ℕ
 \end{code}
@@ -281,7 +290,7 @@ interpretation as we did in the introduction. We have thus
 defined the algebra $\mathit{Sem}$:
 \begin{code}
 Semₑ : Algebra Σₑ
-Semₑ = ⟪ ⟦_⟧ , i ⟫
+Semₑ = 〈 ⟦_⟧ , i 〉
 \end{code}
 %if False
 \begin{code}
@@ -306,19 +315,20 @@ a module parameterized over the signature and the algebras.
 \begin{code}
 module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ}
         (A : Algebra {ℓ₁} {ℓ₂} Σ) 
-        (B : Algebra {ℓ₃} {ℓ₄} Σ) where
-  
+        (B : Algebra {ℓ₃} {ℓ₄} Σ) where 
+\end{code}
+\begin{code}
   _⟿_ : Set _
   _⟿_ = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
 \end{code}
-An element of |h : A ⟿ B| will be a family of setoid morphisms between
+An element |h : A ⟿ B| will be a family of setoid morphisms between
 the interpretation of each sort in the source and target algebras.  In
 order to encode condition \eqref{eq:homcond} we need to map |h| over
 the heterogeneous vector |as : A ⟦ ar ⟧ₛ*|. We let |map⟿ h ts = mapV
 (_⟨$⟩_ ∘ h) ts|, where |mapV| is mapping over heterogeneous vectors.
 %if False
 \begin{code}
-  map⟿ : ∀ {ar} → (h : _⟿_) → (ts : A ⟦ ar ⟧ₛ* ) → B ⟦ ar ⟧ₛ*
+  map⟿ : ∀ {ar} → (h : _⟿_) →  ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ B ⟦ ar ⟧ₛ* ∥
   map⟿ h ts = mapV (_⟨$⟩_ ∘ h) ts
 \end{code}
 %endif
@@ -326,7 +336,7 @@ the heterogeneous vector |as : A ⟦ ar ⟧ₛ*|. We let |map⟿ h ts = mapV
 equality by the corresponding equivalence relation, so let |_≈ₛ_ = _≈_ (B ⟦ s ⟧ₛ)|:
 \begin{code}
   homCond : ∀ ty → _⟿_ → ops Σ ty → Set _
-  homCond (ar ⇒ s) h f = (as : A ⟦ ar ⟧ₛ*) →
+  homCond (ar ⇒ s) h f = (as : ∥ A ⟦ ar ⟧ₛ* ∥) →
        h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as) ≈ₛ B ⟦ f ⟧ₒ ⟨$⟩ map⟿ h as
 \end{code}
 %if False
@@ -522,7 +532,7 @@ module TermAlgebra (Σ : Signature) where
 \begin{code}
   data HU : (s : sorts Σ) → Set where
     term : ∀  {ar s} →  (f : ops Σ (ar ⇒ s)) →
-               (VecH (sorts Σ) HU ar) → HU s
+               (Vec HU ar) → HU s
 \end{code}
 
 %% MIGUEL: no creo que sean necesarios estos ejemplos.
@@ -547,10 +557,8 @@ tuple $⟨t_1,\ldots,t_n⟩$ to $f(t_1,\ldots,t_n)$; we omit the proof
 of |cong|.
 \begin{spec}
   |T| : Algebra Σ
-  |T| = record  { _⟦_⟧ₛ = setoid ∘ HU
-                ; _⟦_⟧ₒ = λ f → record
-                  { _⟨$⟩_ = term f ; cong = {!!}}
-                }
+  |T| = 〈setoid ∘ HU ,
+           λ f → record  { _⟨$⟩_ = term f ; cong = {!!}} 〉
 \end{spec}
 %if False
 \begin{code}
@@ -607,7 +615,7 @@ module InitHomo {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} {Σ : Signature} (A : Alge
     ∣h∣→A (term f ⟨⟩)         =   A ⟦ f ⟧ₒ ⟨$⟩ ⟨⟩
     ∣h∣→A (term f (t ▹ ts))   =   A ⟦ f ⟧ₒ ⟨$⟩ (∣h∣→A t ▹ map|h|→A ts)
 
-    map|h|→A : ∀ {ar} → |T| ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
+    map|h|→A : ∀ {ar} → ∥ |T| ⟦ ar ⟧ₛ* ∥ → ∥ A ⟦ ar ⟧ₛ* ∥
     map|h|→A ⟨⟩ = ⟨⟩
     map|h|→A (t ▹ ts) = ∣h∣→A t ▹ map|h|→A ts
 \end{code}
@@ -621,7 +629,7 @@ terms and also satisfies the homomorphism condition.
 \end{spec}
 %if False
 \begin{code}
-  map|T|→A≡mapV : ∀ {ar} {ts : |T| ⟦ ar ⟧ₛ* } →
+  map|T|→A≡mapV : ∀ {ar} {ts : ∥ |T| ⟦ ar ⟧ₛ*  ∥} →
                 map|h|→A ts ≡ mapV (λ s → ∣h∣→A {s}) ts
   map|T|→A≡mapV {ar = []} {⟨⟩} = PE.refl
   map|T|→A≡mapV {s ∷ ar} {t ▹ ts} =

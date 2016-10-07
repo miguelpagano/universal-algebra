@@ -80,26 +80,26 @@ mapV {is = i₀ ∷ is} f (v₀ ▹ vs) = f i₀ v₀ ▹ mapV f vs
 Transformación de un vector con índices en I a 
 un vector con índices en I'.
 -}
-vecTransf : ∀ {l} {I I' : Set}
-              (fᵢ : I → I') → (A : I' → Set l) → (is : List I) →
+reindex : ∀ {l} {I I' : Set}
+              (fᵢ : I → I') → {A : I' → Set l} → {is : List I} →
               VecH I (A ∘ fᵢ) is → VecH I' A (map fᵢ is)
-vecTransf fᵢ A .[] ⟨⟩ = ⟨⟩
-vecTransf fᵢ A (_ ∷ is) (v ▹ vs) = v ▹ vecTransf fᵢ A is vs
+reindex fᵢ ⟨⟩ = ⟨⟩
+reindex fᵢ (v ▹ vs) = v ▹ reindex fᵢ vs
 
 
 {-
 Si dos vectores están relacionados, sus transformados también
 lo están.
 -}
-∼vtransf : ∀ {l₀} {l₁} {I I' : Set} {is : List I}
+∼v-reindex : ∀ {l₀} {l₁} {I I' : Set} {is : List I}
              {A : I' → Set l₀} {R : (i : I') → Rel (A i) l₁} →
              (fᵢ : I → I') → {vs₁ vs₂ : VecH I (A ∘ fᵢ) is} →
              _∼v_ {R = R ∘ fᵢ} vs₁ vs₂ →
              _∼v_ {I = I'} {R = R}
-                  (vecTransf fᵢ A is vs₁)
-                  (vecTransf fᵢ A is vs₂)
-∼vtransf fₛ ∼⟨⟩ = ∼⟨⟩
-∼vtransf fᵢ (∼▹ v₁∼v₂ eq) = ∼▹ v₁∼v₂ (∼vtransf fᵢ eq)
+                  (reindex fᵢ vs₁)
+                  (reindex fᵢ vs₂)
+∼v-reindex fₛ ∼⟨⟩ = ∼⟨⟩
+∼v-reindex fᵢ (∼▹ v₁∼v₂ eq) = ∼▹ v₁∼v₂ (∼v-reindex fᵢ eq)
 
 
 {- Mapear una función en un vector transformado es lo mismo
@@ -110,8 +110,8 @@ lo están.
               (A₀ : I' → Set l₀) → (A₁ : I' → Set l₁) →
               (h : (i : I') → A₀ i → A₁ i) →
               (is : List I) → (vs : VecH I (A₀ ∘ fᵢ) is) →
-              mapV h (vecTransf fᵢ A₀ is vs) ≡
-              vecTransf fᵢ A₁ is (mapV (h ∘ fᵢ) vs)
+              mapV h (reindex fᵢ vs) ≡
+              reindex fᵢ (mapV (h ∘ fᵢ) vs)
 ≡maptransf fᵢ A₀ A₁ h [] ⟨⟩ = refl
 ≡maptransf fᵢ A₀ A₁ h (i₀ ∷ is) (v ▹ vs) = cong (λ vs' → h (fᵢ i₀) v ▹ vs')
                                                   (≡maptransf fᵢ A₀ A₁ h is vs)

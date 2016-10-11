@@ -42,6 +42,7 @@ urlcolor=blue]{ hyperref }
 \DeclareUnicodeCharacter{12297}{)}
 \newcommand{\cL}{{\cal L}}
 \newcommand{\ie}{i.e.\@@ }
+\newcommand{\manu}[1]{#1}
 
 \begin{document}
 

@@ -360,6 +360,49 @@ equality by the corresponding equivalence relation, so let |_≈ₛ_ = _≈_ (B 
     field
       ′_′  : _⟿_
       cond : ∀ {ty} (f : ops Σ ty) → homCond ty ′_′ f
+
+module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆} {Σ}
+         {A₀ : Algebra {ℓ₁} {ℓ₂} Σ}
+         {A₁ : Algebra {ℓ₃} {ℓ₄} Σ}
+         {A₂ : Algebra {l₅} {l₆} Σ} where
+  open Hom
+  open Homo
+  import Relation.Binary.EqReasoning as EqR
+  _∘ₕ_ : (H₁ : Homo A₁ A₂) → (H₀ : Homo A₀ A₁) →
+         Homo A₀ A₂
+  _∘ₕ_  H₁ H₀ = record { ′_′   = comp
+                        ; cond  = ∘ₕcond }
+    where comp : A₀ ⟿ A₂
+          comp s = ′ H₁ ′ s ∘ₛ ′ H₀ ′ s
+          ∘ₕcond :  ∀ {ty} (f : ops Σ ty) → homCond A₀ A₂ ty comp f
+          ∘ₕcond {ar , s} f as =
+                 begin
+                   comp s ⟨$⟩ (A₀ ⟦ f ⟧ₒ ⟨$⟩ as)
+                     ≈⟨ Π.cong (′ H₁ ′ s) (p₀ as) ⟩
+                   ′ H₁ ′ s ⟨$⟩ (A₁ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₀ A₁ ′ H₀ ′ as))
+                     ≈⟨ p₁ (map⟿ A₀ A₁ ′ H₀ ′ as) ⟩
+                   A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿  A₁ A₂ ′ H₁ ′
+                                       (map⟿ A₀ A₁ ′ H₀ ′ as))
+                     ≈⟨ propMapMorph ⟩
+                   A₂ ⟦ f ⟧ₒ ⟨$⟩ map⟿ A₀ A₂ comp as
+                 ∎
+            where open EqR (A₂ ⟦ s ⟧ₛ)
+                  ty = (ar , s)
+                  p₁ = cond H₁ f
+                  p₀ = cond H₀ f
+                  ≡to≈ : ∀ {x y : ∥ A₂ ⟦ s ⟧ₛ ∥ } → x ≡ y → Setoid._≈_ (A₂ ⟦ s ⟧ₛ) x y
+                  ≡to≈ refl = Setoid.refl (A₂ ⟦ s ⟧ₛ)
+                  propMapMorph =
+                      begin
+                        A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₁ A₂ (′ H₁ ′) $
+                                           map⟿  A₀ A₁ (′ H₀ ′) as)
+                          ≈⟨ ≡to≈ 
+                                $ PE.cong (A₂ ⟦ f ⟧ₒ ⟨$⟩_ )
+                                          (propMapV∘ ar as (_⟨$⟩_ ∘ ′ H₀ ′)
+                                                           (_⟨$⟩_ ∘ ′ H₁ ′)) ⟩
+                        A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₀ A₂ comp as)
+                      ∎
+
 \end{code}
 
 

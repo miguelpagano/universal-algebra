@@ -162,20 +162,28 @@ $\mathit{hexec} \colon T_C \to \mathit{Exec}$. We can picture the situation so f
   \end{tikzpicture}
 \end{center}
 
+%TODO: poner las referencias en las conclusiones en un apartado sobre
+% related work? Ahora corta mucho la lectura.
+
 Instead of defining ingeniously the translation $\comp$ and proving
 afterwards its correctness, we will obtain it from a more broader
 construction which will transform each algebra $A$ of $\Sigma_C$ into
 an algebra $\widehat{A}$ of $\Sigma_e$ and also each homomorphism from
-$h \colon A \to B$ into an homomorphism
-$\widehat{h}\colon \widehat A \to \widehat B$. These transformations will arise
-from an \emph{interpretation} of the signature $\Sigma_C$ in
-$\Sigma_e$. We use the term interpretation because it is related with
-the interpretability of similarity types in universal algebra (cf.\
+$h \colon A \to B$ into an homomorphism $\widehat{h}\colon \widehat A
+\to \widehat B$. These transformations will arise from an
+\emph{interpretation} of the signature $\Sigma_C$ in $\Sigma_e$. We
+use the term interpretation because it is related with the
+interpretability of similarity types in universal algebra (cf.\
 \cite{garcia-84}), but it is otherwise called in the literature:
-\citet{janssen-98} called it a \textit{polynomial derivor} and
-\citet{mossakowski-15} refer to it as a \textit{derived signature
-  morphism}, a generalization of the more restricted \textit{signature
-  morphisms} in the theory of institutions \cite{goguen-92}.
+\citet{fujiwara-1959} introduced this notion as \textit{mappings
+between algebraic systems}, \citet{janssen-98} called it a
+\textit{polynomial derivor} and \citet{mossakowski-15} refer to it as
+a \textit{derived signature morphism}, a generalization of the more
+restricted \textit{signature morphisms} in the theory of institutions
+\cite{goguen-92}. Translations of signatures were
+analyzed categorically by \citet{fiore-2010} for second order
+signatures and by \citet{vidal-2012} for first order signatures.
+
 
 The transformation brings the right side of the above diagram to the
 world of $\Sigma_e$ algebras, thus $\comp$ arises as the unique

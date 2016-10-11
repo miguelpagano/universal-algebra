@@ -1,8 +1,8 @@
 %if False
 \begin{code}
-module reporte.compiler where
-open import reporte.univ-alg
-open import reporte.transforming-algebras
+module compiler where
+open import univ-alg
+open import transforming-algebras
 \end{code}
 %endif
 \section{Back to McCarthy}
@@ -119,6 +119,7 @@ programs, represented as elements in | |T|ₘ |, is given by the initial
 homomorphism.
 %if False
 \begin{code}
+open TermAlgebra Σₑ renaming (|T| to |Tₑ|)
 open TermAlgebra Σₘ renaming (|T| to |Tₘ|)
 open Hom
 \end{code}
@@ -155,60 +156,50 @@ op↝ (varN v) = op (loadₘ v) ⟨⟩
 op↝ plus = op seqₘ
     ⟨⟨ var zero , op seqₘ ⟨⟨ var (suc zero) , op addₘ ⟨⟩ ⟩⟩ ⟩⟩
 \end{code}
+The following translation will induce the transformation of
+$\Sigma_m$-algebras into $\Sigma_e$-algebras.
+\begin{code}
+e↝m : Σₑ ↝ Σₘ
+e↝m = record  { ↝ₛ = s↝ ; ↝ₒ = op↝ }
+\end{code}
+In particular we can see the term algebra |Tₘ| as a $\Sigma_e$-algebra:
+\begin{code}
+open AlgTrans {i = e↝m}
+Codeₑ : Algebra Σₑ
+Codeₑ = 〈 |Tₘ| 〉
+\end{code}
+and the initial homomorphism from |Tₑ| to |〈 Tₘ 〉| is the compiler.
+\begin{code}
+hcomp : Homo |Tₑ| Codeₑ
+hcomp = comp
+  where open InitHomo Codeₑ renaming (|h|A to comp)
+\end{code}
+Moreover the low-level semantics of a high-level program is obtained by
+composing |hcomp| with $\widehat{\mathit{exec}} : \mathcal{T}_m \to \mathit{Exec}$.
+\begin{code}
+Execₑ : Algebra Σₑ
+Execₑ = 〈 Exec 〉
 
-Podemos definir entonces la traducción de símbolos de función, y luego
-la traducción de signaturas:
-
-\begin{spec}
-tfuncs : ∀ {ar} {s} →  (f : funcs Σₑ (ar , s)) →
-                       ΣExpr Σₘ (map tsorts ar) (tsorts s)
-tfuncs (valN n)  = valN↝ n
-tfuncs plus      = plus↝
-tfuncs (varN v)  = varN↝ v
-\end{spec}
-
-\begin{spec}
-t : Σₑ ↝ Σₘ
-t = record  { ↝ₛ = tsorts
-            ; ↝f = tfuncs
-            }
-\end{spec}
-
-\subsubsection*{Transformación de las álgebras de |Σₘ|}
-
-Teniendo definida la traducción |t| podemos llevar las álgebras de |Σₘ| a
-álgebras de |Σₑ| y preservar los homomorfismos:
-
-\begin{spec}
-  Codeₑ : Algebra Σₑ
-  Codeₑ = t 〈 ∣T∣ Σₘ 〉
-\end{spec}
-
-\begin{spec}
-  Execₑ : Algebra Σₑ
-  Execₑ = t 〈 Exec 〉
-\end{spec}
-
-\begin{spec}
-  hexecₑ : Homomorphism Codeₑ Execₑ
-  hexecₑ = t 〈 ∣T∣ₕ Exec 〉ₕ
-\end{spec}
-
-Y por inicialidad del álgebra de términos de |Σₑ| tenemos un homomorfismo
-entre ésta y el álgebra |Codeₑ|:
-
-\begin{spec}
-  hcomp : Homomorphism (∣T∣ Σₑ) Codeₑ
-  hcomp = ∣T∣ₕ Codeₑ
-\end{spec}
-
-Ahora el diagrama se ve así:
-
-%\begin{diagram}
-%  |∣T∣ Σₑ|     &\rTo^{|homc|}  &|Codeₑ|\\
-%  \dTo_{|∣T∣ₕ Semₑ|} &             &\dTo_{|hexecₑ|}\\
-%  |Semₑ|        &              &|Execₑ|\\
-%\end{diagram}
+execₑ : Homo |Tₑ| Execₑ
+execₑ = 〈 semₘ 〉ₕ ∘ₕ hcomp
+\end{code}
+%if False
+\begin{code}
+ where open HomoTrans {i = e↝m} {A = |Tₘ|} {A' = Exec}
+       open HomComp {A₀ = |Tₑ|} {Codeₑ} {Execₑ}
+\end{code}
+%endif
+Of course, this semantics is also given by the initial homomorphism from
+|Tₑ| to |Codeₑ| and both are extensionally equal.
+\begin{code}
+execₑ' : Homo |Tₑ| Execₑ
+execₑ' = semₑ
+\end{code}
+%if False
+\begin{code}
+  where open InitHomo Execₑ renaming (|h|A to semₑ)
+\end{code}
+%endif
 
 Para completar el diagrama y tener la prueba de corrección del compilador
 tenemos que dar un homomorfismo entre |Semₑ| y |Execₑ|.

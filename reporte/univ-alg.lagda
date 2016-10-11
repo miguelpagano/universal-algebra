@@ -1,6 +1,6 @@
 %if False
 \begin{code}
-module reporte.univ-alg where
+module univ-alg where
 \end{code}
 %endif
 \section{Universal Algebra}
@@ -36,8 +36,6 @@ following the \textit{Handbook of Logic in Computer Science},
 
 %if False
 \begin{code}
-
-module reporte where
 
 open import Relation.Binary hiding (_⇒_;Total) public
 open import Level renaming (suc to lsuc ; zero to lzero) public
@@ -357,7 +355,9 @@ equality by the corresponding equivalence relation, so let |_≈ₛ_ = _≈_ (B 
     field
       ′_′  : _⟿_
       cond : ∀ {ty} (f : ops Σ ty) → homCond ty ′_′ f
-
+\end{code}
+%if False
+\begin{code}
 module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆} {Σ}
          {A₀ : Algebra {ℓ₁} {ℓ₂} Σ}
          {A₁ : Algebra {ℓ₃} {ℓ₄} Σ}
@@ -401,7 +401,7 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆} {Σ}
                       ∎
 
 \end{code}
-
+%endif
 
 \subsection{The Term Algebra is Initial}
 

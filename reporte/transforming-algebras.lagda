@@ -1,7 +1,7 @@
 %if False
 \begin{code}
-module reporte.transforming-algebras where
-open import reporte.univ-alg
+module transforming-algebras where
+open import univ-alg
 \end{code}
 %endif
 \section{Algebra transformation}
@@ -102,7 +102,7 @@ module FormalTerm (Σ : Signature) where
  data _⊢_  (ar' : Arity Σ) : (sorts Σ) → Set where
    var      : (n : Fin (length ar')) → ar' ⊢ (ar' ‼ n)
    op  : ∀ {ar s} → ops Σ (ar ⇒ s) → 
-               Vec (ar' ⊢_) ar → ar' ⊢ s
+               HVec (ar' ⊢_) ar → ar' ⊢ s
 \end{code}
 A formal term $\mathit{ar} \sdash{\Sigma} t : s$ can be interpreted
 in any $\Sigma$-algebra as a function from |⟦ ar ⟧ₛ*| to  |⟦ s ⟧ₛ|;
@@ -123,7 +123,7 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
 \end{code}
 %if False
 \begin{code}
-  ⟦_⟧ᵒ* : ∀ {ar ar'} → Vec (ar ⊢_) ar' → ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ A ⟦ ar' ⟧ₛ* ∥
+  ⟦_⟧ᵒ* : ∀ {ar ar'} → HVec (ar ⊢_) ar' → ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ A ⟦ ar' ⟧ₛ* ∥
   ⟦ ⟨⟩ ⟧ᵒ*      as = ⟨⟩
   ⟦ t ▹ ts ⟧ᵒ*  as = ⟦ t ⟧ᵒ as ▹ ⟦ ts ⟧ᵒ*  as
 
@@ -132,10 +132,10 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
             (t : ar ⊢ s) →
             _∼v_  {R = Setoid._≈_ ∘ _⟦_⟧ₛ A} vs vs' →
             Setoid._≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧ᵒ vs) (⟦ t ⟧ᵒ vs')
-  congᵒ {vs = vs} {vs'} (var n) eq = ~v‼prop vs vs' eq n
+  congᵒ {vs = vs} {vs'} (var n) eq = ~v-pointwise vs vs' eq n
   congᵒ {ar} {_} {vs} {vs'} (op f ts) eq = Π.cong (A ⟦ f ⟧ₒ) (congᵒ* ts)
     where  congᵒ* : ∀ {ar'} →
-                   (ts : Vec (ar ⊢_) ar') →
+                   (ts : HVec (ar ⊢_) ar') →
                    (⟦ ts ⟧ᵒ* vs ) ∼v (⟦ ts ⟧ᵒ* vs' )
            congᵒ* ⟨⟩ = ∼⟨⟩
            congᵒ* (t ▹ ts) = ∼▹ (congᵒ t eq) (congᵒ* ts)
@@ -237,9 +237,8 @@ category of $\Sigma_s$-algebras.
                                          ⟦_⟧ᵒ A (↝ₒ i f) (reindex (↝ₛ i) as))
                                   (⟦_⟧ᵒ A' (↝ₒ i f) vec) 
                                    )
-                     (≡maptransf (↝ₛ i) (Setoid.Carrier ∘ _⟦_⟧ₛ A)
-                                        (Setoid.Carrier ∘ _⟦_⟧ₛ A')
-                                 (_⟨$⟩_ ∘ ′ h ′) ar as)
+                     (mapReindex (↝ₛ i) 
+                                 (_⟨$⟩_ ∘ ′ h ′)  as)
                      (homCond↝' (map (↝ₛ i) ar) (↝ₛ i s) (↝ₒ i f)
                                  (reindex (↝ₛ i) as))
 
@@ -257,10 +256,10 @@ category of $\Sigma_s$-algebras.
                                             (Π.cong (A' ⟦ f₁ ⟧ₒ)
                                                     (homCond↝'vec ar₁ es))
           where homCond↝'vec : (ar₁ : Arity Σₜ) → 
-                               (es : Vec (_⊢_ ar) ar₁) →
+                               (es : HVec (_⊢_ ar) ar₁) →
                                _∼v_ {R = Setoid._≈_ ∘ (A' ⟦_⟧ₛ) }
-                               (mapV (λ x → _⟨$⟩_ (′ h ′ x)) (⟦_⟧ᵒ* A es vs))
-                               (⟦_⟧ᵒ* A' es (mapV (λ x → _⟨$⟩_ (′ h ′ x)) vs))
+                               (mapHVec (λ x → _⟨$⟩_ (′ h ′ x)) (⟦_⟧ᵒ* A es vs))
+                               (⟦_⟧ᵒ* A' es (mapHVec (λ x → _⟨$⟩_ (′ h ′ x)) vs))
                 homCond↝'vec .[] ⟨⟩ = ∼⟨⟩
                 homCond↝'vec (s₁ ∷ ar₁) (e ▹ es) = ∼▹ (homCond↝' ar s₁ e vs)
                                                        (homCond↝'vec ar₁ es)

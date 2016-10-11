@@ -177,7 +177,7 @@ data VecH' {I} (A : I -> Set) : List I → Set where
   _▹_  :  ∀ {i is} → A i →
             VecH' A is → VecH' A (i ∷ is)
 \end{code}
-When |A| is a family of setoids |I → Setoid| it is straightforward to
+When |A| is a family of setoids |I → Setoid|, it is straightforward to
 promote this construction to setoids and we use |A ✳ is| to refer to
 the setoid of heterogeneous vectors where the equivalence relation is
 the point-wisely induced. The interpretation of the operation $f

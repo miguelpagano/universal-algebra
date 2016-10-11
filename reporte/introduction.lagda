@@ -30,7 +30,7 @@ to map the target language and its semantics as algebras for
 the source language and then provide an homomorphism from the
 high-level semantics to the low-level one. In this work we formalize
 enough heterogenous universal algebra in order to complete the
-definition of a correct compiler. Throgout the article we will use
+definition of a correct compiler. Throughout the article we will use
 McCarthy and Painter's language as a guiding example.
 % TODO: Sería bueno encontrar una forma más vendedora para decir lo
 % que hacemos y también estaría muy bien si tenemos una formalización
@@ -171,11 +171,10 @@ afterwards its correctness, we will obtain it from a more broader
 construction which will transform each algebra $A$ of $\Sigma_C$ into
 an algebra $\widetilde{A}$ of $\Sigma_e$ and also each homomorphism from
 $h \colon A \to B$ into an homomorphism $\widetilde{h}\colon \widetilde A
-\to \widetilde B$. These transformations will arise from an
-\emph{interpretation} of the signature $\Sigma_C$ in $\Sigma_e$. We
-use the term interpretation because it is related with the
-interpretability of similarity types in universal algebra (cf.\
-\cite{garcia-84}), but it is otherwise called in the literature:
+\to \widetilde B$. These transformations will arise from a
+\emph{signature-translation} from $\Sigma_e$ to $\Sigma_C$. This concept
+is related with the interpretability of similarity types in universal algebra (cf.\
+\cite{garcia-84}), and it is called in different ways in the literature:
 \citet{fujiwara-1959} introduced this notion as \textit{mappings
 between algebraic systems}, \citet{janssen-98} called it a
 \textit{polynomial derivor} and \citet{mossakowski-15} refer to it as
@@ -190,9 +189,9 @@ The transformation brings the right side of the above diagram to the
 world of $\Sigma_e$ algebras, thus $\comp$ arises as the unique
 homomorphism from $T_e$ to $\widetilde{T_C}$. Correctness of the compiler
 follows abstractly as soon as we provide either an homomorphism
-$\mathit{enc} \colon \mathit{Sem} \to \widetilde{\mathit{Exec}}$ (as
+$\mathit{dec} \colon \widetilde{\mathit{Exec}} \to \mathit{Sem}$ (as
 proposed by \citet{morris-73}) or an homomorphism
-$\mathit{enc} \colon \widetilde{\mathit{Exec}} \to \mathit{Sem}$ (after \cite{thatcher-80}).
+$\mathit{enc} \colon \mathit{Sem} \to \widetilde{\mathit{Exec}}$ (after \cite{thatcher-80}).
 
 \begin{center}
   \begin{tikzpicture}[>=latex]
@@ -216,8 +215,8 @@ and results. We discuss our design implementation in Agda and compare
 it with other formalizations, in particular \citeauthor{capretta-99}'s
 in Coq.
 
-In Sect. \ref{sec:trans} we introduce the concept of \emph{interpretation}
-of signatures and prove that it induces a transformation of algebras
+In Sect. \ref{sec:trans} we introduce the concept of \emph{signature-translation}
+and prove that it induces a transformation of algebras
 and their homomorphisms. As far as we know, there is no formalization
 of heterogeneous algebras including these results.
 

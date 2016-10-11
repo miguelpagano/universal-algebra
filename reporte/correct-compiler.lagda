@@ -32,7 +32,7 @@ urlcolor=blue]{ hyperref }
 
 %include agda.fmt
 %include unicode.fmt
-
+\DeclareUnicodeCharacter{7504}{\ensuremath{^{m}}}
 \DeclareUnicodeCharacter{10140}{\ensuremath{\Rightarrow}}
 \DeclareUnicodeCharacter{10035}{\ensuremath{\ast}}
 \DeclareUnicodeCharacter{8338}{\ensuremath{_{o}}}

@@ -25,7 +25,7 @@ data Opsₘ : List Sortsₘ × Sortsₘ → Set where
  
 The main aspect of the algebraic approach to correct translation is to
 conceive both languages as algebras of the source signature. We could
-define a $\Sigma_e$-algebra $\widehat{\mathcal{T}_m}$ where the interpretation of
+define a $\Sigma_e$-algebra $\widetilde{\mathcal{T}_m}$ where the interpretation of
 sort |ExprN| is the set of terms of the term algebra $\mathcal{T}_m$ and the
 interpretation of operations is defined in the following way:
 %if False
@@ -216,8 +216,8 @@ module AlgTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} where
 \end{code}
 
 Furthermore, we can also translate any homomorphism $h : \mathcal{A}
-\to \mathcal{A'}$ to an homomorphism $\widehat{h} :
-\widehat{\mathcal{A}} \to \widehat{\mathcal{A'}}$, thus completing the
+\to \mathcal{A'}$ to an homomorphism $\widetilde{h} :
+\widetilde{\mathcal{A}} \to \widetilde{\mathcal{A'}}$, thus completing the
 definition of a functor from the category of $\Sigma_t$-algebras to the
 category of $\Sigma_s$-algebras.
 

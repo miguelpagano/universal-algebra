@@ -1,308 +1,160 @@
-\section{Corrección de un compilador de expresiones}
+%if False
+\begin{code}
+module reporte.compiler where
+open import reporte.univ-alg
+open import reporte.transforming-algebras
+\end{code}
+%endif
+\section{Back to McCarthy}
 \label{sec:compiler}
 
-En esta sección mostraremos el desarrollo del compilador de expresiones
-aritméticas en un lenguaje de máquina cuya ejecución manipula un stack, que
-presentamos en la introducción, utilizando el framework algebraico.
-
-\subsection{Especificación del problema}
-
-Se quiere definir un compilador que traduzca expresiones del lenguaje 
-$Expr$ en expresiones (a las que llamaremos \textit{códigos}) del lenguaje $Code$ de manera que la semántica se preserve.
-Esta preservación estará especificada por una relación entre ambas semánticas.
-
-\subsubsection*{Lenguaje fuente}
-
-\paragraph{Sintaxis}
-\begin{quote}
-$ Expr  ::=  \;\; Nat  \;\; || \;\;  Var \;\; || \;\; Expr ⊕ Expr $
-\end{quote}
-
-\noindent donde $Nat$ corresponde con los símbolos de los números naturales y $Var$ con
-símbolos para variables.
-
-\paragraph{Semántica}
-Para darle semántica a las variables necesitamos un \textit{estado} que asigne
-a cada una un natural. Sea $State = Var \rightarrow \mathbb{N}$, definimos
-una función semántica para $Expr$, a la cual llamamos $eval$:
-
-\begin{align*}
-  &eval     :\;Expr \rightarrow State \rightarrow \mathbb{N}\\
-  &eval\;n \;=\; \lambda\,\upsigma \rightarrow n\\
-  &eval\;v \;=\;\lambda\,\upsigma \rightarrow \upsigma\,v\\
-  &eval\;(e_1 \oplus e_2)\;=\;\lambda\,\upsigma \rightarrow (eval\,e_1\,\upsigma) + (eval\,e_1\,\upsigma)\\
-\end{align*}
-
-\subsubsection*{Lenguaje target}
-
-\paragraph{Sintaxis}
-\begin{quote}
-$ Code  ::=  \;\; push\,Nat  \;\; || \;\; load\, Var \;\; || \;\; Code \,;\, Code \;\; || \;\; add $
-\end{quote}
-
-\noindent donde $Nat$ corresponde con los símbolos de los números naturales y $Var$ con
-símbolos para variables.
-
-\paragraph{Semántica}
-La semántica de $Code$ representa la ejecución del código en una máquina que manipula
-una pila. Podemos representar las pilas con listas de naturales.
-
-\begin{align*}
-  &exec     :\;Code \rightarrow Stack \times State \rightarrow Stack\\
-  &exec\;(push\,n) \;=\; \lambda\,(s , \upsigma) \rightarrow (s : n)\\
-  &exec\;(load\,v) \;=\;\lambda\,(s , \upsigma) \rightarrow (\upsigma\,v\,:\,s)\\
-  &exec\;(c_1\,;\,c_2)\;=\;\lambda\,(s , \upsigma) \rightarrow exec\;c_2\;(\upsigma,exec\;c_1\;(\upsigma,s))\\
-  &exec\;add \;\;\;\;\;\;\;=\;\lambda\,(n \, : \, m \, : \, s , \upsigma) \rightarrow (n \, + \, m \, : \, s)\\
-\end{align*}
-
-\subsubsection*{Compilador correcto}
-El objetivo es definir un compilador $comp\,:\,Expr \rightarrow Code$ tal que la ejecución del resultado
-de compilar una expresión $e$ a partir de una pila $s$ y un estado $\sigma$ obtenga la misma pila $s$ con el
-valor semántico de $e$ agregado en el tope:
-
+In this short section we define the expected interpretation of the
+signature $\Sigma_e$, introduced in Sec.~\ref{sec:univ-alg}, in the
+signature $\Sigma_c$, shown in Sec.~\ref{sec:trans}; this will let us
+obtain the compiler as the initial homomorphism from $\mathcal{T}_e$
+to $\widetilde{\mathcal{T}_m}$. We will also define the algebra
+$\mathit{Exec}$ corresponding to the execution of the target language
+thus getting the following diagram between $\Sigma_e$-algebras:
 \begin{center}
-   $exec\,(comp\,e)\,(s,\upsigma)\,=\,eval\,e\,:\,s$
+  \begin{tikzpicture}[>=latex]
+    \node (te) at (0,1.5) {$T_e$}; 
+    \node (tc) at (3,1.5) {$\widetilde{T_c}$}; 
+    \node (seme) at (0,0) {$\mathit{Sem}$} ; 
+    \node (semc) at (3,0) {$\widetilde{\mathit{Exec}}$} ; 
+    \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [above] {$\mathit{comp}$} (tc); 
+    \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
+    \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\widetilde{\mathit{hexec}}$} (semc);
+  \end{tikzpicture}
 \end{center}
+To close the gap, we define an homomorphism
+$\mathit{enc} : \mathit{Sem} \to \widetilde{\mathit{Exec}}$; in order
+to show that this approach corresponds to the usual notion of compiler
+correctness, we extract a proof from the commuting diagram.
 
-\subsection{Definición de los lenguajes}
-
-Definimos los lenguajes mediante signaturas y sus semánticas mediante
-álgebras de las mismas.
-
-\subsubsection*{Signatura fuente}
-
-\begin{spec}
-data Sortsₑ : Sorts where
-  E : Sortsₑ
-
-data Funcsₑ : Funcs Sortsₑ where
-  valN  : (n : ℕ) → Funcsₑ ([] , E)
-  varN  : (v : Var) → Funcsₑ ([] , E)
-  plus  : Funcsₑ ( E ∷ [ E ] , E )
+%TODO: ver cómo recordar esto por acá.
+El objetivo es definir un compilador $comp\,:\,Expr \rightarrow Code$
+tal que la ejecución del resultado de compilar una expresión $e$ a
+partir de una pila $s$ y un estado $\sigma$ obtenga la misma pila $s$
+con el valor semántico de $e$ agregado en el tope:
+\[
+  \execCode\,(\comp\,e)\,(\sigma,s)\,=\,\evalExpr\,e\,\sigma \consop s
+\]
 
 
-Σₑ : Signature
-Σₑ = record  { sorts = Sortsₑ
-             ; funcs = Funcsₑ
-             }
-\end{spec}
+\paragraph{Semantics of the target language}
 
-El carrier del álgebra de términos |∣T∣ Σₑ| para el único sort |E| contiene los elementos
-del lenguaje $Expr$. La expresión $3 \oplus ``x''$ de $Expr$ se corresponde con el término:
-
-\begin{spec}
-term plus (term (valN 3) ⟨⟩ ▹ term (varN `` x '') ⟨⟩ ▹ ⟨⟩) : ∣T∣ Σₑ
-\end{spec}
-
-
-\subsubsection*{Álgebra para la semántica de $Expr$}
-
-La semántica del lenguaje $Expr$ asigna a cada expresión una función en $State \rightarrow \mathbb{N}$.
-Definimos un álgebra en la cual interpretamos al único sort |E| con el setoide de las funciones
-de |State| en |ℕ|, para ello usamos la función |→-setoid| definida en la librería estándar:
-
-\begin{spec}
-State : Set
-State = Var → ℕ
-
-iSortsₑ : ISorts Σₑ
-iSortsₑ E = State →-setoid ℕ
-\end{spec}
-
-Para cada operación en |Σₑ| damos su interpretación, es decir un elemento en
-|IFuncs Σₑ ty iSortsₑ|, donde |ty| es el tipo de la operación:
-
-\begin{spec}
-iValN : (n : ℕ) → IFuncs Σₑ ([] , E) iSortsₑ
-iValN n = record  { _⟨$⟩_ = λ { ⟨⟩ σ → n }
-                  ; cong = ... }
- 
-iVarN : (v : Var) → IFuncs Σₑ ([] , E) iSortsₑ
-iVarN v = record  { _⟨$⟩_ = λ { ⟨⟩ σ → σ v }
-                   ; cong = ... }
-
-iPlus : IFuncs Σₑ (E ∷ [ E ] , E) iSortsₑ
-iPlus = record  { _⟨$⟩_ = λ { (v₀ ▹ v₁ ▹ ⟨⟩) σ → v₀ σ + v₁ σ }
-                ; cong = ... }
-\end{spec}
-
-\begin{spec}
-iFuncsₑ : ∀ {ty} → (f : funcs Σₑ ty) → IFuncs Σₑ ty iSortsₑ
-iFuncsₑ (valN n)  = iValN n
-iFuncsₑ plus      = iPlus
-iFuncsₑ (varN v)  = iVarN v
-\end{spec}
-
-Podemos definir entonces el álgebra |Semₑ|, correspondiente al dominio semántico
-del lenguaje $Expr$:
-
-\begin{spec}
-Semₑ : Algebra Σₑ
-Semₑ = iSortsₑ ∥ iFuncsₑ
-\end{spec}
-
-La función semántica está dada por el homomorfismo |∣T∣ₕ Semₑ|, que es único por inicialidad
-de |∣T∣ Σₑ|.
-
-\subsubsection*{Signatura target}
-
-\begin{spec}
-data Sortsₘ : Sorts where
-  C : Sortsₘ
-
-data Funcsₘ : Funcs Sortsₘ where
-  pushₘ  : (n : ℕ) → Funcsₘ ([] , C)
-  loadₘ  : (v : Var) → Funcsₘ ([] , C)
-  addₘ   : Funcsₘ ([] , C)
-  seqₘ   : Funcsₘ (C ∷ C ∷ [] , C)
-
-Σₘ : Signature
-Σₘ = record  { sorts = Sortsₘ
-             ; funcs = Funcsₘ
-             }
-\end{spec}
-
-El carrier del álgebra de términos |∣T∣ Σₜ| para el único sort |C| contiene los elementos
-del lenguaje $Code$. La expresión $push\;3;load\;``x'';add$ de $Code$ se corresponde con
-
-\begin{spec}
-  term seqₘ  (term (pushₘ 3) ⟨⟩ ▹
-             (term seqₘ  (term (loadₘ `` x '') ⟨⟩ ▹
-                         term add ⟨⟩ ▹
-                         ⟨⟩)) ▹
-             ⟨⟩)
-\end{spec}
-
-\subsubsection*{Álgebra para la semántica de $Code$}
-
-La semántica del lenguaje $Code$ asigna a cada código una función \textbf{parcial} de
-$Stack \times State$ en $Stack$. Para representar esta parcialidad usamos el tipo |Maybe|,
-de manera que si la función no está definida para algún valor se obtendrá |nothing|.
-
-\begin{spec}
+As we explained in the introduction, our target language corresponds
+to a stack-based machine. Execution can get stuck when the current
+instruction is $\instr{add}$ and there is less than two naturals in
+the stack. We model partiality with the Maybe monad.
+%if False
+\begin{code}
 Stack : Set
 Stack = List ℕ
 
 Conf : Set
 Conf = Stack × State
-\end{spec}
+open import Data.Maybe hiding (map)
+open import Category.Monad
+open import Category.Monad.Identity 
+open Signature
+private
+\end{code}
+%endif
+\begin{code}
+  ⟦_⟧ₛᵐ : sorts Σₘ → Setoid _ _
+  ⟦ Codeₛ ⟧ₛᵐ = Conf →-setoid Maybe Stack
+\end{code}
 
-\begin{spec}
-iSortsₘ : ISorts Σₘ
-iSortsₘ Codeₛ = Conf →-setoid Maybe Stack
-\end{spec}
+The interpretation of the operations is straightforward: the machine
+gets stuck only when incurring in a stack underflow; in such case,
+errors are propagated and the following instructions are discarded.
+\begin{code}
+iₒᵐ : ∀ {ar s} → ops Σₘ (ar ⇒ s) → ∥ ⟦_⟧ₛᵐ ✳ ar ∥ → ∥ ⟦ s ⟧ₛᵐ ∥
+iₒᵐ (pushₘ n) ⟨⟩ (s , σ) = just (n ∷ s)
+iₒᵐ (loadₘ v) ⟨⟩ (s , σ) = just (σ v ∷ s)
+iₒᵐ addₘ ⟨⟩ (m ∷ n ∷ s , σ) = just (m + n ∷ s)
+iₒᵐ addₘ ⟨⟩ (s , σ) = nothing
+iₒᵐ seqₘ ⟨⟨ v₀ , v₁ ⟩⟩ (s , σ) = v₀ (s , σ) >>= (λ s' → v₁ (s' , σ))
+\end{code}
+%if False
+\begin{code}
+  where open RawMonad Data.Maybe.monad
+iₚᵐ : ∀ {ar} {s} → (f : ops Σₘ (ar ⇒ s)) →
+           {vs vs' : ∥ ⟦_⟧ₛᵐ ✳ ar ∥ } →
+           _∼v_ {R = Setoid._≈_ ∘ ⟦_⟧ₛᵐ} vs vs' →
+           Setoid._≈_ (⟦ s ⟧ₛᵐ) (iₒᵐ f vs) (iₒᵐ f vs')
+iₚᵐ (pushₘ n) ∼⟨⟩ = Setoid.refl ⟦ Code ⟧ₛᵐ
+iₚᵐ (loadₘ v) ∼⟨⟩ = Setoid.refl ⟦ Code ⟧ₛᵐ
+iₚᵐ addₘ ∼⟨⟩ = Setoid.refl ⟦ Code ⟧ₛᵐ
+iₚᵐ seqₘ {⟨⟨ t₁ , t₃ ⟩⟩} {⟨⟨ t₂ , t₄ ⟩⟩}
+         (∼▹ t₁≈t₂ (∼▹ t₃≈t₄ ∼⟨⟩)) (s , σ) = begin
+                                             ((t₁ (s , σ)) >>= (λ s' → t₃ (s' , σ)))
+                                             ≡⟨ cong (_>>= λ s' → t₃ (s' , σ)) (t₁≈t₂ (s , σ)) ⟩
+                                             ((t₂ (s , σ)) >>= (λ s' → t₃ (s' , σ)))
+                                             ≡⟨ congSeq ⟩
+                                             ((t₂ (s , σ)) >>= (λ s' → t₄ (s' , σ)))
+                                             ∎
+    where open RawMonad Data.Maybe.monad
+          import Relation.Binary.PropositionalEquality
+          open ≡-Reasoning
+          congSeq : (t₂ (s , σ) >>= (λ s' → t₃ (s' , σ)))
+                    ≡
+                    (t₂ (s , σ) >>= (λ s' → t₄ (s' , σ)))
+          congSeq with t₂ (s , σ)
+          ... | nothing = refl
+          ... | just s' = t₃≈t₄ (s' , σ)        
+\end{code}
+%endif
 
-Definimos ahora la interpretación de cada símbolo de función de |Σₘ|:
-
-\begin{spec}
-iPushN : (n : ℕ) → IFuncs Σₘ ([] , C) iSortsₘ
-iPushN n = record  { _⟨$⟩_ = λ { ⟨⟩ (s , σ) → just (n ∷ s) }
-                   ; cong = ... }
-
-iLoadV : (v : Var) → IFuncs Σₘ ([] , Codeₛ) iSortsₘ
-iLoadV v = record  { _⟨$⟩_ = λ { ⟨⟩ (s , σ) → just (σ v ∷ s) }
-                   ; cong = ... }
-
-iAdd : IFuncs Σₘ ([] , C) iSortsₘ
-iAdd = record  { _⟨$⟩_ = λ {  ⟨⟩ (n₀ ∷ n₁ ∷ s , σ)  → just (n₁ + n₀ ∷ s) ;
-                              ⟨⟩ (_ , σ)            → nothing}
-               ; cong = ... }
-
-iSeq : IFuncs Σₘ (Codeₛ ∷ [ Codeₛ ] , Codeₛ) iSortsₘ
-iSeq = record  { _⟨$⟩_ = λ {  (v₀ ▹ v₁ ▹ ⟨⟩) (s , σ) →
-                              v₀ (s , σ) >>= λ s' → v₁ (s' , σ) } 
-               ; cong = ... }
-\end{spec}
-
-En las interpretaciones de |addₘ| y |seqₘ| tenemos que lidiar con la parcialidad. En el
-primer caso si en la pila no hay por lo menos dos elementos damos |nothing|. En el segundo
-caso utilizamos la función \textit{bind} de la mónada Maybe, si al ejecutar la semántica correspondiente
-al primer código de la secuencia se obtiene |nothing|, entonces la semántica de toda la secuencia será
-nothing, de lo contrario se prosigue ejecutando la semántica del segundo código de la secuencia, a partir
-de la pila resultante y el mismo estado.
-
-Definimos entonces la interpretación de los símbolos de función y el álgebra |Exec|, correspondiente
-al dominio semántico del lenguaje $Code$:
-
-\begin{spec}
-iFuncsₘ : ∀ {ty} → (f : funcs Σₘ ty) → IFuncs Σₘ ty iSortsₘ
-iFuncsₘ (pushₘ n) = iPushN n
-iFuncsₘ (loadₘ v) = iLoadV v
-iFuncsₘ addₘ = iAdd
-iFuncsₘ seqₘ = iSeq
-\end{spec}
-
-\begin{spec}
+The interpretation of operations is completed by the proof that their
+interpretation, here |iₒᵐ|, respects the equality of arguments; we
+omit this straightforward proof, which we call |iₚᵐ|. 
+\begin{code}
+iₘ :  ∀ {ar s} → ops Σₘ (ar ➜ s) → ⟦_⟧ₛᵐ ✳ ar ⟶ ⟦ s ⟧ₛᵐ
+iₘ f = record { _⟨$⟩_ = iₒᵐ f ; cong = iₚᵐ f }
+\end{code}
+We have thus constructed the algebra |Exec|; the semantics of low-level
+programs, represented as elements in | |T|ₘ |, is given by the initial
+homomorphism.
+%if False
+\begin{code}
+open TermAlgebra Σₘ renaming (|T| to |Tₘ|)
+open Hom
+\end{code}
+%endif
+\begin{code}
 Exec : Algebra Σₘ
-Exec = iSortsₘ ∥ iFuncsₘ  
-\end{spec}
+Exec = 〈 ⟦_⟧ₛᵐ , iₘ 〉
 
-La función semántica está dada por el homomorfismo |∣T∣ₕ Exec|.
+semₘ : Homo |Tₘ| Exec
+semₘ = hₘ
+\end{code}
+%if False
+\begin{code}
+  where open InitHomo Exec renaming (|h|A to hₘ)
+open FormalTerm Σₘ
+open import Data.Fin
+\end{code}
+%endif
 
-\subsection{Traducción}
-
-Tenemos definidos los lenguajes source y target mediante signaturas, y a sus
-semánticas como álgebras.
-
-%\begin{diagram}
-%  |∣T∣ Σₑ|     &     &   &  &    &|∣T∣ Σₘ|\\
-%  \dTo_{|∣T∣ₕ Semₑ|} &     &   &  &   &\dTo_{|∣T∣ₕ Exec|}\\
-%  |Semₑ|        &     &   &  &    &|Exec|\\
-%\end{diagram}
-
-Procedemos ahora a definir una traducción |Σₑ ↝ Σₘ| y así poder llevar las álgebras
-y homomorfismos de |Σₘ| a |Σₑ|.
-
-\subsubsection*{Traducción de las signaturas}
-
-Definimos una traducción de la signatura |Σₑ| a |Σₘ|, para ello
-damos la traducción de sorts y de símbolos de función.
-
-
-\paragraph{Sorts} Como tenemos un sólo sort en cada signatura, hay una sóla forma
-de definir la traducción de sorts:
-
-\begin{spec}
-tsorts : sorts Σₑ → sorts Σₘ
-tsorts E = C
-\end{spec}
-
-
-\paragraph{Operaciones} Para cada símbolo de función de |Σₑ| debemos dar una expresión
-que respete el tipo. Aquí se puede notar la ventaja de tener los símbolos de función definidos
-como una familia indexada en sus tipos, ya que las expresiones que conforman
-la traducción sólo pueden definirse de manera que los tipos sean correctos.
-
-\begin{itemize}
-  \item Para cada natural |n| tenemos un símbolo |val n| con tipo |([] , E)|.
-        Damos entonces una expresión con aridad vacía y target sort |C| (ya que
-        |tsorts E = C|):
-
-\begin{spec}
-valN↝ : (n : ℕ) → ΣExpr Σₘ [] C
-valN↝ n = pushₘ n ∣$∣ ⟨⟩
-\end{spec}
-
-   \item Para el caso de las variables tenemos que dar una expresión también con aridad
-         vacía y sort |C|:
-
-\begin{spec}
-varN↝ : (v : Var) → ΣExpr Σₘ [] C
-varN↝ v = loadₘ v ∣$∣ ⟨⟩
-\end{spec}
-
-   \item Para la operación |plus|, cuyo tipo es |(E ∷ [ E ] , E)| tenemos que dar una expresión donde pueden ocurrir
-         referencias a parámetros según la aridad |C ∷ [ C ]| y el target sort debe ser
-         |C|:
-
-\begin{spec}
-plus↝ : ΣExpr Σₘ (C ∷ [ C ]) C
-plus↝ = seqₘ ∣$∣  (# (suc zero) ▹
-                  (seqₘ ∣$∣ ((# zero) ▹ (addₘ ∣$∣ ⟨⟩) ▹ ⟨⟩)) ▹
-                  ⟨⟩)
-\end{spec}
-\end{itemize}
-
+\paragraph{Interpreting the source language}
+Our next task is to interpret |Σₑ| into |Σₘ|. Remember that this involves
+an interpretation of sorts
+\begin{code}
+s↝ : sorts Σₑ → sorts Σₘ
+s↝ ExprN = Code
+\end{code}
+and an interpretation of operations, which consists in assigning a
+formal expression $\mathit{ar} \vdash t : s$ to each operation symbol
+$f : ar \Rightarrow s$. 
+\begin{code}
+op↝ : ∀ {ar s} → ops Σₑ (ar , s) → map s↝ ar ⊢ s↝ s
+op↝ (valN n) = op (pushₘ n) ⟨⟩
+op↝ (varN v) = op (loadₘ v) ⟨⟩
+op↝ plus = op seqₘ
+    ⟨⟨ var zero , op seqₘ ⟨⟨ var (suc zero) , op addₘ ⟨⟩ ⟩⟩ ⟩⟩
+\end{code}
 
 Podemos definir entonces la traducción de símbolos de función, y luego
 la traducción de signaturas:

@@ -267,7 +267,7 @@ i plus = record  { _⟨$⟩_ = λ {⟨⟨ f , g ⟩⟩  σ → f σ + g σ}
 \begin{code}
   iₒ : ∀ {ar s} → (f : ops Σₑ (ar ⇒ s)) → ∥ ⟦_⟧ ✳ ar ∥ → ∥ ⟦ s ⟧ ∥
   iₒ (valN n) ⟨⟩ = λ σ → n
-  iₒ (plus) (v₀ ▹ (v₁ ▹ ⟨⟩)) = λ σ → v₀ σ + v₁ σ
+  iₒ (plus) ⟨⟨ v₀ , v₁ ⟩⟩ = λ σ → v₀ σ + v₁ σ
   iₒ (varN x) ⟨⟩ = λ σ → σ x
 
   iₚ : ∀ {ar} {s} → (f : ops Σₑ (ar ⇒ s)) →
@@ -602,7 +602,7 @@ vectors of terms to vectors of $\mathcal{A}$, of course respecting
 the sorts.
 %if False
 \begin{code}
-module InitHomo {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} {Σ : Signature} (A : Algebra {ℓ₃} {ℓ₄} Σ) where
+module InitHomo {ℓ₃ ℓ₄ : Level} {Σ : Signature} (A : Algebra {ℓ₃} {ℓ₄} Σ) where
   open TermAlgebra Σ
   open Hom |T| A
   open Homo

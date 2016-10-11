@@ -49,7 +49,7 @@ open import Data.List hiding ([_];zip) public
 open import Relation.Binary.PropositionalEquality as PE hiding ([_];isEquivalence) public
 open import Data.String using (String) public
  
-open import VecH public
+open import HeterogenuousVec public
 
 open Setoid
 
@@ -65,9 +65,6 @@ ls ➜ s = (ls , s)
 
 [_,_] : {S : Set} → S → S → List S
 [ a , b ] = a ∷ (b ∷ []) 
-
-Vec : ∀ {l} {I : Set} (A : I -> Set l) → List I → Set l
-Vec {l} {I} = VecH {l} I
 \end{code}
 %endif
 
@@ -99,7 +96,7 @@ record Signature : Set₁ where
   
 _✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) →
                                  List I → Setoid _ _
-_✳_ {I = I} = VecSet I
+_✳_ {I = I} = HVecSet I
 
 ∥_∥ : ∀ {l₁ l₂} → (Setoid l₁ l₂) → Set l₁
 ∥_∥ {l₁} {l₂} S = Carrier S
@@ -329,7 +326,7 @@ the heterogeneous vector |as : A ⟦ ar ⟧ₛ*|. We let |map⟿ h ts = mapV
 %if False
 \begin{code}
   map⟿ : ∀ {ar} → (h : _⟿_) →  ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ B ⟦ ar ⟧ₛ* ∥
-  map⟿ h ts = mapV (_⟨$⟩_ ∘ h) ts
+  map⟿ h ts = mapHVec (_⟨$⟩_ ∘ h) ts
 \end{code}
 %endif
 \noindent Now we can state condition \eqref{eq:homcond} replacing
@@ -398,8 +395,8 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆} {Σ}
                                            map⟿  A₀ A₁ (′ H₀ ′) as)
                           ≈⟨ ≡to≈ 
                                 $ PE.cong (A₂ ⟦ f ⟧ₒ ⟨$⟩_ )
-                                          (propMapV∘ ar as (_⟨$⟩_ ∘ ′ H₀ ′)
-                                                           (_⟨$⟩_ ∘ ′ H₁ ′)) ⟩
+                                          (propMapV∘ as (_⟨$⟩_ ∘ ′ H₀ ′)
+                                                        (_⟨$⟩_ ∘ ′ H₁ ′)) ⟩
                         A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₀ A₂ comp as)
                       ∎
 
@@ -575,7 +572,7 @@ module TermAlgebra (Σ : Signature) where
 \begin{code}
   data HU : (s : sorts Σ) → Set where
     term : ∀  {ar s} →  (f : ops Σ (ar ⇒ s)) →
-               (Vec HU ar) → HU s
+               (HVec HU ar) → HU s
 \end{code}
 
 %% MIGUEL: no creo que sean necesarios estos ejemplos.
@@ -609,14 +606,14 @@ of |cong|.
   |T| = record  { _⟦_⟧ₛ = setoid ∘ HU
                 ; _⟦_⟧ₒ  = ∣_|ₒ
                 }
-    where ≡vec : ∀ {ar}  → (ts₁ ts₂ : VecH _ HU ar) →
+    where ≡vec : ∀ {ar}  → (ts₁ ts₂ : HVec HU ar) →
                    _∼v_ {R = λ _ → _≡_} ts₁ ts₂ →
                    ts₁ ≡ ts₂
           ≡vec ⟨⟩ ⟨⟩ ≈⟨⟩ = PE.refl
           ≡vec (t ▹ ts₁) (.t ▹ ts₂) (∼▹ PE.refl ts₁≈ts₂) =
                                     PE.cong (λ ts → t ▹ ts) (≡vec ts₁ ts₂ ts₁≈ts₂)
           fcong : ∀ {ar s} {f : ops Σ (ar ⇒ s)} →
-                              (ts₁ ts₂ : VecH _ HU ar) →
+                              (ts₁ ts₂ : HVec HU ar) →
                              _∼v_ {R = λ s₀ → _≡_} ts₁ ts₂ →
                              term f ts₁ ≡ term f ts₂
           fcong {f = f} ts₁ ts₂ ts₁≈ts₂ = PE.cong (term f) (≡vec ts₁ ts₂ ts₁≈ts₂)
@@ -673,7 +670,7 @@ terms and also satisfies the homomorphism condition.
 %if False
 \begin{code}
   map|T|→A≡mapV : ∀ {ar} {ts : ∥ |T| ⟦ ar ⟧ₛ*  ∥} →
-                map|h|→A ts ≡ mapV (λ s → ∣h∣→A {s}) ts
+                map|h|→A ts ≡ mapHVec (λ s → ∣h∣→A {s}) ts
   map|T|→A≡mapV {ar = []} {⟨⟩} = PE.refl
   map|T|→A≡mapV {s ∷ ar} {t ▹ ts} =
                  PE.cong (λ ts' → ∣h∣→A t ▹ ts') map|T|→A≡mapV
@@ -725,9 +722,9 @@ reasoning provided by the standard library. We omit the proof
 %if False
 \begin{code}
     where open EqR (A ⟦ s ⟧ₛ)
-          map≈ : (ar : Arity Σ) → (ts : VecH (sorts Σ) (HU) ar) →
-                  (mapV (_⟨$⟩_ ∘ ′ H ′) ts) ∼v
-                  (mapV (_⟨$⟩_ ∘ ′ G ′) ts)
+          map≈ : (ar : Arity Σ) → (ts : HVec (HU) ar) →
+                  (mapHVec (_⟨$⟩_ ∘ ′ H ′) ts) ∼v
+                  (mapHVec (_⟨$⟩_ ∘ ′ G ′) ts)
           map≈ [] ⟨⟩ = ∼⟨⟩
           map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (total H G s t)
                                       (map≈ ar ts)

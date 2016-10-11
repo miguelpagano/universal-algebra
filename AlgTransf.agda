@@ -87,8 +87,8 @@ iFun↝ : ∀ {l₀ l₁} {Σ₀ Σ₁ : Signature} {ar : Arity Σ₀}
                    IFuncs Σ₀ (ar , s) (_⟦_⟧ₛ a ∘ fₛ)
 iFun↝ {Σ₀ = Σ₀} {Σ₁} {ar} {s} {fₛ} f e a =
                    record { _⟨$⟩_ = λ vs → iΣExpr a
-                                           (vecTransf fₛ (Carrier ∘ _⟦_⟧ₛ a) ar vs) e
-                          ; cong = λ vs≈vs' → fTransCong e (∼vtransf fₛ vs≈vs') }
+                                           (reindex fₛ vs) e
+                          ; cong = λ vs≈vs' → fTransCong e (∼v-reindex fₛ vs≈vs') }
   where fTransCong : ∀ {ar₁ : Arity Σ₁} {s₁ : sorts Σ₁}
                        {vs vs' : VecH (sorts Σ₁) (Carrier ∘ _⟦_⟧ₛ a) ar₁} →
                        (e₁ : ΣExpr Σ₁ ar₁ s₁) →
@@ -122,13 +122,13 @@ homCond↝ : ∀ {l₀ l₁} {Σ₀ Σ₁ : Signature} {a a' : Algebra {l₀} {l
 homCond↝ {Σ₁ = Σ₁} {a} {a'} {ar , s} t h f = λ as →
                subst (λ vec → _≈_ (a' ⟦ ↝ₛ t s ⟧ₛ)
                                    (_⟨$⟩_ (′ h ′ (↝ₛ t s))
-                                         (iΣExpr a (vecTransf (↝ₛ t) (Carrier ∘ _⟦_⟧ₛ a) ar as)
+                                         (iΣExpr a (reindex (↝ₛ t) as)
                                           (↝f t f)))
                                    (iΣExpr a' vec (↝f t f)))
                      (≡maptransf (↝ₛ t) (Carrier ∘ _⟦_⟧ₛ a) (Carrier ∘ _⟦_⟧ₛ a')
                                  (_⟨$⟩_ ∘ ′ h ′) ar as)
                      (homCond↝' (map (↝ₛ t) ar) (↝ₛ t s) (↝f t f)
-                                 (vecTransf (↝ₛ t) (Carrier ∘ _⟦_⟧ₛ a) ar as))
+                                 (reindex (↝ₛ t) as))
   where
         homCond↝' : (ar : Arity Σ₁) → (s : sorts Σ₁) → (e : ΣExpr Σ₁ ar s) →
                      (vs : VecH (sorts Σ₁) (Carrier ∘ _⟦_⟧ₛ a) ar) →

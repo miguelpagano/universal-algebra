@@ -1,4 +1,4 @@
-\documentclass[preprint,10pt]{sigplanconf}
+\documentclass[10pt]{sigplanconf}
 
 % The following \documentclass options may be useful:
 
@@ -49,9 +49,8 @@ urlcolor=blue]{ hyperref }
 \special{papersize=8.5in,11in}
 \setlength{\pdfpageheight}{\paperheight}
 \setlength{\pdfpagewidth}{\paperwidth}
-
-\conferenceinfo{CONF 'yy}{Month d--d, 20yy, City, ST, Country}
-\copyrightyear{20yy}
+\conferenceinfo{CPP '17}{January 16--17, 2017, Paris, France}
+\copyrightyear{2017}
 \copyrightdata{978-1-nnnn-nnnn-n/yy/mm}
 \copyrightdoi{nnnnnnn.nnnnnnn}
 
@@ -79,7 +78,7 @@ urlcolor=blue]{ hyperref }
 
 \begin{abstract}
   An interesting approach to construct correct compilers is given by
-  the framework of heterogeneous universal algebras. Although this is a
+  the framework of heterogeneous algebras. Although this is a
   fairly old approach, we could not find any formalization in type
   theory of this methodology.  Indeed, there seems that universal
   algebra did not attracted a lot of attention in type theory.
@@ -94,12 +93,14 @@ urlcolor=blue]{ hyperref }
 
 \end{abstract}
 
-\category{CR-number}{subcategory}{third-level}
-
+\category{D.3.1}{Programming Languages}{Formal Definitions and Theory}
+\category{F.3.1}{Specifying and Verifying and Reasoning about Programs}{Mechanical Verification}
+\category{F.3.2}{Semantics of Programming Languages}{Algebraic approaches to semantics}
+\category{D.3.4}{Processors}{Compilers}
 % general terms are not compulsory anymore,
 % you may leave them out
-\terms
-term1, term2
+% \terms
+
 
 \keywords
 correct compiler, universal algebra, formalization of mathematics

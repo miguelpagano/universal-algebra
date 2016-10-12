@@ -1,19 +1,24 @@
 \section{Introduction}
 
-The pioneering work by \citet{mccarthy1967correctness} on
-a correct compiler for arithmetic expressions was followed by a myriad
-of further papers, and even books, about how to prove the correctness
-of compilers and also methodologies for constructing correct compilers.
+The pioneering work by \citet{mccarthy1967correctness} on a correct
+compiler for arithmetic expressions was followed by a myriad of
+further papers (\cite{leroy-09}, to name the most impressive and
+\cite{bahr-16,tan-16} to name some newer), PhD theses (see, for
+example, \cite{meijer-93} and its extensive discussion of literature
+at that point), and even books \cite{sampaio-97}, about how to prove
+the correctness of compilers and also methodologies for constructing
+correct compilers.
+
 % TODO:
 % - completar con trabajos: Burstall
 % - mencionar CompCert (es lo más)
 % - mencionar Hutton (es nuevo, es cercano?)
 One early approach for structuring the proof of correctness proposed
 by \citet{morris-73} used universal algebra (particularly
-heterogeneous algebras \citet{birkhoff-70}). Soon after the ADJ group
-popularized the use of universal algebra contributing the notion of
-\emph{initial algebra sematics} \citet{goguen-77} and expanded
-\cite{thatcher-80} Morris' work. %TODO: en qué sentido?
+heterogeneous algebras as presented by \citet{birkhoff-70}). Soon after the ADJ group
+popularized the use of universal algebra by contributing the notion of
+\emph{initial algebra sematics} \cite{goguen-77} and expanded
+Morris' work in \cite{thatcher-80}. %
 % TODO: Es un salto medio grande del 80 al 98, quizás lo podamos
 % rellenar un poco? 
 % - Meijer
@@ -25,13 +30,18 @@ The main idea behind this algebraic proof of correctness is to
 conceive both languages, source and target, as the initial algebras of
 their respective signatures; semantics of the languages are freely
 obtained by initiality after giving an interpretation for the
-corresponding function symbols. The trick to get correctness is
-to map the target language and its semantics as algebras for
-the source language and then provide an homomorphism from the
-high-level semantics to the low-level one (or viceversa). In this work we formalize
-enough heterogenous universal algebra in order to complete the
-definition of a correct compiler. Throughout the article we will use
-McCarthy and Painter's language as a guiding example.
+corresponding function symbols. The trick to get correctness is to map
+the target language and its semantics as algebras for the source
+language and then provide an homomorphism from the high-level
+semantics to the low-level one (or viceversa). In this work we
+formalize enough heterogenous universal algebra in order to complete
+the definition of a correct compiler. Throughout the article we will
+use McCarthy and Painter's language as a guiding example. In the
+accompanying code for this paper (available at
+\url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}) we show a more
+interesting example.
+
+
 % TODO: Sería bueno encontrar una forma más vendedora para decir lo
 % que hacemos y también estaría muy bien si tenemos una formalización
 % del lenguaje imperativo simple, aunque no lo mostremos.
@@ -169,20 +179,21 @@ $\mathit{hexec} \colon T_C \to \mathit{Exec}$. We can picture the situation so f
 Instead of defining ingeniously the translation $\comp$ and proving
 afterwards its correctness, we will obtain it from a more broader
 construction which will transform each algebra $A$ of $\Sigma_C$ into
-an algebra $\widetilde{A}$ of $\Sigma_e$ and also each homomorphism from
-$h \colon A \to B$ into an homomorphism $\widetilde{h}\colon \widetilde A
-\to \widetilde B$. These transformations will arise from a
-\emph{signature-translation} from $\Sigma_e$ to $\Sigma_C$. This concept
-is related with the interpretability of similarity types in universal algebra (cf.\
-\cite{garcia-84}), and it is called in different ways in the literature:
-\citet{fujiwara-1959} introduced this notion as \textit{mappings
-between algebraic systems}, \citet{janssen-98} called it a
-\textit{polynomial derivor} and \citet{mossakowski-15} refer to it as
-a \textit{derived signature morphism}, a generalization of the more
-restricted \textit{signature morphisms} in the theory of institutions
-\cite{goguen-92}. Translations of signatures were
-analyzed categorically by \citet{fiore-2010} for second order
-signatures and by \citet{vidal-2012} for first order signatures.
+an algebra $\widetilde{A}$ of $\Sigma_e$ and also each homomorphism
+from $h \colon A \to B$ into an homomorphism $\widetilde{h}\colon
+\widetilde A \to \widetilde B$. These transformations will arise from
+a \emph{signature-translation} from $\Sigma_e$ to $\Sigma_C$. This
+concept is related with the interpretability of similarity types in
+universal algebra (cf.\ \cite{garcia-84}), and has an extensive
+literature: \citet{fujiwara-1959} introduced this notion as
+\textit{mappings between algebraic systems}, \citet{janssen-98},
+following the ADJ group, called it a \textit{polynomial derivor} and
+\citet{mossakowski-15} refer to it as a \textit{derived signature
+morphism}, a generalization of the more restricted \textit{signature
+morphisms} in the theory of institutions
+\cite{goguen-92}. Translations of signatures were analyzed
+categorically by \citet{fiore-2010} for second order signatures and by
+\citet{vidal-2012} for first order signatures.
 
 
 The transformation brings the right side of the above diagram to the

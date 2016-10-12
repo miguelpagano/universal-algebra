@@ -57,18 +57,7 @@ iₒ (plus) ⟨⟨ c₀ , c₁ ⟩⟩ = seq c₀ (seq c₁ add)
 \end{code}
 
 \noindent where |push|, |load| and |seq| are smart
-constructors of the terms of |HU C|:
-
-\begin{spec}
-push : ℕ → HU C 
-push n = term (pushₘ n) ⟨⟩
-load : Var → HU C
-load v = term (loadₘ v) ⟨⟩
-seq : HU C → HU C → HU C
-seq c₀ c₁ = term seqₘ (c₀  ▹ (c₁ ▹ ⟨⟩))
-add : HU C
-add = term addₘ ⟨⟩
-\end{spec}
+constructors for the terms of |HU C|.
 
 %if False
 \begin{code}
@@ -159,13 +148,18 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
 \end{code}
 %endif
 
-We will use this denotation of formal terms to define the transformation
-of algebras; however the translation of signatures involves only
-syntacticalities. In fact, it is given by a pair of functions
-$\mapSort{\_} : \mathit{sorts}\,Σ \to \mathit{sorts}\,Σ'$ and
-$\mapOp{\_}$ mapping any operation
-$f : [s_1,\ldots,s_{n}] \Rightarrow s$ to a $\Sigma'$-formal term:
-$ \mapSort{s_1},\ldots, \mapSort{s_{n}} \sdash{\Sigma'} t: \mapSort{s}$.
+In order to define the transformation of $\Sigma_t$-algebras to
+$\Sigma_s$-algebras, we need give a sort of $\Sigma_t$ for each
+sort of $\Sigma_s$, and a formal term of $\Sigma_t$ for each operation
+of $\Sigma_s$. A \emph{signature translation} consists of two functions,
+mapping sorts and operations:
+
+
+%% The translation of signatures is given by a pair of functions
+%% $\mapSort{\_} : \mathit{sorts}\,Σ \to \mathit{sorts}\,Σ'$ and
+%% $\mapOp{\_}$ mapping any operation
+%% $f : [s_1,\ldots,s_{n}] \Rightarrow s$ to a $\Sigma'$-formal term:
+%% $ \mapSort{s_1},\ldots, \mapSort{s_{n}} \sdash{\Sigma'} t: \mapSort{s}$.
 
 %if False
 \begin{code}
@@ -173,7 +167,7 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
  open FormalTerm Σₜ
  field
   ↝ₛ : sorts Σₛ → sorts Σₜ
-  ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → lmap ↝ₛ ar ⊢ ↝ₛ s
+  ↝ₒ : ∀ {ar s}  → ops Σₛ (ar , s) → lmap ↝ₛ ar ⊢ ↝ₛ s
 \end{code}
 %endif
 
@@ -181,7 +175,8 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
 record _↝_ (Σₛ Σₜ : Signature) : Set where
  field
   ↝ₛ : sorts Σₛ → sorts Σₜ
-  ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → map ↝ₛ ar ⊢ ↝ₛ s
+  ↝ₒ : ∀ {ar s} →  ops Σₛ (ar , s) →
+                   map ↝ₛ ar ⊢ ↝ₛ s
 \end{spec}
 \newcommand{\intSign}[2]{#1 \leadsto #2}
 \newcommand{\algTrans}[1]{\widetilde{\mathcal{#1}}}
@@ -204,30 +199,30 @@ $\algTrans{A} \llbracket s \rrbracket_s = \mathcal{A} \llbracket
 obtained by the interpretation of the corresponding formal expression:
 $\algTrans{A} \llbracket f \rrbracket_o = \mathcal{A} \llbracket
 \mapOp{f}\, \rrbracket^o $.
-In Agda, we can define the transformed algebra directly from this informal
-definition, however we need to convince
-Agda that any vector |vs : VecH' (A ⟦_⟧ₛ ∘ ↝ₛ) is| has also the type
-|VecH' A (map ↝ₛ is)|, this is accomplished with |reindex|.
-
-In Agda, we can define the interpretation of sorts in the transformed algebra
-directly from this:
+We can formalize the transformation of algebra directly from this, however
+the interpretation of operations is a little more complicated, since we need to convince Agda
+that any vector |vs : VecH' (A ⟦_⟧ₛ ∘ ↝ₛ) is| has also the type
+|VecH' A (map ↝ₛ is)|. This is accomplished with |reindex|.
 
 \begin{code}
-\end{code}
-
-%if False
-\begin{code}
-module AlgTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} where
+module AlgTrans {Σₛ Σₜ}  {t : Σₛ ↝ Σₜ} where
  open _↝_
 \end{code}
-%endif
+
+\begin{code}
+ _⟨_⟩ₛ : ∀  {ℓ₀ ℓ₁} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
+            (s : sorts Σₛ) → Setoid _ _
+ A ⟨ s ⟩ₛ = A ⟦ ↝ₛ t s ⟧ₛ
+\end{code}
+
 \begin{code}
  _⟨_⟩ₒ :  ∀  {ℓ₀ ℓ₁ ar s} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
              ops Σₛ (ar ⇒ s) →
-             (A ⟦_⟧ₛ ∘ (↝ₛ i)) ✳ ar ⟶ A ⟦ ↝ₛ i s ⟧ₛ
- A ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ i f ⟧ᵒ ∘ reindex (↝ₛ i) 
-                       ;  cong =  congᵒ (↝ₒ i f) ∘
-                                  ∼v-reindex (↝ₛ i) }
+             (A ⟨_⟩ₛ) ✳ ar ⟶  A ⟨ s ⟩ₛ
+ A ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ t f ⟧ᵒ ∘ reindex (↝ₛ t) 
+                       ;  cong =  congᵒ (↝ₒ t f) ∘
+                                  ∼v-reindex (↝ₛ t) }
+                                  
 \end{code}
 %if False
 \begin{code}
@@ -236,14 +231,15 @@ module AlgTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} where
 %endif
 \begin{code}
  〈_〉 : ∀ {ℓ₀ ℓ₁} → Algebra {ℓ₀} {ℓ₁} Σₜ → Algebra Σₛ
- 〈 A 〉 = 〈 (A ⟦_⟧ₛ ∘ ↝ₛ i) , (A ⟨_⟩ₒ) 〉
+ 〈 A 〉 = 〈 A ⟨_⟩ₛ , (A ⟨_⟩ₒ) 〉
 \end{code}
 
 Furthermore, we can also translate any homomorphism $h : \mathcal{A}
 \to \mathcal{A'}$ to an homomorphism $\widetilde{h} :
 \widetilde{\mathcal{A}} \to \widetilde{\mathcal{A'}}$, thus completing the
 definition of a functor from the category of $\Sigma_t$-algebras to the
-category of $\Sigma_s$-algebras.
+category of $\Sigma_s$-algebras. The proof |hcond↝| is the condition
+of the transformed homomorphism, we omit it in this text.
 
 %if False
 \begin{code}
@@ -254,17 +250,17 @@ category of $\Sigma_s$-algebras.
             {A : Algebra {l₀} {l₁} Σₜ}
             {A' : Algebra {l₂} {l₃} Σₜ}
             {ty : Type Σₛ} → (h : Homo A A') → 
-            (f : ops Σₛ ty) → homCond 〈 A 〉 〈 A' 〉 ty (′ h ′ ∘ ↝ₛ i) f 
+            (f : ops Σₛ ty) → homCond 〈 A 〉 〈 A' 〉 ty (′ h ′ ∘ ↝ₛ t) f 
  hcond↝  {A = A} {A'} {ar ⇒ s} h f as = 
-                   subst (λ vec → Setoid._≈_ (A' ⟦ ↝ₛ i s ⟧ₛ)
-                                  (′ h ′ (↝ₛ i s) ⟨$⟩
-                                         ⟦_⟧ᵒ A (↝ₒ i f) (reindex (↝ₛ i) as))
-                                  (⟦_⟧ᵒ A' (↝ₒ i f) vec) 
+                   subst (λ vec → Setoid._≈_ (A' ⟦ ↝ₛ t s ⟧ₛ)
+                                  (′ h ′ (↝ₛ t s) ⟨$⟩
+                                         ⟦_⟧ᵒ A (↝ₒ t f) (reindex (↝ₛ t) as))
+                                  (⟦_⟧ᵒ A' (↝ₒ t f) vec) 
                                    )
-                     (mapReindex (↝ₛ i) 
+                     (mapReindex (↝ₛ t) 
                                  (_⟨$⟩_ ∘ ′ h ′)  as)
-                     (homCond↝' (lmap (↝ₛ i) ar) (↝ₛ i s) (↝ₒ i f)
-                                 (reindex (↝ₛ i) as))
+                     (homCond↝' (lmap (↝ₛ t) ar) (↝ₛ t s) (↝ₒ t f)
+                                 (reindex (↝ₛ t) as))
 
   where open FormalTermInt
         homCond↝' : (ar' : Arity Σₜ) → (s' : sorts Σₜ) → (e : ar' ⊢ s') →
@@ -289,10 +285,10 @@ category of $\Sigma_s$-algebras.
                                                        (homCond↝'vec ar₁ es)
 
 
-module HomoTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} {l₀ l₁ l₂ l₃} 
+module HomoTrans {Σₛ Σₜ}  {t : Σₛ ↝ Σₜ} {l₀ l₁ l₂ l₃} 
    {A : Algebra {l₀} {l₁} Σₜ}  
    {A' : Algebra {l₂} {l₃} Σₜ} where
-   open AlgTrans {i = i}
+   open AlgTrans {t = t}
    open _↝_
    open Hom
    open Homo
@@ -300,6 +296,7 @@ module HomoTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} {l₀ l₁ l₂ l₃}
 %endif
 \begin{code}
    〈_〉ₕ : Homo A A' → Homo 〈 A 〉 〈 A' 〉
-   〈 h 〉ₕ = record { ′_′ = ′ h ′ ∘ ↝ₛ i ; cond = hcond↝ h }
+   〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ t
+                      ; cond = hcond↝ h }
 \end{code}
 

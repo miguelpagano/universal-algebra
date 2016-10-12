@@ -43,7 +43,7 @@ open import Data.Nat renaming (_⊔_ to _⊔ₙ_) public
 open import Data.Product renaming (map to pmap) public
 open import Function public 
 open import Function.Equality using (_⟶_;_⟨$⟩_;Π) renaming (_∘_ to _∘ₛ_)  public
-open import Data.List hiding ([_];zip) public
+open import Data.List hiding ([_];zip) renaming (map to lmap) public
 open import Relation.Binary.PropositionalEquality as PE hiding ([_];isEquivalence) public
 open import Data.String using (String) public
  
@@ -118,12 +118,12 @@ Var = String
 \end{code}
 %endif
 \begin{code}
-data Sortsₑ : Set where ExprN : Sortsₑ
+data Sortsₑ : Set where E : Sortsₑ
 
 data Opsₑ : List Sortsₑ × Sortsₑ → Set where
-  valN  : (n : ℕ)   → Opsₑ ([] ➜ ExprN)
-  varN  : (v : Var) → Opsₑ ([] ➜ ExprN)
-  plus  : Opsₑ ([ ExprN , ExprN ] ➜ ExprN )
+  val   : (n : ℕ)   → Opsₑ ([] ➜ E)
+  var   : (v : Var) → Opsₑ ([] ➜ E)
+  plus  : Opsₑ ([ E , E ] ➜ E )
 
 Σₑ : Signature
 Σₑ = ⟨ Sortsₑ , Opsₑ ⟩
@@ -223,9 +223,9 @@ record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) :
 %\medskip
 Let see an example of a |Σₑ|-algebra, the semantics of the expression
 language that we introduced previously. We let |State = Var → ℕ| and
-intepret the only sort |ExprN| as the setoid whose carrier are
+intepret the only sort |E| as the setoid whose carrier are
 functions in |State → ℕ| with |f ≈ g| if for every state |σ|, 
-|f σ ≡ g σ|; this last equality is the definitional equality of Agda.
+|f σ ≡ g σ| (where |≡| is the definitional equality of Agda).
 %if False
 \begin{code}
 State : Set
@@ -243,7 +243,7 @@ private
 %endif
 \begin{code}
   ⟦_⟧ : sorts Σₑ → Setoid _ _
-  ⟦ _ ⟧ = State →-setoid ℕ
+  ⟦ E ⟧ = State →-setoid ℕ
 \end{code}
 The interpretation of operations is piecewise-defined according to
 their types. Remember that besides the function, one must provide the
@@ -251,9 +251,9 @@ proof of preservation of equalities; we omit these proofs as they
 are utterly uninteresting.
 \begin{spec}
 i : ∀ {ar s} → ops Σₑ (ar ➜ s) → ⟦_⟧ ✳ ar ⟶ ⟦ s ⟧
-i (valN n) = record  { _⟨$⟩_ = λ {⟨⟩ σ → n }
+i (val n) = record  { _⟨$⟩_ = λ {⟨⟩ σ → n }
                      ; cong = {!!} }
-i (varN v) = record  { _⟨$⟩_ = λ {⟨⟩ σ → σ v }
+i (var v) = record  { _⟨$⟩_ = λ {⟨⟩ σ → σ v }
                      ; cong = {!!} }
 i plus = record  { _⟨$⟩_ = λ {⟨⟨ f , g ⟩⟩  σ → f σ + g σ}
                  ; cong = {!!}}
@@ -261,26 +261,26 @@ i plus = record  { _⟨$⟩_ = λ {⟨⟨ f , g ⟩⟩  σ → f σ + g σ}
 %if False
 \begin{code}
   iₒ : ∀ {ar s} → (f : ops Σₑ (ar ⇒ s)) → ∥ ⟦_⟧ ✳ ar ∥ → ∥ ⟦ s ⟧ ∥
-  iₒ (valN n) ⟨⟩ = λ σ → n
+  iₒ (val n) ⟨⟩ = λ σ → n
   iₒ (plus) ⟨⟨ v₀ , v₁ ⟩⟩ = λ σ → v₀ σ + v₁ σ
-  iₒ (varN x) ⟨⟩ = λ σ → σ x
+  iₒ (var x) ⟨⟩ = λ σ → σ x
 
   iₚ : ∀ {ar} {s} → (f : ops Σₑ (ar ⇒ s)) →
            {vs vs' : ∥ ⟦_⟧ ✳ ar ∥ } →
            _∼v_ {R = _≈_ ∘ ⟦_⟧} vs vs' →
            _≈_ (⟦  s ⟧) (iₒ f vs) (iₒ f vs')
-  iₚ (valN n) {⟨⟩} ∼⟨⟩ = λ σ → _≡_.refl
+  iₚ (val n) {⟨⟩} ∼⟨⟩ = λ σ → _≡_.refl
   iₚ plus {v₀ ▹ (v₀' ▹ ⟨⟩)} {v₁ ▹ (v₁' ▹ ⟨⟩)} (∼▹ v₀≈v₁ (∼▹ v₀'≈v₁' ∼⟨⟩)) =
                            λ σ → cong₂ _+_ (v₀≈v₁ σ) (v₀'≈v₁' σ)
-  iₚ (varN v) {⟨⟩} ∼⟨⟩ = λ σ → _≡_.refl
+  iₚ (var v) {⟨⟩} ∼⟨⟩ = λ σ → _≡_.refl
 
   i : ∀ {ar s} → ops Σₑ (ar ➜ s) → ⟦_⟧ ✳ ar ⟶ ⟦ s ⟧
   i f = record  { _⟨$⟩_ = iₒ f ; cong = iₚ f }
 \end{code}
 %endif
 Notice that Agda infers that there are no arguments for nullary
-operators; since |plus| has arity |[ExprN,ExprN]| and we can
-pattern-matching on |⟦_⟧ ✳ [ExprN,ExprN]| and define the
+operators; since |plus| has arity |[E,E]| and we can
+pattern-matching on |⟦_⟧ ✳ [E,E]| and define the
 interpretation as we did in the introduction. We have thus
 defined the algebra $\mathit{Sem}$:
 \begin{code}
@@ -319,12 +319,12 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ}
 An element |h : A ⟿ B| will be a family of setoid morphisms between
 the interpretation of each sort in the source and target algebras.  In
 order to encode condition \eqref{eq:homcond} we need to map |h| over
-the heterogeneous vector |as : A ⟦ ar ⟧ₛ*|. We let |map⟿ h ts = mapV
-(_⟨$⟩_ ∘ h) ts|, where |mapV| is mapping over heterogeneous vectors.
+the heterogeneous vector |as : A ⟦ ar ⟧ₛ*|. We let |map⟿ h ts = map
+(_⟨$⟩_ ∘ h) ts|, where |map| is mapping over heterogeneous vectors.
 %if False
 \begin{code}
   map⟿ : ∀ {ar} → (h : _⟿_) →  ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ B ⟦ ar ⟧ₛ* ∥
-  map⟿ h ts = mapHVec (_⟨$⟩_ ∘ h) ts
+  map⟿ h ts = map (_⟨$⟩_ ∘ h) ts
 \end{code}
 %endif
 \noindent Now we can state condition \eqref{eq:homcond} replacing
@@ -581,10 +581,10 @@ module TermAlgebra (Σ : Signature) where
 
 % \begin{spec}
 % t₁ : HU Σₑ E
-% t₁ = term (valN 2) ⟨⟩
+% t₁ = term (val 2) ⟨⟩
 
 % t₂ : HU Σₑ E
-% t₂ = term (varN " x ") ⟨⟩
+% t₂ = term (var " x ") ⟨⟩
 
 % t₃ : HU Σₑ E
 % t₃ = term plus (t₁ ▹ t₂ ▹ ⟨⟩)
@@ -593,7 +593,7 @@ module TermAlgebra (Σ : Signature) where
 \noindent We use propositional equality to turn each $\mathcal{T}_s$ in a
 setoid, thus completing the interpretation of sorts. To interpret
 an operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the
-tuple $⟨t_1,\ldots,t_n⟩$ to $f(t_1,\ldots,t_n)$; we omit the proof
+tuple $⟨t_1,\ldots,t_n⟩$ to the term $f(t_1,\ldots,t_n)$; we omit the proof
 of |cong|.
 \begin{spec}
   |T| : Algebra Σ
@@ -632,7 +632,7 @@ $\Sigma$-algebra $\mathcal{A}$ we define the homomorphism $h_A \colon
 \noindent One would like to define this map in Agda just like that:
 \begin{spec}
   ∣h∣→A : ∀ {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
-  ∣h∣→A (term f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (mapV ∣h∣→A ts)
+  ∣h∣→A (term f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (map ∣h∣→A ts)
 \end{spec}
 
 \noindent The termination checker, however, cannot ensure the
@@ -663,17 +663,18 @@ It is trivial to show that |∣h∣→A| respects the (trivial) equality on
 terms and also satisfies the homomorphism condition.
 \begin{spec}
   |h|A : Homo
-  |h|A = record  { ′_′  = λ s → record 
-                   {_⟨$⟩_ = ∣h∣→A {s} ; cong  = {!!}}
+  |h|A = record  { ′_′  =  λ s → record 
+                           {_⟨$⟩_ = ∣h∣→A {s}
+                           ; cong  = {!!}}
                  ; cond = {!!}}
 \end{spec}
 %if False
 \begin{code}
-  map|T|→A≡mapV : ∀ {ar} {ts : ∥ |T| ⟦ ar ⟧ₛ*  ∥} →
-                map|h|→A ts ≡ mapHVec (λ s → ∣h∣→A {s}) ts
-  map|T|→A≡mapV {ar = []} {⟨⟩} = PE.refl
-  map|T|→A≡mapV {s ∷ ar} {t ▹ ts} =
-                 PE.cong (λ ts' → ∣h∣→A t ▹ ts') map|T|→A≡mapV
+  map|T|→A≡map : ∀ {ar} {ts : ∥ |T| ⟦ ar ⟧ₛ*  ∥} →
+                map|h|→A ts ≡ map (λ s → ∣h∣→A {s}) ts
+  map|T|→A≡map {ar = []} {⟨⟩} = PE.refl
+  map|T|→A≡map {s ∷ ar} {t ▹ ts} =
+                 PE.cong (λ ts' → ∣h∣→A t ▹ ts') map|T|→A≡map
       
   ≡to≈ : ∀ {ℓ₁} {ℓ₂} {St : Setoid ℓ₁ ℓ₂} {x y : Carrier St} →
      x ≡ y → _≈_ St x y
@@ -689,7 +690,7 @@ terms and also satisfies the homomorphism condition.
   |T|ₕcond {_ ⇒ s} f (t ▹ ts) =
            ≡to≈ {St = A ⟦ s ⟧ₛ}
                 (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩ (∣h∣→A t ▹ ts'))
-                         map|T|→A≡mapV)
+                         map|T|→A≡map)
 
 
   |h|A : Homo
@@ -701,7 +702,7 @@ terms and also satisfies the homomorphism condition.
 
 The proof of initiality is finished once we prove that any pair of
 homomorphisms $H,G \colon \mathcal{T} \to \mathcal{A}$ are equal; \ie
-$H\,f(t_0,\ldots,t_{n-1}) ≈ f(t_0,\ldots,t_{n-1})$, for any term
+$H\,f(t_0,\ldots,t_{n-1}) ≈ G\,f(t_0,\ldots,t_{n-1})$, for any term
 $f(t_0,\ldots,t_{n-1})$.
 \begin{code}
   total : Total _≈ₕ_
@@ -718,13 +719,14 @@ $f(t_0,\ldots,t_{n-1})$.
 \end{code}
 \noindent In that proof we used the facilities for equational
 reasoning provided by the standard library. We omit the proof
-|map≈| showing |map H ts ≈ map G ts|.
+|map≈| showing |map H ts ≈ map G ts|, wich is mutually recursive
+with the proof |total|.
 %if False
 \begin{code}
     where open EqR (A ⟦ s ⟧ₛ)
           map≈ : (ar : Arity Σ) → (ts : HVec (HU) ar) →
-                  (mapHVec (_⟨$⟩_ ∘ ′ H ′) ts) ∼v
-                  (mapHVec (_⟨$⟩_ ∘ ′ G ′) ts)
+                  (map (_⟨$⟩_ ∘ ′ H ′) ts) ∼v
+                  (map (_⟨$⟩_ ∘ ′ G ′) ts)
           map≈ [] ⟨⟩ = ∼⟨⟩
           map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (total H G s t)
                                       (map≈ ar ts)

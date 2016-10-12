@@ -1,6 +1,6 @@
 module HeterogenuousVec where
 
-open import Data.List
+open import Data.List renaming (map to lmap)
 open import Relation.Binary
 open import Level
 open import Data.Fin
@@ -46,10 +46,10 @@ _‼v_ : ∀ {l I} {is : List I} {A : I → Set l} →
 {-
 Map
 -}
-mapHVec : ∀ {l₀ l₁ I} {A : I → Set l₀} {A' : I → Set l₁} {is : List I} →
+map : ∀ {l₀ l₁ I} {A : I → Set l₀} {A' : I → Set l₁} {is : List I} →
          (f : (i : I) → (A i) → (A' i)) → (vs : HVec A is) → HVec A' is
-mapHVec {is = []} f ⟨⟩ = ⟨⟩
-mapHVec {is = i₀ ∷ is} f (v₀ ▹ vs) = f i₀ v₀ ▹ mapHVec f vs
+map {is = []} f ⟨⟩ = ⟨⟩
+map {is = i₀ ∷ is} f (v₀ ▹ vs) = f i₀ v₀ ▹ map f vs
 
 
 {-
@@ -96,7 +96,7 @@ data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} 
 
 reindex : ∀ {l} {I I' : Set}
               (fᵢ : I → I') → {A : I' → Set l} → {is : List I} →
-              HVec (A ∘ fᵢ) is → HVec A (map fᵢ is)
+              HVec (A ∘ fᵢ) is → HVec A (lmap fᵢ is)
 reindex fᵢ ⟨⟩ = ⟨⟩
 reindex fᵢ (v ▹ vs) = v ▹ reindex fᵢ vs
 
@@ -132,7 +132,7 @@ Mapping reindexed vectors
 mapReindex : ∀ {l₀ l₁ I I' is} {A₀ : I' → Set l₀} {A₁ : I' → Set l₁} →
               (fᵢ : I → I') → (h : (i : I') → A₀ i → A₁ i) →
               (vs : HVec (A₀ ∘ fᵢ) is) →
-              mapHVec h (reindex fᵢ vs) ≡ reindex fᵢ (mapHVec (h ∘ fᵢ) vs)
+              map h (reindex fᵢ vs) ≡ reindex fᵢ (map (h ∘ fᵢ) vs)
 mapReindex {is = []} fᵢ h ⟨⟩ = refl
 mapReindex {is = i₀ ∷ is} fᵢ h (v ▹ vs) = cong (λ vs' → h (fᵢ i₀) v ▹ vs')
                                                (mapReindex fᵢ h vs)
@@ -147,9 +147,9 @@ propMapV∘ : ∀ {l₀ l₁ l₂ I is}  {A₀ : I → Set l₀} {A₁ : I → S
               {A₂ : I → Set l₂} → (vs : HVec A₀ is) →
               (m : (i : I) → (A₀ i) → (A₁ i)) →
               (m' : (i : I) → (A₁ i) → (A₂ i)) →
-              mapHVec m' (mapHVec m vs)
+              map m' (map m vs)
               ≡
-              mapHVec (λ s' → m' s' ∘ m s') vs
+              map (λ s' → m' s' ∘ m s') vs
 propMapV∘ {is = []} ⟨⟩ m m' = refl
 propMapV∘ {is = i₀ ∷ is} (v₀ ▹ vs) m m' = cong₂ (λ x y → x ▹ y) refl
                                                 (propMapV∘ vs m m')

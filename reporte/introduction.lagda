@@ -65,7 +65,7 @@ meta-variable over $\state$, the semantics is given by:
   &\multicolumn{4}{l}{\evalExpr \colon\ \expr \to \state \to \mathbb{N}}\\
   &\evalExpr &n                &=&\lambda\,\sigma \rightarrow n\\
   &\evalExpr &v                &=& \lambda\,\sigma \rightarrow \sigma\,v\\
-  &\evalExpr &(e_1 \oplus e_2) &=& \lambda\,\sigma \rightarrow (\evalExpr\,e_1\,\sigma) + (\evalExpr\,e_1\,\sigma)
+  &\evalExpr &(e_1 \oplus e_2) &=& \lambda\,\sigma \rightarrow (\evalExpr\,e_1\,\sigma) + (\evalExpr\,e_2\,\sigma)
 \end{array}%
 \end{equation*}
 

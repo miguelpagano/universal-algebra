@@ -28,7 +28,7 @@ obtained by initiality after giving an interpretation for the
 corresponding function symbols. The trick to get correctness is
 to map the target language and its semantics as algebras for
 the source language and then provide an homomorphism from the
-high-level semantics to the low-level one. In this work we formalize
+high-level semantics to the low-level one (or viceversa). In this work we formalize
 enough heterogenous universal algebra in order to complete the
 definition of a correct compiler. Throughout the article we will use
 McCarthy and Painter's language as a guiding example.
@@ -84,7 +84,7 @@ configuration is a stack $s'$. We assume that $\stack$s are lists of numbers.
 \[
 \begin{array}{lllcl}
   &\multicolumn{4}{l}{\execCode \colon \code \rightarrow \stack \times \state \rightarrow \stack}\\
-  &\execCode &(\instr{push}\,n)     &=&(s , \sigma) \rightarrow (n \consop s)\\
+  &\execCode &(\instr{push}\,n)     &=&\lambda\,(s , \sigma) \rightarrow (n \consop s)\\
   &\execCode &(\instr{load}\,v)     &=&\lambda\,(s , \sigma) \rightarrow (\sigma\,v \consop s)\\
   &\execCode &(c_1\,;\,c_2) &=&\lambda\,(s , \sigma) \rightarrow \execCode\;c_2\;(\execCode\;c_1\;(s,\sigma),\sigma)\\
   &\execCode &\instr{add}   &=&\lambda\,(n  \consop  m  \consop  s , \sigma) \rightarrow (n \, + \, m  \consop s)\\
@@ -96,7 +96,7 @@ A compiler $\comp \colon \expr \rightarrow \code$ is correct if for
 every expression $e$ the generated code $\comp\,e$ has the ``same''
 semantics of $e$. In our setting we can state correctness formally as
 \[
-  \execCode\,(\comp\,e)\,(\sigma,s)\,=\,\evalExpr\,e\,\sigma \consop s \enspace .
+  \execCode\,(\comp\,e)\,(s,\sigma)\,=\,\evalExpr\,e\,\sigma \consop s \enspace .
 \]
 It is straightforward to write a compiler and then prove its correctness by induction
 on the structure of expressions (we omit this proof):

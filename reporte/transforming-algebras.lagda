@@ -71,8 +71,8 @@ iₚ plus {v₀ ▹ (v₀' ▹ ⟨⟩)} {v₁ ▹ (v₁' ▹ ⟨⟩)} (∼▹ v�
 iₚ (var v) {⟨⟩} ∼⟨⟩ =  refl
 \end{code}
 %endif
-\newcommand{\mapSort}[1]{\widehat{#1}}
-\newcommand{\mapOp}[1]{\widehat{#1}}
+\newcommand{\mapSort}[2]{#1\,#2}
+\newcommand{\mapOp}[2]{#1\,#2}
 \newcommand{\sdash}[1]{\vdash\!\!\!\!^{#1}}
 
 Notice that turning $\mathcal{T}_m$ into a $\Sigma_e$-algebra is not
@@ -190,15 +190,15 @@ well-known concept in the theory of institutions and
 with respect to a derived signature morphism} for a transformed algebra
 induced by a signature translation.
 
-Given a signature translation $\intSign{\Sigma_s}{\Sigma_t}$ and a
+Given a signature translation $t\,:\,\intSign{\Sigma_s}{\Sigma_t}$ and a
 $\Sigma_t$-algebra $\mathcal{A}$, we denote with $\algTrans{A}$ its
 transformation as a $\Sigma_s$-algebra. It is clear that every sort $s$
 of $\Sigma_s$ can be interpreted via the interpretation of the translated sort:
 $\algTrans{A} \llbracket s \rrbracket_s = \mathcal{A} \llbracket
-\mapSort{s} \rrbracket_s $.  The denotation of an operation $f$ is
+\mapSort{t}{s} \rrbracket_s $.  The denotation of an operation $f$ is
 obtained by the interpretation of the corresponding formal expression:
 $\algTrans{A} \llbracket f \rrbracket_o = \mathcal{A} \llbracket
-\mapOp{f}\, \rrbracket^o $.
+\mapOp{t}{f}\, \rrbracket^o $.
 We can formalize the transformation of algebra directly from this, however
 the interpretation of operations is a little more complicated, since we need to convince Agda
 that any vector |vs : VecH' (A ⟦_⟧ₛ ∘ ↝ₛ) is| has also the type

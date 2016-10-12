@@ -11,13 +11,13 @@ With our formalization thus far, the source language is given by the
 term algebra of the signature $\Sigma_e$ and, parallely, the target 
 language is the term algebra of the following signature:
 \begin{code}
-data Sortsₘ : Set where Code : Sortsₘ
+data Sortsₘ : Set where C : Sortsₘ
 
 data Opsₘ : List Sortsₘ × Sortsₘ → Set where
-  pushₘ  : (n : ℕ) → Opsₘ ([] ⇒ Code)
-  loadₘ  : (v : Var) → Opsₘ ([] ⇒ Code)
-  addₘ   : Opsₘ ([] ⇒ Code)
-  seqₘ   : Opsₘ ([ Code , Code ] ⇒ Code)
+  pushₘ  : (n : ℕ) → Opsₘ ([] ⇒ C)
+  loadₘ  : (v : Var) → Opsₘ ([] ⇒ C)
+  addₘ   : Opsₘ ([] ⇒ C)
+  seqₘ   : Opsₘ ([ C , C ] ⇒ C)
 
 Σₘ : Signature
 Σₘ = ⟨ Sortsₘ , Opsₘ ⟩
@@ -26,7 +26,7 @@ data Opsₘ : List Sortsₘ × Sortsₘ → Set where
 The main aspect of the algebraic approach to correct translation is to
 conceive both languages as algebras of the source signature. We could
 define a $\Sigma_e$-algebra $\widetilde{\mathcal{T}_m}$ where the interpretation of
-sort |ExprN| is the set of terms of the term algebra $\mathcal{T}_m$ and the
+sort |E| is the set of terms of the term algebra $\mathcal{T}_m$ and the
 interpretation of operations is defined in the following way:
 %if False
 \begin{code}
@@ -34,36 +34,52 @@ open TermAlgebra Σₘ renaming (|T| to |Tc|)
 open Algebra
 open Signature
 open InitHomo
-push : ℕ → HU Code 
+push : ℕ → HU C 
 push n = term (pushₘ n) ⟨⟩
-load : Var → HU Code
+load : Var → HU C
 load v = term (loadₘ v) ⟨⟩
-seq : HU Code → HU Code → HU Code
+seq : HU C → HU C → HU C
 seq c₀ c₁ = term seqₘ (c₀  ▹ (c₁ ▹ ⟨⟩))
-add : HU Code
+add : HU C
 add = term addₘ ⟨⟩
 private
 \end{code}
 %endif
 \begin{code}
   ⟦_⟧ : Sortsₑ → Setoid _ _
-  ⟦ _ ⟧ = |Tc| ⟦ Code ⟧ₛ
+  ⟦ E ⟧ = |Tc| ⟦ C ⟧ₛ
 
-iₒ : ∀ {ar s} → ops Σₑ (ar ⇒ s) → ∥ ⟦_⟧ ✳ ar ∥ → ∥ ⟦ s ⟧ ∥
-iₒ (valN n) ⟨⟩ = push n
-iₒ (varN x) ⟨⟩ = load x
+iₒ : ∀ {ar s} →  ops Σₑ (ar ⇒ s) → ∥ ⟦_⟧ ✳ ar ∥ →
+                 ∥ ⟦ s ⟧ ∥
+iₒ (val n) ⟨⟩ = push n
+iₒ (var x) ⟨⟩ = load x
 iₒ (plus) ⟨⟨ c₀ , c₁ ⟩⟩ = seq c₀ (seq c₁ add)
 \end{code}
+
+\noindent where |push|, |load| and |seq| are smart
+constructors of the terms of |HU C|:
+
+\begin{spec}
+push : ℕ → HU C 
+push n = term (pushₘ n) ⟨⟩
+load : Var → HU C
+load v = term (loadₘ v) ⟨⟩
+seq : HU C → HU C → HU C
+seq c₀ c₁ = term seqₘ (c₀  ▹ (c₁ ▹ ⟨⟩))
+add : HU C
+add = term addₘ ⟨⟩
+\end{spec}
+
 %if False
 \begin{code}
 iₚ : ∀ {ar} {s} → (f : ops Σₑ (ar ⇒ s)) →
          {vs vs' : ∥ ⟦_⟧ ✳ ar ∥ } →
          _∼v_ {R = λ s → Setoid._≈_ (⟦ s ⟧)} vs vs' →
          Setoid._≈_ (⟦  s ⟧) (iₒ f vs) (iₒ f vs')
-iₚ (valN n) {⟨⟩} ∼⟨⟩ = refl
+iₚ (val n) {⟨⟩} ∼⟨⟩ = refl
 iₚ plus {v₀ ▹ (v₀' ▹ ⟨⟩)} {v₁ ▹ (v₁' ▹ ⟨⟩)} (∼▹ v₀≈v₁ (∼▹ v₀'≈v₁' ∼⟨⟩)) =
                          cong₂ (λ c c' → seq c (seq c' add)) v₀≈v₁ v₀'≈v₁'
-iₚ (varN v) {⟨⟩} ∼⟨⟩ =  refl
+iₚ (var v) {⟨⟩} ∼⟨⟩ =  refl
 \end{code}
 %endif
 \newcommand{\mapSort}[1]{\widehat{#1}}
@@ -71,7 +87,7 @@ iₚ (varN v) {⟨⟩} ∼⟨⟩ =  refl
 \newcommand{\sdash}[1]{\vdash\!\!\!\!^{#1}}
 
 Notice that turning $\mathcal{T}_m$ into a $\Sigma_e$-algebra is not
-enough to transform any $\Sigma_m$-algebra, say $\mathcal{A}$ into a
+enough to transform any $\Sigma_m$-algebra, say $\mathcal{A}$, into a
 $\Sigma_e$-algebra, because terms are not formal words that can be further
 interpreted. To be precise, |c₀| and |c₁| in the third clause
 of |iₒ| are meta-variables ranging over terms and not object variables
@@ -143,7 +159,7 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
 \end{code}
 %endif
 
-We will use this denotation of formal terms to define the translation
+We will use this denotation of formal terms to define the transformation
 of algebras; however the translation of signatures involves only
 syntacticalities. In fact, it is given by a pair of functions
 $\mapSort{\_} : \mathit{sorts}\,Σ \to \mathit{sorts}\,Σ'$ and
@@ -157,7 +173,7 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
  open FormalTerm Σₜ
  field
   ↝ₛ : sorts Σₛ → sorts Σₜ
-  ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → map ↝ₛ ar ⊢ ↝ₛ s
+  ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → lmap ↝ₛ ar ⊢ ↝ₛ s
 \end{code}
 %endif
 
@@ -170,27 +186,34 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
 \newcommand{\intSign}[2]{#1 \leadsto #2}
 \newcommand{\algTrans}[1]{\widetilde{\mathcal{#1}}}
 
-\paragraph{Translation of Algebras} A signature interpretation
-$\intSign{\Sigma_s}{\Sigma_t}$ induces a translation of
+\paragraph{Transformation of Algebras} A signature translation
+$\intSign{\Sigma_s}{\Sigma_t}$ induces a transformation of
 $\Sigma_t$-algebras as $\Sigma_s$-algebras; notice the contravariance
-of the translation with respect to the interpretation. This is a
+of the transformation with respect to the signature translation. This is a
 well-known concept in the theory of institutions and
 \citet{sannella2012foundations} use the notion \textit{reduct algebra
-with respect to a derived signature morphism} for a translated algebra
-induced by a signature intepretation.
+with respect to a derived signature morphism} for a transformed algebra
+induced by a signature translation.
 
-Given a signature interpretation $\intSign{\Sigma_s}{\Sigma_t}$ and a
+Given a signature translation $\intSign{\Sigma_s}{\Sigma_t}$ and a
 $\Sigma_t$-algebra $\mathcal{A}$, we denote with $\algTrans{A}$ its
-translation as a $\Sigma_s$-algebra. It is clear that every sort $s$
-of $\Sigma_s$ can be interpreted via the interpretation of the sort:
+transformation as a $\Sigma_s$-algebra. It is clear that every sort $s$
+of $\Sigma_s$ can be interpreted via the interpretation of the translated sort:
 $\algTrans{A} \llbracket s \rrbracket_s = \mathcal{A} \llbracket
 \mapSort{s} \rrbracket_s $.  The denotation of an operation $f$ is
 obtained by the interpretation of the corresponding formal expression:
 $\algTrans{A} \llbracket f \rrbracket_o = \mathcal{A} \llbracket
-\mapOp{f}\, \rrbracket^o $. In Agda the first component of the
-translated algebra mimics that definition, however we need to convince
+\mapOp{f}\, \rrbracket^o $.
+In Agda, we can define the transformed algebra directly from this informal
+definition, however we need to convince
 Agda that any vector |vs : VecH' (A ⟦_⟧ₛ ∘ ↝ₛ) is| has also the type
 |VecH' A (map ↝ₛ is)|, this is accomplished with |reindex|.
+
+In Agda, we can define the interpretation of sorts in the transformed algebra
+directly from this:
+
+\begin{code}
+\end{code}
 
 %if False
 \begin{code}
@@ -199,12 +222,12 @@ module AlgTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} where
 \end{code}
 %endif
 \begin{code}
- _⟨_⟩ₒ :  ∀ {l₀ l₁ ar s} →
-       (A : Algebra {l₀} {l₁} Σₜ) → ops Σₛ (ar ⇒ s) →
-       (A ⟦_⟧ₛ ∘ (↝ₛ i)) ✳ ar ⟶ A ⟦ ↝ₛ i s ⟧ₛ
- A ⟨ f ⟩ₒ = record {  
-               _⟨$⟩_ = ⟦ ↝ₒ i f ⟧ᵒ ∘ reindex (↝ₛ i) 
-             ;  cong = congᵒ (↝ₒ i f) ∘ ∼v-reindex (↝ₛ i) }
+ _⟨_⟩ₒ :  ∀  {ℓ₀ ℓ₁ ar s} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
+             ops Σₛ (ar ⇒ s) →
+             (A ⟦_⟧ₛ ∘ (↝ₛ i)) ✳ ar ⟶ A ⟦ ↝ₛ i s ⟧ₛ
+ A ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ i f ⟧ᵒ ∘ reindex (↝ₛ i) 
+                       ;  cong =  congᵒ (↝ₒ i f) ∘
+                                  ∼v-reindex (↝ₛ i) }
 \end{code}
 %if False
 \begin{code}
@@ -212,7 +235,7 @@ module AlgTrans {Σₛ Σₜ}  {i : Σₛ ↝ Σₜ} where
 \end{code}
 %endif
 \begin{code}
- 〈_〉 : ∀ {l₀ l₁} → Algebra {l₀} {l₁} Σₜ → Algebra Σₛ
+ 〈_〉 : ∀ {ℓ₀ ℓ₁} → Algebra {ℓ₀} {ℓ₁} Σₜ → Algebra Σₛ
  〈 A 〉 = 〈 (A ⟦_⟧ₛ ∘ ↝ₛ i) , (A ⟨_⟩ₒ) 〉
 \end{code}
 
@@ -240,7 +263,7 @@ category of $\Sigma_s$-algebras.
                                    )
                      (mapReindex (↝ₛ i) 
                                  (_⟨$⟩_ ∘ ′ h ′)  as)
-                     (homCond↝' (map (↝ₛ i) ar) (↝ₛ i s) (↝ₒ i f)
+                     (homCond↝' (lmap (↝ₛ i) ar) (↝ₛ i s) (↝ₒ i f)
                                  (reindex (↝ₛ i) as))
 
   where open FormalTermInt
@@ -259,8 +282,8 @@ category of $\Sigma_s$-algebras.
           where homCond↝'vec : (ar₁ : Arity Σₜ) → 
                                (es : HVec (_⊢_ ar) ar₁) →
                                _∼v_ {R = Setoid._≈_ ∘ (A' ⟦_⟧ₛ) }
-                               (mapHVec (λ x → _⟨$⟩_ (′ h ′ x)) (⟦_⟧ᵒ* A es vs))
-                               (⟦_⟧ᵒ* A' es (mapHVec (λ x → _⟨$⟩_ (′ h ′ x)) vs))
+                               (map (λ x → _⟨$⟩_ (′ h ′ x)) (⟦_⟧ᵒ* A es vs))
+                               (⟦_⟧ᵒ* A' es (map (λ x → _⟨$⟩_ (′ h ′ x)) vs))
                 homCond↝'vec .[] ⟨⟩ = ∼⟨⟩
                 homCond↝'vec (s₁ ∷ ar₁) (e ▹ es) = ∼▹ (homCond↝' ar s₁ e vs)
                                                        (homCond↝'vec ar₁ es)

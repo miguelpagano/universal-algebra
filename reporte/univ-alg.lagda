@@ -693,8 +693,8 @@ terms and also satisfies the homomorphism condition.
                          map|T|→A≡map)
 
 
-  |h|A : Homo
-  |h|A = record { ′_′  = fun|T|ₕ
+  |h| : Homo
+  |h| = record { ′_′  = fun|T|ₕ
                  ; cond = |T|ₕcond }
   import Relation.Binary.EqReasoning as EqR
 \end{code}
@@ -732,6 +732,6 @@ with the proof |total|.
                                       (map≈ ar ts)
 
   isInitial : Unique _≈ₕ_
-  isInitial = |h|A , total
+  isInitial = |h| , total
 \end{code}
 %endif

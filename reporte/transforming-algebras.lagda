@@ -42,11 +42,12 @@ seq : HU Code → HU Code → HU Code
 seq c₀ c₁ = term seqₘ (c₀  ▹ (c₁ ▹ ⟨⟩))
 add : HU Code
 add = term addₘ ⟨⟩
+private
 \end{code}
 %endif
 \begin{code}
-⟦_⟧ : Sortsₑ → Setoid _ _
-⟦ _ ⟧ = |Tc| ⟦ Code ⟧ₛ
+  ⟦_⟧ : Sortsₑ → Setoid _ _
+  ⟦ _ ⟧ = |Tc| ⟦ Code ⟧ₛ
 
 iₒ : ∀ {ar s} → ops Σₑ (ar ⇒ s) → ∥ ⟦_⟧ ✳ ar ∥ → ∥ ⟦ s ⟧ ∥
 iₒ (valN n) ⟨⟩ = push n

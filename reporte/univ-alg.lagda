@@ -729,7 +729,7 @@ reasoning provided by the standard library. We omit the proof
           map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (total H G s t)
                                       (map≈ ar ts)
 
-  tinit : Unique _≈ₕ_
-  tinit = |h|A , total
+  isInitial : Unique _≈ₕ_
+  isInitial = |h|A , total
 \end{code}
 %endif

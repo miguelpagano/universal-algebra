@@ -36,10 +36,12 @@ language and then provide an homomorphism from the high-level
 semantics to the low-level one (or viceversa). In this work we
 formalize enough heterogenous universal algebra in order to complete
 the definition of a correct compiler. Throughout the article we will
-use McCarthy and Painter's language as a guiding example. In the
-accompanying code for this paper (available at
-\url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}) we show a more
-interesting example.
+use McCarthy and Painter's language as a guiding example.
+
+%% In the
+%% accompanying code for this paper (available at
+%% \url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}) we show a more
+%% interesting example.
 
 
 % TODO: Sería bueno encontrar una forma más vendedora para decir lo

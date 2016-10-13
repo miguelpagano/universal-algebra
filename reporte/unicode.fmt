@@ -10,6 +10,8 @@
 \DeclareUnicodeCharacter{8347}{\ensuremath{_s}}
 \DeclareUnicodeCharacter{931}{\ensuremath{\Sigma}}
 \DeclareUnicodeCharacter{10239}{\ensuremath{\rightsquigarrow}}
+\DeclareUnicodeCharacter{8605}{\ensuremath{\hookrightarrow}}
+\DeclareUnicodeCharacter{8604}{\ensuremath{\hookleftarrow}}
 \DeclareUnicodeCharacter{8341}{\ensuremath{_h}}
 \DeclareUnicodeCharacter{928}{\ensuremath{\Pi}}
 \DeclareUnicodeCharacter{9656}{\ensuremath{\blacktriangleright}}

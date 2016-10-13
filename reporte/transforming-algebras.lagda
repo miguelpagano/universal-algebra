@@ -7,7 +7,11 @@ open import univ-alg
 \section{Algebra transformation}
 \label{sec:trans}
 
-With our formalization thus far, the source language is given by the
+With the formalization thus far, one can define source and target
+languages from signatures $\Sigma_s$ and $\Sigma_t$, obtaining
+their respective term algebras.
+
+In our example, the source language is given by the
 term algebra of the signature $\Sigma_e$ and, parallely, the target 
 language is the term algebra of the following signature:
 \begin{code}
@@ -148,8 +152,9 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
 \end{code}
 %endif
 
-In order to define the transformation of $\Sigma_t$-algebras to
-$\Sigma_s$-algebras, we need give a sort of $\Sigma_t$ for each
+In order to define the transformation of algebras of the target signature
+$\Sigma_t$ to algebras of the source signature $\Sigma_e$,
+we need give a sort of $\Sigma_t$ for each
 sort of $\Sigma_s$, and a formal term of $\Sigma_t$ for each operation
 of $\Sigma_s$. A \emph{signature translation} consists of two functions,
 mapping sorts and operations:
@@ -178,7 +183,7 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
   ↝ₒ : ∀ {ar s} →  ops Σₛ (ar , s) →
                    map ↝ₛ ar ⊢ ↝ₛ s
 \end{spec}
-\newcommand{\intSign}[2]{#1 \leadsto #2}
+\newcommand{\intSign}[2]{#1 \hookrightarrow #2}
 \newcommand{\algTrans}[1]{\widetilde{\mathcal{#1}}}
 
 \paragraph{Transformation of Algebras} A signature translation
@@ -216,7 +221,8 @@ module AlgTrans {Σₛ Σₜ}  {t : Σₛ ↝ Σₜ} where
  _⟨_⟩ₛ : ∀  {ℓ₀ ℓ₁} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
             (s : sorts Σₛ) → Setoid _ _
  A ⟨ s ⟩ₛ = A ⟦ ↝ₛ t s ⟧ₛ
-
+\end{code}
+\begin{code}
  _⟨_⟩ₒ :  ∀  {ℓ₀ ℓ₁ ar s} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
              ops Σₛ (ar ⇒ s) →
              (A ⟨_⟩ₛ) ✳ ar ⟶  A ⟨ s ⟩ₛ
@@ -298,6 +304,6 @@ module HomoTrans {Σₛ Σₜ}  {t : Σₛ ↝ Σₜ} {l₀ l₁ l₂ l₃}
 \begin{code}
    〈_〉ₕ : Homo A A' → Homo 〈 A 〉 〈 A' 〉
    〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ t
-                      ; cond = hcond↝ h }
+                    ; cond = hcond↝ h }
 \end{code}
 

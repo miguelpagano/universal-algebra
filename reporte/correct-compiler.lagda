@@ -17,6 +17,7 @@ breaklinks=true
 colorlinks=true,
 urlcolor=blue]{ hyperref }
 %format VecH' = Vec
+%format HVec  = Vec
 %format 〉 = ")"
 %format 〈 = "("
 %format ⟨⟨ = "\langle\!"
@@ -26,8 +27,7 @@ urlcolor=blue]{ hyperref }
 %format ≈→ = "\ensuremath{≈_{\mathit{ext}}}"
 %format Equiv≈→ = "\ensuremath{\mathsf{Equiv}≈_{\mathit{ext}}}"
 
-%format (A,_≈A_,_) = "\ensuremath{(\mathsf{A},≈_{A},\_)}"
-%format (B,_≈B_,_) = "\ensuremath{(\mathsf{B},≈_{B},\_)}"
+%format _≈A_ = "\ensuremath{≈_{A}}"
 %format _≈B_ = "\ensuremath{≈_{B}}"
 %format ≈A = "\ensuremath{≈_{A}}"
 %format ≈B = "\ensuremath{≈_{B}}"
@@ -35,7 +35,7 @@ urlcolor=blue]{ hyperref }
 %format |Tc| = "\ensuremath{\mathcal{T}_m}"
 %format ∣h∣→A = |h|
 %format map|h|→A = map|h|
-%format |h|A = H
+%format |h|A = |H|
 %format |h'|A = H
 
 %% "\ensuremath{h_{A}}"

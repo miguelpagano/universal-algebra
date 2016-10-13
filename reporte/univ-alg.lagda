@@ -185,9 +185,9 @@ data VecH' {I} (A : I -> Set) : List I → Set where
   _▹_  :  ∀ {i is} → A i →
             VecH' A is → VecH' A (i ∷ is)
 \end{code}
-When |A| is a family of setoids |I → Setoid|, it is straightforward to
+When |A| is a family of setoids |I → Setoid|, and |is : List I|,  it is straightforward to
 promote this construction to setoids and we use |A ✳ is| to refer to
-the setoid of heterogeneous vectors where the equivalence relation is
+the setoid of heterogeneous vectors indexed in |is|, where the equivalence relation is
 the point-wisely induced. The interpretation of the operation $f
 \colon [s_1,…,s_n] \Rightarrow s$ should be a setoid morphism |A ✳
 [s₁,…,sₙ] ⟶ A s|.
@@ -219,7 +219,7 @@ Let see an example of a |Σₑ|-algebra, the semantics of the expression
 language that we introduced previously. We let |State = Var → ℕ| and
 intepret the only sort |E| as the setoid whose carrier are
 functions in |State → ℕ| with |f ≈ g| if for every state |σ|, 
-|f σ ≡ g σ| (where |≡| is the definitional equality of Agda).
+|f σ ≡ g σ|, where |_≡_| is the definitional equality of Agda.
 %if False
 \begin{code}
 State : Set
@@ -273,7 +273,7 @@ i plus = record  { _⟨$⟩_ = λ {⟨⟨ f , g ⟩⟩  σ → f σ + g σ}
 \end{code}
 %endif
 Notice that Agda infers that there are no arguments for nullary
-operators; since |plus| has arity |[E,E]| and we can pattern-matching
+operators; since |plus| has arity |[E,E]|, we can pattern-matching
 on |⟦_⟧ ✳ [E,E]| and define the interpretation as we did in the
 introduction (we use the notation |⟨⟨ x , y ⟩⟩| to represent the
 vector |x ▹ (y ▹ ⟨⟩)|).  We have thus defined the algebra
@@ -406,7 +406,8 @@ from $\mathcal{A}$ to $\mathcal{B}$. This universal condition should be
 stated with respect to some underlying notion of equality.
 
 Informally, if $≈$ is an equivalence relation over $A$,
-we can say that an element $a \in A$ is unique if $A = [a]_{≈}$;
+we can say that an element $a \in A$ is unique if $A = [a]_{≈}$ (the equivalence class
+of $a$);
 from which we can easily deduce that uniqueness is contagious: if someone
 is unique, everyone is! Less picturesque we define uniqueness through
 totality:
@@ -588,7 +589,7 @@ module TermAlgebra (Σ : Signature) where
 \noindent We use propositional equality to turn each $\mathcal{T}_s$ in a
 setoid, thus completing the interpretation of sorts. To interpret
 an operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the
-tuple $⟨t_1,\ldots,t_n⟩$ to the term $f(t_1,\ldots,t_n)$; we omit the proof
+tuple $⟨t_1,\ldots,t_n⟩$ to the term $f(t_1,\ldots,t_n)$ in $\mathcal{T}_s$; we omit the proof
 of |cong|.
 \begin{spec}
   |T| : Algebra Σ
@@ -688,8 +689,8 @@ terms and also satisfies the homomorphism condition.
                          map|T|→A≡map)
 
 
-  |h| : Homo
-  |h| = record { ′_′  = fun|T|ₕ
+  |H| : Homo
+  |H| = record { ′_′  = fun|T|ₕ
                  ; cond = |T|ₕcond }
   import Relation.Binary.EqReasoning as EqR
 \end{code}
@@ -726,7 +727,17 @@ with the proof |total|.
           map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (total H G s t)
                                       (map≈ ar ts)
 
-  isInitial : Unique _≈ₕ_
-  isInitial = |h| , total
+  open Initial {lzero} {lzero} {ℓ₃} {ℓ₄} Σ
 \end{code}
 %endif
+
+
+
+We complete the proof of initiality of the term algebra
+showing that the homomorphism |∣H∣| is unique:
+
+\begin{code}
+  isInitial : Unique _≈ₕ_
+  isInitial = |H| , total
+\end{code}
+

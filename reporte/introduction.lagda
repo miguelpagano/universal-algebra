@@ -132,7 +132,7 @@ operators.
 
 \newcommand{\hsem}[1]{\mathit{hsem}(#1)}
 In our case we have two (monosorted) signatures $\Sigma_e$ and
-$\Sigma_c$ giving rise to their term algebras $T_e$ and $T_c$,
+$\Sigma_m$ giving rise to their term algebras $T_e$ and $T_m$,
 respectively. We interpret the only sort of $\Sigma_e$ as the set of
 total functions $\mathit{Sem} = \state \to \mathbb{N}$.
 %TODO: 
@@ -157,15 +157,15 @@ satisfying:
     \hsem{e_1 \oplus e_2}&=&\lambda \sigma \mapsto \hsem{e_1}\,\sigma + \hsem{e_2}\,\sigma
   \end{array}
 \]
-In parallel, we interpret the sort of $\Sigma_c$ as the set of partial
+In parallel, we interpret the sort of $\Sigma_m$ as the set of partial
 functions from $\mathit{Exec} = \stack\times\state \to \stack$ and an
-intepretation for the symbols of $\Sigma_C$ leads to the semantics
-$\mathit{hexec} \colon T_C \to \mathit{Exec}$. We can picture the situation so far as: 
+intepretation for the symbols of $\Sigma_m$ leads to the semantics
+$\mathit{hexec} \colon T_m \to \mathit{Exec}$. We can picture the situation so far as: 
 
 \begin{center}
   \begin{tikzpicture}[>=latex]
     \node (te) at (0,1.5) {$T_e$}; 
-    \node (tc) at (3,1.5) {$T_c$}; 
+    \node (tc) at (3,1.5) {$T_m$}; 
     \node (seme) at (0,0) {$\mathit{Sem}$} ; 
     \node (semc) at (3,0) {$\mathit{Exec}$} ; 
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
@@ -178,11 +178,11 @@ $\mathit{hexec} \colon T_C \to \mathit{Exec}$. We can picture the situation so f
 
 Instead of defining ingeniously the translation $\comp$ and proving
 afterwards its correctness, we will obtain it from a more broader
-construction which will transform each algebra $A$ of $\Sigma_C$ into
+construction which will transform each algebra $A$ of $\Sigma_m$ into
 an algebra $\widetilde{A}$ of $\Sigma_e$ and also each homomorphism
 from $h \colon A \to B$ into an homomorphism $\widetilde{h}\colon
 \widetilde A \to \widetilde B$. These transformations will arise from
-a \emph{signature-translation} from $\Sigma_e$ to $\Sigma_C$. This
+a \emph{signature-translation} from $\Sigma_e$ to $\Sigma_m$. This
 concept is related with the interpretability of similarity types in
 universal algebra (cf.\ \cite{garcia-84}), and has an extensive
 literature: \citet{fujiwara-1959} introduced this notion as
@@ -198,7 +198,7 @@ categorically by \citet{fiore-2010} for second order signatures and by
 
 The transformation brings the right side of the above diagram to the
 world of $\Sigma_e$ algebras, thus $\comp$ arises as the unique
-homomorphism from $T_e$ to $\widetilde{T_C}$. Correctness of the compiler
+homomorphism from $T_e$ to $\widetilde{T_m}$. Correctness of the compiler
 follows abstractly as soon as we provide either an homomorphism
 $\mathit{dec} \colon \widetilde{\mathit{Exec}} \to \mathit{Sem}$ (as
 proposed by \citet{morris-73}) or an homomorphism
@@ -207,7 +207,7 @@ $\mathit{enc} \colon \mathit{Sem} \to \widetilde{\mathit{Exec}}$ (after \cite{th
 \begin{center}
   \begin{tikzpicture}[>=latex]
     \node (te) at (0,1.5) {$T_e$}; 
-    \node (tc) at (3,1.5) {$\widetilde{T_c}$}; 
+    \node (tc) at (3,1.5) {$\widetilde{T_m}$}; 
     \node (seme) at (0,0) {$\mathit{Sem}$} ; 
     \node (semc) at (3,0) {$\widetilde{\mathit{Exec}}$} ; 
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [above] {$\mathit{comp}$} (tc); 

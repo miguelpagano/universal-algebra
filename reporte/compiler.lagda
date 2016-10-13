@@ -22,7 +22,8 @@ enables us to obtain that proof by initiality. In particular, we
 define in Agda the algebra $\mathit{Exec}$,
 corresponding to the execution of the target language, and also the
 expected translation from the signature $\Sigma_e$ to the signature
-$\Sigma_m$. This will let us obtain the compiler as the initial
+$\Sigma_m$, from which we can transform any $\Sigma_m$-algebra $\mathcal{A}$ into a
+$\Sigma_e$-algebra $\widetilde{\mathcal{A}}$. This will let us obtain the compiler as the initial
 homomorphism from $\mathcal{T}_e$ to $\widetilde{\mathcal{T}_m}$; thus
 getting the following diagram between $\Sigma_e$-algebras:
 \begin{center}
@@ -65,7 +66,7 @@ private
 %endif
 \begin{code}
   ⟦_⟧ₛᵐ : sorts Σₘ → Setoid _ _
-  ⟦ Codeₛ ⟧ₛᵐ = Conf →-setoid Maybe Stack
+  ⟦ C ⟧ₛᵐ = Conf →-setoid Maybe Stack
 \end{code}
 
 The interpretation of the operations is straightforward: the machine
@@ -78,8 +79,7 @@ iₒᵐ (pushₘ n) ⟨⟩ (s , σ) = just (n ∷ s)
 iₒᵐ (loadₘ v) ⟨⟩ (s , σ) = just (σ v ∷ s)
 iₒᵐ addₘ ⟨⟩ (m ∷ n ∷ s , σ) = just (m + n ∷ s)
 iₒᵐ addₘ ⟨⟩ (s , σ) = nothing
-iₒᵐ seqₘ ⟨⟨ v₀ , v₁ ⟩⟩ (s , σ) =  v₀ (s , σ) >>=
-                                  (λ s' → v₁ (s' , σ))
+iₒᵐ seqₘ ⟨⟨ f , g ⟩⟩ (s , σ) =  f (s , σ) >>= (λ s' → g (s' , σ))
 \end{code}
 %if False
 \begin{code}
@@ -117,10 +117,12 @@ omit this straightforward proof, which we call |iₚᵐ|.
 \begin{code}
 iₘ :  ∀ {ar s} →  ops Σₘ (ar ➜ s) →
                   ⟦_⟧ₛᵐ ✳ ar ⟶ ⟦ s ⟧ₛᵐ
-iₘ f = record { _⟨$⟩_ = iₒᵐ f ; cong = iₚᵐ f }
+iₘ f = record  { _⟨$⟩_ = iₒᵐ f
+               ; cong = iₚᵐ f }
 \end{code}
 We have thus constructed the algebra |Exec|; the semantics of low-level
-programs, represented as elements in | |T|ₘ |, is given by the initial
+programs, represented as elements in the term algebra of |Σₘ| (that we
+call |∣Tₘ∣|), is given by the initial
 homomorphism.
 %if False
 \begin{code}
@@ -135,7 +137,7 @@ Exec : Algebra Σₘ
 Exec = 〈 ⟦_⟧ₛᵐ , iₘ 〉
 
 semₘ : Homo |Tₘ| Exec
-semₘ = |h| Exec
+semₘ = |H| Exec
 \end{code}
 %if False
 \begin{code}
@@ -184,7 +186,7 @@ $\Sigma_m$-algebras into $\Sigma_e$-algebras.
 e↝m : Σₑ ↝ Σₘ
 e↝m = record  { ↝ₛ = s↝ ; ↝ₒ = op↝ }
 \end{code}
-In particular we can see the term algebra |Tₘ| as a $\Sigma_e$-algebra:
+In particular we can see the term algebra |∣Tₘ∣| as a $\Sigma_e$-algebra:
 
 \begin{code}
 open AlgTrans {t = e↝m}
@@ -194,10 +196,10 @@ open AlgTrans {t = e↝m}
 Codeₑ : Algebra Σₑ
 Codeₑ = 〈 |Tₘ| 〉
 \end{code}
-and the initial homomorphism from |Tₑ| to |〈 Tₘ 〉| is the compiler.
+and the initial homomorphism from |∣Tₑ∣| to |〈 ∣Tₘ∣ 〉| is the compiler.
 \begin{code}
 hcomp : Homo |Tₑ| Codeₑ
-hcomp = |h| Codeₑ
+hcomp = |H| Codeₑ
 \end{code}
 
 Moreover the low-level semantics of a high-level program is obtained by
@@ -216,10 +218,10 @@ execₑ = 〈 semₘ 〉ₕ ∘ₕ hcomp
 \end{code}
 %endif
 Of course, this semantics is also given by the initial homomorphism from
-|Tₑ| to |Codeₑ| and both are extensionally equal.
+|∣Tₑ∣| to |Codeₑ| and both are extensionally equal.
 \begin{code}
 execₑ' : Homo |Tₑ| Execₑ
-execₑ' = |h| Execₑ
+execₑ' = |H| Execₑ
 \end{code}
 
 
@@ -270,13 +272,13 @@ We have completed the diagram and get the correctness of the compiler.
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [above] {$\mathit{hcomp}$} (tc); 
     \path [->,shorten <=2pt,shorten >=2pt] (te) edge node [left] {$\mathit{hsem}$} (seme); 
     \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\widetilde{\mathit{hexec}}$} (semc);
-    \path [->,shorten <=2pt,shorten >=2pt] (seme.10) edge node [above] {$\mathit{enc}$} (semc.170);
+    \path [->,shorten <=2pt,shorten >=2pt] (seme.10) edge node [above] {$\mathit{encH}$} (semc.170);
   \end{tikzpicture}
 \end{center}
 
 
 The proof of correctness, as stated by McCarthy and Painter, is a consequence of
-the initiality of | |Tₑ| |. We define types to have a short notation in the
+the initiality of |∣Tₑ∣|. We give some definitions to have a short notation in the
 proof of correctness.
 
 %if false
@@ -293,7 +295,7 @@ Expr : _
 Expr = ∥ |Tₑ| ⟦ E ⟧ₛ ∥
 
 ⟦_⟧_ : Expr → State → ℕ
-⟦ e ⟧ σ = (′ |h| Semₑ ′ E ⟨$⟩ e) σ
+⟦ e ⟧ σ = (′ |H| Semₑ ′ E ⟨$⟩ e) σ
 
 
 ⟪_⟫ : ∥ |Tₘ| ⟦ C ⟧ₛ ∥ → Conf → Maybe Stack
@@ -303,12 +305,15 @@ compₑ : Expr → ∥ |Tₘ| ⟦ C ⟧ₛ ∥
 compₑ e = ′ hcomp ′ E ⟨$⟩ e 
 \end{code}
 
+\noindent and we extract the proof of correcntness from
+the result of initiality of the term algebra:
+
 \begin{code}
 correct : ∀  e s σ →
              ⟪ compₑ  e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ ) ∷ s) 
 correct e s σ = proj₂  (isInitial Execₑ)
                        (〈 semₘ 〉ₕ ∘ₕ hcomp)
-                       (encH ∘ₕ (|h| Semₑ))
+                       (encH ∘ₕ (|H| Semₑ))
                        E
                        e
                        (s , σ)

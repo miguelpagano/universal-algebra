@@ -6,7 +6,7 @@ use it to develop a framework of correct translation. In order to get
 a correct translator within this framework, one must, first, define
 signatures describing the grammatical categories and operators of each
 language, then algebras prescribing the semantics, and a translation
-of the source signature in the target signature. To get the proof of
+from the source signature to the target signature. To get the proof of
 correctnes one has to provide a homomorphism between the semantics. We
 illustrate this framework with the development of a compiler of a
 simple expression language, with variables, into a stack-based machine

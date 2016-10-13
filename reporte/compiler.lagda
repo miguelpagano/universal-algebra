@@ -317,7 +317,7 @@ initiality of the term algebra:
 \begin{code}
 correct : ∀  e s σ →
              ⟪ compₑ  e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ ) ∷ s) 
-correct e s σ = proj₂  (init (TisInitial Σₑ) Execₑ)
+correct e s σ = proj₂  (init (|T|isInitial Σₑ) Execₑ)
                        (〈 semₘ 〉ₕ ∘ₕ hcomp)
                        (encH ∘ₕ (|H| Semₑ))
                        E

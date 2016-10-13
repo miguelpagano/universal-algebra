@@ -15,9 +15,11 @@ term algebra. As far as we know, there are two formalizations of
 \citet{kahl-2011} formalization of allegories in Agda. In this work,
 we depart from Capretta at some points, both because of some
 theoretical considerations and also because our practical interest in
-using universal algebra for constructing a correct compiler. We will
+using universal algebra for constructing a correct compiler.  We will
 motivate some of the main definitions of the development and show its
-more interesting parts, while ommiting some technical details.
+more interesting parts, while ommiting some technical details. The
+full code is available at
+\url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}.
 
 \subsection{Signature, algebra and homomorphism}
 

@@ -21,14 +21,25 @@ urlcolor=blue]{ hyperref }
 %format 〈 = "("
 %format ⟨⟨ = "\langle\!"
 %format ⟩⟩ = "\!\rangle"
+
+%format _≈→_ = "\ensuremath{\_≈_{\mathit{ext}}\_}"
+%format ≈→ = "\ensuremath{≈_{\mathit{ext}}}"
+%format Equiv≈→ = "\ensuremath{\mathsf{Equiv}≈_{\mathit{ext}}}"
+
+%format (A,_≈A_,_) = "\ensuremath{(\mathsf{A},≈_{A},\_)}"
+%format (B,_≈B_,_) = "\ensuremath{(\mathsf{B},≈_{B},\_)}"
+%format _≈B_ = "\ensuremath{≈_{B}}"
 %format ≈A = "\ensuremath{≈_{A}}"
 %format ≈B = "\ensuremath{≈_{B}}"
 %format |T| = "\ensuremath{\mathcal{T}}"
 %format |Tc| = "\ensuremath{\mathcal{T}_m}"
-%format ∣h∣→A = "\ensuremath{h_{A}}"
-%format map|h|→A = "\ensuremath{h_{A}^{\ast}}"
-%format |h|A = "\ensuremath{H_{A}}"
-%format |h'|A = "\ensuremath{H_{A}}"
+%format ∣h∣→A = |h|
+%format map|h|→A = map|h|
+%format |h|A = H
+%format |h'|A = H
+
+%% "\ensuremath{h_{A}}"
+%% "\ensuremath{h_{A}^{\ast}}"
 
 %include agda.fmt
 %include unicode.fmt

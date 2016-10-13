@@ -59,9 +59,15 @@ ls ➜ s = (ls , s)
 \end{code}
 %endif
 
-A \emph{signature} is a pair of sets $(S,F)$, called \textit{sorts} and \textit{operations} (or \textit{function symbols}) respectively. An operation is a triple $(f,[s_1,\ldots,s_n],s)$ consisting of a \textit{name}, a list of sorts (its \textit{arity)}, and another sort (its \textit{target sort}). We write operations as a type declaration $f : [s_1,...,s_n] \Rightarrow s$ and say ``$f$ has type $[s_1,...,s_n] \Rightarrow s$''. %\footnote{In the bibliography of heterogeneous universal algebras the notion of arity may change. In the handbook is called \textit{arity} to what we call \textit{type}.}
+A \emph{signature} is a pair of sets $(S,F)$, called \textit{sorts}
+and \textit{operations} (or \textit{function symbols})
+respectively. An operation is a triple $(f,[s_1,\ldots,s_n],s)$
+consisting of a \textit{name}, a list of sorts (its \textit{arity)},
+and another sort (its \textit{target sort}). We write operations as a
+type declaration $f : [s_1,...,s_n] \Rightarrow s$ and say ``$f$ has
+type $[s_1,...,s_n] \Rightarrow s$''.
 
-There is one alternative way of specifying the operations, one that
+There is one alternative way of specifying the operations, that
 seems to us more type-theoretically, as a family of sets (of
 operations) indexed by (their) types. We use a record to represent
 signatures in Agda, the field |sorts| is a Set and |ops| is a family
@@ -75,13 +81,14 @@ record Signature : Set₁ where
 
   Arity : Set
   Arity = List sorts
-  
-  Type : Set
-  Type = Arity × sorts
 \end{code}
 
 %if False
 \begin{code}
+  
+  Type : Set
+  Type = Arity × sorts
+
   dom : ∀ {ar s} → ops (ar ⇒ s) → Arity
   dom {ar} _ = ar
   
@@ -123,8 +130,14 @@ data Opsₑ : List Sortsₑ × Sortsₑ → Set where
 \end{code}
 
 \paragraph{Algebra}
-Usually, an \emph{algebra} $\mathcal{A}$ of a signature $\Sigma$, or a $\Sigma$-algebra, consists
-of a family of sets indexed by the sorts of $\Sigma$ and a family of functions indexed by the operations of $\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or the \emph{carrier} of the sort $s$; given an operation $f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a total function $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. 
+Usually, an \emph{algebra} $\mathcal{A}$ of a signature $\Sigma$, or a
+$\Sigma$-algebra, consists of a family of sets indexed by the sorts of
+$\Sigma$ and a family of functions indexed by the operations of
+$\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or the
+\emph{carrier} of the sort $s$; given an operation $f \colon
+[s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a total
+function $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
+\mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$.
 
 In type-theory, however types are not enough. The commutativity of the
 diagram expressing the correctness of the compiler ammounts to show
@@ -148,9 +161,11 @@ extensional equality.
 
 %TODO: encajar esto mejor.
 As far as possible, we use the standard library
-\citep{danielsson-agdalib} definitions; for instance, setoids are
+\citep*{danielsson-agdalib} definitions; for instance, setoids are
 defined as a record with fields: the |Carrier : Set|, the
 relation |_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|.
+The operator | ∥_∥ | represents the forgetful functor from setoids
+to sets, so that | ∥ (A,_≈A_,_) ∥ = A|.
 
 Once sorts are interpreted as setoids, operations should be
 interpreted as setoid morphisms; \ie. functions which preserve the
@@ -200,20 +215,6 @@ record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) :
 \end{code}
 %endif
 
-% TODO: sacar esto y poner algo más conciso?
-
-%We define too a type representing the domain of an interpretation of function symbol,
-%wich will be useful in later definitions.
-%If |ar| is the arity of an operation |f|, the interpretation will be a function between
-%setoids, with domain the heterogeneous vectors with arity |ar| and interpretation |_⟦_⟧ₛ A|:
-%
-%\begin{spec}
-%_⟦_⟧ₛ* : ∀ {Σ} {ℓ₁} {ℓ₂}  → (A : Algebra {ℓ₁} {ℓ₂} Σ)
-%                          → (ar : Arity Σ) → Set _
-%_⟦_⟧ₛ* {Σ} A ar = Carrier (VecSetoid (sorts Σ) (_⟦_⟧ₛ A) ar)
-%\end{spec}
-%
-%\medskip
 Let see an example of a |Σₑ|-algebra, the semantics of the expression
 language that we introduced previously. We let |State = Var → ℕ| and
 intepret the only sort |E| as the setoid whose carrier are
@@ -272,10 +273,11 @@ i plus = record  { _⟨$⟩_ = λ {⟨⟨ f , g ⟩⟩  σ → f σ + g σ}
 \end{code}
 %endif
 Notice that Agda infers that there are no arguments for nullary
-operators; since |plus| has arity |[E,E]| and we can
-pattern-matching on |⟦_⟧ ✳ [E,E]| and define the
-interpretation as we did in the introduction. We have thus
-defined the algebra $\mathit{Sem}$:
+operators; since |plus| has arity |[E,E]| and we can pattern-matching
+on |⟦_⟧ ✳ [E,E]| and define the interpretation as we did in the
+introduction (we use the notation |⟨⟨ x , y ⟩⟩| to represent the
+vector |x ▹ (y ▹ ⟨⟩)|).  We have thus defined the algebra
+$\mathit{Sem}$:
 \begin{code}
 Semₑ : Algebra Σₑ
 Semₑ = 〈 ⟦_⟧ , i 〉
@@ -304,8 +306,6 @@ a module parameterized over the signature and the algebras.
 module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ}
         (A : Algebra {ℓ₁} {ℓ₂} Σ) 
         (B : Algebra {ℓ₃} {ℓ₄} Σ) where 
-\end{code}
-\begin{code}
   _⟿_ : Set _
   _⟿_ = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
 \end{code}
@@ -349,6 +349,8 @@ equality by the corresponding equivalence relation, so let |_≈ₛ_ = _≈_ (B 
       ′_′  : _⟿_
       cond : ∀ {ty} (f : ops Σ ty) → homCond ty ′_′ f
 \end{code}
+For |H : Homo A₀ A₁| and |G : Homo A₁ A₂|, we denote with
+|G ∘ₕ H : Homo Aₒ A₂| their composition.
 %if False
 \begin{code}
 module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆} {Σ}
@@ -438,7 +440,7 @@ UniqueContagious _≈_ a prf = (a , proj₂ prf) , _≡_.refl
 As we have explained to justify the use of setoids, the appropiate
 notion of equality between homomorphisms is extensional equality.  We
 define a type to represent the property of extensional equality. If
-|A,≈A| and |B,≈B| are setoids and |f g : A ⟶ B| are setoid morphisms,
+|A| and |B| are setoids and |f, g : A ⟶ B| are setoid morphisms,
 we say that they are extensionally equal if they are equal point-wise.
 %if False
 \begin{code}
@@ -454,7 +456,7 @@ module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoi
 %endif
 \begin{code}
   _≈→_ : Rel (A ⟶ B) _
-  f ≈→ g  = ∀ (a : Carrier A) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
+  f ≈→ g  = ∀ (a : ∥ A ∥) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
 \end{code}
 We can deduce that |a ≈A a'| implies |f a ≈B g a'| by a simple equational
 reasoning. Moreover, we can prove that |_≈→_| is an equivalence relation.

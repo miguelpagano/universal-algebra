@@ -207,20 +207,16 @@ that any vector |vs : VecH' (A ⟦_⟧ₛ ∘ ↝ₛ) is| has also the type
 \begin{code}
 module AlgTrans {Σₛ Σₜ}  {t : Σₛ ↝ Σₜ} where
 \end{code}
-
 %if false
 \begin{code}
  open _↝_
 \end{code}
 %endif
-
 \begin{code}
  _⟨_⟩ₛ : ∀  {ℓ₀ ℓ₁} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
             (s : sorts Σₛ) → Setoid _ _
  A ⟨ s ⟩ₛ = A ⟦ ↝ₛ t s ⟧ₛ
-\end{code}
 
-\begin{code}
  _⟨_⟩ₒ :  ∀  {ℓ₀ ℓ₁ ar s} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
              ops Σₛ (ar ⇒ s) →
              (A ⟨_⟩ₛ) ✳ ar ⟶  A ⟨ s ⟩ₛ

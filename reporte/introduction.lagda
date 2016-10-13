@@ -2,12 +2,12 @@
 
 The pioneering work by \citet{mccarthy1967correctness} on a correct
 compiler for arithmetic expressions was followed by a myriad of
-further papers (\cite{leroy-09}, to name the most impressive and
-\cite{bahr-16,tan-16} to name some newer), PhD theses (see, for
-example, \cite{meijer-93} and its extensive discussion of literature
-at that point), and even books \cite{sampaio-97}, about how to prove
-the correctness of compilers and also methodologies for constructing
-correct compilers.
+further papers (see \cite{leroy-09}, for the most impressive, and
+\cite{bahr-16,tan-16}, for more more recent work), PhD theses (see,
+for example, \cite{meijer-93} and its extensive discussion of
+literature at that point), and even books \cite{sampaio-97}, about how
+to prove the correctness of compilers and also methodologies for
+constructing correct compilers.
 
 % TODO:
 % - completar con trabajos: Burstall

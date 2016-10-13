@@ -37,7 +37,7 @@ getting the following diagram between $\Sigma_e$-algebras:
     \path [->,shorten <=2pt,shorten >=2pt] (tc) edge node [right] {$\widetilde{\mathit{hexec}}$} (semc);
   \end{tikzpicture}
 \end{center}
-To close the gap, we define an homomorphism
+To close the gap, we define a homomorphism
 $\mathit{enc} : \mathit{Sem} \to \widetilde{\mathit{Exec}}$; in order
 to show that this approach corresponds to the usual notion of compiler
 correctness, we extract a proof from the commuting diagram.
@@ -278,40 +278,46 @@ We have completed the diagram and get the correctness of the compiler.
 
 
 The proof of correctness, as stated by McCarthy and Painter, is a consequence of
-the initiality of |∣Tₑ∣|. We give some definitions to have a short notation in the
-proof of correctness.
-
+the initiality of |∣Tₑ∣|.
 %if false
 \begin{code}
 open Algebra
 open Homo
 open HomoTrans {t = e↝m} {A = |Tₘ|} {A' = Exec}
 open HomComp
+open Initial renaming (Initial to Ini)
+open Ini
 \end{code}
 %endif
-
+We introduce some abbreviations for carriers and homomorphisms to
+ease the reading. First we have the source language:
 \begin{code}
 Expr : _
 Expr = ∥ |Tₑ| ⟦ E ⟧ₛ ∥
-
+\end{code}
+and its semantics:
+\begin{code}
 ⟦_⟧_ : Expr → State → ℕ
 ⟦ e ⟧ σ = (′ |H| Semₑ ′ E ⟨$⟩ e) σ
-
-
-⟪_⟫ : ∥ |Tₘ| ⟦ C ⟧ₛ ∥ → Conf → Maybe Stack
-⟪ c ⟫ = ′ semₘ ′ C ⟨$⟩ c
-
+\end{code}
+Then we define the compiler:
+\begin{code}
 compₑ : Expr → ∥ |Tₘ| ⟦ C ⟧ₛ ∥
 compₑ e = ′ hcomp ′ E ⟨$⟩ e 
 \end{code}
+and, finally the semantics of the target language
+\begin{code}
+⟪_⟫ : ∥ |Tₘ| ⟦ C ⟧ₛ ∥ → Conf → Maybe Stack
+⟪ c ⟫ = ′ semₘ ′ C ⟨$⟩ c
+\end{code}
 
-\noindent and we extract the proof of correcntness from
-the result of initiality of the term algebra:
+\noindent We extract the proof of correcntness from the result of
+initiality of the term algebra:
 
 \begin{code}
 correct : ∀  e s σ →
              ⟪ compₑ  e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ ) ∷ s) 
-correct e s σ = proj₂  (isInitial Execₑ)
+correct e s σ = proj₂  (init (TisInitial Σₑ) Execₑ)
                        (〈 semₘ 〉ₕ ∘ₕ hcomp)
                        (encH ∘ₕ (|H| Semₑ))
                        E

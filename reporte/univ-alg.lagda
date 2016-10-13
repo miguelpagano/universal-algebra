@@ -298,10 +298,11 @@ such that for each operation $f : [s_1,...,s_n] \Rightarrow s$, the following ho
   h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)\label{eq:homcond}
 \end{equation}
 
-We formalize an homomorphism as a record with the family of functions
-and a proof that it satisfies condition \eqref{eq:homcond}. In order to
-avoid repetition of the same parameters over and over again, we declare
-a module parameterized over the signature and the algebras.
+We formalize homomorphisms as a record with the family of functions
+and a proof that it satisfies condition \eqref{eq:homcond}. In order
+to avoid repetition of the same parameters over and over again (here
+and also in other parts of the development), we declare a module
+parameterized over the signature and the algebras.
 \begin{code}
 module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ}
         (A : Algebra {ℓ₁} {ℓ₂} Σ) 
@@ -716,7 +717,7 @@ $f(t_0,\ldots,t_{n-1})$.
 \noindent In that proof we used the facilities for equational
 reasoning provided by the standard library. We omit the proof
 |map≈| showing |map H ts ≈ map G ts|, wich is mutually recursive
-with the proof |total|.
+with the proof |total|. Now we construct the initial algebra.
 %if False
 \begin{code}
     where open EqR (A ⟦ s ⟧ₛ)
@@ -728,16 +729,19 @@ with the proof |total|.
                                       (map≈ ar ts)
 
   open Initial {lzero} {lzero} {ℓ₃} {ℓ₄} Σ
+open Initial {lzero} {lzero} 
 \end{code}
 %endif
 
-
-
-We complete the proof of initiality of the term algebra
-showing that the homomorphism |∣H∣| is unique:
-
 \begin{code}
-  isInitial : Unique _≈ₕ_
-  isInitial = |H| , total
+|T|isInitial : ∀ Σ → Initial {lzero} {lzero} Σ 
+|T|isInitial Σ = record  { alg = |T|
+                         ; init = λ A → |H| A , total A }
 \end{code}
+%if False
+\begin{code}
+  where open TermAlgebra Σ
+        open InitHomo
+\end{code}
+%endif
 

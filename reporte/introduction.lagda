@@ -32,7 +32,7 @@ their respective signatures; semantics of the languages are freely
 obtained by initiality after giving an interpretation for the
 corresponding function symbols. The trick to get correctness is to map
 the target language and its semantics as algebras for the source
-language and then provide an homomorphism from the high-level
+language and then provide a homomorphism from the high-level
 semantics to the low-level one (or viceversa). In this work we
 formalize enough heterogenous universal algebra in order to complete
 the definition of a correct compiler. Throughout the article we will
@@ -182,7 +182,7 @@ Instead of defining ingeniously the translation $\comp$ and proving
 afterwards its correctness, we will obtain it from a more broader
 construction which will transform each algebra $A$ of $\Sigma_m$ into
 an algebra $\widetilde{A}$ of $\Sigma_e$ and also each homomorphism
-from $h \colon A \to B$ into an homomorphism $\widetilde{h}\colon
+from $h \colon A \to B$ into a homomorphism $\widetilde{h}\colon
 \widetilde A \to \widetilde B$. These transformations will arise from
 a \emph{signature-translation} from $\Sigma_e$ to $\Sigma_m$. This
 concept is related with the interpretability of similarity types in
@@ -201,9 +201,9 @@ categorically by \citet{fiore-2010} for second order signatures and by
 The transformation brings the right side of the above diagram to the
 world of $\Sigma_e$ algebras, thus $\comp$ arises as the unique
 homomorphism from $T_e$ to $\widetilde{T_m}$. Correctness of the compiler
-follows abstractly as soon as we provide either an homomorphism
+follows abstractly as soon as we provide either a homomorphism
 $\mathit{dec} \colon \widetilde{\mathit{Exec}} \to \mathit{Sem}$ (as
-proposed by \citet{morris-73}) or an homomorphism
+proposed by \citet{morris-73}) or a homomorphism
 $\mathit{enc} \colon \mathit{Sem} \to \widetilde{\mathit{Exec}}$ (after \cite{thatcher-80}).
 
 \begin{center}

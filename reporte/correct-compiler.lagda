@@ -32,6 +32,7 @@ urlcolor=blue]{ hyperref }
 %format ≈A = "\ensuremath{≈_{A}}"
 %format ≈B = "\ensuremath{≈_{B}}"
 %format |T| = "\ensuremath{\mathcal{T}}"
+%format |T|isInitial = "\ensuremath{\mathcal{T}\mathsf{isInitial}}"
 %format |Tc| = "\ensuremath{\mathcal{T}_m}"
 %format ∣h∣→A = |h|
 %format map|h|→A = map|h|

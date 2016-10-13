@@ -242,7 +242,7 @@ module AlgTrans {Σₛ Σₜ}  {t : Σₛ ↝ Σₜ} where
 \end{code}
 
 Furthermore, we can also translate any homomorphism $h : \mathcal{A}
-\to \mathcal{A'}$ to an homomorphism $\widetilde{h} :
+\to \mathcal{A'}$ to a homomorphism $\widetilde{h} :
 \widetilde{\mathcal{A}} \to \widetilde{\mathcal{A'}}$, thus completing the
 definition of a functor from the category of $\Sigma_t$-algebras to the
 category of $\Sigma_s$-algebras. The proof |hcond↝| is the condition

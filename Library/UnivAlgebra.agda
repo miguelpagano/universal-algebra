@@ -70,8 +70,8 @@ record Signature : Set₁ where
   Arity : Set
   Arity = List sorts
 
-  ΣType : Set
-  ΣType = List sorts × sorts
+  Type : Set
+  Type = List sorts × sorts
 
 open Signature
 
@@ -105,7 +105,7 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
 
 
   --Homomorphism condition
-  homCond : {ty : ΣType Σ} →
+  homCond : {ty : Type Σ} →
             (h : _⟿_) → (f : ops Σ ty) → Set _
   homCond {ty = (ar , s)} h f =
             (as : A ⟦ ar ⟧ₛ*) → (h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as))

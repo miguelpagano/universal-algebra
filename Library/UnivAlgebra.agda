@@ -144,10 +144,10 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
 
 
 module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
-       (Σ : Signature)
-       (A₀ : Algebra {ℓ₁} {ℓ₂} Σ)
-       (A₁ : Algebra {ℓ₃} {ℓ₄} Σ)
-       (A₂ : Algebra {l₅} {l₆} Σ) where
+       {Σ : Signature}
+       {A₀ : Algebra {ℓ₁} {ℓ₂} Σ}
+       {A₁ : Algebra {ℓ₃} {ℓ₄} Σ}
+       {A₂ : Algebra {l₅} {l₆} Σ} where
 
   open Algebra
   
@@ -198,8 +198,8 @@ Unique : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _
 Unique {A = A} _≈_ = A × Total _≈_
 
 
-module Initial {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
-               (Σ : Signature) where
+module Initial (Σ : Signature)
+               {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
 
   open Hom
   open Algebra
@@ -240,12 +240,11 @@ module TermAlgebra (Σ : Signature) where
                          ; cong = λ {ts₁} {ts₂} ts₁≈ts₂ → fcong ts₁ ts₂ ts₁≈ts₂
                          }
 
-module InitTermAlg (Σ : Signature) {ℓ₁ ℓ₂ : Level}
-                   (A : Algebra {ℓ₁} {ℓ₂} Σ) where 
+module InitTermAlg (Σ : Signature) where 
 
   open Algebra
   open TermAlgebra Σ
-  open Hom ∣T∣ A
+  open Hom
   open Homo
 
   mutual
@@ -259,10 +258,10 @@ module InitTermAlg (Σ : Signature) {ℓ₁ ℓ₂ : Level}
     map|h|→A A (t ▹ ts) = ∣h∣→A A t ▹ map|h|→A A ts
 
 
-  map|T|→A≡map : ∀ {ar} {ts : ∣T∣ ⟦ ar ⟧ₛ*} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
+  map|T|→A≡map : ∀ {ℓ₁ ℓ₂ ar} {ts : ∣T∣ ⟦ ar ⟧ₛ*} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
                    map|h|→A A ts ≡ map (λ s → ∣h∣→A A) ts
   map|T|→A≡map {ar = []} {⟨⟩} {A} = PE.refl
-  map|T|→A≡map {s ∷ ar} {t ▹ ts} {A} =
+  map|T|→A≡map {ar = s ∷ ar} {t ▹ ts} {A} =
                   PE.cong (λ ts' → ∣h∣→A A t ▹ ts') map|T|→A≡map
 
 
@@ -270,32 +269,32 @@ module InitTermAlg (Σ : Signature) {ℓ₁ ℓ₂ : Level}
     x ≡ y → _≈_ St x y
   ≡to≈ {St = St} PE.refl = Setoid.refl St
 
-  ∣H∣ : Homo
-  ∣H∣ = record { ′_′  = fun|T|ₕ
-              ; cond = |T|ₕcond
-              }
+  ∣H∣ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Homo ∣T∣ A
+  ∣H∣ A = record { ′_′  = fun|T|ₕ
+               ; cond = |T|ₕcond
+               }
     where congfun : ∀ {s} {t₁ t₂ : HU s} →
                     t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) (∣h∣→A A t₁) (∣h∣→A A t₂)
           congfun {s} t₁≡t₂ = ≡to≈ {St = A ⟦ s ⟧ₛ} (PE.cong (∣h∣→A A) t₁≡t₂)
-          fun|T|ₕ : _⟿_
+          fun|T|ₕ : ∣T∣ ⟿ A
           fun|T|ₕ s = record { _⟨$⟩_ = ∣h∣→A {s = s} A
                              ; cong  = congfun {s}
                              }
-          |T|ₕcond : ∀ {ty} (f : ops Σ ty) → homCond fun|T|ₕ f
+          |T|ₕcond : ∀ {ty} (f : ops Σ ty) → (homCond ∣T∣ A) fun|T|ₕ f
           |T|ₕcond {_ ⇒ s} f ⟨⟩ = ≡to≈ {St = A ⟦ s ⟧ₛ} PE.refl
           |T|ₕcond {_ ⇒ s} f (t ▹ ts) =
                    ≡to≈ {St = A ⟦ s ⟧ₛ} (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩
                                                  (∣h∣→A A t ▹ ts')) map|T|→A≡map)
 
 
-  total : Total _≈ₕ_
-  total H G s (term {ar = ar} f ts) = 
+  total : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Total (_≈ₕ_ ∣T∣ A)
+  total A H G s (term {ar = ar} f ts) = 
             begin
               ′ H ′ s ⟨$⟩ term f ts
                 ≈⟨ cond H f ts ⟩
-              A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ′ H ′ ts)
+              A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ∣T∣ A ′ H ′ ts)
                 ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ ar ts) ⟩
-              A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ′ G ′ ts)
+              A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ∣T∣ A ′ G ′ ts)
                 ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond G f ts) ⟩ 
               ′ G ′ s ⟨$⟩ term f ts
             ∎
@@ -303,5 +302,12 @@ module InitTermAlg (Σ : Signature) {ℓ₁ ℓ₂ : Level}
           map≈ : (ar : Arity Σ) → (ts : HVec (HU) ar) →
                  (map (_⟨$⟩_ ∘ ′ H ′) ts) ∼v (map (_⟨$⟩_ ∘ ′ G ′) ts)
           map≈ [] ⟨⟩ = ∼⟨⟩
-          map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (total H G s t)
+          map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (total A H G s t)
                                       (map≈ ar ts)
+
+  open Initial Σ
+
+  ∣T∣isInitial : ∀ {ℓ₁ ℓ₂} → Initial {ℓ₃ = ℓ₁} {ℓ₄ = ℓ₂}
+  ∣T∣isInitial = record  { alg = ∣T∣
+                         ; init = λ A → ∣H∣ A , total A }
+

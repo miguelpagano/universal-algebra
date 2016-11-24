@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 %if False
 \begin{code}
 module compiler where
@@ -9,6 +10,34 @@ open import transforming-algebras
 \label{sec:compiler}
 
 McCarthy's reading of the correctness of the compiler is
+=======
+\section{Compiler of an expression language}
+\label{sec:compiler}
+
+
+\begin{code}
+module reporte.compiler where
+
+open import reporte.univ-alg
+
+\end{code}
+
+Throughout this article we use as example, the problema of a compiler from
+a expression language to a stack-based machine language. In this section
+we show the complete example, developed within the algebraic framework.
+
+\subsection{Specification}
+
+The compiler will 
+
+Se quiere definir un compilador que traduzca expresiones del lenguaje 
+$Expr$ en expresiones (a las que llamaremos \textit{códigos}) del lenguaje $Code$ de manera que la semántica se preserve.
+Esta preservación estará especificada por una relación entre ambas semánticas.
+
+\subsubsection*{Lenguaje fuente}
+
+\paragraph{Sintaxis}
+>>>>>>> Stashed changes
 \begin{quote}
 the result of running the compiled program is to put the
 value of the expression compiled into the accumulator.

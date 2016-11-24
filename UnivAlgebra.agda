@@ -105,7 +105,7 @@ homCond : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} {ty : ΣType Σ} �
 homCond {Σ = Σ} {ty = (ar , s)} A A' h f =
            (as : A ⟦ ar ⟧ₛ*) → (h s ⟨$⟩ (A ⟦ f ⟧ ⟨$⟩ as))
                                ≈ₛ 
-                               (A' ⟦ f ⟧ ⟨$⟩ (map⟿ {Σ = Σ} {A} {A'} h as))
+                               (A' ⟦ f ⟧ ⟨$⟩ (map⟿ {A = A} {A'} h as))
         where _≈ₛ_ : _
               _≈ₛ_ = _≈_ (A' ⟦ s ⟧ₛ)
 
@@ -352,13 +352,18 @@ map∣T∣→A≡mapV {A = A} {s₀ ∷ ar} {t₀ ▹ ts} =
 
 -- Pregunta: El nivel de la relación rel podría ser distinto al nivel de la relación
 -- del álgebra?
-record Congruence {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) :
-                                                       Set (lsuc ℓ₂ ⊔ ℓ₁) where
+
+{- Debería serlo, sino tenemos problemas por ejemplo para definir kernel, donde
+   la relación es una igualdad en el álgebra imagen, por lo cual posiblemente tiene
+   otro nivel
+-}
+record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) :
+                                                       Set (lsuc ℓ₃ ⊔ ℓ₂ ⊔ ℓ₁) where
   field
-    rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₂
-    welldef : ∀ {s} → (x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)) →
-                       _≈_ (A ⟦ s ⟧ₛ) x₁ x₂ → _≈_ (A ⟦ s ⟧ₛ) y₁ y₂ →
-                       rel s x₁ y₁ → rel s x₂ y₂
+    rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₃
+    welldef : ∀ {s} {x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)} →
+                    _≈_ (A ⟦ s ⟧ₛ) x₁ x₂ → _≈_ (A ⟦ s ⟧ₛ) y₁ y₂ →
+                    rel s x₁ y₁ → rel s x₂ y₂
     cequiv : (s : sorts Σ) → IsEquivalence (rel s)
     csubst : ∀ {ar} {s} → (f : funcs Σ (ar , s)) → 
               _∼v_ {R = rel} {is = ar}  =[ _⟨$⟩_ (A ⟦ f ⟧) ]⇒ rel s
@@ -367,9 +372,9 @@ record Congruence {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂
 open Congruence
 
 -- Álgebra Cociente
-
-Quotient : ∀ {ℓ₁ ℓ₂} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence A) →
-                            Algebra {ℓ₁} {ℓ₂} Σ
+-- Cambiar notación a la usual con /
+Quotient : ∀ {ℓ₁ ℓ₂ ℓ₃} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence {ℓ₃} A) →
+                            Algebra {ℓ₁} {ℓ₃} Σ
 Quotient A C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
                               ; _≈_ = rel C s
                               ; isEquivalence = cequiv C s })
@@ -404,20 +409,157 @@ SubSetoid S P = record { Carrier = Σ[ e ∈ Carrier S ] (predicate P e)
                         ; trans = λ x₀ x₁ → Setoid.trans S x₀ x₁ }
 
 
-subalgcond : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-                   (Pₛ : (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)) →
-                   Set _
-subalgcond {Σ} A Pₛ = ∀ {ar} {s} → (f : funcs Σ (ar , s)) →
-                  (_⇨v_ (predicate ∘ Pₛ) ⟨→⟩ predicate (Pₛ s)) (_⟨$⟩_ (A ⟦ f ⟧))
+record SubAlg {ℓ₃ ℓ₁ ℓ₂} {Σ} (A : Algebra {ℓ₁} {ℓ₂} Σ) : Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃)) where
+  constructor _⊢⊣_
+  field
+    pr   : (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)
+    sacond : ∀ {ar} {s} → (f : funcs Σ (ar , s)) →
+                  (_⇨v_ (predicate ∘ pr) ⟨→⟩ predicate (pr s)) (_⟨$⟩_ (A ⟦ f ⟧))
 
-
-SubAlgebra : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-                   (Pₛ : (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)) →
-                   subalgcond A Pₛ → Algebra Σ
-SubAlgebra {Σ} A Pₛ cond = (λ s → SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s))
-                         ∥ if
+SubAlgebra : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
+                   SubAlg {ℓ₃ = ℓ₃} A → Algebra Σ
+SubAlgebra {Σ} {A = A} (Pₛ ⊢⊣ cond) = (λ s → SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s))
+                                    ∥ if
   where if : ∀ {ar} {s} → (f : funcs Σ (ar , s)) → _
         if {ar} {s} f = record { _⟨$⟩_ = λ v → (A ⟦ f ⟧ ⟨$⟩ mapV (λ _ → proj₁) v)
                                        , cond f v
-                               ; cong = λ { {v₁} {v₂} eq → Π.cong (A ⟦ f ⟧) {!eq!} }
+                               ; cong = λ { {v₁} {v₂} eq → Π.cong (A ⟦ f ⟧) (pcong eq) }
                                }
+           where pcong : ∀ {ar} {v₁ v₂ : VecH (sorts Σ) (λ s → Carrier $ SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s)) ar} →
+                           _∼v_ {is = ar} v₁ v₂ →
+                           mapV (λ _ → proj₁) v₁ ∼v mapV (λ _ → proj₁) v₂
+                 pcong {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
+                 pcong {i ∷ is} (∼▹ x eq) = ∼▹ x (pcong eq)
+
+SubImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+                              (B : Algebra {ℓ₃} {ℓ₄} Σ) →
+                              (h : Homomorphism A B) →
+                              (A' : SubAlg {ℓ₅} A) → SubAlg B
+SubImg {Σ} A B h A' = subipr ⊢⊣ subicond
+  where subiwdef : ∀ {s} {b₀ b₁} → _≈_ (B ⟦ s ⟧ₛ) b₀ b₁ →
+                     ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b₀) →
+                     ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b₁)
+        subiwdef {s} {b₀} {b₁} eq (a , eq') = a ,
+                     (begin
+                            ′ h ′ s ⟨$⟩ a
+                              ≈⟨ eq' ⟩
+                            b₀
+                              ≈⟨ eq ⟩
+                            b₁
+                          ∎
+                     )
+          where open EqR (B ⟦ s ⟧ₛ)
+        subipr : (s : sorts Σ) → SetoidPredicate (B ⟦ s ⟧ₛ)
+        subipr s = record { predicate = λ b → ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b)
+                          ; predWellDef = subiwdef }
+        subicond : ∀ {ar} {s} → (f : funcs Σ (ar , s)) →
+                     (_⇨v_ (predicate ∘ subipr) ⟨→⟩ predicate (subipr s))
+                     (_⟨$⟩_ (B ⟦ f ⟧))
+        subicond f vs = (A ⟦ f ⟧ ⟨$⟩ mapV (λ _ → proj₁ ∘ proj₂) vs)
+                        , {!cond h f (mapV (λ _ → proj₁ ∘ proj₂) vs)!}
+
+{-
+((B ⟦ .s ⟧ₛ) ≈
+       ′ h ′ .s ⟨$⟩ ((A ⟦ f ⟧) ⟨$⟩ mapV (λ _ x → proj₁ (proj₂ x)) vs))
+      ((B ⟦ f ⟧) ⟨$⟩ .x)
+
+
+((B ⟦ .s ⟧ₛ) ≈
+ ′ h ′ .s ⟨$⟩ ((A ⟦ f ⟧) ⟨$⟩ mapV (λ _ x → proj₁ (proj₂ x)) vs))
+((B ⟦ f ⟧) ⟨$⟩
+ mapV (λ x → _⟨$⟩_ (′ h ′ x)) (mapV (λ _ x → proj₁ (proj₂ x)) vs))
+-}
+
+Kernel : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Algebra {ℓ₁} {ℓ₂} Σ} {B : Algebra {ℓ₃} {ℓ₄} Σ}
+                             (h : Homomorphism A B) →
+                             Congruence {ℓ₃ = ℓ₄} A
+Kernel {Σ} {ℓ₄ = ℓ₄} {A = A} {B} h =
+       record { rel = krel
+              ; welldef = krelWdef
+              ; cequiv = krelEquiv
+              ; csubst = krsubst
+              }
+  where krel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₄
+        krel s = λ a₁ a₂ → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a₁ ) (′ h ′ s ⟨$⟩ a₂)
+        krelWdef : ∀ {s} {x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)} →
+                   _≈_ (A ⟦ s ⟧ₛ) x₁ x₂ → _≈_ (A ⟦ s ⟧ₛ) y₁ y₂ →
+                   krel s x₁ y₁ → krel s x₂ y₂
+        krelWdef {s} {x₁} {x₂} {y₁} {y₂} eqx eqy x₁ry₁ =
+                        begin
+                          ′ h ′ s ⟨$⟩ x₂
+                          ≈⟨ Setoid.sym (B ⟦ s ⟧ₛ) (Π.cong (′ h ′ s) eqx) ⟩
+                          ′ h ′ s ⟨$⟩ x₁
+                          ≈⟨ x₁ry₁ ⟩
+                          ′ h ′ s ⟨$⟩ y₁
+                          ≈⟨ Π.cong (′ h ′ s) eqy ⟩
+                          ′ h ′ s ⟨$⟩ y₂
+                         ∎
+          where open EqR (B ⟦ s ⟧ₛ)
+        krelEquiv : (s : sorts  Σ) → IsEquivalence (krel s)
+        krelEquiv s = record { refl = Setoid.refl (B ⟦ s ⟧ₛ)
+                             ; sym = Setoid.sym (B ⟦ s ⟧ₛ)
+                             ; trans = Setoid.trans (B ⟦ s ⟧ₛ) }
+        krsubst : {ar : List (sorts Σ)} {s : sorts Σ} (f : funcs Σ (ar , s)) →
+                  _∼v_ {R = krel} =[ _⟨$⟩_ (A ⟦ f ⟧) ]⇒ krel s
+        krsubst {s = s} f {vs₁} {vs₂} eq =
+                begin
+                   ′ h ′ s ⟨$⟩ ((A ⟦ f ⟧) ⟨$⟩ vs₁)
+                   ≈⟨ cond h f vs₁ ⟩
+                   (B ⟦ f ⟧ ⟨$⟩ (map⟿ {A = A} {B} ′ h ′ vs₁))
+                   ≈⟨ Π.cong (B ⟦ f ⟧) (p eq) ⟩
+                   (B ⟦ f ⟧ ⟨$⟩ (map⟿ {A = A} {B} ′ h ′ vs₂))
+                   ≈⟨ Setoid.sym (B ⟦ s ⟧ₛ) (cond h f vs₂) ⟩
+                   ′ h ′ s ⟨$⟩ ((A ⟦ f ⟧) ⟨$⟩ vs₂)
+                 ∎
+          where open EqR (B ⟦ s ⟧ₛ)
+                p : ∀ {is} {v w} → _∼v_ {R = krel} {is = is} v w →
+                      _∼v_ {R = λ s' → _≈_ (B ⟦ s' ⟧ₛ)} {is = is}
+                           (map⟿ {A = A} {B} ′ h ′ v)
+                           (map⟿ {A = A} {B} ′ h ′ w)
+                p {[]} ∼⟨⟩ = ∼⟨⟩
+                p {i ∷ is} (∼▹ x eq₁) = ∼▹ x (p eq₁)
+
+QuotHom : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+                        (Q : Congruence {ℓ₃} A) → Homomorphism A (Quotient A Q)
+QuotHom {Σ} A Q = record { ′_′ = fₕ
+                     ; cond = condₕ }
+  where fₕ : A ⟿ Quotient A Q
+        fₕ s = record { _⟨$⟩_ = Function.id
+                      ; cong = λ eq → welldef Q (Setoid.refl (A ⟦ s ⟧ₛ)) eq
+                                              (IsEquivalence.refl (cequiv Q s)) }
+          where open IsEquivalence
+        condₕ : ∀ {ty} (f : funcs Σ ty) → homCond A (Quotient A Q) fₕ f
+        condₕ f as = {!!}
+
+open import Function.Bijection
+open import Function.Surjection
+
+invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
+          (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
+          (h : Homomorphism A A') → (bj : (s : sorts Σ) → Bijective (′ h ′ s)) →
+          Homomorphism A' A
+invHomo = {!!}
+
+record Isomorphism {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
+                   (A : Algebra {ℓ₁} {ℓ₂} Σ) (A' : Algebra {ℓ₃} {ℓ₄} Σ) : 
+                                    Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+  field
+    hom : Homomorphism A A'
+    bij : (s : sorts Σ) → Bijective (′ hom ′ s)
+
+open Isomorphism
+
+iso⁻¹ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
+          (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
+          Isomorphism A A' → Isomorphism A' A
+iso⁻¹ A A' i = record { hom = invHomo A A' (hom i) (bij i)
+                      ; bij = λ s → {!!} }
+
+
+firstHomTheo : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+                             (B : Algebra {ℓ₃} {ℓ₄} Σ) →
+                             (h : Homomorphism A B) →
+                             (surj : (s : sorts Σ) → Surjective (′ h ′ s)) →
+                             Isomorphism (Quotient A (Kernel h)) B
+firstHomTheo A B h surj = {!!}
+

@@ -12,6 +12,7 @@ In this section we present our formalization in Agda of the core
 concepts of heterogenouos universal algebra, up to initiality of the
 term algebra. As far as we know, there are two formalizations of
 (multisorted) universal algebra: Capretta's implementation in Coq and
+<<<<<<< Updated upstream
 \citet{kahl-2011} formalization of allegories in Agda. In this work,
 we depart from Capretta at some points, both because of some
 theoretical considerations and also because our practical interest in
@@ -19,6 +20,22 @@ using universal algebra for constructing a correct compiler.  We will
 motivate some of the main definitions of the development and show its
 more interesting parts, while ommiting some technical details. The
 full code is available at
+=======
+\citet{kahl-2011} monumental formalization of allegories. In this
+work, we depart from Capretta at some points, both because of some
+theoretical considerations and also because our practical
+interest in using universal algebra for constructing a correct
+compiler. \manu{es necesario decir que partimos de cosas que hizo
+capretta?}.
+
+% \paragraph{Agda}
+% Agda is a functional programming language with dependent types, based on the
+% Martin Löf's intuitionistic type theory...
+
+We will motivate some of the main definitions of the development and
+show its more interesting parts, while ommiting some technical
+details. The full code is available at
+>>>>>>> Stashed changes
 \url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}.
 
 \subsection{Signature, algebra and homomorphism}
@@ -131,6 +148,8 @@ data Opsₑ : List Sortsₑ × Sortsₑ → Set where
 Σₑ = ⟨ Sortsₑ , Opsₑ ⟩
 \end{code}
 
+\manu{Quizás podemos poner nombres de sorts más breves? ExprN no me gusta.}
+
 \paragraph{Algebra}
 Usually, an \emph{algebra} $\mathcal{A}$ of a signature $\Sigma$, or a
 $\Sigma$-algebra, consists of a family of sets indexed by the sorts of
@@ -189,8 +208,13 @@ data VecH' {I} (A : I -> Set) : List I → Set where
 \end{code}
 When |A| is a family of setoids |I → Setoid|, and |is : List I|,  it is straightforward to
 promote this construction to setoids and we use |A ✳ is| to refer to
+<<<<<<< Updated upstream
 the setoid of heterogeneous vectors indexed in |is|, where the equivalence relation is
 the point-wisely induced. The interpretation of the operation $f
+=======
+the setoid of heterogeneous vectors where the equivalence relation is
+the point-wisely induced \manu{y quién es $is$?}. The interpretation of the operation $f
+>>>>>>> Stashed changes
 \colon [s_1,…,s_n] \Rightarrow s$ should be a setoid morphism |A ✳
 [s₁,…,sₙ] ⟶ A s|.
 

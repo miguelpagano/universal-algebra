@@ -30,6 +30,7 @@ The main idea behind this algebraic proof of correctness is to
 conceive both languages, source and target, as the initial algebras of
 their respective signatures; semantics of the languages are freely
 obtained by initiality after giving an interpretation for the
+<<<<<<< Updated upstream
 corresponding function symbols. The trick to get correctness is to map
 the target language and its semantics as algebras for the source
 language and then provide a homomorphism from the high-level
@@ -44,6 +45,15 @@ use McCarthy and Painter's language as a guiding example.
 %% interesting example.
 
 
+=======
+corresponding function symbols. The trick to get correctness is
+to map the target language and its semantics as algebras for
+the source language and then provide an homomorphism from the
+high-level semantics to the low-level one (\manu{o viceversa?}). In this work we formalize
+enough heterogenous universal algebra in order to complete the
+definition of a correct compiler. Throgout the article we will use
+McCarthy and Painter's language as a guiding example.
+>>>>>>> Stashed changes
 % TODO: Sería bueno encontrar una forma más vendedora para decir lo
 % que hacemos y también estaría muy bien si tenemos una formalización
 % del lenguaje imperativo simple, aunque no lo mostremos.
@@ -130,7 +140,7 @@ a signature $\Sigma_e$ is the \emph{term algebra} and it consists of
 the phrases freely generated from the operators. A semantics is
 nothing more than a algebra for the signature, which is completely
 determined by choosing an interpretation for (the sorts and) the
-operators.
+operators. \manu{Cambiamos el término por ``signature-translation''?}.
 
 \newcommand{\hsem}[1]{\mathit{hsem}(#1)}
 In our case we have two (monosorted) signatures $\Sigma_e$ and
@@ -200,11 +210,21 @@ categorically by \citet{fiore-2010} for second order signatures and by
 
 The transformation brings the right side of the above diagram to the
 world of $\Sigma_e$ algebras, thus $\comp$ arises as the unique
+<<<<<<< Updated upstream
 homomorphism from $T_e$ to $\widetilde{T_m}$. Correctness of the compiler
 follows abstractly as soon as we provide either a homomorphism
 $\mathit{dec} \colon \widetilde{\mathit{Exec}} \to \mathit{Sem}$ (as
 proposed by \citet{morris-73}) or a homomorphism
 $\mathit{enc} \colon \mathit{Sem} \to \widetilde{\mathit{Exec}}$ (after \cite{thatcher-80}).
+=======
+homomorphism from $T_e$ to $\widehat{T_C}$. Correctness of the compiler
+follows abstractly as soon as we provide either an homomorphism
+$\mathit{dec} \colon \widehat{\mathit{Exec}} \to \mathit{Sem}$ (as
+proposed by \citet{morris-73}) or an homomorphism
+$\mathit{enc} \colon \widehat{\mathit{Sem}} \to \mathit{Exec}$
+(after \cite{thatcher-80}). \manu{vale la pena decir que janssen discute esto,
+pero que nosotros no le damos bola?}.
+>>>>>>> Stashed changes
 
 \begin{center}
   \begin{tikzpicture}[>=latex]
@@ -232,6 +252,7 @@ In Sect. \ref{sec:trans} we introduce the concept of \emph{signature-translation
 and prove that it induces a transformation of algebras
 and their homomorphisms. As far as we know, there is no formalization
 of heterogeneous algebras including these results.
+\manu{cambiamos el término interpretation??}
 
 Instantiating the abstract framework developed in the previous
 sections, we proceed to formalize in Sect. \ref{sec:compiler} the

@@ -368,6 +368,7 @@ SubSetoid S P = record { Carrier = Σ[ e ∈ Carrier S ] (predicate P e)
                         ; sym = λ x → Setoid.sym S x
                         ; trans = λ x₀ x₁ → Setoid.trans S x₀ x₁ }
 
+{- Induced Subalgebra -}
 
 record SubAlg {ℓ₃ ℓ₁ ℓ₂} {Σ} (A : Algebra {ℓ₁} {ℓ₂} Σ) :
                                           Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃)) where
@@ -425,20 +426,26 @@ SubImg {Σ} A B h A' = subipr ⊢⊣ subicond
         subicond : ∀ {ar} {s} → (f : ops Σ (ar , s)) →
                      (_⇨v_ (predicate ∘ subipr) ⟨→⟩ predicate (subipr s))
                      (_⟨$⟩_ (B ⟦ f ⟧ₒ))
-        subicond f v = {!!}
-
-
-{-
-((B ⟦ .s ⟧ₛ) ≈
-       ′ h ′ .s ⟨$⟩ ((A ⟦ f ⟧) ⟨$⟩ mapV (λ _ x → proj₁ (proj₂ x)) vs))
-      ((B ⟦ f ⟧) ⟨$⟩ .x)
-
-
-((B ⟦ .s ⟧ₛ) ≈
- ′ h ′ .s ⟨$⟩ ((A ⟦ f ⟧) ⟨$⟩ mapV (λ _ x → proj₁ (proj₂ x)) vs))
-((B ⟦ f ⟧) ⟨$⟩
- mapV (λ x → _⟨$⟩_ (′ h ′ x)) (mapV (λ _ x → proj₁ (proj₂ x)) vs))
--}
+        subicond {ar} {s} f v = (A ⟦ f ⟧ₒ ⟨$⟩ va) ,
+                                (begin
+                                  ′ h ′ s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ va)
+                                ≈⟨ cond h f va ⟩
+                                  B ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A B ′ h ′ va)
+                                ≈⟨ Π.cong (B ⟦ f ⟧ₒ) (p≈ v) ⟩
+                                  B ⟦ f ⟧ₒ ⟨$⟩ proj₁⇨v v
+                                ∎
+                               )
+          where open EqR (B ⟦ s ⟧ₛ)
+                ⇨vΣ : HVec (λ sᵢ → Σ[ b ∈ Carrier (B ⟦ sᵢ ⟧ₛ) ] (predicate ∘ subipr) sᵢ b) ar
+                ⇨vΣ  = ⇨vtoΣ v
+                va : HVec (Carrier ∘ _⟦_⟧ₛ A) ar
+                va = map (λ { i (b , a , ha≈b) → a }) ⇨vΣ
+                p≈ : ∀ {ar'} {vs : HVec (Carrier ∘ _⟦_⟧ₛ B) ar'} → (pvs : (predicate ∘ subipr) ⇨v vs) → 
+                     ((_⟦_⟧ₛ B ✳ ar') ≈
+                     map⟿ A B ′ h ′ (map (λ { i (b , a , ha≈b) → a }) (⇨vtoΣ pvs)))
+                     vs
+                p≈ ⇨v⟨⟩ = ∼⟨⟩
+                p≈ (⇨v▹ pv pvs) = ∼▹ (proj₂ pv) (p≈ pvs)
 
 
 Kernel : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Algebra {ℓ₁} {ℓ₂} Σ} {B : Algebra {ℓ₃} {ℓ₄} Σ}
@@ -495,24 +502,62 @@ Kernel {Σ} {ℓ₄ = ℓ₄} {A = A} {B} h =
 QuotHom : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
                         (Q : Congruence {ℓ₃} A) → Homo A (Quotient A Q)
 QuotHom {Σ} A Q = record { ′_′ = fₕ
-                     ; cond = condₕ }
+                         ; cond = condₕ }
   where fₕ : A ⟿ Quotient A Q
         fₕ s = record { _⟨$⟩_ = Function.id
                       ; cong = λ eq → welldef Q (Setoid.refl (A ⟦ s ⟧ₛ)) eq
                                               (IsEquivalence.refl (cequiv Q s)) }
           where open IsEquivalence
         condₕ : ∀ {ty} (f : ops Σ ty) → homCond A (Quotient A Q) fₕ f
-        condₕ f as = {!!}
+        condₕ {ar , s} f as = subst ((rel Q s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
+                                    (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) mapid≡)
+                                    (IsEquivalence.refl (cequiv Q s))
+          where open IsEquivalence
+                mapid≡ : ∀ {ar'} {as' : Carrier (_⟦_⟧ₛ A ✳ ar')} →
+                         as' ≡ map (λ _ a → a) as'
+                mapid≡ {as' = ⟨⟩} = PE.refl
+                mapid≡ {as' = v ▹ as'} = PE.cong (λ as'' → v ▹ as'') mapid≡ 
 
 
-open import Function.Bijection
-open import Function.Surjection
+open import Function.Bijection hiding (_∘_)
+open import Function.Surjection hiding (_∘_)
+
+open Bijective
+
+≡to≈ : ∀ {ℓ₁ ℓ₂} → (S : Setoid ℓ₁ ℓ₂) →
+         {x y : Carrier S } → x ≡ y →
+         Setoid._≈_ S x y
+≡to≈ S refl = Setoid.refl S
 
 invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
           (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
           (h : Homo A A') → (bj : (s : sorts Σ) → Bijective (′ h ′ s)) →
           Homo A' A
-invHomo = {!!}
+invHomo {Σ = Σ} A A' h bj = record { ′_′ = h⁻¹
+                                   ; cond = cond⁻¹
+                                   }
+  where h⁻¹ : A' ⟿ A
+        h⁻¹ s =  from (bj s)
+        cond⁻¹ : ∀ {ty} (f : ops Σ ty) → homCond A' A h⁻¹ f
+        cond⁻¹ {ar , s} f as = 
+               begin
+                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ as)
+               ≈⟨ Π.cong (h⁻¹ s) (Π.cong (A' ⟦ f ⟧ₒ)
+                         (∼↑v (λ i a' → Setoid.sym (A' ⟦ i ⟧ₛ) (right-inverse-of (bj i) a'))
+                         as)) ⟩
+                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ map (λ i a' → ′ h ′ i ⟨$⟩ (h⁻¹ i ⟨$⟩ a')) as)
+               ≈⟨ Π.cong (h⁻¹ s) (Π.cong (A' ⟦ f ⟧ₒ)
+                 (Setoid.sym (_⟦_⟧ₛ A' ✳ ar) (≡to≈ (_⟦_⟧ₛ A' ✳ ar) (propMapV∘ as (λ i → _⟨$⟩_ (h⁻¹ i))
+                                                                               (λ i → _⟨$⟩_ (′ h ′ i)))))) ⟩
+                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ map (λ i → _⟨$⟩_ (′ h ′ i)) (map (λ i → _⟨$⟩_ (h⁻¹ i)) as))
+               ≈⟨ Π.cong (h⁻¹ s) (Setoid.sym (A' ⟦ s ⟧ₛ) (cond h f (map (λ i → _⟨$⟩_ (h⁻¹ i)) as))) ⟩
+                 h⁻¹ s ⟨$⟩ (′ h ′ s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ (map (λ i → _⟨$⟩_ (h⁻¹ i)) as)))
+               ≈⟨ left-inverse-of (bj s) (A ⟦ f ⟧ₒ ⟨$⟩ (map (λ i → _⟨$⟩_ (h⁻¹ i)) as)) ⟩
+                 A ⟦ f ⟧ₒ ⟨$⟩ map⟿ A' A h⁻¹ as
+               ∎
+          where open EqR (A ⟦ s ⟧ₛ)
+
+
 
 record Isomorphism {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                    (A : Algebra {ℓ₁} {ℓ₂} Σ) (A' : Algebra {ℓ₃} {ℓ₄} Σ) : 
@@ -526,8 +571,27 @@ open Isomorphism
 iso⁻¹ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
           (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
           Isomorphism A A' → Isomorphism A' A
-iso⁻¹ A A' i = record { hom = invHomo A A' (hom i) (bij i)
-                      ; bij = λ s → {!!} }
+iso⁻¹ {Σ = Σ} A A' i = record { hom = h⁻¹
+                              ; bij = bij⁻¹ }
+  where h⁻¹ : Homo A' A
+        h⁻¹ = invHomo A A' (hom i) (bij i)
+        surj⁻¹ : (s : sorts Σ) → Surjective (′ h⁻¹ ′ s)
+        surj⁻¹ s = record { from = ′ hom i ′ s
+                          ; right-inverse-of = left-inverse-of (bij i s)
+                          }
+        bij⁻¹ : (s : sorts Σ) → Bijective (′ h⁻¹ ′ s)
+        bij⁻¹ s = record { injective = λ {x} {y} h⁻¹x≈h⁻¹y →
+                                         begin
+                                           x
+                                         ≈⟨ Setoid.sym (A' ⟦ s ⟧ₛ) (right-inverse-of (bij i s) x) ⟩
+                                           ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ x)
+                                         ≈⟨ Π.cong (′ hom i ′ s) h⁻¹x≈h⁻¹y ⟩
+                                           ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ y)
+                                         ≈⟨ right-inverse-of (bij i s) y ⟩
+                                           y
+                                         ∎
+                         ; surjective = surj⁻¹ s }
+              where open EqR (A' ⟦ s ⟧ₛ)
 
 
 firstHomTheo : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →

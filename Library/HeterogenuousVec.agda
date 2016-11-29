@@ -61,8 +61,16 @@ data _⇨v_ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁
            {is : List I} → HVec A is → Set (l₀ ⊔ l₁) where
      ⇨v⟨⟩ : P ⇨v ⟨⟩
      ⇨v▹ : ∀ {i} {is} {v} {vs} → (pv : P i v) →
-             _⇨v_ P {is} vs → P ⇨v (_▹_ {i = i} v vs)
+             (pvs : _⇨v_ P {is} vs) → P ⇨v (_▹_ {i = i} v vs)
 
+⇨vtoΣ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
+           {is} {vs : HVec A is} → P ⇨v vs → HVec (λ i → Σ[ a ∈ A i ] P i a) is
+⇨vtoΣ ⇨v⟨⟩ = ⟨⟩
+⇨vtoΣ (⇨v▹ {v = v} pv p⇨vs) = (v , pv) ▹ ⇨vtoΣ p⇨vs
+
+proj₁⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
+           {is} {vs : HVec A is} → P ⇨v vs → HVec A is
+proj₁⇨v {vs = vs} _ = vs
 
 ⇨v-pointwise : ∀ {l₀ l₁ I} {is : List I} {A : I → Set l₀}
                  {P : (i : I) → A i → Set l₁} →
@@ -92,6 +100,15 @@ data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} 
 ~v-pointwise (v₁ ▹ vs₁) (v₂ ▹ vs₂) (∼▹ v₁∼v₂ eq) (suc n) =
                                                  ~v-pointwise vs₁ vs₂ eq n
 
+
+{- PONER UN NOMBRE MEJOR PARA ESTO -}
+∼↑v : ∀ {l₀ l₁ I} {A : I -> Set l₀} {is : List I} {R : (i : I) → Rel (A i) l₁}
+        {f : (i : I) → A i → A i} →
+        (P : (i : I) → (a : A i) → R i a (f i a)) →
+        (vs : HVec A is) → _∼v_ {R = R} vs (map f vs)
+∼↑v P ⟨⟩ = ∼⟨⟩
+∼↑v {is = i ∷ is} P (v ▹ vs) = ∼▹ (P i v) (∼↑v P vs)
+      
 
 -- Reindexing
 

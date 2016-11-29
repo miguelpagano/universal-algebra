@@ -594,11 +594,30 @@ iso⁻¹ {Σ = Σ} A A' i = record { hom = h⁻¹
               where open EqR (A' ⟦ s ⟧ₛ)
 
 
+open Surjective
+
 firstHomTheo : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
                              (B : Algebra {ℓ₃} {ℓ₄} Σ) →
                              (h : Homo A B) →
                              (surj : (s : sorts Σ) → Surjective (′ h ′ s)) →
                              Isomorphism (Quotient A (Kernel h)) B
-firstHomTheo A B h surj = {!!}
-
+firstHomTheo {Σ} A B h surj =
+             record { hom = homo₁
+                    ; bij = bij₁
+                    }
+  where homo₁ : Homo (Quotient A (Kernel h)) B
+        homo₁ = record { ′_′ = λ s → record { _⟨$⟩_ = λ a → ′ h ′ s ⟨$⟩ a
+                                            ; cong = Function.id }
+                       ; cond = λ { {ar , s} f as → cond h f as }
+                       }
+        surj₁ : (s : sorts Σ) → Surjective (′ homo₁ ′ s)
+        surj₁ s = record { from = record { _⟨$⟩_ = λ b → Surjective.from
+                                                                 (surj s) ⟨$⟩ b
+                                         ; cong = λ {b} {b'} b≈b' → Π.cong (′ h ′ s)
+                                                                    (Π.cong (Surjective.from (surj s)) b≈b') }
+                         ; right-inverse-of = λ b → Surjective.right-inverse-of (surj s) b
+                         }
+        bij₁ : (s : sorts Σ) → Bijective (′ homo₁ ′ s)
+        bij₁ s = record { injective = Function.id
+                        ; surjective = surj₁ s }
 

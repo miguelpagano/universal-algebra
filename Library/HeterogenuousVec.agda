@@ -53,6 +53,11 @@ map : ∀ {l₀ l₁ I} {A : I → Set l₀} {A' : I → Set l₁} {is : List I}
 map {is = []} f ⟨⟩ = ⟨⟩
 map {is = i₀ ∷ is} f (v₀ ▹ vs) = f i₀ v₀ ▹ map f vs
 
+mapId : ∀ {l₀ I} {A : I → Set l₀} {is : List I} →
+          (vs : HVec A is) → map (λ _ a → a) vs ≡ vs
+mapId ⟨⟩ = refl
+mapId (v ▹ vs) = cong (_▹_ v) (mapId vs)
+
 
 {-
 Extension of predicates
@@ -89,7 +94,7 @@ data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} 
      ∼⟨⟩ : ⟨⟩ ∼v ⟨⟩
      ∼▹  : ∀ {i} {is} {t₁} {t₂} {ts₁ : HVec A is} {ts₂ : HVec A is} →
            R i t₁ t₂ → _∼v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ∼v (t₂ ▹ ts₂)
-
+        
 
 ~v-pointwise : ∀ {l₀} {l₁} {I : Set} {is : List I}
                {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} →
@@ -206,6 +211,25 @@ HVecSet I A is = record { Carrier = HVec (λ i → Carrier $ A i) is
                                    (∼▹ w≈z ws≈zs) = ∼▹ (Setoid.trans (A i) v≈w w≈z)
                                                        (trans~v is₁ vs≈ws ws≈zs)
 
+
+
+▹inj : ∀ {l₀ I} {A : I → Set l₀} {is} {i : I} {vs vs' : HVec A is} {v v' : A i} →
+       v ▹ vs ≡ v' ▹ vs' → v ≡ v' × vs ≡ vs'
+▹inj _≡_.refl = _≡_.refl , _≡_.refl
+       
+
+≡to∼v : ∀ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} {is : List I}
+        {vs : HVec A is} {vs' : HVec A is} → ((i : I) → IsEquivalence (R i)) →
+        vs ≡ vs' →
+        _∼v_ {R = R} vs vs'
+≡to∼v {vs = ⟨⟩} {⟨⟩} ise eq = ∼⟨⟩
+≡to∼v {R = R} {vs = _▹_ {i} {is} v vs} {vs' = v' ▹ vs'} ise eq =
+              ∼▹ (subst (λ v~ → R i v v~) v≡v' (irefl (ise i))) (≡to∼v ise vs≡vs')
+  where open IsEquivalence renaming (refl to irefl)
+        v≡v' : v ≡ v'
+        v≡v' = proj₁ (▹inj eq)
+        vs≡vs' : vs ≡ vs'
+        vs≡vs' = proj₂ (▹inj eq)
 
 _✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) →
                                  List I → Setoid _ _

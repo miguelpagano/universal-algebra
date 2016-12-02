@@ -4,8 +4,8 @@ open import Relation.Binary hiding (Total ; _⇒_)
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
-open import Function
-open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid)
+open import Function as F
+open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Data.Bool
 open import Data.List renaming (map to lmap)
 open import Relation.Binary.PropositionalEquality as PE
@@ -190,7 +190,6 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
                           A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₀ A₂ comp as)
                         ∎
 
-
 Total : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _ 
 Total _≈_ = ∀ a a' → a ≈ a'
 
@@ -208,6 +207,17 @@ module Initial (Σ : Signature)
     field
       alg   : Algebra {ℓ₁} {ℓ₂} Σ
       init  : (A : Algebra {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ alg A)
+
+
+module Final (Σ : Signature)
+             {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
+  open Hom
+  open Algebra
+
+  record Final  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+    field
+      alg   : Algebra {ℓ₁} {ℓ₂} Σ
+      init  : (A : Algebra {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ A alg)
 
 
 module TermAlgebra (Σ : Signature) where
@@ -312,7 +322,20 @@ module InitTermAlg (Σ : Signature) where
                         ; init = λ A → ∣H∣ A , total A }
 
 
-open Algebra 
+open Algebra
+
+open Hom
+-- Homomorphism identity
+HomId : ∀ {ℓ₁ ℓ₂} {Σ} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
+          Homo A A
+HomId {A = A} = record { ′_′ = λ s → FE.id
+                       ; cond = λ { {ar , s} f as →
+                                    Π.cong (A ⟦ f ⟧ₒ)
+                                    (≡to∼v (λ i → Setoid.isEquivalence (A ⟦ i ⟧ₛ))
+                                    (PE.sym (mapId as))) }
+                       }
+
+
 record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}
                   (A : Algebra {ℓ₁} {ℓ₂} Σ) : Set (lsuc ℓ₃ ⊔ ℓ₂ ⊔ ℓ₁) where
   field
@@ -328,7 +351,6 @@ record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}
 open Congruence
 
 -- Álgebra Cociente
--- Cambiar notación a la usual con /
 Quotient : ∀ {ℓ₁ ℓ₂ ℓ₃} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence {ℓ₃} A) →
                             Algebra {ℓ₁} {ℓ₃} Σ
 Quotient A C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
@@ -402,11 +424,13 @@ SubAlgebra {Σ} {A = A} (Pₛ ⊢⊣ cond) = (λ s → SubSetoid (A ⟦ s ⟧ₛ
 
 open Hom
 open Homo
-SubImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+
+{- Homomorphic image is a SubAlgebra of B -}
+
+SubImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
                               (B : Algebra {ℓ₃} {ℓ₄} Σ) →
-                              (h : Homo A B) →
-                              (A' : SubAlg {ℓ₅} A) → SubAlg B
-SubImg {Σ} A B h A' = subipr ⊢⊣ subicond
+                              (h : Homo A B) → SubAlg B
+SubImg {Σ} A B h = subipr ⊢⊣ subicond
   where subiwdef : ∀ {s} {b₀ b₁} → _≈_ (B ⟦ s ⟧ₛ) b₀ b₁ →
                      ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b₀) →
                      ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b₁)
@@ -446,6 +470,11 @@ SubImg {Σ} A B h A' = subipr ⊢⊣ subicond
                      vs
                 p≈ ⇨v⟨⟩ = ∼⟨⟩
                 p≈ (⇨v▹ pv pvs) = ∼▹ (proj₂ pv) (p≈ pvs)
+
+-- Definition 2.8
+homImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {B : Algebra {ℓ₃} {ℓ₄} Σ} →
+               (A : Algebra {ℓ₁} {ℓ₂} Σ) → (h : Homo A B) → Algebra Σ
+homImg {Σ} {B = B} A h = SubAlgebra (SubImg A B h)
 
 
 Kernel : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Algebra {ℓ₁} {ℓ₂} Σ} {B : Algebra {ℓ₃} {ℓ₄} Σ}
@@ -504,7 +533,7 @@ QuotHom : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
 QuotHom {Σ} A Q = record { ′_′ = fₕ
                          ; cond = condₕ }
   where fₕ : A ⟿ Quotient A Q
-        fₕ s = record { _⟨$⟩_ = Function.id
+        fₕ s = record { _⟨$⟩_ = F.id
                       ; cong = λ eq → welldef Q (Setoid.refl (A ⟦ s ⟧ₛ)) eq
                                               (IsEquivalence.refl (cequiv Q s)) }
           where open IsEquivalence
@@ -519,7 +548,7 @@ QuotHom {Σ} A Q = record { ′_′ = fₕ
                 mapid≡ {as' = v ▹ as'} = PE.cong (λ as'' → v ▹ as'') mapid≡ 
 
 
-open import Function.Bijection hiding (_∘_)
+open import Function.Bijection renaming (_∘_ to _∘b_) 
 open import Function.Surjection hiding (_∘_)
 
 open Bijective
@@ -568,11 +597,27 @@ record Isomorphism {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
 
 open Isomorphism
 
-iso⁻¹ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
+-- Isomorphic algebras
+record _≅_ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ)
+               (B : Algebra {ℓ₃} {ℓ₄} Σ) : Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄)) where
+  field
+    iso : Isomorphism A B
+
+{- The relation of isomorphism between algebras is an equivalence relation -}
+
+reflIso : ∀ {ℓ₁ ℓ₂ Σ} → Reflexive (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ})
+reflIso {Σ = Σ} {A} = record { hom = HomId
+                              ; bij = λ s → record { injective = F.id
+                                                    ; surjective = surj s } }
+  where surj : (s : sorts Σ) → Surjective (′ HomId {A = A} ′ s)
+        surj s = record { from = FE.id
+                        ; right-inverse-of = λ x → Setoid.refl (A ⟦ s ⟧ₛ) }
+
+symIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
           (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
           Isomorphism A A' → Isomorphism A' A
-iso⁻¹ {Σ = Σ} A A' i = record { hom = h⁻¹
-                              ; bij = bij⁻¹ }
+symIso {Σ = Σ} A A' i = record { hom = h⁻¹
+                               ; bij = bij⁻¹ }
   where h⁻¹ : Homo A' A
         h⁻¹ = invHomo A A' (hom i) (bij i)
         surj⁻¹ : (s : sorts Σ) → Surjective (′ h⁻¹ ′ s)
@@ -581,19 +626,60 @@ iso⁻¹ {Σ = Σ} A A' i = record { hom = h⁻¹
                           }
         bij⁻¹ : (s : sorts Σ) → Bijective (′ h⁻¹ ′ s)
         bij⁻¹ s = record { injective = λ {x} {y} h⁻¹x≈h⁻¹y →
-                                         begin
-                                           x
-                                         ≈⟨ Setoid.sym (A' ⟦ s ⟧ₛ) (right-inverse-of (bij i s) x) ⟩
-                                           ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ x)
-                                         ≈⟨ Π.cong (′ hom i ′ s) h⁻¹x≈h⁻¹y ⟩
-                                           ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ y)
-                                         ≈⟨ right-inverse-of (bij i s) y ⟩
-                                           y
-                                         ∎
+                             begin
+                               x
+                             ≈⟨ Setoid.sym (A' ⟦ s ⟧ₛ) (right-inverse-of (bij i s) x) ⟩
+                               ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ x)
+                             ≈⟨ Π.cong (′ hom i ′ s) h⁻¹x≈h⁻¹y ⟩
+                               ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ y)
+                             ≈⟨ right-inverse-of (bij i s) y ⟩
+                               y
+                             ∎
                          ; surjective = surj⁻¹ s }
               where open EqR (A' ⟦ s ⟧ₛ)
 
+transIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆} {Σ : Signature} → 
+             (A₀ : Algebra {ℓ₁} {ℓ₂} Σ) → (A₁ : Algebra {ℓ₃} {ℓ₄} Σ) →
+             (A₂ : Algebra {ℓ₅} {ℓ₆} Σ) →
+             Isomorphism A₀ A₁ → Isomorphism A₁ A₂ → Isomorphism A₀ A₂
+transIso {Σ = Σ} A₀ A₁ A₂ iso₀ iso₁ =
+            record { hom = hom iso₁ ∘ₕ hom iso₀
+                   ; bij = λ s → bijective (bj₁ s ∘b bj₀ s) }
+  where open HomComp
+        open Bijection
+        bj₀ : (s : sorts Σ) → Bijection (A₀ ⟦ s ⟧ₛ) (A₁ ⟦ s ⟧ₛ)
+        bj₀ s = record { to = ′ hom iso₀ ′ s
+                       ; bijective = bij iso₀ s }
+        bj₁ : (s : sorts Σ) → Bijection (A₁ ⟦ s ⟧ₛ) (A₂ ⟦ s ⟧ₛ)
+        bj₁ s = record { to = ′ hom iso₁ ′ s
+                       ; bijective = bij iso₁ s }
+        
 
+-- Theorem 2.10 del Handbook. Debo poner los mismos niveles en ambas
+-- algebras para que pueda ser una relación binaria en un mismo tipo.
+isoEquiv : ∀ {ℓ₁ ℓ₂} {Σ} → IsEquivalence (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ})
+isoEquiv {Σ = Σ} = record { refl = reflIso
+                          ; sym = λ {A} {A'} i → symIso A A' i
+                          ; trans = λ {A₀} {A₁} {A₂} i₀ i₁ →
+                                           transIso A₀ A₁ A₂ i₀ i₁
+                          }
+
+
+
+{- Theo 2.11 -}
+theo211 : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆} {Σ : Signature} → 
+             (A : Algebra {ℓ₁} {ℓ₂} Σ) → (B : Algebra {ℓ₃} {ℓ₄} Σ) →
+             (C : Algebra {ℓ₅} {ℓ₆} Σ) → A ≅ B →
+             (Homo B C → Homo A C) × (Homo C B → Homo C A)
+theo211 A B C A≅B = (λ h → h ∘ₕ hom i) ,
+                    (λ h → invHomo A B (hom i) (bij i) ∘ₕ h)
+  where open HomComp
+        open _≅_
+        i : Isomorphism A B
+        i = iso A≅B
+
+
+    
 open Surjective
 
 firstHomTheo : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
@@ -607,7 +693,7 @@ firstHomTheo {Σ} A B h surj =
                     }
   where homo₁ : Homo (Quotient A (Kernel h)) B
         homo₁ = record { ′_′ = λ s → record { _⟨$⟩_ = λ a → ′ h ′ s ⟨$⟩ a
-                                            ; cong = Function.id }
+                                            ; cong = F.id }
                        ; cond = λ { {ar , s} f as → cond h f as }
                        }
         surj₁ : (s : sorts Σ) → Surjective (′ homo₁ ′ s)
@@ -618,6 +704,6 @@ firstHomTheo {Σ} A B h surj =
                          ; right-inverse-of = λ b → Surjective.right-inverse-of (surj s) b
                          }
         bij₁ : (s : sorts Σ) → Bijective (′ homo₁ ′ s)
-        bij₁ s = record { injective = Function.id
+        bij₁ s = record { injective = F.id
                         ; surjective = surj₁ s }
 

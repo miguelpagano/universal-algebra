@@ -20,9 +20,14 @@ pattern _⇒_ ar s = (ar , s)
 
 open Setoid
 
+
 ∥_∥ : ∀ {l₁ l₂} → (Setoid l₁ l₂) → Set l₁
 ∥_∥ {l₁} {l₂} S = Carrier S
 
+≡to≈ : ∀ {ℓ₁ ℓ₂} → (S : Setoid ℓ₁ ℓ₂) →
+         {x y : Carrier S } → x ≡ y →
+         Setoid._≈_ S x y
+≡to≈ S refl = Setoid.refl S
 
 -- Extensional equality
 
@@ -177,14 +182,11 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
                       ty = (ar , s)
                       p₁ = cond H₁ f
                       p₀ = cond H₀ f
-                      ≡to≈ : ∀ {x y : ∥ A₂ ⟦ s ⟧ₛ ∥ } → x ≡ y →
-                               Setoid._≈_ (A₂ ⟦ s ⟧ₛ) x y
-                      ≡to≈ refl = Setoid.refl (A₂ ⟦ s ⟧ₛ)
                       propMapMorph = 
                         begin
                           A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₁ A₂ (′ H₁ ′) $
                                               map⟿  A₀ A₁ (′ H₀ ′) as)
-                            ≈⟨ ≡to≈ $ PE.cong (A₂ ⟦ f ⟧ₒ ⟨$⟩_ )
+                            ≈⟨ ≡to≈ (A₂ ⟦ s ⟧ₛ) $ PE.cong (A₂ ⟦ f ⟧ₒ ⟨$⟩_ )
                                               (propMapV∘ as (_⟨$⟩_ ∘ ′ H₀ ′)
                                               (_⟨$⟩_ ∘ ′ H₁ ′)) ⟩
                           A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₀ A₂ comp as)
@@ -274,27 +276,22 @@ module InitTermAlg (Σ : Signature) where
   map|T|→A≡map {ar = s ∷ ar} {t ▹ ts} {A} =
                   PE.cong (λ ts' → ∣h∣→A A t ▹ ts') map|T|→A≡map
 
-
-  ≡to≈ : ∀ {ℓ₁} {ℓ₂} {St : Setoid ℓ₁ ℓ₂} {x y : Carrier St} →
-    x ≡ y → _≈_ St x y
-  ≡to≈ {St = St} PE.refl = Setoid.refl St
-
   ∣H∣ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Homo ∣T∣ A
   ∣H∣ A = record { ′_′  = fun|T|ₕ
                ; cond = |T|ₕcond
                }
     where congfun : ∀ {s} {t₁ t₂ : HU s} →
                     t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) (∣h∣→A A t₁) (∣h∣→A A t₂)
-          congfun {s} t₁≡t₂ = ≡to≈ {St = A ⟦ s ⟧ₛ} (PE.cong (∣h∣→A A) t₁≡t₂)
+          congfun {s} t₁≡t₂ = ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (∣h∣→A A) t₁≡t₂)
           fun|T|ₕ : ∣T∣ ⟿ A
           fun|T|ₕ s = record { _⟨$⟩_ = ∣h∣→A {s = s} A
                              ; cong  = congfun {s}
                              }
           |T|ₕcond : ∀ {ty} (f : ops Σ ty) → (homCond ∣T∣ A) fun|T|ₕ f
-          |T|ₕcond {_ ⇒ s} f ⟨⟩ = ≡to≈ {St = A ⟦ s ⟧ₛ} PE.refl
+          |T|ₕcond {_ ⇒ s} f ⟨⟩ = ≡to≈ (A ⟦ s ⟧ₛ) PE.refl
           |T|ₕcond {_ ⇒ s} f (t ▹ ts) =
-                   ≡to≈ {St = A ⟦ s ⟧ₛ} (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩
-                                                 (∣h∣→A A t ▹ ts')) map|T|→A≡map)
+                   ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩
+                                   (∣h∣→A A t ▹ ts')) map|T|→A≡map)
 
 
   total : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Total (_≈ₕ_ ∣T∣ A)
@@ -552,11 +549,6 @@ open import Function.Bijection renaming (_∘_ to _∘b_)
 open import Function.Surjection hiding (_∘_)
 
 open Bijective
-
-≡to≈ : ∀ {ℓ₁ ℓ₂} → (S : Setoid ℓ₁ ℓ₂) →
-         {x y : Carrier S } → x ≡ y →
-         Setoid._≈_ S x y
-≡to≈ S refl = Setoid.refl S
 
 invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
           (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →

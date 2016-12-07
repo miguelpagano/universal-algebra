@@ -163,6 +163,9 @@ Discusión: En las reglas de substitución y reemplazo, hay dos conjuntos de var
            indexando todas las definiciones en el conjunto de variables. No debería
            haber problemas ya que en todo caso la cuantificación habla de variables
            que pueden no ocurrir en los términos.
+           Esto que dije antes NO es cierto. Pero yo estoy usando un solo conjunto de
+           variables. No debería ser un problema ya que siempre puedo expresar las ecuaciones
+           con el conjunto de variables más grande posible.
 -}
 
 _⊨_ : ∀ {ℓ₁ ℓ₂ Σ} {X : GroundSig (sorts Σ)} {s : sorts Σ} →

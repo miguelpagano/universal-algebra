@@ -134,9 +134,6 @@ record NCEquation (Σ : Signature) (X : GroundSig (sorts Σ)) (s : sorts Σ) : S
     left  : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥
     right : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥
 
-ncsort : ∀ {Σ X} {s : sorts Σ} → NCEquation Σ X s → sorts Σ
-ncsort {s = s} _ = s
-
 open NCEquation
 
 record CEquation (Σ : Signature) (X : GroundSig (sorts Σ)) (s : sorts Σ) : Set₁ where
@@ -168,52 +165,70 @@ Discusión: En las reglas de substitución y reemplazo, hay dos conjuntos de var
            que pueden no ocurrir en los términos.
 -}
 
-〈_,_〉_⊨_ : ∀ {ℓ₁ ℓ₂} → (Σ : Signature) → (X : GroundSig (sorts Σ)) →
-                          {s : sorts Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-                          (Σ -Equation) X s → Set _
-〈 Σ , X 〉 A ⊨ inj₁ e = (θ : (s : sorts Σ) → X s → ∥ A ⟦ s ⟧ₛ ∥) →
-                         (_≈_ (A ⟦ ncsort e ⟧ₛ)) ((θ ↪) (ncsort e) (left e))
-                                                ((θ ↪) (ncsort e) (right e))
+_⊨_ : ∀ {ℓ₁ ℓ₂ Σ} {X : GroundSig (sorts Σ)} {s : sorts Σ} →
+        (A : Algebra {ℓ₁} {ℓ₂} Σ) → (Σ -Equation) X s → Set _
+_⊨_ {Σ = Σ} {X} {s} A (inj₁ e) =
+       (θ : (s' : sorts Σ) → X s' → ∥ A ⟦ s' ⟧ₛ ∥) →
+       (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) s (left e)) ((θ ↪) s (right e))
   where open EnvExt Σ X A
-〈 Σ , X 〉 A ⊨ inj₂ e = (θ : (s : sorts Σ) → X s → ∥ A ⟦ s ⟧ₛ ∥) →
-                     (λ { s₀ (uᵢ , uᵢ') → _≈_ (A ⟦ s₀ ⟧ₛ)
-                                         ((θ ↪) s₀ uᵢ)
-                                         ((θ ↪) s₀ uᵢ')}) ⇨v cond e →
-                     (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) s (left (eq e)))
-                                      ((θ ↪) s (right (eq e)))
+_⊨_ {Σ = Σ} {X} {s} A (inj₂ e) =
+         (θ : (s' : sorts Σ) → X s' → ∥ A ⟦ s' ⟧ₛ ∥) →
+           (λ { s₀ (uᵢ , uᵢ') → _≈_ (A ⟦ s₀ ⟧ₛ) ((θ ↪) s₀ uᵢ) ((θ ↪) s₀ uᵢ')})
+           ⇨v cond e → (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) s (left (eq e)))
+                                         ((θ ↪) s (right (eq e)))
   where open EnvExt Σ X A
-        s : sorts Σ
-        s = csort e
 
-record ⊨ {ℓ₁ ℓ₂ : Level} {Σ X} {ar : Arity Σ} (P : Theory Σ X ar)
+record ⊨T {ℓ₁ ℓ₂ : Level} {Σ X} {ar : Arity Σ} (E : Theory Σ X ar)
                          (A : Algebra {ℓ₁} {ℓ₂} Σ) : Set₁  where
   field
-    satAll : ∀ {s} {e : (Σ -Equation) X s} → e ∈ P → 〈 Σ , X 〉 A ⊨ e
+    satAll : ∀ {s} {e : (Σ -Equation) X s} → e ∈ E → A ⊨ e
 
+
+{- Quisiera poder cuantificar universalmente sobre todas las álgebras
+   de una signatura, pero para ello debería poder cuantificar sobre todos
+   los niveles, y no puedo hacerlo en Agda. Debo dar una definición de ⊨All
+   para cada par de niveles -}
+⊨All : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} → (E : Theory Σ X ar) →
+               (e : (Σ -Equation) X s) → Set _
+⊨All {ℓ₁} {ℓ₂} {Σ} E e = (A : Algebra {ℓ₁} {ℓ₂} Σ) → ⊨T E A → A ⊨ e 
 
 open EnvExt
 
 {- Provability -}
-data 〈_,_〉_⊢_ (Σ : Signature) (X : GroundSig (sorts Σ))
-                 {ar : Arity Σ} (E : HVec ((Σ -Equation) X) ar) :
-                 {s : sorts Σ} → NCEquation Σ X s → Set₁  where
-  prefl : ∀ {s} {t : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥} → 〈 Σ , X 〉 E ⊢ (⋀ t ≈ t)
-  psym : ∀ {s} {t t' : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥} → 〈 Σ , X 〉 E ⊢ (⋀ t ≈ t') →
-                                                 〈 Σ , X 〉 E ⊢ (⋀ t' ≈ t)
+data _⊢_ {Σ : Signature} {X : GroundSig (sorts Σ)}
+          {ar : Arity Σ} (E : HVec ((Σ -Equation) X) ar) :
+          {s : sorts Σ} → NCEquation Σ X s → Set₁  where
+  prefl : ∀ {s} {t : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥} → E ⊢ (⋀ t ≈ t)
+  psym : ∀ {s} {t t' : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥} → E ⊢ (⋀ t ≈ t') →
+                                                  E ⊢ (⋀ t' ≈ t)
   ptrans : ∀ {s} {t₀ t₁ t₂ : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥} →
-                 〈 Σ , X 〉 E ⊢ (⋀ t₀ ≈ t₁) → 〈 Σ , X 〉 E ⊢ (⋀ t₁ ≈ t₂) →
-                 〈 Σ , X 〉 E ⊢ (⋀ t₀ ≈ t₂)
+                 E ⊢ (⋀ t₀ ≈ t₁) → E ⊢ (⋀ t₁ ≈ t₂) → E ⊢ (⋀ t₀ ≈ t₂)
   psubst : ∀ {s} {ar} {us : HVec (λ s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥ ×
                                           ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) ar}
            {t t' : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥} →
            inj₂ ((⋀ t ≈ t') if「 ar 」 us) ∈ E →
            (θ : (s' : sorts Σ) → X s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) →
            (⊢us : (λ { s₀ (uᵢ , uᵢ') →
-                   〈 Σ , X 〉 E ⊢ (⋀ _↪ Σ X (T Σ 〔 X 〕) θ s₀ uᵢ ≈
-                                   _↪ Σ X (T Σ 〔 X 〕) θ s₀ uᵢ') }) ⇨v us) →
-           〈 Σ , X 〉 E ⊢ (⋀ t ≈ t')
+                   E ⊢ (⋀ _↪ Σ X (T Σ 〔 X 〕) θ s₀ uᵢ ≈
+                           _↪ Σ X (T Σ 〔 X 〕) θ s₀ uᵢ') }) ⇨v us) →
+           E ⊢ (⋀ t ≈ t')
   preemp : ∀ {ar'} {s} {es : HVec (NCEquation Σ X) ar'} → (σ : ops (Σ 〔 X 〕) (ar' , s)) →
-             〈 Σ , X 〉 E ⊢ (⋀ term σ (mapV (λ sᵢ e → left e) es) ≈
-                                 term σ (mapV (λ sᵢ e → right e) es)
-                             ) 
+             E ⊢ (⋀ term σ (mapV (λ sᵢ e → left e) es) ≈
+                     term σ (mapV (λ sᵢ e → right e) es)) 
 
+
+
+correctness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} → (E : Theory Σ X ar) →
+                (e : NCEquation Σ X s) → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E (inj₁ e)
+correctness {X = X} {ar} {s} E (⋀ right ≈ .right) prefl =
+                                                λ A _ _ → Setoid.refl (A ⟦ s ⟧ₛ)
+correctness {X = X} {ar} {s} E (⋀ left ≈ right) (psym pe) =
+                 λ A sall θ → Setoid.sym (A ⟦ s ⟧ₛ)
+                               (correctness E (⋀ right ≈ left) pe A sall θ)
+correctness {X = X} {ar} {s} E (⋀ left ≈ right) (ptrans {t₀ = .left} {t₁} {.right} pe₀ pe₁) =
+                 λ A x θ → Setoid.trans (A ⟦ s ⟧ₛ)
+                           (correctness E (⋀ left ≈ t₁) pe₀ A x θ)
+                           (correctness E (⋀ t₁ ≈ right) pe₁ A x θ)
+correctness {X = X} {ar} {s} E (⋀ left ≈ right) (psubst x θ ⊢us) =
+                 λ A x₁ θ₁ → {!!}
+correctness E (⋀ _ ≈ _) (preemp σ) = {!!}

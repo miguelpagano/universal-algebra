@@ -190,6 +190,7 @@ _⊨_ {Σ = Σ} {X} {s} A (inj₂ e) =
 
 open EnvExt
 
+{- Substitution Lemma -}
 ⊨subst : ∀ {ℓ₁ ℓ₂ Σ X} {s : sorts Σ}
             {A : Algebra {ℓ₁} {ℓ₂} Σ} {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
             (θ : Subst X) → A ⊨ inj₁ (⋀ t ≈ t') → A ⊨ inj₁ (⋀ (θ ↪s) t ≈ (θ ↪s) t')
@@ -227,10 +228,8 @@ data _⊢_ {Σ : Signature} {X : GroundSig (sorts Σ)}
            {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
            inj₂ ((⋀ t ≈ t') if「 ar 」 us) ∈ E →
            (θ : Subst X) → (⊢us : (λ { s₀ (uᵢ , uᵢ') →
-                   E ⊢ (⋀ _↪ (T Σ 〔 X 〕) θ s₀ uᵢ ≈
-                           _↪ (T Σ 〔 X 〕) θ s₀ uᵢ') }) ⇨v us) →
-           E ⊢ (⋀ _↪ (T Σ 〔 X 〕) θ s t ≈
-                   _↪ (T Σ 〔 X 〕) θ s t')
+                   E ⊢ (⋀ (θ ↪s) uᵢ ≈ (θ ↪s) uᵢ') }) ⇨v us) →
+           E ⊢ (⋀ (θ ↪s) t ≈ (θ ↪s) t')
   preemp : ∀ {ar'} {s} {es : HVec (NCEquation Σ X) ar'} → (σ : ops (Σ 〔 X 〕) (ar' , s)) →
              E ⊢ (⋀ term σ (mapV (λ sᵢ e → left e) es) ≈
                      term σ (mapV (λ sᵢ e → right e) es)) 
@@ -254,8 +253,8 @@ correctness {Σ = Σ} {X} {ar} {s} E (⋀ _ ≈ _)
   where --hi : 
         A⊨econd : (A : Algebra Σ) → ⊨T E A →
                   (θ' : (s' : sorts Σ) → X s' → ∥ A ⟦ s' ⟧ₛ ∥) →
-                  ((A ⟦ s ⟧ₛ) ≈ (A ↪) θ' s (((T Σ 〔 X 〕) ↪) θ s t))
-                               ((A ↪) θ' s (((T Σ 〔 X 〕) ↪)  θ s t'))
+                  ((A ⟦ s ⟧ₛ) ≈ (A ↪) θ' s ((θ ↪s) t))
+                               ((A ↪) θ' s ((θ ↪s) t'))
         A⊨econd A sall θ' = {!!}
 correctness E (⋀ _ ≈ _) (preemp σ) = {!!}
 

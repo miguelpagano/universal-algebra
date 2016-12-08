@@ -73,6 +73,14 @@ data _⇨v_ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁
 ⇨vtoΣ ⇨v⟨⟩ = ⟨⟩
 ⇨vtoΣ (⇨v▹ {v = v} pv p⇨vs) = (v , pv) ▹ ⇨vtoΣ p⇨vs
 
+map⇨v : ∀ {l₀ l₁ l₂ I is} {A : I → Set l₀} {vs : HVec A is} →
+           (P : (i : I) → A i → Set l₁) → (P' : (i : I) → A i → Set l₂) →
+           (f : ∀ {i'} {a : A i'} → P i' a → P' i' a) →
+           P ⇨v vs → P' ⇨v vs
+map⇨v P P' f ⇨v⟨⟩ = ⇨v⟨⟩
+map⇨v P P' f (⇨v▹ pv pvs) = ⇨v▹ (f pv) (map⇨v P P' f pvs)
+           
+
 proj₁⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
            {is} {vs : HVec A is} → P ⇨v vs → HVec A is
 proj₁⇨v {vs = vs} _ = vs

@@ -72,7 +72,7 @@ open Setoid
 
 {- Freeness property -}
 module Freeness {ℓ₁ ℓ₂ : Level}
-                (Σ : Signature) (X : GroundSig (sorts Σ))
+                {Σ : Signature} {X : GroundSig (sorts Σ)}
                 (A : Algebra {ℓ₁} {ℓ₂} Σ)
                 (a : Env {X = X} A) where
 
@@ -148,8 +148,8 @@ record CEquation (Σ : Signature) (X : GroundSig (sorts Σ)) (s : sorts Σ) : Se
   field
     eq   : NCEquation Σ X s
     arty : Arity Σ
-    cond : HVec (λ s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥ ×
-                         ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) arty
+    cond : HVec (λ s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) arty ×
+           HVec (λ s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) arty
 
 csort : ∀ {Σ X} {s : sorts Σ} → CEquation Σ X s → sorts Σ
 csort {s = s} _ = s
@@ -182,9 +182,10 @@ _⊨_ {Σ = Σ} {X} {s} A (inj₁ e) =
   where open EnvExt A
 _⊨_ {Σ = Σ} {X} {s} A (inj₂ e) =
          (θ : Env A) →
-           (λ { s₀ (uᵢ , uᵢ') → _≈_ (A ⟦ s₀ ⟧ₛ) ((θ ↪) s₀ uᵢ) ((θ ↪) s₀ uᵢ')})
-           ⇨v cond e → (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) s (left (eq e)))
-                                         ((θ ↪) s (right (eq e)))
+           _∼v_ {R = λ sᵢ uᵢ uᵢ' → _≈_ (A ⟦ sᵢ ⟧ₛ) ((θ ↪) sᵢ uᵢ) ((θ ↪) sᵢ uᵢ')}
+                (proj₁ (cond e)) (proj₂ (cond e)) →
+           (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) s (left (eq e)))
+                           ((θ ↪) s (right (eq e)))
   where open EnvExt A
 
 
@@ -193,8 +194,9 @@ open EnvExt
 {- Substitution Lemma -}
 ⊨subst : ∀ {ℓ₁ ℓ₂ Σ X} {s : sorts Σ}
             {A : Algebra {ℓ₁} {ℓ₂} Σ} {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
-            (θ : Subst X) → A ⊨ inj₁ (⋀ t ≈ t') → A ⊨ inj₁ (⋀ (θ ↪s) t ≈ (θ ↪s) t')
-⊨subst {s = s} {A} {t} {t'} θ e = λ θ₁ → {!!}
+            (σ : Subst X) → A ⊨ inj₁ (⋀ t ≈ t') → A ⊨ inj₁ (⋀ (σ ↪s) t ≈ (σ ↪s) t')
+⊨subst {A = A} {t} {t'} σ e θ = {!!}
+
 
 
 record ⊨T {ℓ₁ ℓ₂ : Level} {Σ X} {ar : Arity Σ} (E : Theory Σ X ar)
@@ -223,38 +225,56 @@ data _⊢_ {Σ : Signature} {X : GroundSig (sorts Σ)}
                                                   E ⊢ (⋀ t' ≈ t)
   ptrans : ∀ {s} {t₀ t₁ t₂ : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
                  E ⊢ (⋀ t₀ ≈ t₁) → E ⊢ (⋀ t₁ ≈ t₂) → E ⊢ (⋀ t₀ ≈ t₂)
-  psubst : ∀ {s} {ar} {us : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥ ×
-                                          ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar}
+  psubst : ∀ {s} {ar} {us us' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar}
            {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
-           inj₂ ((⋀ t ≈ t') if「 ar 」 us) ∈ E →
-           (θ : Subst X) → (⊢us : (λ { s₀ (uᵢ , uᵢ') →
-                   E ⊢ (⋀ (θ ↪s) uᵢ ≈ (θ ↪s) uᵢ') }) ⇨v us) →
-           E ⊢ (⋀ (θ ↪s) t ≈ (θ ↪s) t')
-  preemp : ∀ {ar'} {s} {es : HVec (NCEquation Σ X) ar'} → (σ : ops (Σ 〔 X 〕) (ar' , s)) →
-             E ⊢ (⋀ term σ (mapV (λ sᵢ e → left e) es) ≈
-                     term σ (mapV (λ sᵢ e → right e) es)) 
+           inj₂ ((⋀ t ≈ t') if「 ar 」 (us , us')) ∈ E →
+           (σ : Subst X) →
+           _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ (σ ↪s) uᵢ ≈ (σ ↪s) uᵢ')} us us' →
+           E ⊢ (⋀ (σ ↪s) t ≈ (σ ↪s) t')
+  preemp : ∀ {ar'} {s} {ts ts' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'} →
+             _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' →
+             (f : ops (Σ 〔 X 〕) (ar' , s)) → E ⊢ (⋀ term f ts ≈ term f ts') 
 
 
-
-correctness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} → (E : Theory Σ X ar) →
-                (e : NCEquation Σ X s) → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E (inj₁ e)
-correctness {X = X} {ar} {s} E (⋀ right ≈ .right) prefl =
-                                                λ A _ _ → Setoid.refl (A ⟦ s ⟧ₛ)
-correctness {X = X} {ar} {s} E (⋀ left ≈ right) (psym pe) =
+correctness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
+                {e : NCEquation Σ X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E (inj₁ e)
+correctness {X = X} {ar} {s} prefl = λ A _ _ → Setoid.refl (A ⟦ s ⟧ₛ)
+correctness {X = X} {ar} {s} {E} {⋀ left ≈ right} (psym pe) =
                  λ A sall θ → Setoid.sym (A ⟦ s ⟧ₛ)
-                               (correctness E (⋀ right ≈ left) pe A sall θ)
-correctness {X = X} {ar} {s} E (⋀ left ≈ right)
+                               (correctness pe A sall θ)
+correctness {X = X} {ar} {s} {E} {⋀ left ≈ right}
                                (ptrans {t₀ = .left} {t₁} {.right} pe₀ pe₁) =
                  λ A x θ → Setoid.trans (A ⟦ s ⟧ₛ)
-                           (correctness E (⋀ left ≈ t₁) pe₀ A x θ)
-                           (correctness E (⋀ t₁ ≈ right) pe₁ A x θ)
-correctness {Σ = Σ} {X} {ar} {s} E (⋀ _ ≈ _)
-                               (psubst {us = us} {t} {t'} econd θ ⊢us) = A⊨econd
-  where --hi : 
-        A⊨econd : (A : Algebra Σ) → ⊨T E A →
-                  (θ' : (s' : sorts Σ) → X s' → ∥ A ⟦ s' ⟧ₛ ∥) →
-                  ((A ⟦ s ⟧ₛ) ≈ (A ↪) θ' s ((θ ↪s) t))
-                               ((A ↪) θ' s ((θ ↪s) t'))
+                           (correctness pe₀ A x θ)
+                           (correctness pe₁ A x θ)
+correctness {Σ = Σ} {X} {ar} {s} {E}
+            (psubst {us = us} {us'} {t} {t'} econd σ ⊢us≈us') = A⊨econd
+  where A⊨econd : (A : Algebra Σ) → ⊨T E A → (θ : Env A) →
+                  ((A ⟦ s ⟧ₛ) ≈ (A ↪) θ s ((σ ↪s) t))
+                               ((A ↪) θ s ((σ ↪s) t'))
         A⊨econd A sall θ' = {!!}
-correctness E (⋀ _ ≈ _) (preemp σ) = {!!}
+correctness {s = s} {E} (preemp {[]} ∼⟨⟩ f) = λ A x θ → Setoid.refl (A ⟦ s ⟧ₛ)
+correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
+            (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' f) A sall θ =
+                begin
+                   (A ↪) θ s (term f ts)
+                 ≈⟨ TΣXcond f ts ⟩
+                   A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts
+                 ≈⟨ Π.cong (A ⟦ f ⟧ₒ) map≈ ⟩
+                   A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts'
+                 ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
+                   (A ↪) θ s (term f ts')
+                ∎
+                
+  where open EqR (A ⟦ s ⟧ₛ)
+        open Freeness A θ
+        iHts : _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ sᵢ tᵢ)
+                                                 ((A ↪) θ sᵢ tᵢ')} ts ts'
+        iHts = map∼v (λ ⊢tᵢ≈tᵢ' → ih ⊢tᵢ≈tᵢ' A sall θ) ⊢ts≈ts'
+          where ih : ∀ {s' : sorts Σ} {tᵢ tᵢ' : ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥} →
+                       E ⊢ (⋀ tᵢ ≈ tᵢ') → ⊨All E (inj₁ (⋀ tᵢ ≈ tᵢ'))
+                ih {s'} {tᵢ} {tᵢ'} peq = correctness peq
+        map≈ : _∼v_ {R = λ s₀ → _≈_ (A ⟦ s₀ ⟧ₛ)}
+               (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts) (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts')
+        map≈ = {!!}
 

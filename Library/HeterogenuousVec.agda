@@ -73,12 +73,12 @@ data _⇨v_ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁
 ⇨vtoΣ ⇨v⟨⟩ = ⟨⟩
 ⇨vtoΣ (⇨v▹ {v = v} pv p⇨vs) = (v , pv) ▹ ⇨vtoΣ p⇨vs
 
-map⇨v : ∀ {l₀ l₁ l₂ I is} {A : I → Set l₀} {vs : HVec A is} →
-           (P : (i : I) → A i → Set l₁) → (P' : (i : I) → A i → Set l₂) →
+map⇨v : ∀ {l₀ l₁ l₂ I is} {A : I → Set l₀} {vs : HVec A is}
+           {P : (i : I) → A i → Set l₁} {P' : (i : I) → A i → Set l₂} →
            (f : ∀ {i'} {a : A i'} → P i' a → P' i' a) →
            P ⇨v vs → P' ⇨v vs
-map⇨v P P' f ⇨v⟨⟩ = ⇨v⟨⟩
-map⇨v P P' f (⇨v▹ pv pvs) = ⇨v▹ (f pv) (map⇨v P P' f pvs)
+map⇨v f ⇨v⟨⟩ = ⇨v⟨⟩
+map⇨v f (⇨v▹ pv pvs) = ⇨v▹ (f pv) (map⇨v f pvs)
            
 
 proj₁⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
@@ -103,6 +103,14 @@ data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} 
      ∼▹  : ∀ {i} {is} {t₁} {t₂} {ts₁ : HVec A is} {ts₂ : HVec A is} →
            R i t₁ t₂ → _∼v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ∼v (t₂ ▹ ts₂)
         
+map∼v : ∀ {l₀ l₁ l₂ I} {A : I → Set l₀}
+        {R : (i : I) → Rel (A i) l₁} {R' : (i : I) → Rel (A i) l₂}
+        {is : List I} {vs vs' : HVec A is} →
+        (f : {i : I} {a a' : A i} → R i a a' → R' i a a') →
+        _∼v_ {R = R} vs vs' → _∼v_ {R = R'} vs vs'
+map∼v f ∼⟨⟩ = ∼⟨⟩
+map∼v f (∼▹ vRv' vs≈Rvs') = ∼▹ (f vRv') (map∼v f vs≈Rvs')
+
 
 ~v-pointwise : ∀ {l₀} {l₁} {I : Set} {is : List I}
                {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} →

@@ -260,7 +260,7 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                    (A ↪) θ s (term f ts)
                  ≈⟨ TΣXcond f ts ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts
-                 ≈⟨ Π.cong (A ⟦ f ⟧ₒ) map≈ ⟩
+                 ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (iHts ⊢ts≈ts')) ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts'
                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
                    (A ↪) θ s (term f ts')
@@ -268,13 +268,21 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                 
   where open EqR (A ⟦ s ⟧ₛ)
         open Freeness A θ
-        iHts : _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ sᵢ tᵢ)
-                                                 ((A ↪) θ sᵢ tᵢ')} ts ts'
-        iHts = map∼v (λ ⊢tᵢ≈tᵢ' → ih ⊢tᵢ≈tᵢ' A sall θ) ⊢ts≈ts'
+        iHts : ∀ {ar₀} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
+               _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts₀ ts₀' →
+               _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ sᵢ tᵢ)
+                                                 ((A ↪) θ sᵢ tᵢ')} ts₀ ts₀'
+        iHts {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
+        iHts {s₀ ∷ ar₀} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ ⊢t₀≈t₀' ⊢ts₀≈ts₀') =
+                                    ∼▹ (ih ⊢t₀≈t₀' A sall θ) (iHts ⊢ts₀≈ts₀')
           where ih : ∀ {s' : sorts Σ} {tᵢ tᵢ' : ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥} →
                        E ⊢ (⋀ tᵢ ≈ tᵢ') → ⊨All E (inj₁ (⋀ tᵢ ≈ tᵢ'))
                 ih {s'} {tᵢ} {tᵢ'} peq = correctness peq
-        map≈ : _∼v_ {R = λ s₀ → _≈_ (A ⟦ s₀ ⟧ₛ)}
-               (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts) (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts')
-        map≈ = {!!}
+        map≈ : ∀ {ar'} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'} →
+               (p : _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ sᵢ tᵢ)
+                                                 ((A ↪) θ sᵢ tᵢ')} ts₀ ts₀') →
+               _∼v_ {R = λ s₀ → _≈_ (A ⟦ s₀ ⟧ₛ)}
+               (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts₀) (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts₀')
+        map≈ {[]} ∼⟨⟩ = ∼⟨⟩
+        map≈ {i ∷ is} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ p₀ p) = ∼▹ p₀ (map≈ p)
 

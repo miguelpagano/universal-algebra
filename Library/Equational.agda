@@ -265,7 +265,6 @@ mutual
   map∘subst {A = A} σ θ (t ▹ ts) = ∼▹ (∘subst {A = A} σ θ t) (map∘subst σ θ ts)
 
 
-{-
 correctness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
                 {e : Equation Σ X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E e
 correctness {X = X} {ar} {s} prefl = λ A _ _ _ → Setoid.refl (A ⟦ s ⟧ₛ)
@@ -338,7 +337,7 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts₀) (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts₀')
         map≈ {[]} ∼⟨⟩ = ∼⟨⟩
         map≈ {i ∷ is} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ p₀ p) = ∼▹ p₀ (map≈ p)
--}
+
 
 -- Completeness
 ⊢R : ∀ {Σ X ar} → (E : Theory Σ X ar) → (s : sorts Σ) →
@@ -434,4 +433,48 @@ complete {Σ} {X} {ar} {s} {E} {t} {t'} sall = begin t
     map↪id ⟨⟩ = _≡_.refl
     map↪id (t ▹ ts) = cong₂ (λ t₀ ts₀ → t₀ ▹ ts₀)
                             (idSubst≡ t) (map↪id ts)
+
+module Rewrite (Σ : Signature) (X : Vars Σ) where
+
+  _matches_ : ∀ {s} → (p t : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) → Set
+  p matches t = Σ[ σ ∈ Subst ] (σ ↪s) p ≡ t
+
+  mutual
+    FV : ∀ {s} → (t : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) → Σ[ ar ∈ Arity Σ ] HVec (λ s₀ → X s₀) ar
+    FV (term {[]} (inj₁ x) ⟨⟩) = [] , ⟨⟩
+    FV (term {[]} {s} (inj₂ y) ⟨⟩) = s ∷ [] , y ▹ ⟨⟩
+    FV (term {s₀ ∷ ar} f (t ▹ ts)) = ar₀ ++ ar' , (vs₀ ++v vs)
+      where ar' : Arity Σ
+            ar' = proj₁ (mapFV ts)
+            vs : HVec X ar'
+            vs = proj₂ (mapFV ts)
+            ar₀ : Arity Σ
+            ar₀ = proj₁ (FV t)
+            vs₀ : HVec X ar₀
+            vs₀ = proj₂ (FV t)
+
+    mapFV : ∀ {ar} → (ts : T Σ 〔 X 〕 ⟦ ar ⟧ₛ*) → Σ[ ar ∈ Arity Σ ] HVec X ar
+    mapFV ⟨⟩ = [] , ⟨⟩
+    mapFV (t ▹ ts) = ar₀ ++ ar' , (vs₀ ++v vs)
+      where ar' : Arity Σ
+            ar' = proj₁ (mapFV ts)
+            vs : HVec X ar'
+            vs = proj₂ (mapFV ts)
+            ar₀ : Arity Σ
+            ar₀ = proj₁ (FV t)
+            vs₀ : HVec X ar₀
+            vs₀ = proj₂ (FV t)
+
+  {- Rewrite Rule -}
+  record Rule (s : sorts Σ) : Set where
+    field
+      l : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
+      r : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
+      rcond : ∀ {s₀} {x : X s₀} → x ∈ (proj₂ (FV r)) → x ∈ (proj₂ (FV l))
+
+  {- Term Rewriting System -}
+  TRS : (ar : Arity Σ) → Set
+  TRS ar = HVec Rule ar
+
+
 

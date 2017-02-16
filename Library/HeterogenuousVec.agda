@@ -45,6 +45,12 @@ _‼v_ : ∀ {l I} {is : List I} {A : I → Set l} →
 (v ▹ _) ‼v zero = v
 (_ ▹ vs) ‼v suc n = vs ‼v n
 
+{- Concat -}
+_++v_ : ∀ {l I} {is is' : List I} {A : I → Set l} →
+         (vs : HVec A is) → (vs' : HVec A is') → HVec A (is ++ is')
+⟨⟩ ++v vs' = vs'
+(v ▹ vs) ++v vs' = v ▹ (vs ++v vs')
+
 {-
 Map
 -}
@@ -250,3 +256,4 @@ HVecSet I A is = record { Carrier = HVec (λ i → Carrier $ A i) is
 _✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) →
                                  List I → Setoid _ _
 _✳_ {I = I} = HVecSet I
+

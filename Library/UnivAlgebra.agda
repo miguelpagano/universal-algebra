@@ -16,7 +16,7 @@ import Relation.Binary.EqReasoning as EqR
 
 open import HeterogenuousVec
 
-pattern _⇒_ ar s = (ar , s)
+pattern _↦_ ar s = (ar , s)
 
 open Setoid
 
@@ -228,7 +228,7 @@ module TermAlgebra (Σ : Signature) where
   open Algebra
 
   data HU : (s : sorts Σ) → Set where
-    term : ∀  {ar s} →  (f : ops Σ (ar ⇒ s)) → (HVec HU ar) → HU s
+    term : ∀  {ar s} →  (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
 
 
   ∣T∣ : Algebra Σ
@@ -242,12 +242,12 @@ module TermAlgebra (Σ : Signature) where
           ≡vec (t ▹ ts₁) (.t ▹ ts₂) (∼▹ PE.refl ts₁≈ts₂) =
                                         PE.cong (λ ts → t ▹ ts)
                                                 (≡vec ts₁ ts₂ ts₁≈ts₂)
-          fcong : ∀ {ar s} {f : ops Σ (ar ⇒ s)} →
+          fcong : ∀ {ar s} {f : ops Σ (ar ↦ s)} →
                            (ts₁ ts₂ : HVec HU ar) →
                            _∼v_ {R = λ s₀ → _≡_} ts₁ ts₂ →
                            term f ts₁ ≡ term f ts₂
           fcong {f = f} ts₁ ts₂ ts₁≈ts₂ = PE.cong (term f) (≡vec ts₁ ts₂ ts₁≈ts₂)
-          ∣_|ₒ  : ∀ {ar s} → ops Σ (ar ⇒ s) → (setoid ∘ HU) ✳ ar ⟶ (setoid ∘ HU) s
+          ∣_|ₒ  : ∀ {ar s} → ops Σ (ar ↦ s) → (setoid ∘ HU) ✳ ar ⟶ (setoid ∘ HU) s
           ∣ f |ₒ = record { _⟨$⟩_ = term f
                          ; cong = λ {ts₁} {ts₂} ts₁≈ts₂ → fcong ts₁ ts₂ ts₁≈ts₂
                          }
@@ -288,8 +288,8 @@ module InitTermAlg (Σ : Signature) where
                              ; cong  = congfun {s}
                              }
           |T|ₕcond : ∀ {ty} (f : ops Σ ty) → (homCond ∣T∣ A) fun|T|ₕ f
-          |T|ₕcond {_ ⇒ s} f ⟨⟩ = ≡to≈ (A ⟦ s ⟧ₛ) PE.refl
-          |T|ₕcond {_ ⇒ s} f (t ▹ ts) =
+          |T|ₕcond {_ ↦ s} f ⟨⟩ = ≡to≈ (A ⟦ s ⟧ₛ) PE.refl
+          |T|ₕcond {_ ↦ s} f (t ▹ ts) =
                    ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩
                                    (∣h∣→A A t ▹ ts')) map|T|→A≡map)
 

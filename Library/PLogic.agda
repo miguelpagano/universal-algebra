@@ -134,9 +134,17 @@ Ax₁₂ = ⋀ p ⇒ q ≈ (p ∨∙ q ≐ q)
 Ax₁₃ : Equation Σₚ Vₚ _
 Ax₁₃ = ⋀ p ⇐ q ≈ (q ⇒ p)
 
-Tₚ : Theory Σₚ (λ _ → V) (repeat tt 13)
+-- Axiomas adicionados a los de Dijkstra:
+
+Ax≡≈ : Equation Σₚ Vₚ _
+Ax≡≈ = ⋀ p ≈ q if「 [ tt ] 」 (((p ≐ q) ▹ ⟨⟩) , (true∼ ▹ ⟨⟩))
+
+AxRefl≡ : Equation Σₚ Vₚ _
+AxRefl≡ = ⋀ p ≐ p ≈ true∼
+
+Tₚ : Theory Σₚ (λ _ → V) (repeat tt 15)
 Tₚ = Ax₁ ▹ Ax₂ ▹ Ax₃ ▹ Ax₄ ▹ Ax₅ ▹ Ax₆ ▹ Ax₇ ▹
-     Ax₈ ▹ Ax₉ ▹ Ax₁₀ ▹ Ax₁₁ ▹ Ax₁₂ ▹ Ax₁₃ ▹ ⟨⟩
+     Ax₈ ▹ Ax₉ ▹ Ax₁₀ ▹ Ax₁₁ ▹ Ax₁₂ ▹ Ax₁₃ ▹ Ax≡≈ ▹ AxRefl≡ ▹ ⟨⟩
 
 -- Patterns para los axiomas en la teoría
 pattern axₚ₁ = here
@@ -156,8 +164,13 @@ pattern axₚ₁₂ = there (there (there (there (there (there (there (there (th
                                                     (there (there here))))))))))
 pattern axₚ₁₃ = there (there (there (there (there (there (there (there (there
                                             (there (there (there here)))))))))))
+pattern ax≡≈ = there (there (there (there (there (there (there (there (there
+                                            (there (there (there (there here))))))))))))
+pattern axrefl≡ = there (there (there (there (there (there (there (there (there
+                                            (there (there (there (there (there here)))))))))))))
 
-
+pattern noaxₚ = there (there (there (there (there (there (there (there (there
+                                            (there (there (there (there (there (there ()))))))))))))))
 
 
 -- Bool es álgebra de Tₚ
@@ -283,6 +296,26 @@ module BoolModel where
   Bsat₁₃ : B ⊨ Ax₁₃
   Bsat₁₃ θ _ = refl
 
+
+  open import Data.Empty
+
+  boolabsurd : true ≡ false → ⊥
+  boolabsurd ()
+
+  Bsat≡≈ : B ⊨ Ax≡≈
+  Bsat≡≈ θ satcond with θ _ vp | θ _ vq | inspect (θ _) vp | inspect (θ _) vq
+  ... | true | true | c | d = refl
+  ... | false | false | c | d = refl
+  Bsat≡≈ θ (∼▹ x ∼⟨⟩) | true | false | Reveal_·_is_.[ eqp ] | Reveal_·_is_.[ eqq ] =
+         ⊥-elim (boolabsurd (sym (subst₂ (λ b₁ b₂ → b₁ =b b₂ ≡ true) eqp eqq x)))
+  Bsat≡≈ θ (∼▹ x ∼⟨⟩) | false | true | Reveal_·_is_.[ eqp ] | Reveal_·_is_.[ eqq ] =
+         ⊥-elim (boolabsurd (sym (subst₂ (λ b₁ b₂ → b₁ =b b₂ ≡ true) eqp eqq x)))
+
+  BsatRefl≡ : B ⊨ AxRefl≡
+  BsatRefl≡ θ _ with θ _ vp
+  BsatRefl≡ θ _ | false = refl
+  BsatRefl≡ θ _ | true = refl
+
   Bsat : ⊨T Tₚ B
   Bsat = record { satAll = sall }
     where sall : ∀ {s : ⊤} {e} → e ∈ Tₚ → B ⊨ e
@@ -292,14 +325,16 @@ module BoolModel where
           sall axₚ₄ = Bsat₄
           sall axₚ₅ = Bsat₅
           sall axₚ₆ = Bsat₆
-          sall (there (there (there (there (there (there here)))))) = Bsat₇
-          sall (there (there (there (there (there (there (there here))))))) = Bsat₈
-          sall (there (there (there (there (there (there (there (there here)))))))) = Bsat₉
-          sall (there (there (there (there (there (there (there (there (there here))))))))) = Bsat₁₀
-          sall (there (there (there (there (there (there (there (there (there (there here)))))))))) = Bsat₁₁
-          sall (there (there (there (there (there (there (there (there (there (there (there here))))))))))) = Bsat₁₂
-          sall (there (there (there (there (there (there (there (there (there (there (there (there here)))))))))))) = Bsat₁₃
-          sall (there (there (there (there (there (there (there (there (there (there (there (there (there ())))))))))))))
+          sall axₚ₇ = Bsat₇
+          sall axₚ₈ = Bsat₈
+          sall axₚ₉ = Bsat₉
+          sall axₚ₁₀ = Bsat₁₀
+          sall axₚ₁₁ = Bsat₁₁
+          sall axₚ₁₂ = Bsat₁₂
+          sall axₚ₁₃ = Bsat₁₃
+          sall ax≡≈ = Bsat≡≈
+          sall axrefl≡ = BsatRefl≡
+          sall noaxₚ
   
 module Example1 where
 

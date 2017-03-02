@@ -1,12 +1,12 @@
 open import Relation.Binary hiding (_⇒_)
 open import Level renaming (suc to lsuc ; zero to lzero)
 
-module Dijkstra2 where
+module Dijkstra where
 
 open import Data.Product renaming (map to pmap)
 open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
-open import Data.List renaming (map to lmap)
+open import Data.List renaming (map to lmap) hiding (and ; or)
 open import Relation.Binary.PropositionalEquality as PE hiding (_≢_)
 open import Data.Fin
 open import Data.Vec
@@ -32,7 +32,7 @@ data Formula : Set where
 
 
 cong⁻¹≡ : ∀ {φ ψ φ' ψ'} → φ ≡' ψ ≡ φ' ≡' ψ' → φ ≡ φ' × ψ ≡ ψ'
-cong⁻¹≡ eq = {!!}
+cong⁻¹≡ refl = refl , refl
 
 
 -- Esquema de axiomas
@@ -195,112 +195,116 @@ module ToEquational where
   ⟦_⟧ₐ {φ'} {ψ'} {τ} {φ} {ψ} noax
 
   
-
-  -- Para traducir pruebas, lo primero que vamos a hacer es
-  -- pasar de una prueba de una fórmula a una que tenga siempre un equivalente.
-  -- Si tenemos que la conclusión es φ ≡ ψ, listo. Sino, la cambiamos por φ ≡ true.
-
-  ⊢↝≡ : ∀ {φ} → ⊢ φ → Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ] (⊢ (φ' ≡' ψ)))
-  ⊢↝≡ {φ' ≡' ψ} p = φ' , (ψ , p)
-  ⊢↝≡ {φ} ⊢φ = φ , (true , pru)
-    where pru : ⊢ (φ ≡' true)
-          pru = equan ⊢φ (equan (ax {ψ = true} {τ = true} ax₃)
-                                (ax {τ = true} ax₂)) 
-                                
-
-  _↝≡true : ∀ {φ} → ⊢ φ → ⊢ (φ ≡' true)
-  _↝≡true {φ} ⊢φ = equan ⊢φ (equan (ax {ψ = true} {τ = true} ax₃)
-                                     (ax {τ = true} ax₂)) 
-
-
-  -- quizás esto debería ser un axioma:
-  refl≡ : Tₚ ⊢ (⋀ (p ≐ p) ≈ true∼)
-  refl≡ = {!!}
-
   -- Entonces ahora traducimos cualquier prueba del sistema formal, en una
   -- prueba ecuacional.
 
-{-
-  ⊢↝Eq₁ : ∀ {φ ψ} → (pru : ⊢ (φ ≡' ψ)) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
-  ⊢↝Eq₁ (ax x) = ⟦ x ⟧ₐ
-  ⊢↝Eq₁ {φ} {ψ} (equan ⊢φ' ⊢φ'≡φ≡ψ) = {!!}
-  ⊢↝Eq₁ (leib ⊢φ≡ψ) = {!!}
+  pequan₁ : (φ ψ : Formula) →
+            Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ true∼) → Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧) →
+            Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)
+  pequan₁ φ ψ ⋀ψ≈t ⋀ψ≈φ = psym (ptrans (psym ⋀ψ≈t) ⋀ψ≈φ)
+  pequan₂ : (φ ψ ψ₁ ψ₂ : Formula) → Tₚ ⊢ (⋀ ⟦ ψ₁ ⟧ ≈ ⟦ ψ₂ ⟧) → ψ ≡ ψ₁ ≡' ψ₂ →
+            Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)
+  pequan₂ φ ψ ψ₁ ψ₂ ⋀ψ₁≈ψ₂ ψ=ψ₁≡ψ₂ ⋀ψ≈φ =
+            ptrans (psym (ptrans (psym (preemp (∼▹ ⋀ψ₁≈ψ₂ (∼▹ prefl ∼⟨⟩)) equiv))
+                                 (subst (λ ψ₀ → Tₚ ⊢ (⋀ ⟦ ψ₀ ⟧ ≈ ⟦ φ ⟧))
+                                        ψ=ψ₁≡ψ₂ ⋀ψ≈φ)))
+                   reflψ₂
+    where subs₀ : Subst
+          subs₀ _ 0 = ⟦ ψ₂ ⟧
+          subs₀ _ n = term (inj₂ n) ⟨⟩
+          reflψ₂ : Tₚ ⊢ (⋀ ⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧ ≈ true∼)
+          reflψ₂ = psubst axrefl≡ subs₀ ∼⟨⟩
+          
+  pleib : ∀ {ψ τ φ p} → Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ τ ⟧) → Tₚ ⊢ (⋀ ⟦ φ [ p := ψ ] ⟧ ≈ ⟦ φ [ p := τ ] ⟧)
+  pleib {φ = true} eqpru = prefl
+  pleib {φ = false} eqpru = prefl
+  pleib {ψ} {τ} {var q} {p} eqpru with p ≟ q
+  ... | yes p₁ = eqpru
+  ... | no ¬p = prefl
+  pleib {ψ} {τ} {¬ φ} {p} eqpru = preemp (∼▹ (pleib {φ = φ} eqpru) ∼⟨⟩) neg
+  -- podemos generalizar lo que sigue para no repetir la misma prueba en cada operador binario
+  pleib {ψ} {τ} {φ₁ ≡' φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
+                                              (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
+                                              equiv
+  pleib {ψ} {τ} {φ₁ /≡ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
+                                              (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
+                                              nequiv
+  pleib {ψ} {τ} {φ₁ ∧ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
+                                             (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
+                                             and
+  pleib {ψ} {τ} {φ₁ ∨ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
+                                             (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
+                                             or
+  pleib {ψ} {τ} {φ₁ ⇒ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
+                                             (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
+                                               impl
+  pleib {ψ} {τ} {φ₁ ⇐ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
+                                             (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
+                                               conseq
+
+  substaux : ∀ {φ ψ φ' ψ'} → Tₚ ⊢ (⋀ ⟦ ψ' ⟧ ≈ ⟦ φ' ⟧) → (ψ ≡' φ) ≡ (ψ' ≡' φ') →
+               Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧)
+  substaux ⋀ψ'≈φ' ψ≡φ=ψ'≡φ' =
+                  (subst₂ (λ φ' ψ' → Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ' ⟧))
+                         (proj₁ (cong⁻¹≡ (sym ψ≡φ=ψ'≡φ')))
+                         (proj₂ (cong⁻¹≡ (sym ψ≡φ=ψ'≡φ'))) ⋀ψ'≈φ')
+
+  p≡to≈ : ∀ {φ ψ} → Tₚ ⊢ (⋀ ⟦ φ ≡' ψ ⟧ ≈ true∼) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
+  p≡to≈ {φ} {ψ} pru = psubst ax≡≈ subs₀ (∼▹ pru ∼⟨⟩)
+    where subs₀ : Subst
+          subs₀ s 0 = ⟦ φ ⟧
+          subs₀ s 1 = ⟦ ψ ⟧
+          subs₀ _ n = term (inj₂ n) ⟨⟩
 
 
-  ⊢↝Eq : ∀ {φ} → (pru : ⊢ φ) → Tₚ ⊢ (⋀ ⟦ proj₁ (⊢↝≡ pru) ⟧ ≈
-                                          ⟦ proj₁ (proj₂ (⊢↝≡ pru))⟧)
-  ⊢↝Eq {φ ≡' ψ} pru = ⊢↝Eq₁ pru
-  ⊢↝Eq {φ} pru = ⊢↝Eq₁ (proj₂ (proj₂ (⊢↝≡ pru)))
--}
 
-
-  pleib : ∀ {ψ τ φ p} → ⊢ (ψ ≡' τ) → Tₚ ⊢ (⋀ ⟦ φ [ p := ψ ] ⟧ ≈ ⟦ φ [ p := τ ] ⟧)
-  pleib {ψ} {τ} {φ} {p} pru = {!!}
-
-
-  -- divagando
-  ⊢↝Eq' : ∀ {φ} → (pru : ⊢ φ) → (Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)) ⊎
+  ⊢↝Eq : ∀ {φ} → (pru : ⊢ φ) → (Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)) ⊎
                                    (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
                                    ((Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (φ ≡ φ' ≡' ψ))))
-  ⊢↝Eq' {φ ≡' ψ} (ax ∈A) = inj₂ (φ , ψ , (⟦ ∈A ⟧ₐ , refl))
-  ⊢↝Eq' {true} (ax noax)
-  ⊢↝Eq' {false} (ax noax)
-  ⊢↝Eq' {var p} (ax noax)
-  ⊢↝Eq' {¬ φ} (ax noax)
-  ⊢↝Eq' {φ /≡ φ₁} (ax noax)
-  ⊢↝Eq' {φ ∧ φ₁} (ax noax)
-  ⊢↝Eq' {φ ∨ φ₁} (ax noax)
-  ⊢↝Eq' {φ ⇒ φ₁} (ax noax)
-  ⊢↝Eq' {φ ⇐ φ₁} (ax noax)
-  ⊢↝Eq' {φ} (equan {.φ} {ψ} ⊢ψ ⊢ψ≡φ) with ⊢↝Eq' ⊢ψ | ⊢↝Eq' ⊢ψ≡φ
-  ... | inj₁ ⊢⋀ψ≈t | inj₁ ⊢⋀ψ≡φ≈t = inj₁ pr
-    where sub₁ : Subst
-          sub₁ _ 0 = ⟦ φ ⟧
-          sub₁ _ 1 = true∼
-          sub₁ _ n = term (inj₂ n) ⟨⟩
-          ⋆₁ : Tₚ ⊢ (⋀ ⟦ φ ⟧ ≐ true∼ ≈ ⟦ φ ⟧)
-          ⋆₁ = psubst axₚ₃ sub₁ ∼⟨⟩
-          ⋆₂ : Tₚ ⊢ (⋀ (⟦ φ ⟧ ≐ true∼) ≈ (true∼ ≐ ⟦ φ ⟧))
-          ⋆₂ = psubst axₚ₂ sub₁ ∼⟨⟩
-          
-          pr₁ : Tₚ ⊢ (⋀ (true∼ ≐ ⟦ φ ⟧) ≈ true∼)
-          pr₁ = ptrans (psym (preemp (∼▹ ⊢⋀ψ≈t (∼▹ prefl ∼⟨⟩)) equiv)) ⊢⋀ψ≡φ≈t
-          pr : Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)
-          pr = ptrans (psym ⋆₁) (ptrans ⋆₂ pr₁)
-  ... | inj₁ ⊢⋀ψ≈t | inj₂ (ψ' , φ' , ⊢⋀ψ'≈φ' , ψ≡φ=ψ'≡φ') =
-                   inj₁ (psym (ptrans (psym ⊢⋀ψ≈t) pr))
-    where pr : Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧)
-          pr = subst₂ (λ φ' ψ' → Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ' ⟧))
-                      (proj₁ (cong⁻¹≡ (sym ψ≡φ=ψ'≡φ')))
-                      (proj₂ (cong⁻¹≡ (sym ψ≡φ=ψ'≡φ'))) ⊢⋀ψ'≈φ'
-  ... | inj₂ (ψ₁ , ψ₂ , ⊢⋀ψ₁≈ψ₂ , ψ=ψ₁≡ψ₂) | inj₁ ⊢⋀ψ≡φ≈t =
-                      inj₁ {!!}
-    where p₁ : Tₚ ⊢ (⋀ ((⟦ ψ₁ ⟧ ≐ ⟦ ψ₂ ⟧) ≐ ⟦ φ ⟧) ≈ ((⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧) ≐ ⟦ φ ⟧))
-          p₁ = preemp (∼▹ (preemp (∼▹ ⊢⋀ψ₁≈ψ₂ (∼▹ prefl ∼⟨⟩)) equiv)
-                      (∼▹ prefl ∼⟨⟩)) equiv
-          p₂ : Tₚ ⊢ (⋀ ((⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧) ≐ ⟦ φ ⟧) ≈ true∼ )
-          p₂ = ptrans (psym p₁)
-                      (subst (λ φ₀ → Tₚ ⊢ (⋀ (⟦ φ₀ ⟧ ≐ ⟦ φ ⟧) ≈ true∼)) ψ=ψ₁≡ψ₂ ⊢⋀ψ≡φ≈t)
-  ... | inj₂ y | inj₂ y₁ = {!!}
-  ⊢↝Eq' (leib pru) = {!!}
+  ⊢↝Eq {φ ≡' ψ} (ax ∈A) = inj₂ (φ , ψ , (⟦ ∈A ⟧ₐ , refl))
+  ⊢↝Eq {true} (ax noax)
+  ⊢↝Eq {false} (ax noax)
+  ⊢↝Eq {var p} (ax noax)
+  ⊢↝Eq {¬ φ} (ax noax)
+  ⊢↝Eq {φ /≡ φ₁} (ax noax)
+  ⊢↝Eq {φ ∧ φ₁} (ax noax)
+  ⊢↝Eq {φ ∨ φ₁} (ax noax)
+  ⊢↝Eq {φ ⇒ φ₁} (ax noax)
+  ⊢↝Eq {φ ⇐ φ₁} (ax noax)
+  ⊢↝Eq {φ} (equan {.φ} {ψ} ⊢ψ ⊢ψ≡φ) with ⊢↝Eq ⊢ψ | ⊢↝Eq ⊢ψ≡φ
+  ... | inj₁ ⋀ψ≈t | inj₂ (ψ' , φ' , ⋀ψ'≈φ' , ψ≡φ=ψ'≡φ') =
+             inj₁ (pequan₁ φ ψ ⋀ψ≈t
+                  (substaux ⋀ψ'≈φ' ψ≡φ=ψ'≡φ'))
+  ... | inj₂ (ψ₁ , ψ₂ , ⋀ψ₁≈ψ₂ , ψ=ψ₁≡ψ₂) | inj₂ (ψ' , φ' , ⋀ψ'≈φ' , ψ≡φ=ψ'≡φ') =
+            inj₁ (pequan₂ φ ψ ψ₁ ψ₂ ⋀ψ₁≈ψ₂ ψ=ψ₁≡ψ₂ (substaux ⋀ψ'≈φ' ψ≡φ=ψ'≡φ'))
+  ... | inj₁ ⋀ψ≈t | inj₁ ⊢⋀ψ≡φ≈t =
+            inj₁ (pequan₁ φ ψ ⋀ψ≈t (p≡to≈ {ψ} {φ} ⊢⋀ψ≡φ≈t))
+  ... | inj₂ (ψ₁ , ψ₂ , ⋀ψ₁≈ψ₂ , ψ=ψ₁≡ψ₂) | inj₁ ⋀ψ≡φ≈t =
+            inj₁ (pequan₂ φ ψ ψ₁ ψ₂ ⋀ψ₁≈ψ₂ ψ=ψ₁≡ψ₂ (p≡to≈ {ψ} {φ} ⋀ψ≡φ≈t))
+  ⊢↝Eq (leib {φ} {ψ} {τ} {p} pru) with ⊢↝Eq pru
+  ... | inj₁ ⋀ψ≡τ≈t =
+                 inj₂ ((φ [ p := ψ ]) ,
+                      ((φ [ p := τ ]) ,
+                      (pleib {φ = φ} (p≡to≈ {ψ} {τ} ⋀ψ≡τ≈t) ,
+                      refl)))
+  ... | inj₂ (ψ₁ , τ₁ , ⋀ψ₁≈τ₁ , ψ≡τ=ψ₁≡τ₁) =
+                 inj₂ ( (φ [ p := ψ ])
+                      , ((φ [ p := τ ])
+                      , ((pleib {φ = φ} (substaux ⋀ψ₁≈τ₁ ψ≡τ=ψ₁≡τ₁))
+                      , refl)))
 
 
-{-
-  ⊢↝Eq : ∀ {φ} → (pru : ⊢ φ) → Tₚ ⊢ (⋀ ⟦ proj₁ (⊢↝≡ pru) ⟧ ≈
-                                          ⟦ proj₁ (proj₂ (⊢↝≡ pru))⟧)
-  ⊢↝Eq {φ ≡' ψ} (ax x) = ⟦ x ⟧ₐ
-  ⊢↝Eq {true} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {false} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {var p} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {¬ φ} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {φ /≡ φ₁} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {φ ∧ φ₁} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {φ ∨ φ₁} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {φ ⇒ φ₁} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {φ ⇐ φ₁} (ax (there (there (there (there (there (there (there (there (there (there (there (there (there ()))))))))))))))
-  ⊢↝Eq {φ} (equan {.φ} {ψ} ⊢ψ ⊢ψ≡φ) = {!!}
-    where ⊢true≡ψ : ⊢ (true ≡' ψ)
-          ⊢true≡ψ = equan {!proj₂ (proj₂ (⊢↝≡ ⊢ψ))!} (ax (there here))
-          
-  ⊢↝Eq (leib pru) = {!!}
+
+{- En PLogic hemos dado una teoría para la lógica proposicional, con 15 axiomas y
+   probamos que Bool es un modelo, esto nos garantiza que las pruebas ecuacionales
+   que podemos hacer son correctas.
+   En la primera parte de este archivo definimos un sistema formal para la lógica
+   proposicional, según el paper de Rocha. En ese paper dice que ese sistema es correcto
+   y completo.
+   En el módulo ToEquational definimos una traducción de toda prueba en el sistema formal
+   en una prueba ecuacional para la teoría definida en PLogic. Puesto que el sistema de
+   Rocha captura toda la lógica proposicional y que las pruebas ecuacionales son correctas,
+   tenemos un cálculo ecuacional para la lógica proposicional correcto y completo.
 -}
+
+

@@ -335,10 +335,4 @@ module BoolModel where
           sall ax≡≈ = Bsat≡≈
           sall axrefl≡ = BsatRefl≡
           sall noaxₚ
-  
-module Example1 where
-
-  -- así la haríamos en ecuacional
-  proof : Tₚ ⊢ (⋀ true∼ ≈ true∼)
-  proof = prefl
 

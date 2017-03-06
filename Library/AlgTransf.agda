@@ -99,7 +99,7 @@ module HomoTrans {Σₛ Σₜ}  {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
              {A' : Algebra {l₂} {l₃} Σₜ}
              {ty : Type Σₛ} → (h : Homo A A') → 
              (f : ops Σₛ ty) → homCond 〈 A 〉 〈 A' 〉 (′ h ′ ∘ ↝ₛ t) f 
-  hcond↝  {A = A} {A'} {ar ⇒ s} h f as = 
+  hcond↝  {A = A} {A'} {ar ↦ s} h f as = 
                        subst (λ vec → Setoid._≈_ (A' ⟦ ↝ₛ t s ⟧ₛ)
                                     (′ h ′ (↝ₛ t s) ⟨$⟩
                                            ⟦_⟧⊢ A (↝ₒ t f) (reindex (↝ₛ t) as))

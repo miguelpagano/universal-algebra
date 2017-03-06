@@ -68,6 +68,7 @@ module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoi
 
 
 record Signature : Set₁ where
+  constructor ⟨_,_⟩
   field
     sorts  : Set
     ops    : (List sorts) × sorts → Set

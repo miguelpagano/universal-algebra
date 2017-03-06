@@ -12,7 +12,7 @@ open import Data.Product hiding (map)
 
 data HVec {l} {I : Set} (A : I -> Set l) : List I → Set l where
   ⟨⟩  : HVec A []
-  _▹_ : ∀ {i} {is} → (v : A i) → (vs : HVec A is) → HVec A (i ∷ is)
+  _▹_ : ∀ {i is} → (v : A i) → (vs : HVec A is) → HVec A (i ∷ is)
 
 pattern ⟨⟨_,_⟩⟩ a b = a ▹ (b ▹ ⟨⟩) 
 

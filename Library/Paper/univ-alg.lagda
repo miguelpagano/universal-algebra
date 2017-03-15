@@ -63,18 +63,16 @@ data S : Set where
 data O : (List S) × S → Set where
   consℕ : (n : ℕ) → O ([] , nat)
   consB  : (b : Bool) → O ([] , bool)
-  plus   : O (nat ∷ [ nat ] , nat)
-  prod   : O (nat ∷ [ nat ] , nat)
-  eq     : O (nat ∷ [ nat ] , bool)
-  and    : O (bool ∷ [ bool ] , bool)
-  or     : O (bool ∷ [ bool ] , bool)
+  plus   : O ([ nat , nat ] , nat)
+  prod   : O ([ nat , nat ] , nat)
+  eq     : O ([ nat , nat ] , bool)
+  and    : O ([ bool , bool ] , bool)
+  or     : O ([ bool , bool ] , bool)
 
 Sig₁ : Signature
 Sig₁ = ⟨ S , O ⟩
 
 \end{spec}
-\manu{ya que no compilamos, podemos usar una notación más
-linda.}
 
 \noindent We have a constant operation |consℕ n| for each natural
 number |n|, two constants |consB true| and |consB false|, and binary
@@ -82,7 +80,7 @@ operations with diferent types. Note that, for example, we can define
 functions or predicates only for binary operations of sort |nat|:
 
 \begin{spec}
-property : O (nat ∷ [ nat ] , nat) → P
+property : O ([ nat , nat ] , nat) → P
 property f = ...
 \end{spec}
 
@@ -102,7 +100,7 @@ function $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
 
 In type-theory, is convenient to use setoids instead of sets,
 representing the carrier of an algebra. We coincide with Capretta
-in this point. Setoids allows to define an arbitrary equivalence
+in this point. Setoids allows defining an arbitrary equivalence
 relation on a set, and it's easy to define congruence, quotient algebra
 and subalgebras. With setoids we can define a carrier which
 elements are functions, with the extensional equality as the relation
@@ -127,6 +125,7 @@ We formalize the product $\mathcal{A}_{s_1} \times ... \times
 type of heterogeneous vectors is parameterized by a set of codes
 (sorts) and a family of sets indexed by those codes and indexed over a
 list of codes:
+\manu{De dónde sale el nombre ``codes'' para referirse a los índices de los vectores?}
 \begin{spec}
 data HVec {l} {I : Set}  (A : I -> Set l) :
                          List I → Set l where
@@ -182,7 +181,7 @@ Alg₁ : Algebra Sig₁
 Alg₁ = iS ∥ iO
 \end{spec}
 
-\noindent The interpretation of the operations of a signature are functions over setoids, so one must to provide a proof of preservation of
+\noindent The interpretation of the operations of a signature are functions over setoids, so one must provide a proof of preservation of
 equalities (the field |cong|), we omit these proofs as they are utterly
 uninteresting. The functions |_+_|, |_*_|, |_=ₙ_|, |_∧_| and |_∨_| are
 the expected over |ℕ| and |Bool|.
@@ -191,6 +190,10 @@ interpretation function in |iO|. For example the interpretation of
 |plus| is a function from the setoid of vectors of two elements of
 type |ℕ|, to |ℕ| (we use the notation |⟨⟨ x , y ⟩⟩| to
 represent the vector |x ▹ (y ▹ ⟨⟩)|).
+
+In the next Agda definitions of this section, we consider a parameter
+|Σ : Signature| defined globally (in the formalization this is
+achieved with a module with parameters).
 
 \paragraph{Homomorphism.}
 
@@ -254,7 +257,7 @@ condition''):
 \end{equation}
 
 
-As we have defined algebras with setoids, each relation $Q_s$ must to
+As we have defined algebras with setoids, each relation $Q_s$ must
 preserve the setoid equality. This is formalized in this way:
 
 \begin{spec}
@@ -272,7 +275,7 @@ property |welldef|, and the substitutivity condition
 extension of a relation in a vector |_∼v_|. If we have two vectors related
 by |rel| and we apply the function |A ⟦ f ⟧ₒ| on each one, the results
 are related by rel. The function |_=[_]⇒_|, defined in standard
-library, express exactly this.
+library, expresses exactly this.
 
 \begin{spec}
 record Congruence (A : Algebra Σ) : Set _ where
@@ -300,9 +303,10 @@ In classic logic, a subalgebra consists simply of a subset of the
 carrier of each sort closed by the interpretation of operations.
 In type theory is more complicated, because the notion of subset
 is not the same. Particullary in Agda we don't have subtypes.
-We implement subsetoids in the same way that Capretta. A setoid
-predicate of $S$ is a predicate over the carrier of $S$ and the
-proof of well defined:
+We implement subsetoids in the same way than Capretta. An element
+in a subsetoid of $S$ is a pair consisting of an element $e \in S$ and
+the proof that $e$ satisfies a predicate. The equality of the subsetoid
+is the same than $S$, ignoring the second component of each element:
 
 \begin{spec}
 record SetoidPredicate (S : Setoid _ _) : Set _  where
@@ -326,10 +330,169 @@ SubSetoid S P = record  { Carrier = Σ[ e ∈ Carrier S ] (predicate P e)
 
 Having implemented predicates and subsetoids, we can define the
 condition necessary to construct a subalgebra.
-We need a setoid predicate for each sort, and the condition of 
+We need a setoid predicate for each sort, and the condition asserting
+that if we have a vector where each element satisfies the predicate
+(i.e., all elements are in the subset), then applying an operation
+results in an element that satisfies the predicate. 
+
+\begin{spec}
+record SubAlg (A : Algebra Σ) : Set _ where
+  constructor _⊢⊣_
+  field
+    pr   : (s : sorts Σ) → SetoidPredicate (A ⟦ s ⟧ₛ)
+    sacond : ∀  {ar} {s} → (f : ops Σ (ar , s)) →
+                (_⇨v_ (predicate ∘ pr) ⟨→⟩ predicate (pr s))
+                (_⟨$⟩_ (A ⟦ f ⟧ₒ))
+
+\end{spec}
+
+\noindent Function |_⇨v_| extends a predicate over vectors, and
+function |_⟨→⟩_|, from standard library, expresses the condition
+mentioned above.
+
+With |SubAlg A| we can construct a $\Sigma$-algebra. The carriers are
+elements in the subsetoid induced by the predicate |pr|, and for each
+operation, we must give a function from a vector of elements in the
+corresponding subsetoids to another element in a subsetoid.
+The condition |sacond| ensures that we can give the proof that this
+element satisfies the corresponding predicate.
+
+\begin{spec}
+  SubAlgebra : ∀ {Σ} {A} → SubAlg A → Algebra Σ
+  SubAlgebra (Pₛ ⊢⊣ cond)  = (λ s → SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s))
+                           ∥ if
+    where  if : ∀ {ar} {s} → (f : ops Σ (ar , s)) → _
+           if f = record { _⟨$⟩_ = λ v →  (A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) v)
+                                          , cond f (vpred v)
+\end{spec}
+
+\noindent where |vpred| converts the vector v (of elements in the
+subsetoids, i. e., pairs of an element and a predicate) to the extension
+of predicates.
+\manu{este último párrafo no está claro :-/}.
 
 \subsection{Term algebra is initial}
 
+\paragraph{Initial algebra.}
+A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for all
+$\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
+from $\mathcal{A}$ to $\mathcal{B}$, i. e., if we have two
+homomorphisms from $\mathcal{A}$ to $\mathcal{B}$, then they are equals.
+
+We can define the notion of \textit{uniqueness} respects to an
+equivalence relation:
+
+\begin{spec}
+Unique : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} →  (_≈_ : Rel A ℓ₂) →
+                                   IsEquivalence _≈_ → Set _
+Unique {A = A} _≈_ _ = A × (∀ a a' → a ≈ a')
+\end{spec}
+
+
+The appropiate notion of equality between homomorphisms is the
+extensional equality respects to the equivalence relation of the
+respectives setoids of each algebra.
+If |S₁| and |S₂| are setoids, and |≈S₂| is the equivalence relation of
+|S₂|, we define extensional equality:
+
+\begin{spec}
+  _≈→_ : Rel (S₁ ⟶ S₂) _
+  f ≈→ g  = ∀ (a : ∥ S₁ ∥) → (f ⟨$⟩ a) ≈S₂ (g ⟨$⟩ a)
+\end{spec}
+
+\noindent It's easy to prove that this relation is of equivalence.
+Call |≈ₕequiv| to this proof.
+
+Two homomorphisms |H G : Homo A B| are equals if for every sort |s|,
+its corresponding setoid morphisms are extensionally equal, that is
+|′ H ′ s ≈→ ′ G ′ s|:
+
+\begin{spec}
+  _≈ₕ_  : ∀ A B → (H G : Homo A B) → Set _
+  H ≈ₕ G = (s : sorts Σ) → ′ H ′ s ≈→ ′ G ′ s
+\end{spec}
+
+We define the initial algebra of a signature |Σ| with a record with
+two elements: An algebra |alg| and the proof of uniqueness of the
+homomorphism between |alg| and any other:
+
+\begin{spec}
+record Initial  : Set _ where
+  field
+    alg   :  Algebra Σ
+    init  :  (A : Algebra Σ) → Unique (_≈ₕ_ alg A) ≈ₕequiv
+\end{spec}
+
+\paragraph{Term algebra.}
+
+Given a signature $\Sigma$ we can define the \emph{term algebra}
+$\mathcal{T}$, whose carriers are sets of well-typed words built up
+from the function symbols.  Sometimes this universe is called the
+\emph{Herbrand Universe} (although, according to \cite{wirth-2009},
+Herbrand did not thought of $\mathcal{T}$ but only finite
+approximations of it). It is customary to use an inductive definition
+for $\mathcal{T}$:
+\[
+\inferrule*{f : [s_0,...,s_{n-1}] \Rightarrow s\\  \text{ for all } 0 \leq i \leq n-1,\  t_i \in \mathcal{T}_{s_i} }
+{f\,(t_0,...,t_{n-1}) \in \mathcal{T}_s}
+\]
+This inductive definition can be directly written in Agda:
+
+\begin{spec}
+  data HU : (s : sorts Σ) → Set where
+    term : ∀  {ar s} → (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
+\end{spec}
+
+\noindent We use propositional equality to turn each
+$\mathcal{T}_s$ in a
+setoid, thus completing the interpretation of sorts. To interpret
+an operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the
+tuple $⟨t_1,\ldots,t_n⟩$ to the term
+$f(t_1,\ldots,t_n)$ in $\mathcal{T}_s$; we omit the proof
+of |cong|.
+\begin{spec}
+  |T| : Algebra Σ
+  |T| = (setoid ∘ HU) ∥ (λ f → record  { _⟨$⟩_ = term f ; cong = {!!}})
+\end{spec}
+
+\noindent Now we turn to prove that the term algebra is initial; so for any
+$\Sigma$-algebra $\mathcal{A}$ we define the homomorphism $h_A \colon
+\mathcal{T} \to \mathcal{A}$ \[
+  h_A (f(t_1,\ldots,t_n)) = f_{\mathcal{A}}\,(h_A\,t_1,...,h_A\,t_n) \enspace .
+\] 
+\noindent We can define in Agda this homomorphism in a way similar to
+this\footnote{Indead, because of the Agda termination checker, we must
+define two mutually recursive functions, one
+mappings terms to elements of $\mathcal{A}$ and the other mapping
+vectors of terms to vectors of $\mathcal{A}$}:
+\begin{spec}
+  ∣h∣→A : ∀ {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
+  ∣h∣→A (term f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (map ∣h∣→A ts)
+\end{spec}
+ 
+With the function |∣h∣→A| we can define the homomorphism. The proofs of
+|cong| and the homomorphism condition are straightforward,
+we omit them.
+
+\begin{spec}
+|h|A : (A : Algebra Σ) → Homo |T| A
+|h|A = record  { ′_′  =  λ s → record 
+                         {_⟨$⟩_ = ∣h∣→A {s}
+                         ; cong  = {!!}}
+               ; cond = {!!}}
+\end{spec}
+
+With this homomorphism we can define the proof of initiality of the
+term algebra. We omit the proof of uniqueness because presents no
+interesting difficulties.
+
+\begin{spec}
+  |T|isInitial : Initial
+  |T|isInitial = record  { alg = |T|
+                         ; init = λ A → |h|A , ... }
+\end{spec}
+
+      
 \subsection{Theorems}
 
 We conclude this section with the proof of some theorems.

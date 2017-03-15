@@ -26,3 +26,4 @@
 \DeclareUnicodeCharacter{8342}{\ensuremath{_k}}
 \DeclareUnicodeCharacter{11388}{\ensuremath{_j}}
 \DeclareUnicodeCharacter{8346}{\ensuremath{_p}}
+\DeclareUnicodeCharacter{8680}{\ensuremath{\Mapsto}}

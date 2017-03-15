@@ -1,6 +1,6 @@
 module UnivAlgebra where
 
-open import Relation.Binary hiding (Total ; _⇒_)
+open import Relation.Binary hiding (Total)
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
@@ -199,6 +199,9 @@ Total _≈_ = ∀ a a' → a ≈ a'
 Unique : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _
 Unique {A = A} _≈_ = A × Total _≈_
 
+Unique' : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → (_≈_ : Rel A ℓ₂) →
+            IsEquivalence _≈_ → Set _
+Unique' {A = A} _≈_ _ = ∀ a a' → a ≈ a'
 
 module Initial (Σ : Signature)
                {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
@@ -313,6 +316,7 @@ module InitTermAlg (Σ : Signature) where
           map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (total A H G s t)
                                       (map≈ ar ts)
 
+
   open Initial Σ
 
   ∣T∣isInitial : ∀ {ℓ₁ ℓ₂} → Initial {ℓ₃ = ℓ₁} {ℓ₄ = ℓ₂}
@@ -348,6 +352,11 @@ record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}
 
 open Congruence
 
+
+_⊆_ : ∀ {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
+        Congruence {ℓ₃} A → Congruence {ℓ₃} A → Set _
+Φ ⊆ Ψ = ∀ s → rel Φ s ⇒ rel Ψ s
+
 -- Álgebra Cociente
 Quotient : ∀ {ℓ₁ ℓ₂ ℓ₃} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence {ℓ₃} A) →
                             Algebra {ℓ₁} {ℓ₃} Σ
@@ -365,7 +374,7 @@ Quotient A C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
    Definir condición de subálgebra, probar que es álgebra
 -}
 
-open import Relation.Unary
+open import Relation.Unary hiding (_⊆_)
 
 record SetoidPredicate {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) :
                            Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃))  where
@@ -700,3 +709,51 @@ firstHomTheo {Σ} A B h surj =
         bij₁ s = record { injective = F.id
                         ; surjective = surj₁ s }
 
+module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
+                     (A : Algebra {ℓ₁} {ℓ₂} Σ)
+                     (B : SubAlg {ℓ₃} A)
+                     (Φ : Congruence {ℓ₄} A) where
+
+  -- Trace of a congruence in a subalgebra.
+  trace : (s : sorts Σ) → Rel ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ _
+  trace s = {!!}
+
+  -- Collection of equivalence classes that intersect B
+  A/Φ∩B : (s : sorts Σ) → Pred ∥ (Quotient A Φ) ⟦ s ⟧ₛ ∥ _
+  A/Φ∩B s = λ a → Σ[ b ∈ ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ ] _≈_ (A ⟦ s ⟧ₛ) a (proj₁ b)
+
+  -- Item 1 of theorem. The trace of Φ in B is a congruence on B.
+  theo₁ : Congruence (SubAlgebra B)
+  theo₁ = record { rel = trace
+                 ; welldef = {!!}
+                 ; cequiv = {!!}
+                 ; csubst = {!!} }
+
+  -- A/Φ∩B is a subalgebra of A/Φ
+  theo₂ : SubAlg (Quotient A Φ)
+  theo₂ = (λ s → record { predicate = A/Φ∩B s
+                         ; predWellDef = {!!} })
+          ⊢⊣
+          {!!}
+
+  -- A/Φ∩B is isomorphic to B/(the trace of Φ in B)
+  theo₃ : Isomorphism (SubAlgebra theo₂) (Quotient (SubAlgebra B) theo₁)
+  theo₃ = {!!}
+
+
+module ThirdHomTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
+                    (A : Algebra {ℓ₁} {ℓ₂} Σ)
+                    (Φ Ψ : Congruence {ℓ₃} A)
+                    (Φ⊆Ψ : Φ ⊆ Ψ)
+                    where
+
+  -- Φ/Ψ is a congruence on A/Ψ
+  theo₁ : Congruence (Quotient A Ψ)
+  theo₁ = record { rel = λ s a₁ a₂ → rel Φ s a₁ a₂
+                 ; welldef = {!!}
+                 ; cequiv = {!!}
+                 ; csubst = {!!} }
+
+  -- A/Φ is isomorphic to (A/Ψ)/(Φ/Ψ)
+  theo₂ : Isomorphism (Quotient A Φ) (Quotient (Quotient A Ψ) theo₁)
+  theo₂ = {!!}

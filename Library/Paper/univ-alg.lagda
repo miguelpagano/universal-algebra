@@ -130,8 +130,7 @@ list of codes:
 data HVec {l} {I : Set}  (A : I -> Set l) :
                          List I → Set l where
   ⟨⟩  : HVec A []
-  _▹_ : ∀  {i is} → (v : A i) →
-           (vs : HVec A is) → HVec A (i ∷ is)
+  _▹_ : ∀  {i is} → (v : A i) → (vs : HVec A is) → HVec A (i ∷ is)
 \end{spec}
 
 When |A| is a family of setoids |I → Setoid|, and |is : List I|,  it

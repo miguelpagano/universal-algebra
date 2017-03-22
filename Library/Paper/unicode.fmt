@@ -1,6 +1,8 @@
 \DeclareUnicodeCharacter{952}{\ensuremath{\theta}}
 \DeclareUnicodeCharacter{955}{\ensuremath{\lambda}}
 \DeclareUnicodeCharacter{963}{\ensuremath{\sigma}}
+\DeclareUnicodeCharacter{966}{\ensuremath{\phi}}
+\DeclareUnicodeCharacter{968}{\ensuremath{\psi}}
 \DeclareUnicodeCharacter{10218}{\ensuremath{\ll}}
 \DeclareUnicodeCharacter{10219}{\ensuremath{\gg}}
 \DeclareUnicodeCharacter{9657}{\ensuremath{\vartriangleright}}
@@ -27,3 +29,8 @@
 \DeclareUnicodeCharacter{11388}{\ensuremath{_j}}
 \DeclareUnicodeCharacter{8346}{\ensuremath{_p}}
 \DeclareUnicodeCharacter{8680}{\ensuremath{\Mapsto}}
+\DeclareUnicodeCharacter{12308}{\ensuremath{\llparenthesis}}
+\DeclareUnicodeCharacter{12309}{\ensuremath{\rrparenthesis}}
+\DeclareUnicodeCharacter{12300}{\ensuremath{\ulcorner}}
+\DeclareUnicodeCharacter{12301}{\ensuremath{\lrcorner}}
+\DeclareUnicodeCharacter{8872}{\ensuremath{\models}}

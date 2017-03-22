@@ -14,7 +14,8 @@ data HVec {l} {I : Set} (A : I -> Set l) : List I → Set l where
   ⟨⟩  : HVec A []
   _▹_ : ∀ {i is} → (v : A i) → (vs : HVec A is) → HVec A (i ∷ is)
 
-pattern ⟨⟨_,_⟩⟩ a b = a ▹ (b ▹ ⟨⟩) 
+pattern ⟨⟨_,_⟩⟩ a b = a ▹ (b ▹ ⟨⟩)
+pattern ⟪_⟫ a = a ▹ ⟨⟩
 
 infixr 6 _▹_
 infixr 5 _∈_

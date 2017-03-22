@@ -22,6 +22,7 @@ open Signature
 Vars : (Σ : Signature) → Set₁
 Vars Σ = (s : sorts Σ) → Set
 
+{- Signature extension with variables -}
 _〔_〕 : (Σ : Signature) → (X : Vars Σ) → Signature
 Σ 〔 X 〕 = record { sorts = sorts Σ
                    ; ops = λ { ([] , s) → ops Σ ([] , s) ⊎ X s
@@ -43,24 +44,24 @@ T Σ 〔 X 〕 = (λ s → ∣T∣ ⟦ s ⟧ₛ)
 {- Environments -}
 Env : ∀ {Σ} {X : Vars Σ} {ℓ₁ ℓ₂} →
             (A : Algebra {ℓ₁} {ℓ₂} Σ) → Set ℓ₁
-Env {Σ} {X} A = (s : sorts Σ) → X s → ∥ A ⟦ s ⟧ₛ ∥
+Env {Σ} {X} A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥
 
 
-{- Extension of environments -}
+{- Extension of environments to terms -}
 module EnvExt {ℓ₁ ℓ₂ : Level} {Σ} {X : Vars Σ}
               (A : Algebra {ℓ₁} {ℓ₂} Σ) where
 
   open TermAlgebra (Σ 〔 X 〕)
 
   mutual
-    _↪ : (a : Env A) → (s : sorts Σ) → ∥ ∣T∣ ⟦ s ⟧ₛ ∥ → ∥ A ⟦ s ⟧ₛ ∥
-    (a ↪) s (term {[]} (inj₁ k) ⟨⟩) = A ⟦ k ⟧ₒ ⟨$⟩ ⟨⟩
-    (a ↪) s (term {[]} (inj₂ x) ⟨⟩) = a s x
-    (a ↪) s (term {s₀ ∷ ar'} f (t ▹ ts)) = A ⟦ f ⟧ₒ ⟨$⟩ (a ↪) s₀ t ▹ (map↪ a ts)
+    _↪ : (a : Env A) → {s : sorts Σ} → ∥ ∣T∣ ⟦ s ⟧ₛ ∥ → ∥ A ⟦ s ⟧ₛ ∥
+    (a ↪) (term {[]} (inj₁ k) ⟨⟩) = A ⟦ k ⟧ₒ ⟨$⟩ ⟨⟩
+    (a ↪) (term {[]} (inj₂ x) ⟨⟩) = a x
+    (a ↪) (term {s₀ ∷ ar'} f (t ▹ ts)) = A ⟦ f ⟧ₒ ⟨$⟩ (a ↪) t ▹ (map↪ a ts)
     
     map↪ : ∀ {ar} → (a : Env A) → ∣T∣ ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
     map↪ a ⟨⟩ = ⟨⟩
-    map↪ {s₀ ∷ ar'} a (t ▹ ts) = ((a ↪) s₀ t) ▹ map↪ a ts
+    map↪ {s₀ ∷ ar'} a (t ▹ ts) = ((a ↪) t) ▹ map↪ a ts
 
 module Subst {Σ} {X : Vars Σ} where
 
@@ -70,25 +71,24 @@ module Subst {Σ} {X : Vars Σ} where
   open TermAlgebra (Σ 〔 X 〕)
 
   idSubst : Subst
-  idSubst = λ s x → term (inj₂ x) ⟨⟩
+  idSubst = λ x → term (inj₂ x) ⟨⟩
 
   open EnvExt {X = X} (T Σ 〔 X 〕)
 
   _↪s : Subst → {s : sorts Σ} →
                   ∥ ∣T∣ ⟦ s ⟧ₛ ∥ → ∥ ∣T∣ ⟦ s ⟧ₛ ∥
-  _↪s θ {s} t = (θ ↪) s t
+  _↪s θ {s} t = (θ ↪) t
   
 
 open Hom
 open Setoid
 
 
-{- There exists an unique homomorphism from T Σ ( X ) to any other
-   Σ-Algebra, for each environment -}
+{- Extension of the initial homomorphism to signatures with variables -}
 
 
-{- Freeness property -}
-module Freeness {ℓ₁ ℓ₂ : Level}
+
+module InitHomoExt {ℓ₁ ℓ₂ : Level}
                 {Σ : Signature} {X : Vars Σ}
                 (A : Algebra {ℓ₁} {ℓ₂} Σ)
                 (a : Env {X = X} A) where
@@ -101,17 +101,17 @@ module Freeness {ℓ₁ ℓ₂ : Level}
   open Homo
                                                                    
   conga↪ : ∀ {s} {t₁ t₂ : ∥ ∣T∣ ⟦ s ⟧ₛ ∥} →
-                   t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) ((a ↪) s t₁) ((a ↪) s t₂)
-  conga↪ {s} {t₁} eq = ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong ((a ↪) s) eq)
+                   t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) ((a ↪) t₁) ((a ↪) t₂)
+  conga↪ {s} {t₁} eq = ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (a ↪) eq)
 
   map↪≡map : ∀ {ar} {ts : ∣T∣ ⟦ ar ⟧ₛ*} →
-                   map↪ a ts ≡ mapV (a ↪) ts
+                   map↪ a ts ≡ mapV (λ s → (a ↪) {s}) ts
   map↪≡map {ar = []} {⟨⟩} = PE.refl
-  map↪≡map {ar = s ∷ ar} {t ▹ ts} = PE.cong (λ ts' → (a ↪) s t ▹ ts')
+  map↪≡map {ar = s ∷ ar} {t ▹ ts} = PE.cong (λ ts' → (a ↪) t ▹ ts')
                                                  map↪≡map
 
   TΣX⇝A : T Σ 〔 X 〕 ⟿ A
-  TΣX⇝A s = record { _⟨$⟩_ = (a ↪) s
+  TΣX⇝A s = record { _⟨$⟩_ = (a ↪)
                     ; cong = conga↪ }
 
   {- Homomorphism condition of TΣX⇝A -}
@@ -121,33 +121,9 @@ module Freeness {ℓ₁ ℓ₂ : Level}
                 ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩
                                             (TΣX⇝A s₀ ⟨$⟩ t) ▹ ts')
                                map↪≡map)
-{-
-  uniqueTΣX : Total (T Σ 〔 X 〕 ≈ₕ A)
-  uniqueTΣX H₁ H₂ s (TermAlgebra.term {[]} (inj₂ x) ⟨⟩) =
-            begin
-              ′ H₁ ′ s ⟨$⟩ term (inj₂ x) ⟨⟩
-            ≈⟨ {!!} ⟩
-              a s x
-            ≈⟨ {!!} ⟩
-              ′ H₂ ′ s ⟨$⟩ term (inj₂ x) ⟨⟩
-            ∎
-    where open EqR (A ⟦ s ⟧ₛ)
-  uniqueTΣX H₁ H₂ s (TermAlgebra.term {[]} (inj₁ k) ⟨⟩) =
-            begin
-              ′ H₁ ′ s ⟨$⟩ term (inj₁ k) ⟨⟩
-            ≈⟨ cond H₁ k ⟨⟩ ⟩
-              A ⟦ k ⟧ₒ ⟨$⟩ ⟨⟩
-            ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond H₂ k ⟨⟩) ⟩
-              ′ H₂ ′ s ⟨$⟩ term (inj₁ k) ⟨⟩
-            ∎
-    where open EqR (A ⟦ s ⟧ₛ)
-  uniqueTΣX H₁ H₂ s (TermAlgebra.term {s₀ ∷ ar} f ts) = {!!}
 
-
-  freeness : Unique (_≈ₕ_ (T Σ 〔 X 〕) A)
-  freeness = (record { ′_′ = TΣX⇝A ; cond = TΣXcond })
-           , uniqueTΣX
--}
+  TΣXHom : Homo (T Σ 〔 X 〕) A
+  TΣXHom = record { ′_′ = TΣX⇝A ; cond = TΣXcond }
 
 open TermAlgebra
 
@@ -191,12 +167,10 @@ Discusión: En las reglas de substitución y reemplazo, hay dos conjuntos de var
 
 _⊨_ : ∀ {ℓ₁ ℓ₂ Σ X} {s : sorts Σ} →
         (A : Algebra {ℓ₁} {ℓ₂} Σ) → Equation Σ X s → Set (ℓ₂ Level.⊔ ℓ₁)
-_⊨_ {s = s} A (⋀ left ≈ right if「 carty 」 cond) =
+_⊨_ {s = s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
     (θ : Env A) →
-    _∼v_ {R = λ sᵢ uᵢ uᵢ' → _≈_ (A ⟦ sᵢ ⟧ₛ) ((θ ↪) sᵢ uᵢ) ((θ ↪) sᵢ uᵢ')}
-         (proj₁ cond) (proj₂ cond) →
-    (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) s left)
-                    ((θ ↪) s right)
+    _∼v_ {R = λ sᵢ uᵢ uᵢ' → _≈_ (A ⟦ sᵢ ⟧ₛ) ((θ ↪) uᵢ) ((θ ↪) uᵢ')} us us' →
+    (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) t) ((θ ↪) t')
     
   where open EnvExt A
 
@@ -244,13 +218,13 @@ open EnvExt
 {- Composition of an environment with a substitution -}
 EnvSubst : ∀ {Σ X ℓ₁ ℓ₂} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
              (σ : Subst) → (θ : Env {X = X} A) → Env A
-EnvSubst {A = A} σ θ s x = (A ↪) θ s (σ s x)
+EnvSubst {A = A} σ θ x = (A ↪) θ (σ x)
 
 
 mutual
   ∘subst : ∀ {Σ X ℓ₁ ℓ₂ s} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
                   (σ : Subst) → (θ : Env A) → (t₀ : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) →
-                  (A ⟦ s ⟧ₛ ≈ (A ↪) (EnvSubst {A = A} σ θ) s t₀) ((A ↪) θ s ((σ ↪s) t₀))
+                  (A ⟦ s ⟧ₛ ≈ (A ↪) (EnvSubst {A = A} σ θ) t₀) ((A ↪) θ ((σ ↪s) t₀))
   ∘subst {A = A} σ θ (term {[]} {s} (inj₁ x) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
   ∘subst {A = A} σ θ (term {[]} {s} (inj₂ y) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
   ∘subst {A = A} σ θ (term {s₀ ∷ ar} {s} f (t₀ ▹ ts)) =
@@ -282,48 +256,48 @@ correctness {Σ = Σ} {X} {ar} {s} {E}
         iHus : ∀ {ar₀} {us₀ us₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
                (θ' : Env A) → 
                _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ (σ ↪s) uᵢ ≈ (σ ↪s) uᵢ')} us₀ us₀' →
-               _∼v_ {R = λ sᵢ uᵢ uᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ' sᵢ ((σ ↪s) uᵢ))
-                                                 ((A ↪) θ' sᵢ ((σ ↪s) uᵢ'))} us₀ us₀'
+               _∼v_ {R = λ sᵢ uᵢ uᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ' ((σ ↪s) uᵢ))
+                                                 ((A ↪) θ' ((σ ↪s) uᵢ'))} us₀ us₀'
         iHus θ' ∼⟨⟩ = ∼⟨⟩
         iHus θ' (∼▹ {s₀} {ar₀} {u₁} {u₂} ⊢u₁≈u₂ p) = ∼▹ (correctness ⊢u₁≈u₂ A sall θ' ∼⟨⟩)
                                                        (iHus θ' p)
         θσ↪≈θ↪∘σ↪ : ∀ {s'} → (t₀ : ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) →
-                        (A ⟦ s' ⟧ₛ ≈ (A ↪) θσ s' t₀) ((A ↪) θ s' ((σ ↪s) t₀))
+                        (A ⟦ s' ⟧ₛ ≈ (A ↪) θσ t₀) ((A ↪) θ ((σ ↪s) t₀))
         θσ↪≈θ↪∘σ↪ = ∘subst {A = A} σ θ
-        A⊨econd : ((A ⟦ s ⟧ₛ) ≈ (A ↪) θ s ((σ ↪s) t))
-                               ((A ↪) θ s ((σ ↪s) t'))
+        A⊨econd : ((A ⟦ s ⟧ₛ) ≈ (A ↪) θ ((σ ↪s) t))
+                               ((A ↪) θ ((σ ↪s) t'))
         A⊨econd = begin
-                   (A ↪) θ s ((σ ↪s) t)
+                   (A ↪) θ ((σ ↪s) t)
                      ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (θσ↪≈θ↪∘σ↪ t)⟩
-                   (A ↪) θσ s t
+                   (A ↪) θσ t
                      ≈⟨ satAll sall econd θσ (map∼v (λ {s₀} {uᵢ} {uᵢ'} x →
                                              Setoid.trans (A ⟦ s₀ ⟧ₛ) (θσ↪≈θ↪∘σ↪ uᵢ)
                                              (Setoid.trans (A ⟦ s₀ ⟧ₛ) x (Setoid.sym (A ⟦ s₀ ⟧ₛ) (θσ↪≈θ↪∘σ↪ uᵢ'))))
                                              (iHus θ ⊢us≈us')) ⟩
-                   (A ↪) θσ s t'
+                   (A ↪) θσ t'
                      ≈⟨ θσ↪≈θ↪∘σ↪ t' ⟩
-                   (A ↪) θ s ((σ ↪s) t')
+                   (A ↪) θ ((σ ↪s) t')
                    ∎
           where open EqR (A ⟦ s ⟧ₛ)
 correctness {s = s} {E} (preemp {[]} ∼⟨⟩ f) = λ { A x θ ∼⟨⟩ → Setoid.refl (A ⟦ s ⟧ₛ) }
 correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
             (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' f) A sall θ ∼⟨⟩ =
                 begin
-                   (A ↪) θ s (term f ts)
+                   (A ↪) θ (term f ts)
                  ≈⟨ TΣXcond f ts ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts
                  ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (iHts ⊢ts≈ts')) ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts'
                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
-                   (A ↪) θ s (term f ts')
+                   (A ↪) θ (term f ts')
                 ∎
                 
   where open EqR (A ⟦ s ⟧ₛ)
-        open Freeness A θ
+        open InitHomoExt A θ
         iHts : ∀ {ar₀} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
                _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts₀ ts₀' →
-               _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ sᵢ tᵢ)
-                                                 ((A ↪) θ sᵢ tᵢ')} ts₀ ts₀'
+               _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ tᵢ)
+                                                 ((A ↪) θ tᵢ')} ts₀ ts₀'
         iHts {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
         iHts {s₀ ∷ ar₀} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ ⊢t₀≈t₀' ⊢ts₀≈ts₀') =
                                     ∼▹ (ih ⊢t₀≈t₀' A sall θ ∼⟨⟩) (iHts ⊢ts₀≈ts₀')
@@ -331,8 +305,8 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                        E ⊢ (⋀ tᵢ ≈ tᵢ') → ⊨All E (⋀ tᵢ ≈ tᵢ')
                 ih {s'} {tᵢ} {tᵢ'} peq = correctness peq
         map≈ : ∀ {ar'} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'} →
-               (p : _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ sᵢ tᵢ)
-                                                 ((A ↪) θ sᵢ tᵢ')} ts₀ ts₀') →
+               (p : _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (A ↪) θ tᵢ)
+                                                 ((A ↪) θ tᵢ')} ts₀ ts₀') →
                _∼v_ {R = λ s₀ → _≈_ (A ⟦ s₀ ⟧ₛ)}
                (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts₀) (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts₀')
         map≈ {[]} ∼⟨⟩ = ∼⟨⟩
@@ -378,12 +352,12 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
 ⊢Quot⊨E {Σ} {X} {ar} E = record { satAll = sall }
   where
     mutual
-        thm : ∀ {s} {t} {θ} → ((T record { sorts = sorts Σ ; ops = ops Σ } 〔 X 〕 ⟦ s ⟧ₛ) ≈ (θ ↪s) t) ((⊢Quot E ↪) θ s t)
+        thm : ∀ {s} {t} {θ : Subst} → ((T Σ 〔 X 〕 ⟦ s ⟧ₛ) ≈ (θ ↪s) t) ((⊢Quot E ↪) θ t)
         thm {t = term (inj₁ x) ⟨⟩} {θ} = _≡_.refl
         thm {t = term (inj₂ y) ⟨⟩} {θ} = _≡_.refl
         thm {t = term f (t ▹ ts)} {θ} = PE.cong (term f) (thm' {ts = t ▹ ts} {θ} )
 
-        thm' : ∀ {ar'} {ts : HVec (HU (Σ 〔 X 〕)) ar' } {θ} → map↪ T Σ 〔 X 〕 θ ts ≡ map↪ (⊢Quot E) θ ts
+        thm' : ∀ {ar'} {ts : HVec (HU (Σ 〔 X 〕)) ar' } {θ : Subst} → map↪ T Σ 〔 X 〕 θ ts ≡ map↪ (⊢Quot E) θ ts
         thm' {ts = ⟨⟩} {θ} = _≡_.refl
         thm' {ts = v ▹ ts} {θ} = cong₂ _▹_ (thm {t = v} {θ}) (thm' {ts = ts} {θ})
 
@@ -403,33 +377,33 @@ complete : ∀ {Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
              ⊨All {Level.zero} {Level.zero} E (⋀ t ≈ t') → E ⊢ (⋀ t ≈ t')
 complete {Σ} {X} {ar} {s} {E} {t} {t'} sall = begin t
                   ≈⟨ ≡to≈ (⊢RSetoid E s) (PE.sym (idSubst≡ t)) ⟩
-                  ((λ s' x → term (inj₂ x) ⟨⟩) ↪s) t
-                  ≈⟨ Congruence.welldef (⊢Cong E ) (Setoid.sym ((_⟦_⟧ₛ T Σ 〔 X 〕 s)) (thm {t = t} {λ _ x → term (inj₂ x) ⟨⟩}))
-                                                   ((Setoid.sym ((_⟦_⟧ₛ T Σ 〔 X 〕 s)) (thm {t = t'} {λ _ x → term (inj₂ x) ⟨⟩}))) (sall (⊢Quot E) (⊢Quot⊨E E) (λ s' x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
-                  ((λ s' x → term (inj₂ x) ⟨⟩) ↪s) t'
+                  ((λ x → term (inj₂ x) ⟨⟩) ↪s) t
+                  ≈⟨ Congruence.welldef (⊢Cong E ) (Setoid.sym ((_⟦_⟧ₛ T Σ 〔 X 〕 s)) (thm {t = t} {λ x → term (inj₂ x) ⟨⟩}))
+                                                   ((Setoid.sym ((_⟦_⟧ₛ T Σ 〔 X 〕 s)) (thm {t = t'} {λ x → term (inj₂ x) ⟨⟩}))) (sall (⊢Quot E) (⊢Quot⊨E E) (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
+                  ((λ x → term (inj₂ x) ⟨⟩) ↪s) t'
                   ≈⟨ ≡to≈ (⊢RSetoid E s) ((idSubst≡ t')) ⟩
                   t' ∎
   where
    open EqR (⊢RSetoid E s)
    mutual
-        thm : ∀ {s} {t} {θ} → ((T record { sorts = sorts Σ ; ops = ops Σ } 〔 X 〕 ⟦ s ⟧ₛ) ≈ (θ ↪s) t) ((⊢Quot E ↪) θ s t)
+        thm : ∀ {s} {t} {θ : Subst} → ((T Σ 〔 X 〕 ⟦ s ⟧ₛ) ≈ (θ ↪s) t) ((⊢Quot E ↪) θ t)
         thm {t = term (inj₁ x) ⟨⟩} {θ} = _≡_.refl
         thm {t = term (inj₂ y) ⟨⟩} {θ} = _≡_.refl
         thm {t = term f (t ▹ ts)} {θ} = PE.cong (term f) (thm' {ts = t ▹ ts} {θ} )
 
-        thm' : ∀ {ar'} {ts : HVec (HU (Σ 〔 X 〕)) ar' } {θ} → map↪ T Σ 〔 X 〕 θ ts ≡ map↪ (⊢Quot E) θ ts
+        thm' : ∀ {ar'} {ts : HVec (HU (Σ 〔 X 〕)) ar' } {θ : Subst} → map↪ T Σ 〔 X 〕 θ ts ≡ map↪ (⊢Quot E) θ ts
         thm' {ts = ⟨⟩} {θ} = _≡_.refl
         thm' {ts = v ▹ ts} {θ} = cong₂ _▹_ (thm {t = v} {θ}) (thm' {ts = ts} {θ})
 
    mutual
     idSubst≡ : ∀ {s} → (t : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) →
-                 ((λ s' x → term (inj₂ x) ⟨⟩) ↪s) t ≡ t
+                 ((λ x → term (inj₂ x) ⟨⟩) ↪s) t ≡ t
     idSubst≡ (term {[]} (inj₁ x) ⟨⟩) = _≡_.refl
     idSubst≡ (term {[]} (inj₂ y) ⟨⟩) = _≡_.refl
     idSubst≡ (term {s₀ ∷ ar'} f (t ▹ ts)) = cong₂ (λ t₀ ts₀ → term f (t₀ ▹ ts₀))
                                                   (idSubst≡ t) (map↪id ts)
 
-    map↪id : ∀ {ar'} → (ts : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar') → (map↪ T Σ 〔 X 〕 (λ s' x → term (inj₂ x) ⟨⟩) ts) ≡ ts
+    map↪id : ∀ {ar'} → (ts : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar') → (map↪ T Σ 〔 X 〕 (λ x → term (inj₂ x) ⟨⟩) ts) ≡ ts
     map↪id ⟨⟩ = _≡_.refl
     map↪id (t ▹ ts) = cong₂ (λ t₀ ts₀ → t₀ ▹ ts₀)
                             (idSubst≡ t) (map↪id ts)
@@ -477,4 +451,17 @@ module Rewrite (Σ : Signature) (X : Vars Σ) where
   TRS ar = HVec Rule ar
 
 
+module ProvSetoid {Σ : Signature} {X : Vars Σ}
+                  {ar : Arity Σ} 
+                  (Th : Theory Σ X ar) where
+
+
+  ProvSetoid : (s : sorts Σ) → Setoid _ _
+  ProvSetoid s = record { Carrier = ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
+                        ; _≈_ = λ t t' → Th ⊢ (⋀ t ≈ t')
+                        ; isEquivalence = record { refl = prefl
+                                                 ; sym = psym
+                                                 ; trans = ptrans } }
+
+  
 

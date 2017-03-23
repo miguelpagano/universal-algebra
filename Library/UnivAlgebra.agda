@@ -6,11 +6,11 @@ open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
 open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
-open import Data.Bool
+open import Data.Bool renaming (_≟_ to _≟b_)
 open import Data.List renaming (map to lmap)
-open import Relation.Binary.PropositionalEquality as PE
-open import Data.String hiding (setoid)
-open import Data.Fin
+open import Relation.Binary.PropositionalEquality as PE hiding ( Reveal_·_is_;[_])
+
+open import Data.Fin hiding (_+_)
 
 import Relation.Binary.EqReasoning as EqR
 
@@ -67,8 +67,7 @@ module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoi
 
 
 
-record Signature : Set₁ where
-  constructor ⟨_,_⟩
+record Signature : Set₁ where 
   field
     sorts  : Set
     ops    : (List sorts) × sorts → Set
@@ -81,6 +80,8 @@ record Signature : Set₁ where
 
 open Signature
 
+
+
 record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
   constructor _∥_
 
@@ -90,7 +91,68 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
                 _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 
   _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
-  _⟦_⟧ₛ* ar = Carrier (HVecSet (sorts Σ) _⟦_⟧ₛ ar)
+  _⟦_⟧ₛ* ar = ∥ _⟦_⟧ₛ ✳ ar ∥
+
+private
+  module example where
+    data S : Set where nat : S ; bool : S
+
+    data O : (List S) × S → Set where
+      consℕ  : (n : ℕ) → O ([] , nat)
+      True False  : O ([] , bool)
+      plus prod   : O ( nat ∷ [ nat ] , nat)
+      eq     : O ( nat ∷ [ nat ] , bool)
+      cand cor     : O ( bool ∷ [ bool ] , bool)
+
+    Sig₁ : Signature
+    Sig₁ = record { sorts = S ; ops = O }
+
+    open import Data.List.All
+    data isMonoSorted : S → Arity Sig₁ → Set where
+      monoSort : ∀ s ar → All (λ s' → s ≡ s') ar → isMonoSorted s ar
+        
+    data monoSorted {ar s} : ops Sig₁ (ar , s) → Set where
+     isMono : ∀ (o : ops Sig₁ (ar , s)) → All (_≡_ s) ar → monoSorted o
+
+    monoNat : ∀ {ar} → (o : O (ar , nat)) → monoSorted o
+    monoNat (consℕ n) = isMono (consℕ n) []
+    monoNat plus = isMono plus (_≡_.refl ∷ _≡_.refl ∷ [])
+    monoNat prod = isMono prod (_≡_.refl ∷ _≡_.refl ∷ [])
+
+    open import Data.Empty
+    fail : (∀ {ar} → (o : O (ar , bool)) → monoSorted o) → ⊥
+    fail prop = feq (prop eq)
+      where feq : monoSorted eq → ⊥
+            feq (isMono .eq (() ∷ x))
+
+    iS : sorts Sig₁ → Setoid _ _
+    iS nat   = setoid ℕ
+    iS bool  = setoid Bool
+    
+    iO : ∀ {ar s} → ops Sig₁ (ar ↦ s) → (iS ✳ ar) ⟶ iS s
+    iO (consℕ n)  = record  { _⟨$⟩_ = λ { ⟨⟩ → n } ; cong = {! !} }
+    iO plus  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ + n₂} ; cong = {! !} }
+    iO prod  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ * n₂} ; cong = {! !} }
+    iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ ≟ n₂ } ; cong = {! !} }
+    iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂} ; cong = {! !} }
+    iO or    = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∨ b₂} ; cong = {! !} }
+             
+    Alg₁ : Algebra Sig₁
+    Alg₁ = ? -- record { _⟦_⟧ₛ = iS , _⟦_⟧ₒ = iO }
+    
+  module exMonAction where
+    data So : Set where
+      M : So
+      S : So
+
+    data O : (List So) × So → Set where
+      unit  : O ([] , M)
+      mult  : O (M ∷ [ M ] , M)
+      act   : O (M ∷ [ S ] , S)
+
+    MonAct : Signature
+    MonAct = record { sorts = So ; ops = O }
+
 
 
 module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
@@ -234,7 +296,6 @@ module TermAlgebra (Σ : Signature) where
   data HU : (s : sorts Σ) → Set where
     term : ∀  {ar s} →  (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
 
-
   ∣T∣ : Algebra Σ
   ∣T∣ = record  { _⟦_⟧ₛ = setoid ∘ HU
                ; _⟦_⟧ₒ  = ∣_|ₒ
@@ -370,11 +431,30 @@ Quotient A C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
 
 -- SUBALGEBRAS
 
-{- Definir subsetoid, probar que es setoid
-   Definir condición de subálgebra, probar que es álgebra
+{-
+
+  Dado un tipo A, un subconjunto B de A está dado por (A → Set), es decir
+    un predicado sobre A.
+
+  Subset A P = Σ[a ∈ A] (P a)
+
+  Para definir subsetoide, necesitamos un predicado sobre el carrier
+  del setoide y (aunque no lo usamos!!) una prueba de que el predicado
+  es cerrado respecto de la equivalencia.
+
+  Si tengo B ⊆ A y (φ : Rel A), entonces φ_B = (B × B) ∩ φ
+
+  Podemos ver si (ψ : Rel B), entonces ψ ∩ φ : Rel B
+
 -}
 
+
 open import Relation.Unary hiding (_⊆_)
+Subset : ∀ {ℓ₁ ℓ₂} → (A : Set ℓ₁) → (Pred A ℓ₂) → Set _
+Subset A P = Σ[ a ∈ A ] (P a)
+restr : ∀ {ℓ₁ ℓ₂ ℓ₃} → (A : Set ℓ₁) → (P : Pred A ℓ₂) →  (φ : Rel A ℓ₃) → Rel (Subset A P) _
+restr A P φ (a , p) (a' , q) = φ a a'
+
 
 record SetoidPredicate {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) :
                            Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃))  where
@@ -388,14 +468,14 @@ open SetoidPredicate
 
 SubSetoid : ∀ {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) → (P : SetoidPredicate {ℓ₃ = ℓ₃} S) →
                          Setoid _ _
-SubSetoid S P = record { Carrier = Σ[ e ∈ Carrier S ] (predicate P e)
+SubSetoid S P = record { Carrier = Subset (Carrier S) (predicate P)--Σ[ e ∈ Carrier S ] (predicate P e)
                        ; _≈_ = λ { (e₁ , _) (e₂ , _) → (_≈_ S) e₁ e₂ }
                        ; isEquivalence = pequiv
                        }
   where pequiv : _
-        pequiv = record { refl = λ {x} → Setoid.refl S
-                        ; sym = λ x → Setoid.sym S x
-                        ; trans = λ x₀ x₁ → Setoid.trans S x₀ x₁ }
+        pequiv = record { refl = Setoid.refl S
+                        ; sym = Setoid.sym S
+                        ; trans = Setoid.trans S }
 
 {- Induced Subalgebra -}
 
@@ -716,7 +796,7 @@ module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
 
   -- Trace of a congruence in a subalgebra.
   trace : (s : sorts Σ) → Rel ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ _
-  trace s = {!!}
+  trace s (b , _) (b' , _) = rel Φ s b b' 
 
   -- Collection of equivalence classes that intersect B
   A/Φ∩B : (s : sorts Σ) → Pred ∥ (Quotient A Φ) ⟦ s ⟧ₛ ∥ _
@@ -725,7 +805,7 @@ module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
   -- Item 1 of theorem. The trace of Φ in B is a congruence on B.
   theo₁ : Congruence (SubAlgebra B)
   theo₁ = record { rel = trace
-                 ; welldef = {!!}
+                 ; welldef = λ { {s} eq eq' rel → welldef Φ eq eq' rel}
                  ; cequiv = {!!}
                  ; csubst = {!!} }
 

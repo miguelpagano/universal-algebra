@@ -2,21 +2,20 @@
 \label{sec:univ-alg}
 
 In this section we present our formalization in Agda of the core
-concepts of heterogenouos universal algebra, up to initiality of the
-term algebra, and some importants theorems.
-As far as we know, there are two formalizations of
-(multisorted) universal algebra: Capretta's implementation in Coq and
-\cite{kahl-2011} formalization of allegories in Agda.
+concepts of heterogenouos universal algebra, up to the three
+isomorphism theorems and initiality of the term algebra.  As far as we
+know, there are two formalizations of (multisorted) universal algebra
+in type-theory: Capretta's implementation in Coq and the formalization
+of allegories in Agda by \citet{kahl-2011}. 
 
-We will motivate some of the main definitions of the development and
-show its more interesting parts, while ommiting some technical details.
-The full code is available at \url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}.
+Our reference for heterogeneous universal algebra is
+\citet{meinke-tucker-1992}. We will recall some of the standard
+definitions in order to explain the most salient aspects of our
+formalization, and its more bureaucratic and less interesting parts
+will be omitted. The complete development is available at
+\url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}.
 
 \subsection{Signature, algebra and homomorphism}
-
-We recall some basic definitions of multisorted
-universal algebra following the
-\textit{Handbook of Logic in Computer Science}, \cite{handbook}.
 
 \paragraph{Signature.}
 
@@ -28,15 +27,13 @@ and another sort (its \textit{target sort}). We write operations as a
 type declaration $f : [s_1,...,s_n] \Rightarrow s$ and say ``$f$ has
 type $[s_1,...,s_n] \Rightarrow s$''.
 
-There is one alternative way of specifying the operations, that
-seems to us more type-theoretically, as a family of sets (of
-operations) indexed by (their) types. We use a record to represent
-signatures in Agda, the field |sorts| is a Set and |ops| is a family
-of sets indexed by the types of operations:
+We prefer to think of operations as a family of sets indexed by
+types. Thus, we represent signatures in Agda by a record with fields
+|sorts|, which is a Set, and |ops|, which is a family of sets indexed
+by the types of operations:
 
 \begin{spec}
 record Signature : Set₁ where
-  constructor ⟨_,_⟩
   field
     sorts  : Set
     ops  : List sorts × sorts → Set 
@@ -45,47 +42,50 @@ record Signature : Set₁ where
   Arity = List sorts
 \end{spec}
 
-\noindent This way of defining the set of operations offers two
-advantages. On the one hand, we can have an infinite number of sorts
-and also of operations; and, more important, we can naturally
-define functions or predicates over operations of a given type.
-\manu{pensar en por qué es una ventaja tener infinitos sorts y
-operaciones. Y encontrar algún predicado o función interesante.}
+\noindent
+This way of defining the set of operations admits of having an
+infinite number of sorts and operations, contrasting with Capretta's
+formalization where both the set of sorts and operations are
+finite. More important, we can define functions or predicates over
+operations of a given type.
+\manu{pensar en por qué es una ventaja
+  tener infinitos sorts y operaciones. Y encontrar algún predicado o
+  función interesante.}
 
-As an example, consider a signature for a language with arithmetic
-and boolean expressions:
-
+As an example, consider the signature for arithmetic and boolean
+expressions; we introduce operations with the same type in the
+same line.
 \begin{spec}
-data S : Set where
-  nat  : S
-  bool : S
+data S : Set where nat : S ; bool : S 
 
 data O : (List S) × S → Set where
-  consℕ : (n : ℕ) → O ([] , nat)
-  consB  : (b : Bool) → O ([] , bool)
-  plus   : O ([ nat , nat ] , nat)
-  prod   : O ([ nat , nat ] , nat)
-  eq     : O ([ nat , nat ] , bool)
-  and    : O ([ bool , bool ] , bool)
-  or     : O ([ bool , bool ] , bool)
+  const       :  ℕ → O ([] , nat)
+  eq          :  O ([ nat , nat ] , bool)
+  and or      :  O ([ bool , bool ] , bool)
+  plus prod   :  O ([ nat , nat ] , nat)
 
 Sig₁ : Signature
-Sig₁ = ⟨ S , O ⟩
-
+Sig₁ = record { sorts = S ; ops = O }
 \end{spec}
 
-\noindent We have a constant operation |consℕ n| for each natural
-number |n|, two constants |consB true| and |consB false|, and binary
-operations with diferent types. Note that, for example, we can define
-functions or predicates only for binary operations of sort |nat|:
-
+\noindent Notice that there is a constant operation |const n| for each
+natural number |n|, thus permitting a straightforward encoding of
+numbers as terminals of the abstract grammar of expressions.
+% ¿adelantar que frases de la gramática abstracta son las expresiones?
+Let us illustrate the possibility of proving properties of operations
+according to their types by showing that operations with target sort
+|nat| are monosorted:
 \begin{spec}
-property : O ([ nat , nat ] , nat) → P
-property f = ...
-\end{spec}
+data monoSorted {ar s} : ops (ar , s) → Set where
+   isMono : (o : ops (ar , s)) → All (_≡_ s) ar → monoSorted o  
 
-\noindent and if we do pattern matching over f, we have two posible
-terms: |plus| and |prod|.
+monoNat : ∀ {ar} → (o : O (ar , nat)) → monoSorted o
+monoNat (const n) = isMono (const n) []
+monoNat plus = isMono plus (_≡_.refl ∷ _≡_.refl ∷ [])
+monoNat prod = isMono prod (_≡_.refl ∷ _≡_.refl ∷ [])
+\end{spec}
+There are only three cases in |monoNat| because the other
+constructors of |O| have target sort |bool|.
 
 \paragraph{Algebra.}
 
@@ -96,68 +96,65 @@ $\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or the
 \emph{carrier} of the sort $s$; given an operation $f \colon
 [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a total
 function $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
-\mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$.
+\mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. It is assumed that
+every carrier comes equipped with a notion of equality and several
+theorems refer to that equality.
 
-In type-theory, is convenient to use setoids instead of sets,
-representing the carrier of an algebra. We coincide with Capretta
-in this point. Setoids allows defining an arbitrary equivalence
-relation on a set, and it's easy to define congruence, quotient algebra
-and subalgebras. With setoids we can define a carrier which
-elements are functions, with the extensional equality as the relation
-of the setoid.
+In type-theory, however, it is well-known that one can equip a type
+with several notions of equality (a relevant example for this paper is
+the carrier of well-formed terms of a given signature: for the initial
+algebra one takes the definitional equality, but for proving
+completeness of equational logic one equates terms whenever they are
+provable equal under the corresponding axioms). The well-known
+solution is to represent carriers as setoids; \ie as types paired
+with an equivalence relation.
 
-As far as possible, we use the standard library
-\cite{danielsson-agdalib} definitions; for instance, setoids are
-defined as a record with fields: the |Carrier : Set|, the
-relation |_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|.
-The operator | ∥_∥ | represents the forgetful functor from setoids
-to sets, so that | ∥ (A,_≈A_,_) ∥ = A|.
+Setoids are defined in the the standard library
+\cite{danielsson-agdalib} of Agda, we conveniently use it as far as
+possible, as a record with fields: the |Carrier : Set|, the relation
+|_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|.  The
+operator | ∥_∥ | represents the forgetful functor from setoids to
+sets, so that | ∥ (A,_≈A_,_) ∥ = A|.
 
 Once sorts are interpreted as setoids, operations should be
-interpreted as setoid morphisms; \ie. functions which preserve the
-equivalence relation.  Given two setoids |(A,_≈A_,_)| and |(B,_≈B_,_)|,
-the type |A ⟶ B| corresponds to the type of functions |f : A → B| that
-come with a proof of the preservation,
-|cong : ∀ a a' → a ≈A a' → f a ≈B f a'|. 
+interpreted as setoid morphisms; \ie functions which preserve the
+equivalence relation.  Given two setoids |Ȧ := (A,_≈A_,_)| and |Ḃ :=
+(B,_≈B_,_)|, the inhabitants of |Ȧ ⟶ Ḃ| are 
+morphism from |Ȧ| to |Ḃ| defined by records with fields |_⟨$⟩_ : A → B|
+and |cong : ∀ a a' → a ≈A a' → f ⟨$⟩ a ≈B f ⟨$⟩ a'|.
 
 We formalize the product $\mathcal{A}_{s_1} \times ... \times
 \mathcal{A}_{s_n}$ as the setoid of \emph{heterogeneous vectors}. The
 type of heterogeneous vectors is parameterized by a set of codes
 (sorts) and a family of sets indexed by those codes and indexed over a
 list of codes:
-\manu{De dónde sale el nombre ``codes'' para referirse a los índices de los vectores?}
 \begin{spec}
-data HVec {l} {I : Set}  (A : I -> Set l) :
-                         List I → Set l where
+data HVec {ℓ} {I : Set}  (A : I -> Set ℓ) : List I → Set ℓ where
   ⟨⟩  : HVec A []
-  _▹_ : ∀  {i is} → (v : A i) → (vs : HVec A is) → HVec A (i ∷ is)
+  _▹_ : ∀  {i is} → A i → HVec A is → HVec A (i ∷ is)
 \end{spec}
-
-When |A| is a family of setoids |I → Setoid|, and |is : List I|,  it
-is straightforward to promote this construction to setoids and we
-use |A ✳ is| to refer to the setoid of heterogeneous vectors indexed
-in |is|, where the equivalence relation is the point-wisely induced.
-The interpretation of the operation
-$f \colon [s_1,…,s_n] \Rightarrow s$ should be a setoid morphism |A ✳
-[s₁,…,sₙ] ⟶ A s|.
+\noindent When |A| is a family of setoids |I → Setoid|, and |is : List I|, it is
+straightforward to promote this construction to setoids (the
+equivalence relation is defined point-wisely); we use |A ✳ is| to
+refer to the setoid of heterogeneous vectors indexed in |is|. The
+interpretation of an operation $f \colon [s_1,…,s_n] \Rightarrow s$
+should be a setoid morphism |A ✳ [s₁,…,sₙ] ⟶ A s|.
 
 
 An algebra for a signature $\Sigma$ is a record with two fields: the
 interpretation for sorts and the interpretation for operations.
-
 \begin{spec}
-record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) :
-                            Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
-  constructor _∥_
+record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
   field
     _⟦_⟧ₛ   : sorts Σ → Setoid ℓ₁ ℓ₂
     _⟦_⟧ₒ    : ∀  {ar s} → ops Σ (ar , s) → _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
-
-  _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
-  _⟦_⟧ₛ* ar = Carrier (HVecSet (sorts Σ) _⟦_⟧ₛ ar)
 \end{spec}
+% Me parece que esto no es necesario!
+%  _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
+%  _⟦_⟧ₛ* ar = Carrier (HVecSet (sorts Σ) _⟦_⟧ₛ ar)
 
-Let see an example of a |Sig₁|-algebra. We interpret sorts |nat| and
+
+Let us see an example of a |Sig₁|-algebra. We interpret sorts |nat| and
 |bool| with setoids |ℕ| and |Bool|, where the equivalence relation
 is the definitional equality of Agda (the function |setoid| constructs
 this trivial setoid).
@@ -168,34 +165,26 @@ iS nat   = setoid ℕ
 iS bool  = setoid Bool
 
 iO : ∀ {ar s} → ops Sig₁ (ar ↦ s) → (iS ✳ ar) ⟶ iS s
-iO (consℕ n)  = record  { _⟨$⟩_ = λ { ⟨⟩ → n } ; cong = ... }
-iO (consB b)  = record  { _⟨$⟩_ = λ {⟨⟩ → b} ; cong = ... }
-iO plus  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ + n₂} ; cong = ... }
-iO prod  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ * n₂} ; cong = ... }
-iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ =ₙ n₂} ; cong = ... }
-iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂} ; cong = ... }
-iO or    = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∨ b₂} ; cong = ... }
+iO (const n)  = record  { _⟨$⟩_ = λ { ⟨⟩ → n } ; cong = {! !} }
+iO plus  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ + n₂} ; cong = {! !} }
+iO prod  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ * n₂} ; cong = {! !} }
+iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ =ₙ n₂} ; cong = {! !} }
+iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂} ; cong = {! !} }
+iO or    = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∨ b₂} ; cong = {! !} }
        
 Alg₁ : Algebra Sig₁
-Alg₁ = iS ∥ iO
+Alg₁ = record { _⟦_⟧ₛ = iS , _⟦_⟧ₒ = iO }
 \end{spec}
 
-\noindent The interpretation of the operations of a signature are functions over setoids, so one must provide a proof of preservation of
-equalities (the field |cong|), we omit these proofs as they are utterly
-uninteresting. The functions |_+_|, |_*_|, |_=ₙ_|, |_∧_| and |_∨_| are
-the expected over |ℕ| and |Bool|.
-It's interesting to note that Agda infers the types of each
-interpretation function in |iO|. For example the interpretation of
-|plus| is a function from the setoid of vectors of two elements of
-type |ℕ|, to |ℕ| (we use the notation |⟨⟨ x , y ⟩⟩| to
-represent the vector |x ▹ (y ▹ ⟨⟩)|).
-
-In the next Agda definitions of this section, we consider a parameter
-|Σ : Signature| defined globally (in the formalization this is
-achieved with a module with parameters).
+\noindent We omit the proofs that each function preserve the
+definitional relation as they are utterly uninteresting (here and
+there we use |{! !}| to indicate omitted code). When one uses Agda
+interactively, the type-checker infers the argument of the
+interpretation of each operation.
 
 \paragraph{Homomorphism.}
-
+In this section we fix a signature |Σ: Signature|; in the
+formalization this is achieved with a module with parameters.
 Let $\mathcal{A}$ and $\mathcal{B}$ be two $\Sigma$-algebras, a \emph{homomorphism}
 $h$ from $\mathcal{A}$ to $\mathcal{B}$ is a family of functions indexed by the
 sorts $h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$,
@@ -321,7 +310,7 @@ With a setoid predicate |P|, we can define a subsetoid:
 SubSetoid : (S : Setoid _ _) → (P : SetoidPredicate S) → Setoid _ _
 SubSetoid S P = record  { Carrier = Σ[ e ∈ Carrier S ] (predicate P e)
                         ; _≈_ = λ { (e₁ , _) (e₂ , _) → (_≈_ S) e₁ e₂ }
-                        ; isEquivalence = ...
+                        ; isEquivalence = {! !}
                         }
 \end{spec}
 
@@ -371,7 +360,7 @@ of predicates.
 \manu{este último párrafo no está claro :-/}.
 
 \subsection{Term algebra is initial}
-
+\manu{Comentar más lo simple que sale respecto a lo que tiene Capretta.}
 \paragraph{Initial algebra.}
 A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for all
 $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
@@ -488,7 +477,7 @@ interesting difficulties.
 \begin{spec}
   |T|isInitial : Initial
   |T|isInitial = record  { alg = |T|
-                         ; init = λ A → |h|A , ... }
+                         ; init = λ A → |h|A , {! !} }
 \end{spec}
 
       

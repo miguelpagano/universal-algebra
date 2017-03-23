@@ -29,7 +29,7 @@ Var = String
 
 -- Syntax
 
-data Sortsₑ : Set where E : Sortsₑ
+data Sortsₑ : Set where E : Sortsₑ ; E' : Sortsₑ
 
 data Opsₑ : List Sortsₑ × Sortsₑ → Set where
   val   : (n : ℕ)   → Opsₑ ([] , E)

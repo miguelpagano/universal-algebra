@@ -11,6 +11,7 @@
 \usepackage{mathpartir}
 \usepackage{tikz}
 \usepackage{ upgreek }
+\usepackage[numbers]{natbib}
 \usepackage[bookmarksopen,
 bookmarksdepth=2,
 breaklinks=true
@@ -27,7 +28,12 @@ urlcolor=blue]{ hyperref }
 %format ≈→ = "\ensuremath{≈_{\mathit{ext}}}"
 %format Equiv≈→ = "\ensuremath{\mathsf{Equiv}≈_{\mathit{ext}}}"
 
+%format Ȧ = "\ensuremath{\mathcal{A}}"
+%format Ḃ = "\ensuremath{\mathcal{B}}"
+
 %format _≈A_ = "\ensuremath{≈_{A}}"
+%format (A,_≈A_,_) = "\ensuremath{(A,≈_{A},\_)}"
+%format (B,_≈B_,_) = "\ensuremath{(B,≈_{B},\_)}"
 %format _≈B_ = "\ensuremath{≈_{B}}"
 %format ≈A = "\ensuremath{≈_{A}}"
 %format ≈B = "\ensuremath{≈_{B}}"

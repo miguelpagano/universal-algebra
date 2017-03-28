@@ -176,7 +176,6 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
           eq↝vec (s₀ ∷ is) (t₀ ▹ ts , t₀' ▹ ts') =
                            ((′ term↝ ′ s₀ ⟨$⟩ t₀) ▹ proj₁ (eq↝vec is (ts , ts'))) ,
                            ((′ term↝ ′ s₀ ⟨$⟩ t₀') ▹ proj₂ (eq↝vec is (ts , ts')))
-  
 
   -- Theory implication
   _⇒T_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set
@@ -184,4 +183,16 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 
   -- Importante: Nuestro sistema de pruebas sólo permite demostrar ecuaciones no condicionales.
   -- Si tenemos axiomas con condiciones, entonces no podríamos probarlos en la otra teoría.
+
+
+  -- Model translation
+  module ModelTrans {ar : Arity Σₛ} {ar' : Arity Σₜ}
+                    (Thₛ : Theory Σₛ Xₛ ar) (Thₜ : Theory Σₜ Xₜ ar')
+                    (p⇒ : Thₜ ⇒T Thₛ) where
+
+    ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) → ⊨T Thₜ A → ⊨T Thₛ 〈 A 〉
+    ⊨T↝ A record { satAll = satAll } =
+                 record { satAll = λ ax θ x₁ → {!!}
+                          -- correctness {!!} {!!} {!!} {!!} {!!}
+                         }
 

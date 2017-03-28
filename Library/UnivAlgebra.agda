@@ -93,6 +93,7 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
   _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
   _⟦_⟧ₛ* ar = ∥ _⟦_⟧ₛ ✳ ar ∥
 
+{-
 private
   module example where
     data S : Set where nat : S ; bool : S
@@ -133,7 +134,7 @@ private
     iO (consℕ n)  = record  { _⟨$⟩_ = λ { ⟨⟩ → n } ; cong = {! !} }
     iO plus  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ + n₂} ; cong = {! !} }
     iO prod  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ * n₂} ; cong = {! !} }
-    iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ ≟ n₂ } ; cong = {! !} }
+    iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → ? } ; cong = {! !} }
     iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂} ; cong = {! !} }
     iO or    = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∨ b₂} ; cong = {! !} }
              
@@ -152,7 +153,7 @@ private
 
     MonAct : Signature
     MonAct = record { sorts = So ; ops = O }
-
+-}
 
 
 module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
@@ -789,6 +790,7 @@ firstHomTheo {Σ} A B h surj =
         bij₁ s = record { injective = F.id
                         ; surjective = surj₁ s }
 
+{-
 module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                      (A : Algebra {ℓ₁} {ℓ₂} Σ)
                      (B : SubAlg {ℓ₃} A)
@@ -796,14 +798,18 @@ module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
 
   -- Trace of a congruence in a subalgebra.
   trace : (s : sorts Σ) → Rel ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ _
+<<<<<<< Updated upstream
   trace s (b , _) (b' , _) = rel Φ s b b' 
+=======
+  trace s = λ {(b₁ , _) (b₂ , _) → rel Φ s b₁ b₂ }
+>>>>>>> Stashed changes
 
   -- Collection of equivalence classes that intersect B
   A/Φ∩B : (s : sorts Σ) → Pred ∥ (Quotient A Φ) ⟦ s ⟧ₛ ∥ _
   A/Φ∩B s = λ a → Σ[ b ∈ ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ ] _≈_ (A ⟦ s ⟧ₛ) a (proj₁ b)
 
   -- Item 1 of theorem. The trace of Φ in B is a congruence on B.
-  theo₁ : Congruence (SubAlgebra B)
+  theo₁ : Congruence (SubAlgebra B) 
   theo₁ = record { rel = trace
                  ; welldef = λ { {s} eq eq' rel → welldef Φ eq eq' rel}
                  ; cequiv = {!!}
@@ -837,3 +843,7 @@ module ThirdHomTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
   -- A/Φ is isomorphic to (A/Ψ)/(Φ/Ψ)
   theo₂ : Isomorphism (Quotient A Φ) (Quotient (Quotient A Ψ) theo₁)
   theo₂ = {!!}
+
+-}
+
+

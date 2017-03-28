@@ -9,9 +9,10 @@
 
 \usepackage{amsmath}
 \usepackage{mathpartir}
-\usepackage{tikz}
 \usepackage{ upgreek }
 \usepackage[numbers]{natbib}
+\usepackage{minted}
+\usemintedstyle{friendly}
 \usepackage[bookmarksopen,
 bookmarksdepth=2,
 breaklinks=true
@@ -32,8 +33,8 @@ urlcolor=blue]{ hyperref }
 %format Ḃ = "\ensuremath{\mathcal{B}}"
 
 %format _≈A_ = "\ensuremath{≈_{A}}"
-%format (A,_≈A_,_) = "\ensuremath{(A,≈_{A},\_)}"
-%format (B,_≈B_,_) = "\ensuremath{(B,≈_{B},\_)}"
+%%format (A,≈A,_) = "\ensuremath{(A,≈_{A},\_)}"
+%%format (B,≈B,_) = "\ensuremath{(B,≈_{B},\_)}"
 %format _≈B_ = "\ensuremath{≈_{B}}"
 %format ≈A = "\ensuremath{≈_{A}}"
 %format ≈B = "\ensuremath{≈_{B}}"
@@ -96,8 +97,17 @@ urlcolor=blue]{ hyperref }
 
 \maketitle
 
-\begin{abstract}
-Universal Algebra
+\begin{abstract} In this work we present a novel formalization of
+universal algebra in Agda. We show that heterogeneous signatures can
+be elegantly modelled in type-theory using sets indexed by arities
+to represent operations. We prove all the elementary results of
+heterogeneous algebras, \ie that the term algebra is initial and
+the three isomorphism theorems. We further internalise equational
+theory and prove correctness and completeness. At the end, we define
+the (derived) signature morphisms, from which we get the
+contra-variant functor between algebras; moreover, we prove that the
+translation of a theory induce a contra-variant functor between
+models.
 
 \end{abstract}
 

@@ -465,3 +465,28 @@ module ProvSetoid {Σ : Signature} {X : Vars Σ}
 
   
 
+
+
+{-
+open import Relation.Unary hiding (_∈_)
+Class : ∀ {ℓ₁ ℓ₂ ℓ₃} → (Σ : Signature) → Set _
+Class {ℓ₁} {ℓ₂} {ℓ₃} Σ = Pred (Algebra {ℓ₁} {ℓ₂} Σ) ℓ₃
+
+⊨Class : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} → (E : Theory Σ X ar) →
+           Class {ℓ₁} {ℓ₂} Σ
+⊨Class E = λ A → ⊨T E A
+
+HSP : ∀ {ℓ₁ ℓ₂ ℓ₃ Σ} → Pred (Class Σ) _
+HSP = {!!}
+
+Birkhoff₁ : ∀ {Σ X} {ar : Arity Σ} → (E : Theory Σ X ar) →
+              HSP (⊨Class E)
+Birkhoff₁ = {!!}
+
+Birkhoff₂ : ∀ {Σ X} {ar : Arity Σ} → (C : Class Σ) →
+              (HSP C) → Σ[ E ∈ Theory Σ X ar ] ((A : Algebra Σ) → C A → ⊨Class E A)
+Birkhoff₂ C hspC = {!!}
+-}
+
+
+

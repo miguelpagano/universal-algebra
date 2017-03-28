@@ -336,3 +336,24 @@ module BoolModel where
           sall axrefl≡ = BsatRefl≡
           sall noaxₚ
 
+
+open import Data.String renaming (_++_ to _++s_)
+
+printF : (pv : V → String) → Formₚ → String
+printF pv (TermAlgebra.term {[]} (inj₁ t∙) ⟨⟩) = "true"
+printF pv (TermAlgebra.term {[]} (inj₁ f∙) ⟨⟩) = "false"
+printF pv (TermAlgebra.term {[]} (inj₂ y) ⟨⟩) = pv y
+printF pv (TermAlgebra.term {_ ∷ []} neg (f ▹ ⟨⟩)) = "¬ (" ++s (printF pv f) ++s ")"
+printF pv (TermAlgebra.term {_ ∷ _ ∷ []} equiv (f₁ ▹ f₂ ▹ ⟨⟩)) =
+                               "(" ++s (printF pv f₁) ++s ") ≡ (" ++s (printF pv f₂) ++s ")"
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} nequiv (f₁ ▹ f₂ ▹ ⟨⟩)) =
+                               "(" ++s (printF pv f₁) ++s ") ≢ (" ++s (printF pv f₂) ++s ")"
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} and (f₁ ▹ f₂ ▹ ⟨⟩)) =
+                               "(" ++s (printF pv f₁) ++s ") ∧ (" ++s (printF pv f₂) ++s ")"
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} or (f₁ ▹ f₂ ▹ ⟨⟩)) =
+                               "(" ++s (printF pv f₁) ++s ") ∨ (" ++s (printF pv f₂) ++s ")"
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} impl (f₁ ▹ f₂ ▹ ⟨⟩)) =
+                            "(" ++s (printF pv f₁) ++s ") ⇒ (" ++s (printF pv f₂) ++s ")"
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} conseq (f₁ ▹ f₂ ▹ ⟨⟩)) =
+                            "(" ++s (printF pv f₁) ++s ") ⇐ (" ++s (printF pv f₂) ++s ")"
+printF pv (TermAlgebra.term {_ ∷ _ ∷ _ ∷ _} () x₃)

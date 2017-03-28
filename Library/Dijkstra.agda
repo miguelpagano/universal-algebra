@@ -214,7 +214,16 @@ module ToEquational where
           subs₀ _ n = term (inj₂ n) ⟨⟩
           reflψ₂ : Tₚ ⊢ (⋀ ⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧ ≈ true∼)
           reflψ₂ = psubst axrefl≡ subs₀ ∼⟨⟩
-          
+
+  open Signature
+
+  pleibin : ∀ {ψ τ φ₁ φ₂ p} → (σ : ops Σₚ (_ ∷ _ ∷ [] , _)) →
+              Tₚ ⊢ (⋀ ⟦ φ₁ [ p := ψ ] ⟧ ≈ ⟦ φ₁ [ p := τ ] ⟧) →
+              Tₚ ⊢ (⋀ ⟦ φ₂ [ p := ψ ] ⟧ ≈ ⟦ φ₂ [ p := τ ] ⟧) →
+              Tₚ ⊢ (⋀ term σ (⟦ φ₁ [ p := ψ ] ⟧ ▹ ⟦ φ₂ [ p := ψ ] ⟧ ▹ ⟨⟩) ≈
+                      term σ (⟦ φ₁ [ p := τ ] ⟧ ▹ ⟦ φ₂ [ p := τ ] ⟧ ▹ ⟨⟩))
+  pleibin σ p₁ p₂ = preemp (∼▹ p₁ (∼▹ p₂ ∼⟨⟩)) σ
+
   pleib : ∀ {ψ τ φ p} → Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ τ ⟧) → Tₚ ⊢ (⋀ ⟦ φ [ p := ψ ] ⟧ ≈ ⟦ φ [ p := τ ] ⟧)
   pleib {φ = true} eqpru = prefl
   pleib {φ = false} eqpru = prefl
@@ -222,25 +231,24 @@ module ToEquational where
   ... | yes p₁ = eqpru
   ... | no ¬p = prefl
   pleib {ψ} {τ} {¬ φ} {p} eqpru = preemp (∼▹ (pleib {φ = φ} eqpru) ∼⟨⟩) neg
-  -- podemos generalizar lo que sigue para no repetir la misma prueba en cada operador binario
-  pleib {ψ} {τ} {φ₁ ≡' φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
-                                              (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
-                                              equiv
-  pleib {ψ} {τ} {φ₁ /≡ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
-                                              (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
-                                              nequiv
-  pleib {ψ} {τ} {φ₁ ∧ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
-                                             (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
-                                             and
-  pleib {ψ} {τ} {φ₁ ∨ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
-                                             (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
-                                             or
-  pleib {ψ} {τ} {φ₁ ⇒ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
-                                             (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
-                                               impl
-  pleib {ψ} {τ} {φ₁ ⇐ φ₂} {p} eqpru = preemp (∼▹ (pleib {φ = φ₁} eqpru)
-                                             (∼▹ (pleib {φ = φ₂} eqpru) ∼⟨⟩))
-                                               conseq
+  pleib {ψ} {τ} {φ₁ ≡' φ₂} {p} eqpru = pleibin {φ₁ = φ₁} {φ₂}
+                                               equiv (pleib {φ = φ₁} eqpru)
+                                                     (pleib {φ = φ₂} eqpru)
+  pleib {ψ} {τ} {φ₁ /≡ φ₂} {p} eqpru = pleibin {φ₁ = φ₁} {φ₂}
+                                               nequiv (pleib {φ = φ₁} eqpru)
+                                                     (pleib {φ = φ₂} eqpru)
+  pleib {ψ} {τ} {φ₁ ∧ φ₂} {p} eqpru = pleibin {φ₁ = φ₁} {φ₂}
+                                               and (pleib {φ = φ₁} eqpru)
+                                                     (pleib {φ = φ₂} eqpru)
+  pleib {ψ} {τ} {φ₁ ∨ φ₂} {p} eqpru = pleibin {φ₁ = φ₁} {φ₂}
+                                               or (pleib {φ = φ₁} eqpru)
+                                                     (pleib {φ = φ₂} eqpru)
+  pleib {ψ} {τ} {φ₁ ⇒ φ₂} {p} eqpru = pleibin {φ₁ = φ₁} {φ₂}
+                                               impl (pleib {φ = φ₁} eqpru)
+                                                     (pleib {φ = φ₂} eqpru)
+  pleib {ψ} {τ} {φ₁ ⇐ φ₂} {p} eqpru = pleibin {φ₁ = φ₁} {φ₂}
+                                               conseq (pleib {φ = φ₁} eqpru)
+                                                     (pleib {φ = φ₂} eqpru)
 
   substaux : ∀ {φ ψ φ' ψ'} → Tₚ ⊢ (⋀ ⟦ ψ' ⟧ ≈ ⟦ φ' ⟧) → (ψ ≡' φ) ≡ (ψ' ≡' φ') →
                Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧)
@@ -295,6 +303,7 @@ module ToEquational where
 
 
 
+
 {- En PLogic hemos dado una teoría para la lógica proposicional, con 15 axiomas y
    probamos que Bool es un modelo, esto nos garantiza que las pruebas ecuacionales
    que podemos hacer son correctas.
@@ -308,3 +317,34 @@ module ToEquational where
 -}
 
 
+module Examples where
+  open ToEquational
+  open import PLogic ℕ 0 1 2 renaming (¬ to ¬ₚ ; _⇒_ to _⇒ₚ_ ; _⇐_ to _⇐ₚ_)
+  open Example1
+  open import Data.Nat.Show renaming (show to shown)
+  open import Data.String
+  open import UnivAlgebra
+  open import Equational
+  open import HeterogenuousVec renaming (_∈_ to _∈ₕ_)
+  open import Data.Sum
+
+  ex₁ : (Tₚ ⊢ (⋀ ⟦ true ⟧ ≈ true∼)) ⊎
+        (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
+        ((Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (true ≡ φ' ≡' ψ))))
+  ex₁ = ⊢↝Eq 4∙
+
+  toproof : ∀ {φ} → (Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)) ⊎
+                   (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
+                   ((Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (φ ≡ φ' ≡' ψ)))) →
+                   (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
+                   (Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ ⟧))))
+  toproof {φ} (inj₁ x) = φ , true , x
+  toproof (inj₂ (φ' , ψ , pr , _)) = φ' , (ψ , pr)
+
+  showex₁ : String
+  showex₁ = pp (printF shown) proof
+    where proof : _
+          proof = proj₂ (proj₂ (toproof ex₁))
+
+
+open Examples

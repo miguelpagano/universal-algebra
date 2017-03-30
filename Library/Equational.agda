@@ -84,6 +84,7 @@ open Hom
 open Setoid
 
 
+
 {- Extension of the initial homomorphism to signatures with variables -}
 
 
@@ -94,17 +95,17 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
                 (a : Env {X = X} A) where
 
 
-  open InitTermAlg (Σ)
-  open TermAlgebra (Σ 〔 X 〕)
+  --open InitTermAlg (Σ)
+  open TermAlgebra (Σ 〔 X 〕) renaming (∣T∣ to ∣T∣x)
   open EnvExt {X = X} A
   open ExtEq
   open Homo
-                                                                   
-  conga↪ : ∀ {s} {t₁ t₂ : ∥ ∣T∣ ⟦ s ⟧ₛ ∥} →
+
+  conga↪ : ∀ {s} {t₁ t₂ : ∥ ∣T∣x ⟦ s ⟧ₛ ∥} →
                    t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) ((a ↪) t₁) ((a ↪) t₂)
   conga↪ {s} {t₁} eq = ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (a ↪) eq)
 
-  map↪≡map : ∀ {ar} {ts : ∣T∣ ⟦ ar ⟧ₛ*} →
+  map↪≡map : ∀ {ar} {ts : ∣T∣x ⟦ ar ⟧ₛ*} →
                    map↪ a ts ≡ mapV (λ s → (a ↪) {s}) ts
   map↪≡map {ar = []} {⟨⟩} = PE.refl
   map↪≡map {ar = s ∷ ar} {t ▹ ts} = PE.cong (λ ts' → (a ↪) t ▹ ts')
@@ -124,6 +125,47 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
 
   TΣXHom : Homo (T Σ 〔 X 〕) A
   TΣXHom = record { ′_′ = TΣX⇝A ; cond = TΣXcond }
+
+  HomEnv : Homo (T Σ 〔 X 〕) A → Set _
+  HomEnv h = (s : sorts Σ) → (x : X s) → _≈_ (A ⟦ s ⟧ₛ) ( ′ h ′ s ⟨$⟩ term (inj₂ x) ⟨⟩ ) (a x)
+
+
+ 
+  tot : (H H' : Homo (T Σ 〔 X 〕) A) → HomEnv H → HomEnv H' → _≈ₕ_ (T Σ 〔 X 〕) A H  H'
+  tot H H' he he' s (TermAlgebra.term {[]} (inj₂ v) ⟨⟩) = begin (′ H ′ s ⟨$⟩ term (inj₂ v) ⟨⟩)
+                                                          ≈⟨ he s v  ⟩
+                                                          a v
+                                                          ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (he' s v) ⟩
+                                                          ′ H' ′ s ⟨$⟩ term (inj₂ v) ⟨⟩
+                                                          ∎
+    where open EqR (A ⟦ s ⟧ₛ)
+  tot H H' he he' s (TermAlgebra.term {[]} (inj₁ k) ⟨⟩) =
+                  begin
+                    ′ H ′ s ⟨$⟩ term (inj₁ k) ⟨⟩
+                   ≈⟨ cond H k ⟨⟩ ⟩
+                    A ⟦ k ⟧ₒ ⟨$⟩ ⟨⟩
+                   ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond H' k ⟨⟩) ⟩
+                    ′ H' ′ s ⟨$⟩ term (inj₁ k) ⟨⟩
+                   ∎
+    where open EqR (A ⟦ s ⟧ₛ)
+  tot H H' he he' s (TermAlgebra.term {x ∷ ar} f ts) =
+                  begin
+                    ′ H ′ s ⟨$⟩ term f ts
+                  ≈⟨ cond H f ts ⟩
+                    A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ (T Σ 〔 X 〕) A ′ H ′ ts)
+                  ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (x ∷ ar) ts) ⟩
+                    A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ (T Σ 〔 X 〕) A ′ H' ′ ts)
+                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond H' f ts) ⟩ 
+                    ′ H' ′ s ⟨$⟩ term f ts
+                  ∎
+    where open EqR (A ⟦ s ⟧ₛ)
+          map≈ : (ar : Arity Σ) → (ts : HVec (HU) ar) →
+                 _∼v_ {R = _≈_ ∘ (_⟦_⟧ₛ A)} (mapV (_⟨$⟩_ ∘ ′ H ′) ts) (mapV (_⟨$⟩_ ∘ ′ H' ′) ts)
+          map≈ [] ⟨⟩ = ∼⟨⟩
+          map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (tot H H' he he' s t)
+                                      (map≈ ar ts)
+
+
 
 open TermAlgebra
 
@@ -465,7 +507,16 @@ module ProvSetoid {Σ : Signature} {X : Vars Σ}
 
   
 
+-- Theory implication
+_⇒T_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
+_⇒T_ {Σ} {X} T₁ T₂ = ∀ {s} {ax : Equation Σ X s} → ax ∈ T₂ → T₁ ⊢ ax
 
+
+⊨T⇒ : ∀ {ℓ₁ ℓ₂ Σ X ar ar'} → (T₁ : Theory Σ X ar) (T₂ : Theory Σ X ar')
+        (p⇒ : T₁ ⇒T T₂) → (A : Algebra {ℓ₁} {ℓ₂} Σ) → ⊨T T₁ A → ⊨T T₂ A
+⊨T⇒ T₁ T₂ p⇒ A record { satAll = satAll } =
+                        record { satAll = λ ax θ ~cond →
+                        correctness (p⇒ ax) A (record { satAll = satAll }) θ ~cond }
 
 {-
 open import Relation.Unary hiding (_∈_)

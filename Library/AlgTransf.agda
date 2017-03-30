@@ -7,7 +7,7 @@ open import Level renaming (suc to lsuc ; zero to lzero)
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
 open import Function
-open import Function.Equality renaming (_∘_ to _∘ₛ_)
+open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (id)
 open import Data.Bool hiding (T)
 open import Data.List renaming (map to lmap)
 open import Relation.Binary.PropositionalEquality as PE
@@ -137,6 +137,8 @@ module HomoTrans {Σₛ Σₜ}  {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
                    ; cond = hcond↝ h
                    }
 
+import Relation.Binary.EqReasoning as EqR
+
 -- Translation and Equational logic
 open import Equational
 open _↝_
@@ -178,8 +180,8 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
                            ((′ term↝ ′ s₀ ⟨$⟩ t₀') ▹ proj₂ (eq↝vec is (ts , ts')))
 
   -- Theory implication
-  _⇒T_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set
-  Tₜ ⇒T Tₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Tₛ → Tₜ ⊢ eq↝ ax
+  _⇒T~_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set
+  Tₜ ⇒T~ Tₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Tₛ → Tₜ ⊢ eq↝ ax
 
   -- Importante: Nuestro sistema de pruebas sólo permite demostrar ecuaciones no condicionales.
   -- Si tenemos axiomas con condiciones, entonces no podríamos probarlos en la otra teoría.
@@ -188,11 +190,56 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   -- Model translation
   module ModelTrans {ar : Arity Σₛ} {ar' : Arity Σₜ}
                     (Thₛ : Theory Σₛ Xₛ ar) (Thₜ : Theory Σₜ Xₜ ar')
-                    (p⇒ : Thₜ ⇒T Thₛ) where
+                    (p⇒ : Thₜ ⇒T~ Thₛ) where
+
+
+    open Setoid
+
+
+    module Lemma₀ {ℓ₁ ℓ₂ : Level}
+                  (A : Algebra {ℓ₁} {ℓ₂} Σₜ)
+                  (θ : Env {X = Xₜ} A) where
+                  
+
+      open InitHomoExt A θ renaming (TΣXHom to ∣H∣ₜ)
+      
+      θ↝ : Env {X = Xₛ} 〈 A 〉
+      θ↝ {s} v = θ (tvars v)
+
+      open InitHomoExt 〈 A 〉 θ↝ renaming (TΣXHom to ∣H∣ₛ ; tot to totₛ ; HomEnv to HomEnvₛ)
+
+      private _∼ : (s : sorts Σₛ) → sorts Σₜ
+      s ∼ = ↝ₛ Σ↝ s
+
+      open TermAlgebra Σₛ
+      open FormalTerm Σₜ
+      open HomoTrans Σ↝ (T Σₜ 〔 Xₜ 〕) A
+      open HomComp
+
+      lemma₀ : ∀ {s} → (t : ∥ (T Σₛ 〔 Xₛ 〕) ⟦ s ⟧ₛ ∥) →
+                     _≈_ (〈 A 〉 ⟦ s ⟧ₛ) ((′ 〈 ∣H∣ₜ 〉ₕ ′ s) ⟨$⟩ (′ term↝ ′ s ⟨$⟩ t))
+                                        ((′ ∣H∣ₛ ′ s) ⟨$⟩ t)
+      lemma₀ {s} t = totₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝) ∣H∣ₛ he₁ he₂ s t
+        where he₁ : HomEnvₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝)
+              he₁ s x = Setoid.refl (A ⟦ s ∼ ⟧ₛ)
+              he₂ : HomEnvₛ ∣H∣ₛ
+              he₂ s x = Setoid.refl (A ⟦ s ∼ ⟧ₛ)
+
+
+    lemma : ∀ {s ℓ₁ ℓ₂} → (e : Equation Σₛ Xₛ s) → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) →
+                           A ⊨ (eq↝ e) → 〈 A 〉 ⊨ e
+    lemma {s} (⋀ t ≈ t' if「 carty 」 cond) A sat θ eq = 
+              begin
+                (θ ↪) t
+               ≈⟨ {!!} ⟩
+                (θ ↪) t'
+               ∎
+      where open EqR (A ⟦ ↝ₛ Σ↝ s ⟧ₛ)
+            open EnvExt 〈 A 〉
 
     ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) → ⊨T Thₜ A → ⊨T Thₛ 〈 A 〉
     ⊨T↝ A record { satAll = satAll } =
-                 record { satAll = λ ax θ x₁ → {!!}
-                          -- correctness {!!} {!!} {!!} {!!} {!!}
+                 record { satAll = λ {s} {e} ax θ x₁ →
+                           lemma e A (correctness (p⇒ ax) A (record { satAll = satAll })) θ x₁
                          }
 

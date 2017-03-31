@@ -109,7 +109,7 @@ provable equal under the corresponding axioms). The well-known
 solution is to represent carriers as setoids; \ie as types paired
 with an equivalence relation.
 
-Setoids are defined in the the standard library
+Setoids are defined in the standard library
 \cite{danielsson-agdalib} of Agda, we conveniently use it as far as
 possible, as a record with fields: the |Carrier : Set|, the relation
 |_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|.  The

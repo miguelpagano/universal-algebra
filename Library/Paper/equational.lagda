@@ -105,7 +105,7 @@ record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
 and |right|. If the equation is conditional, we have a non-empty
 arity |carty| and two vectors of terms with arity |carty|.
 
-We can give a short notation for non-contitional equations:
+We can give a short notation for non-conditional equations:
 
 \begin{spec}
 ⋀_≈_ : ∀ {Σ X s} → (t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) → Equation Σ X s

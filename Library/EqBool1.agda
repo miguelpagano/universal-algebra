@@ -325,10 +325,141 @@ module Translation where
   open Theory₁
   open Theory₂
 
+  form↝ : Form₁ → Form₂
+  form↝ = {!′ term↝ '!}
+
   -- Tbool₂ implica a Tbool₁:
   open TheoryTrans Σtrans Vars₁ Vars₂ id
 
-  T₂⇒T₁ : Tbool₂ ⇒T Tbool₁
-  T₂⇒T₁ = ?
+  T₂⇒T₁ : Tbool₂ ⇒T~ Tbool₁
+  T₂⇒T₁ = {!!}
 
+
+module GoguenMeseguer where
+
+
+  data sorts∼ : Set where
+    bool : sorts∼
+    a    : sorts∼
+
+  data Σops∼ : List sorts∼ × sorts∼ → Set where
+    t   : Σops∼ ([] ↦ bool)
+    f   : Σops∼ ([] ↦ bool)
+    neg : Σops∼ ([ bool ] ↦ bool)
+    and∼ : Σops∼ ((bool ∷ [ bool ]) ↦ bool)
+    or∼  : Σops∼ ((bool ∷ [ bool ]) ↦ bool)
+    foo : Σops∼ ([ a ] ↦ bool)
+
+  Σ∼ : Signature
+  Σ∼ = record { sorts = sorts∼ ; ops = Σops∼ }
+
+
+                                                 
+  Vars∼ : Vars Σ∼
+  Vars∼ _ = ℕ
+
+  Eq∼ : Set
+  Eq∼ = Equation Σ∼ Vars∼ bool
+
+  open TermAlgebra
+
+  
+  -- A formula is a term of the Term Algebra
+  Form : Set
+  Form = HU (Σ∼ 〔 Vars∼ 〕) bool
+
+  aterm : Set
+  aterm = HU (Σ∼ 〔 Vars∼ 〕) a
+
+  module Smartcons where
+
+    ¬ : Form → Form
+    ¬ φ = term neg ⟪ φ ⟫
+
+    _∨_ : Form → Form → Form
+    φ ∨ ψ = term or∼ ⟨⟨ φ , ψ ⟩⟩
+
+    _∧_ : Form → Form → Form
+    φ ∧ ψ = term and∼ ⟨⟨ φ , ψ ⟩⟩
+
+    fu : aterm → Form
+    fu aₜ = term foo ⟪ aₜ ⟫
+
+    b : Form
+    b = term (inj₂ 0) ⟨⟩
+
+    av : aterm
+    av = term (inj₂ 0) ⟨⟩
+
+    T : Form
+    T = term (inj₁ t) ⟨⟩
+
+    F : Form
+    F = term (inj₁ f) ⟨⟩
+
+
+  open Smartcons
+  -- Axioms
+  notT : Eq∼
+  notT = ⋀ ¬ T ≈ F
+
+  notF : Eq∼
+  notF = ⋀ ¬ F ≈ T
+
+  3exc : Eq∼
+  3exc = ⋀ b ∨ (¬ b) ≈ T
+
+  b∧¬b : Eq∼
+  b∧¬b = ⋀ b ∧ (¬ b) ≈ F
+
+  idem∧ : Eq∼
+  idem∧ = ⋀ b ∧ b ≈ b
+
+  idem∨ : Eq∼
+  idem∨ = ⋀ b ∨ b ≈ b
+
+  fooax : Eq∼
+  fooax = ⋀ fu av ≈ ¬ (fu av)
+
+  Th : Theory Σ∼ Vars∼ (repeat bool 7)
+  Th = notT ▹ notF ▹ 3exc ▹ b∧¬b ▹ idem∧ ▹ idem∨ ▹ fooax ▹ ⟨⟩
+
+  pattern ax₁ = here
+  pattern ax₂ = there here
+  pattern ax₃ = there (there here)
+  pattern ax₄ = there (there (there here))
+  pattern ax₅ = there (there (there (there here)))
+  pattern ax₆ = there (there (there (there (there here))))
+  pattern ax₇ = there (there (there (there (there (there here)))))
+  pattern noax = there (there (there (there (there (there (there ()))))))
+
+  module Proof where
+    open ProvSetoid
+    open import Relation.Binary.EqReasoning (ProvSetoid Th bool)
+    open Subst {Σ∼} {Vars∼}
+    open Equation
+    open Smartcons
+    open TermAlgebra
+--    open Setoid
+  
+    t≈f : Th ⊢ (⋀ T ≈ F)
+    t≈f =
+      begin
+        T
+      ≈⟨ psym (psubst ax₃ σ₁ ∼⟨⟩) ⟩
+        (fu av ∨ (¬ (fu av)))
+      ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst ax₇ idSubst ∼⟨⟩)) ∼⟨⟩)) or∼ ⟩
+        (fu av ∨ fu av)
+      ≈⟨ psubst ax₆ σ₁ ∼⟨⟩ ⟩
+        fu av
+      ≈⟨ psym (psubst ax₅ σ₁ ∼⟨⟩) ⟩
+        (fu av ∧ fu av)
+      ≈⟨ preemp (∼▹ prefl (∼▹ (psubst ax₇ idSubst ∼⟨⟩) ∼⟨⟩)) and∼ ⟩
+        (fu av ∧ (¬ (fu av)))
+      ≈⟨ psubst ax₄ σ₁ ∼⟨⟩ ⟩
+        F
+      ∎
+      where σ₁ : Subst
+            σ₁ {bool} 0 = fu av
+            σ₁ x = term (inj₂ x) ⟨⟩
 

@@ -354,9 +354,11 @@ module GoguenMeseguer where
   Σ∼ = record { sorts = sorts∼ ; ops = Σops∼ }
 
 
-                                                 
+  open import Data.Empty
+  open import Data.Unit
   Vars∼ : Vars Σ∼
-  Vars∼ _ = ℕ
+  Vars∼ bool = ℕ
+  Vars∼ a = ⊤
 
   Eq∼ : Set
   Eq∼ = Equation Σ∼ Vars∼ bool
@@ -389,7 +391,7 @@ module GoguenMeseguer where
     b = term (inj₂ 0) ⟨⟩
 
     av : aterm
-    av = term (inj₂ 0) ⟨⟩
+    av = term (inj₂ tt) ⟨⟩
 
     T : Form
     T = term (inj₁ t) ⟨⟩
@@ -462,7 +464,8 @@ module GoguenMeseguer where
       ∎
       where σ₁ : Subst
             σ₁ {bool} 0 = fu av
-            σ₁ x = term (inj₂ x) ⟨⟩
+            σ₁ {bool} (suc x) = term (inj₂ x) ⟨⟩
+            σ₁ {a} tt = term (inj₂ tt) ⟨⟩
 
 
   -- Es verdad que contradice corrección? Parece que no.
@@ -474,8 +477,8 @@ module GoguenMeseguer where
     open import Data.Empty
 
     isorts : sorts Σ∼ → Setoid _ _
-    isorts bool = setoid Bool
-    isorts a = setoid ⊥
+    isorts bool = PE.setoid Bool
+    isorts a = PE.setoid ⊥
 
     iops : ∀ {ar s} → (op : ops Σ∼ (ar ↦ s)) → isorts ✳ ar ⟶ isorts s
     iops t = record { _⟨$⟩_ = λ _ → true ; cong = λ _ → refl }
@@ -490,8 +493,8 @@ module GoguenMeseguer where
                       cong = λ { {⟨⟨ b₀ , b₀' ⟩⟩} {⟨⟨ b₁ , b₁' ⟩⟩}
                                  (∼▹ b₀≡b₁ (∼▹ b₀'≡b₁' ∼⟨⟩)) →
                                                      cong₂ _∨_ b₀≡b₁ b₀'≡b₁' } }
-    iops foo = record { _⟨$⟩_ = λ { ⟪ v ⟫ → true }
-                      ; cong = λ { {⟪ noel₁ ⟫} {⟪ noel₂ ⟫} (∼▹ ₁≡₂ _) → refl } }
+    iops foo = record { _⟨$⟩_ = λ { (() ▹ ⟨⟩) }
+                      ; cong = λ { {() ▹ ⟨⟩} {noel₂ ▹ ⟨⟩} (∼▹ ₁≡₂ x) } }
 
     model : Algebra Σ∼
     model = isorts ∥ iops
@@ -527,8 +530,23 @@ module GoguenMeseguer where
 
     -- Para poder probar que es modelo, debería poder probar true ≡ false en agda.
     sat₇ : model ⊨ fooax
-    sat₇ θ _ = {!!}
+    sat₇ θ ∼⟨⟩ with (θ {a} tt)
+    sat₇ θ ∼⟨⟩ | ()
     
 
     ismodel : ⊨T Th model
-    ismodel = record { satAll = {!!} }
+    ismodel = record { satAll = sat }
+      where sat : {s : sorts∼} {e : Equation _ Vars∼ s} → e ∈ Th → model ⊨ e
+            sat ax₁ = sat₁
+            sat ax₂ = λ θ _ → refl
+            sat ax₃ = sat₃
+            sat ax₄ = sat₄
+            sat ax₅ = sat₅
+            sat ax₆ = sat₆
+            sat ax₇ = sat₇
+            sat noax 
+
+    abs : true ≡ false
+    abs = correctness t≈f model ismodel (λ { {bool} x → true ; {a} x → {!x!} }) ∼⟨⟩
+      where open Proof
+

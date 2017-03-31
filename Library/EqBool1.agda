@@ -397,50 +397,51 @@ module GoguenMeseguer where
     F : Form
     F = term (inj₁ f) ⟨⟩
 
+  module Theory where
+    open Smartcons
+    -- Axioms
+    notT : Eq∼
+    notT = ⋀ ¬ T ≈ F
+  
+    notF : Eq∼
+    notF = ⋀ ¬ F ≈ T
+  
+    3exc : Eq∼
+    3exc = ⋀ b ∨ (¬ b) ≈ T
 
-  open Smartcons
-  -- Axioms
-  notT : Eq∼
-  notT = ⋀ ¬ T ≈ F
+    b∧¬b : Eq∼
+    b∧¬b = ⋀ b ∧ (¬ b) ≈ F
 
-  notF : Eq∼
-  notF = ⋀ ¬ F ≈ T
+    idem∧ : Eq∼
+    idem∧ = ⋀ b ∧ b ≈ b
 
-  3exc : Eq∼
-  3exc = ⋀ b ∨ (¬ b) ≈ T
+    idem∨ : Eq∼
+    idem∨ = ⋀ b ∨ b ≈ b
 
-  b∧¬b : Eq∼
-  b∧¬b = ⋀ b ∧ (¬ b) ≈ F
+    fooax : Eq∼
+    fooax = ⋀ fu av ≈ ¬ (fu av)
 
-  idem∧ : Eq∼
-  idem∧ = ⋀ b ∧ b ≈ b
+    Th : Theory Σ∼ Vars∼ (repeat bool 7)
+    Th = notT ▹ notF ▹ 3exc ▹ b∧¬b ▹ idem∧ ▹ idem∨ ▹ fooax ▹ ⟨⟩
 
-  idem∨ : Eq∼
-  idem∨ = ⋀ b ∨ b ≈ b
-
-  fooax : Eq∼
-  fooax = ⋀ fu av ≈ ¬ (fu av)
-
-  Th : Theory Σ∼ Vars∼ (repeat bool 7)
-  Th = notT ▹ notF ▹ 3exc ▹ b∧¬b ▹ idem∧ ▹ idem∨ ▹ fooax ▹ ⟨⟩
-
-  pattern ax₁ = here
-  pattern ax₂ = there here
-  pattern ax₃ = there (there here)
-  pattern ax₄ = there (there (there here))
-  pattern ax₅ = there (there (there (there here)))
-  pattern ax₆ = there (there (there (there (there here))))
-  pattern ax₇ = there (there (there (there (there (there here)))))
-  pattern noax = there (there (there (there (there (there (there ()))))))
+    pattern ax₁ = here
+    pattern ax₂ = there here
+    pattern ax₃ = there (there here)
+    pattern ax₄ = there (there (there here))
+    pattern ax₅ = there (there (there (there here)))
+    pattern ax₆ = there (there (there (there (there here))))
+    pattern ax₇ = there (there (there (there (there (there here)))))
+    pattern noax = there (there (there (there (there (there (there ()))))))
 
   module Proof where
     open ProvSetoid
+    open Theory
     open import Relation.Binary.EqReasoning (ProvSetoid Th bool)
     open Subst {Σ∼} {Vars∼}
     open Equation
     open Smartcons
     open TermAlgebra
---    open Setoid
+
   
     t≈f : Th ⊢ (⋀ T ≈ F)
     t≈f =
@@ -463,3 +464,71 @@ module GoguenMeseguer where
             σ₁ {bool} 0 = fu av
             σ₁ x = term (inj₂ x) ⟨⟩
 
+
+  -- Es verdad que contradice corrección? Parece que no.
+  module NotCorrectness where
+    open import Data.Bool
+    open import Relation.Binary.PropositionalEquality as PE
+    open import Relation.Binary
+    open import Function.Equality hiding (setoid)
+    open import Data.Empty
+
+    isorts : sorts Σ∼ → Setoid _ _
+    isorts bool = setoid Bool
+    isorts a = setoid ⊥
+
+    iops : ∀ {ar s} → (op : ops Σ∼ (ar ↦ s)) → isorts ✳ ar ⟶ isorts s
+    iops t = record { _⟨$⟩_ = λ _ → true ; cong = λ _ → refl }
+    iops f = record { _⟨$⟩_ = λ _ → false ; cong = λ _ → refl }
+    iops neg = record { _⟨$⟩_ = λ { ⟪ b ⟫ → not b } ;
+                        cong = λ { {b₀ ▹ ⟨⟩} {b₁ ▹ ⟨⟩} (∼▹ b₀≡b₁ _) → PE.cong not b₀≡b₁ } }
+    iops and∼ = record { _⟨$⟩_ = λ { ⟨⟨ b , b' ⟩⟩ → b ∧ b' } ;
+                      cong = λ { {⟨⟨ b₀ , b₀' ⟩⟩} {⟨⟨ b₁ , b₁' ⟩⟩}
+                                 (∼▹ b₀≡b₁ (∼▹ b₀'≡b₁' ∼⟨⟩)) →
+                                                     cong₂ _∧_ b₀≡b₁ b₀'≡b₁' } }
+    iops or∼ = record { _⟨$⟩_ = λ { ⟨⟨ b , b' ⟩⟩ → b ∨ b' } ;
+                      cong = λ { {⟨⟨ b₀ , b₀' ⟩⟩} {⟨⟨ b₁ , b₁' ⟩⟩}
+                                 (∼▹ b₀≡b₁ (∼▹ b₀'≡b₁' ∼⟨⟩)) →
+                                                     cong₂ _∨_ b₀≡b₁ b₀'≡b₁' } }
+    iops foo = record { _⟨$⟩_ = λ { ⟪ v ⟫ → true }
+                      ; cong = λ { {⟪ noel₁ ⟫} {⟪ noel₂ ⟫} (∼▹ ₁≡₂ _) → refl } }
+
+    model : Algebra Σ∼
+    model = isorts ∥ iops
+
+    open Theory
+
+
+    sat₁ : model ⊨ notT
+    sat₁ θ _ = refl
+
+    sat₂ : model ⊨ notT
+    sat₂ θ _ = refl
+
+    sat₃ : model ⊨ 3exc
+    sat₃ θ _ with θ {bool} 0
+    sat₃ θ x | false = refl
+    sat₃ θ x | true = refl
+
+    sat₄ : model ⊨ b∧¬b
+    sat₄ θ _ with θ {bool} 0
+    sat₄ θ x | false = refl
+    sat₄ θ x | true = refl
+
+    sat₅ : model ⊨ idem∧
+    sat₅ θ _ with θ {bool} 0
+    sat₅ θ x | false = refl
+    sat₅ θ x | true = refl
+
+    sat₆ : model ⊨ idem∨
+    sat₆ θ _ with θ {bool} 0
+    sat₆ θ x | false = refl
+    sat₆ θ x | true = refl
+
+    -- Para poder probar que es modelo, debería poder probar true ≡ false en agda.
+    sat₇ : model ⊨ fooax
+    sat₇ θ _ = {!!}
+    
+
+    ismodel : ⊨T Th model
+    ismodel = record { satAll = {!!} }

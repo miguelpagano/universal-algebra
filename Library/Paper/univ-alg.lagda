@@ -76,10 +76,10 @@ Let us illustrate the possibility of proving properties of operations
 according to their types by showing that operations with target sort
 |nat| are monosorted:
 \begin{spec}
-data monoSorted {ar s} : ops (ar , s) → Set where
-   isMono : (o : ops (ar , s)) → All (_≡_ s) ar → monoSorted o  
+data monoSorted {ar s} : ops (ar ↦ s) → Set where
+   isMono : (o : ops (ar ↦ s)) → All (_≡_ s) ar → monoSorted o  
 
-monoNat : ∀ {ar} → (o : O (ar , nat)) → monoSorted o
+monoNat : ∀ {ar} → (o : O (ar  ↦ nat)) → monoSorted o
 monoNat (const n) = isMono (const n) []
 monoNat plus = isMono plus (_≡_.refl ∷ _≡_.refl ∷ [])
 monoNat prod = isMono prod (_≡_.refl ∷ _≡_.refl ∷ [])
@@ -89,39 +89,58 @@ constructors of |O| have target sort |bool|.
 
 \paragraph{Algebra.}
 
-Usually, an \emph{algebra} $\mathcal{A}$ of a signature $\Sigma$, or a
-$\Sigma$-algebra, consists of a family of sets indexed by the sorts of
-$\Sigma$ and a family of functions indexed by the operations of
-$\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or the
-\emph{carrier} of the sort $s$; given an operation $f \colon
-[s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a total
-function $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
-\mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. It is assumed that
-every carrier comes equipped with a notion of equality and several
-theorems refer to that equality.
+Usually, an \emph{algebra} $\mathcal{A}$ for the signature $\Sigma$,
+or a $\Sigma$-algebra, consists of a family of sets indexed by the
+sorts of $\Sigma$ and a family of functions indexed by the operations
+of $\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or
+the \emph{carrier} of the sort $s$; given an operation
+$f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a
+total function
+$f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
+\mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. What this definitions
+hides is that carriers are pairs of a set and its equality; in
+type-theory one makes this structure apparent by using Bishop's sets
+(\ie sets paired with an equivalence relation) as the interpretation
+of sorts. In type-theory Bishop's sets are better known as setoids and
+they were thoroughly studied by \citet{barthe-setoids-2003}; in the
+following, we introduce the defintion of setoids in Agda and some
+constructions around them.
 
-In type-theory, however, it is well-known that one can equip a type
-with several notions of equality (a relevant example for this paper is
-the carrier of well-formed terms of a given signature: for the initial
-algebra one takes the definitional equality, but for proving
-completeness of equational logic one equates terms whenever they are
-provable equal under the corresponding axioms). The well-known
-solution is to represent carriers as setoids; \ie as types paired
-with an equivalence relation.
-
-Setoids are defined in the standard library
-\cite{danielsson-agdalib} of Agda, we conveniently use it as far as
+Setoids are defined in the the standard library
+\cite{danielsson-agdalib} of Agda, which we conveniently use as far as
 possible, as a record with fields: the |Carrier : Set|, the relation
-|_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|.  The
+|_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|. The
 operator | ∥_∥ | represents the forgetful functor from setoids to
-sets, so that | ∥ (A,_≈A_,_) ∥ = A|.
+sets, so that | ∥ (A,_≈A_,_) ∥ = A|.\manu{Miguel pregunta si conviene
+notar que en Agda no hay coerciones} There is an obvios
+functor |setoid : Set → Setoid| which maps a type |A| to the setoid
+defined by the propositional equality over that type. In the standard
+library it is also defined the point-wise extension of two setoids
+|A ×-setoid B|.
 
 Once sorts are interpreted as setoids, operations should be
 interpreted as setoid morphisms; \ie functions which preserve the
-equivalence relation.  Given two setoids |Ȧ := (A,_≈A_,_)| and |Ḃ :=
-(B,_≈B_,_)|, the inhabitants of |Ȧ ⟶ Ḃ| are 
-morphism from |Ȧ| to |Ḃ| defined by records with fields |_⟨$⟩_ : A → B|
-and |cong : ∀ a a' → a ≈A a' → f ⟨$⟩ a ≈B f ⟨$⟩ a'|.
+equivalence relation.  Given two setoids |Ȧ := (A,_≈A_,p)| and |Ḃ :=
+(B,_≈B_,q)|, the inhabitants of |Ȧ ⟶ Ḃ| are morphism from |Ȧ| to |Ḃ|
+records with fields
+|_⟨$⟩_ : A → B| and |cong : ∀ a a' → a ≈A a' → _⟨$⟩_ a ≈B
+_⟨$⟩_ a'|. Similarly, predicates over setoids should
+be even over equal elements; thus we set
+\begin{spec}
+  WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃} → (A : Setoid ℓ₁ ℓ₂) → Pred (∥ A ∥) ℓ₃ → Set _
+  WellDef A P = ∀ {a a'} → a ≈A a' → P a → P a'
+\end{spec}
+\noindent If |P| is well-defined, we deduce |P a ↔ P a'| if |a ≈
+a'|, because equality is symmetric. Notice also that we can
+define that a relation is well-defined using the product of 
+setoids:
+\begin{spec}
+  WellDefBin : ∀ {ℓ₁ ℓ₂ ℓ₃} → (A : Setoid ℓ₁ ℓ₂) → Rel (∥ A ∥) ℓ₃ → Set _
+  WellDefBin A R = WellDef (A ×-setoid A) (λ {(a , b) → R a b}) 
+\end{spec}
+\noindent Expanding this definition we discover that |WellDefBin A R|
+iff for all |a₁ ≈A a₂| and |a'₁ ≈A a'₂|, |R a₁ a'₁| implies |R a₂
+a'₂|. 
 
 We formalize the product $\mathcal{A}_{s_1} \times ... \times
 \mathcal{A}_{s_n}$ as the setoid of \emph{heterogeneous vectors}. The
@@ -129,17 +148,17 @@ type of heterogeneous vectors is parameterized by a set of codes
 (sorts) and a family of sets indexed by those codes and indexed over a
 list of codes:
 \begin{spec}
-data HVec {ℓ} {I : Set}  (A : I -> Set ℓ) : List I → Set ℓ where
+data HVec {ℓ} {I : Set}  (A : I → Set ℓ) : List I → Set ℓ where
   ⟨⟩  : HVec A []
   _▹_ : ∀  {i is} → A i → HVec A is → HVec A (i ∷ is)
 \end{spec}
-\noindent When |A| is a family of setoids |I → Setoid|, and |is : List I|, it is
-straightforward to promote this construction to setoids (the
-equivalence relation is defined point-wisely); we use |A ✳ is| to
-refer to the setoid of heterogeneous vectors indexed in |is|. The
-interpretation of an operation $f \colon [s_1,…,s_n] \Rightarrow s$
-should be a setoid morphism |A ✳ [s₁,…,sₙ] ⟶ A s|.
-
+\noindent Given |A : I → Set| and |R : (i : I) → Rel (A i)| we let |R
+*| be the point-wise extension of |R| over heterogeneous vectors.
+This construction is used to define the setoid of heterogeneous
+vectors given a family of setoids |A : I → Setoid|; for |is : List I|,
+|A ✳ is| refers to the setoid of heterogeneous vectors with index
+|is|. The interpretation of an operation $f \colon [s_1,…,s_n]
+\Rightarrow s$ should be a setoid morphism |A ✳ [s₁,…,sₙ] ⟶ A s|.
 
 An algebra for a signature $\Sigma$ is a record with two fields: the
 interpretation for sorts and the interpretation for operations.
@@ -154,11 +173,8 @@ record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ ℓ₂)
 %  _⟦_⟧ₛ* ar = Carrier (HVecSet (sorts Σ) _⟦_⟧ₛ ar)
 
 
-Let us see an example of a |Sig₁|-algebra. We interpret sorts |nat| and
-|bool| with setoids |ℕ| and |Bool|, where the equivalence relation
-is the definitional equality of Agda (the function |setoid| constructs
-this trivial setoid).
-
+Let us see an example of a |Sig₁|-algebra. The sorts |nat| and |bool|
+are interpreted by the trivial setoids over |ℕ| and |Bool|, respectively.
 \begin{spec}
 iS : sorts Sig₁ → Setoid _ _
 iS nat   = setoid ℕ
@@ -173,7 +189,7 @@ iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂}
 iO or    = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∨ b₂} ; cong = {! !} }
        
 Alg₁ : Algebra Sig₁
-Alg₁ = record { _⟦_⟧ₛ = iS , _⟦_⟧ₒ = iO }
+Alg₁ = record { _⟦_⟧ₛ = iS ; _⟦_⟧ₒ = iO }
 \end{spec}
 
 \noindent We omit the proofs that each function preserve the
@@ -182,9 +198,8 @@ there we use |{! !}| to indicate omitted code). When one uses Agda
 interactively, the type-checker infers the argument of the
 interpretation of each operation.
 
-\paragraph{Homomorphism.}
-In this section we fix a signature |Σ: Signature|; in the
-formalization this is achieved with a module with parameters.
+\paragraph{Homomorphism} % In this section we fix a signature |Σ: Signature|; in the
+% formalization this is achieved with a module with parameters.
 Let $\mathcal{A}$ and $\mathcal{B}$ be two $\Sigma$-algebras, a \emph{homomorphism}
 $h$ from $\mathcal{A}$ to $\mathcal{B}$ is a family of functions indexed by the
 sorts $h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$,
@@ -193,97 +208,68 @@ such that for each operation $f : [s_1,...,s_n] \Rightarrow s$, the following ho
   h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)\label{eq:homcond}
 \end{equation}
 
-We formalize homomorphisms from an algebra |A| to an algebra |B| in
-a signature |Σ|, as a record with the family of functions
-and a proof that it satisfies condition \eqref{eq:homcond}.
-We define a family of functions indexed by sorts, from algebra |A|
-to algebra |B|:
-
+We formalize homomorphisms from an algebra |A| to an algebra |B| as a
+family of functions indexed over sorts
 \begin{spec}
 _⟿_ : (A : Algebra Σ) → (B : Algebra Σ) → Set _
 A ⟿ B = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
 \end{spec}
-
-An element |h : A ⟿ B| will be a family of setoid morphisms between
-the interpretation of each sort in the source and target algebras.
-The condition \eqref{eq:homcond} is encoded through a mapping over
-the heterogeneous vector |as : A ⟦ ar ⟧ₛ*|, with the function |map⟿|:
-
+and a proof that it satisfies condition \eqref{eq:homcond}, expressed by
 \begin{spec}
 homCond : ∀ ty → A ⟿ B → ops Σ ty → Set _
-homCond  (ar ⇒ s) h f = (as : ∥ A ⟦ ar ⟧ₛ* ∥) →
+homCond (ar ↦ s) h f =   (as : ∥ A ⟦ ar ⟧ₛ* ∥) → 
          h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as) ≈ₛ B ⟦ f ⟧ₒ ⟨$⟩ map⟿ h as
 \end{spec}
+\noindent where |_≈ₛ_| is the equivalence relation of the setoid
+|B ⟦ s ⟧ₛ| and |map⟿ h| is the obvious extension of |h| over vectors.
 
-\noindent where |_≈ₛ_| is the equivalence relation in the corresponding
-setoid.
-
-For |H : Homo A B|, the setoid morphism is |′ H ′ : A ⟿ B| and
-|cond H| is the proof that |′ H ′| satisfies \eqref{eq:homcond}:
-
-\begin{spec}
-record Homo : (A : Algebra Σ) → (B : Algebra Σ) → Set _ where
-  field
-    ′_′  : A ⟿ B
-    cond : ∀ {ty} (f : ops Σ ty) → homCond ty ′_′ f
-\end{spec}
+For |H : Homo A B|, the family of setoid morphism is |′ H ′ : A ⟿ B|
+and |cond H| is the proof for |homCond ′ H ′|; and for |a : A ⟦ s ⟧ₛ|, we
+have |′ H ′ s ⟨$⟩ a : B ⟦ s ⟧ₛ|.
 
 \subsection{Quotient and subalgebras}
+In order to prove the more basic results of universal algebra, we need
+to formalize congruence relations, quotients, and sub-algebras.
 
-\paragraph{Congruence.}
-
-Let $\mathcal{A}$ a $\Sigma$-algebra. A \emph{congruence} is a family
-$Q$ of equivalence relations indexed by each sort $s$ of $\Sigma$
-on $\mathcal{A}_{s}$,
-such that for each operation $f : [s_1,...,s_n] \Rightarrow s$, each
-$a_i,b_i \in A_{s_i}$ with $(a_i,b_i) \in Q_{s_i}$ ($1 \leq i \leq n$),
-the following holds (this property is usually called ``substitutivity
-condition''):
-
+\paragraph{Congruence and Quotients}
+A \emph{congruence} on a $\Sigma$-algebra $\mathcal{A}$ is a family
+$Q$ of equivalence relations indexed by sorts closed by the operations
+of the algebra. This condition is called \emph{substitutivity} and can
+be formalized using the point-wise extension of $Q$ over vectors: for
+every operation $ f : [s_1, \ldots,s_n] \Rightarrow s$
 \begin{equation}
-  (f_{\mathcal{A}}(a_1,...,a_n) , f_{\mathcal{A}}(b_1,...,b_n)) \in Q_s\label{eq:congcond}
-\end{equation}
+  (\vec{a},\vec{b}) \in Q_{s_1} \times \cdots \times Q_{s_n} \text{ implies }
+ (f_{\mathcal{A}}(\vec{a}) , f_{\mathcal{A}}(\vec{b})) \in Q_s\label{eq:congcond}
+\end{equation} 
 
-
-As we have defined algebras with setoids, each relation $Q_s$ must
-preserve the setoid equality. This is formalized in this way:
-
-\begin{spec}
-WellDef : _
-WellDef = ∀  {s} {x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)} →
-             (Q : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ))) →
-             x₁ ≈ₛ x₂ → y₁ ≈ₛ y₂ → Q s x₁ y₁ → Q s x₂ y₂
-\end{spec}
-
-We formalize congruence of an algebra |A| with a record with four
-fields: a familiy of binary relations |rel| indexed by sorts, the proof
-|cequiv| of that relations are of equivalence, the ``well-defined''
-property |welldef|, and the substitutivity condition
-\eqref{eq:congcond}. This condition is encoded using the pointwise
-extension of a relation in a vector |_∼v_|. If we have two vectors related
-by |rel| and we apply the function |A ⟦ f ⟧ₒ| on each one, the results
-are related by rel. The function |_=[_]⇒_|, defined in standard
-library, expresses exactly this.
+Remember that a binary relation over a setoid is well-defined if it is
+preserved by the setoid equality; this notion can be extended over
+families of relations in the obvious way. In our formalization, a
+congruence on an algebra |A| is a family |Q| of well-defined,
+equivalence relations. The substitutivity condition
+\eqref{eq:congcond} is aptly captured by the generalized containment
+operator |_=[_]⇒_| of the standard library, where |P =[ f ]⇒ Q| if,
+for all |a,b ∈ A|, |(a,b) ∈ P| implies |(f a, f b) ∈ Q|.
 
 \begin{spec}
 record Congruence (A : Algebra Σ) : Set _ where
   field
     rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) _
-    welldef : WellDef rel
+    welldef : (s : sorts Σ) → WellDef (rel s)
     cequiv : (s : sorts Σ) → IsEquivalence (rel s)
-    csubst : ∀ {ar} {s} → (f : ops Σ (ar , s)) → 
-              _∼v_ {R = rel} {is = ar}  =[ _⟨$⟩_ (A ⟦ f ⟧ₒ) ]⇒ rel s
+    csubst : ∀ {ar s} → (f : ops Σ (ar , s)) → rel * =[ A ⟦ f ⟧ₒ ⟨$⟩_  ]⇒ rel s
 \end{spec}
 
-
-\paragraph{Quotient}
-
-Let $\mathcal{A}$ a $\Sigma$-algebra and $Q$ a congruence on
-$\mathcal{A}$. The \emph{quotient algebra} of $\mathcal{A}$ by $Q$ is
-the $\Sigma$-algebra defined by the equivalence classes of $Q$. 
-Having implemented the interpretations of sorts with setoids, defining
-quotient algebra is trivial, we just replace the equality of each
-carrier by the relation of the congruence.
+Given a congruence $Q$ over the algebra $\mathcal{A}$, we can obtain a
+new algebra, the \emph{quotient algebra}, by interpreting the sort $s$
+as the set of equivalence classes $\mathcal{A}_s / Q$; the condition
+\eqref{eq:congcond} ensures that the operation $ f : [s_1, \ldots,s_n]
+\Rightarrow s$ can be interpreted as the function mapping the vector
+$([a_1],\ldots,[a_n])$ of equivalence classes into the class $[
+f_\mathcal{A}(a_1,\ldots,a_n)]$. In Agda, we take the same carriers
+from |A| and use |Q s| as the equivalence relation over |A ⟦ s ⟧ₛ|
+and operations are interpreted just as in |A|; operations are 
+interpreted as before and the congruence proof is given by |csubst Q|.
 
 \paragraph{Subalgebra}
 

@@ -35,7 +35,7 @@ operation in |Σbool₂|) we could transform it in a |Σbool₁|-algebra: For ea
 |Σbool₁|-operation, we use the translation to |Σbool₂|-operations, and then we
 have how to interpret them.
 In particular, the function mapping terms in |Σbool₁| to terms in
-|Σbool₂| will be the extension to variables of initial homomorphism between |∣T∣ Σbool₁| and the transformation of |∣T∣ Σbool₂|.
+|Σbool₂| will be the initial homomorphism between |∣T∣ Σbool₁| and the transformation of |∣T∣ Σbool₂|.
 
 In this section we proceed to formalize the concepts of
 \textit{derived signature morphism} and \textit{reduct algebra}, that
@@ -229,3 +229,35 @@ free the interpretation of each operation in |Σbool₁| in the setoid
 Bool₁ : Algebra Σbool₁
 Bool₁= 〈  B₂ 〉
 \end{spec}
+
+
+\subsection{Translation of theories}
+Given a signature translation $t : \intSign{\Sigma_s}{\Sigma_t}$, two
+families $X_s$ and $X_t$ of variables indexed by the respective
+sorts, a function $tvars : X_s s \rightarrow X_t (t s)$,
+for each sort $s$ of $\Sigma_s$ and tow theories
+$\Sigma_t$-theory $Th_t$ and a $\Sigma_s$-theory $Th_s$, we say that
+$Th_t$ implies $Th_s$ if for each axiom $e \in Th_s$, there exists
+a proof of the translation of $e$ in $Th_t$.
+
+Let us define the translation of $\Sigma_s$-terms extended to $X_s$ to
+$\Sigma_t$-terms extended to $X_t$.
+
+\paragraph{Terms translation.}
+Because the \textit{freeness} property, we have an unique homomorphism
+from the $\Sigma_s$-algebra |T Σₛ 〔 Xₛ 〕| to any other extending an
+environment. In particular
+we can obtain the homomorphism to the algebra |T Σₜ 〔 Xₜ 〕|
+transformed via $t$, where the environment extended consists of assign to
+each variable $v \in X_s\;s$ the term $tvars\;v \in X_t (t\,s)$.
+Thus, we get for free a function mapping |Σₛ 〔 Xₛ 〕|-terms to |Σₜ 〔 Xₜ 〕|-terms:
+
+\begin{spec}
+  term↝ : Homo (T Σₛ 〔 Xₛ 〕) 〈 T Σₜ 〔 Xₜ 〕 〉
+  term↝ = TΣXHom 〈 T Σₜ 〔 Xₜ 〕 〉 θv
+    where θv : Env Xₛ 〈 T Σₜ 〔 Xₜ 〕 〉
+          θv v = term (inj₂ (tvars v)) ⟨⟩
+          open InitHomoExt 〈 T Σₜ 〔 Xₜ 〕 〉 θv
+\end{spec}
+
+

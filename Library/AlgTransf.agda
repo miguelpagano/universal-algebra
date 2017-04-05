@@ -156,8 +156,8 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   term↝ : Homo (T Σₛ 〔 Xₛ 〕) 〈 T Σₜ 〔 Xₜ 〕 〉
   term↝ = TΣXHom
     where open TermAlgebra (Σₜ 〔 Xₜ 〕)
-          θv : Env {X = Xₛ} 〈 T Σₜ 〔 Xₜ 〕 〉
-          θv {s} v = term (inj₂ (tvars v)) ⟨⟩
+          θv : Env Xₛ 〈 T Σₜ 〔 Xₜ 〕 〉
+          θv v = term (inj₂ (tvars v)) ⟨⟩
           open InitHomoExt 〈 T Σₜ 〔 Xₜ 〕 〉 θv
 
   open Homo
@@ -186,7 +186,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   -- Importante: Nuestro sistema de pruebas sólo permite demostrar ecuaciones no condicionales.
   -- Si tenemos axiomas con condiciones, entonces no podríamos probarlos en la otra teoría.
 
-
+{-
   -- Model translation
   module ModelTrans {ar : Arity Σₛ} {ar' : Arity Σₜ}
                     (Thₛ : Theory Σₛ Xₛ ar) (Thₜ : Theory Σₜ Xₜ ar')
@@ -226,6 +226,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
               he₂ s x = Setoid.refl (A ⟦ s ∼ ⟧ₛ)
 
 
+<<<<<<< Updated upstream
     -- lemma : ∀ {s ℓ₁ ℓ₂} → (e : Equation Σₛ Xₛ s) → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) →
     --                        A ⊨ (eq↝ e) → 〈 A 〉 ⊨ e
     -- lemma {s} (⋀ t ≈ t' if「 carty 」 cond) A sat θ eq = 
@@ -242,4 +243,50 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
     --              record { satAll = λ {s} {e} ax θ x₁ →
     --                        lemma e A (correctness (p⇒ ax) A (record { satAll = satAll })) θ x₁
     --                      }
+=======
 
+      -- The lemma above is exactly the same that:
+      
+      open EnvExt {X = Xₛ} 〈 A 〉 renaming (_↪ to _↪ₛ)
+      open EnvExt {X = Xₜ} A renaming (_↪ to _↪ₜ)
+      lemma₀' : ∀ {s} → (t : ∥ (T Σₛ 〔 Xₛ 〕) ⟦ s ⟧ₛ ∥) →
+                        _≈_ (〈 A 〉 ⟦ s ⟧ₛ) ((θ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t))
+                                          ((θ↝ ↪ₛ) t)
+      lemma₀' = lemma₀
+                                          
+
+
+    lemma : ∀ {s ℓ₁ ℓ₂} → (e : Equation Σₛ Xₛ s) → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) →
+                           A ⊨ (eq↝ e) → 〈 A 〉 ⊨ e
+    lemma {s} (⋀ t ≈ t' if「 carty 」 cond) A sat θ eq = 
+              begin
+                (θ ↪ₛ) t
+               ≈⟨ Setoid.sym ((A ⟦ ↝ₛ Σ↝ s ⟧ₛ)) (lemma₀ t) ⟩
+                ((θₜ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t))
+               ≈⟨ sat θₜ {!!} ⟩
+                ((θₜ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t'))
+               ≈⟨ lemma₀ t' ⟩
+                (θ ↪ₛ) t'
+               ∎
+      where open EqR (A ⟦ ↝ₛ Σ↝ s ⟧ₛ)
+            open EnvExt 〈 A 〉 renaming (_↪ to _↪ₛ)
+            open EnvExt A renaming (_↪ to _↪ₜ)
+            θₜ : Env Xₜ A
+            θₜ = ?
+{-
+            θₜ {s'} y with isImg s'
+            ... | yes _ = θ x
+              where x = ren⁻¹ y
+            ... | no _ = hab s'
+-}
+
+            open Lemma₀ A θₜ
+
+    ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) → ⊨T Thₜ A → ⊨T Thₛ 〈 A 〉
+    ⊨T↝ A record { satAll = satAll } =
+                 record { satAll = λ {s} {e} ax θ x₁ →
+                           lemma e A (correctness (p⇒ ax) A (record { satAll = satAll })) θ x₁
+                         }
+>>>>>>> Stashed changes
+
+-}

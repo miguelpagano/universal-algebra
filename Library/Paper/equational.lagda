@@ -5,7 +5,7 @@ formalize Equational Logic in Agda.
 
 \subsection{Variables, environments and substitution}
 
-\paragraph{Variables} A signature $\Sigma$ as we defined consists of sorts and operation
+\paragraph{Variables} A signature $\Sigma$ consists of sorts and operation
 symbols. We can add variables of each sort and construct a new
 signature, consisting of the same operations than $\Sigma$, but
 adding new constant symbols, one for each variable:
@@ -49,6 +49,7 @@ T Σ 〔 X 〕  = (λ s → ∣T∣ ⟦ s ⟧ₛ)
   where open TermAlgebra (Σ 〔 X 〕)
 \end{spec}
 
+
 \paragraph{Environments}
 Given a $\Sigma$-algebra $\mathcal{A}$ and a family of variables
 $X$, we can define the set of environments from $X$ to
@@ -56,28 +57,36 @@ $\mathcal{A}$. Each variable of sort $s$ is mapped to an element
 in the interpretation of $s$ in $\mathcal{A}$:
 
 \begin{spec}
-Env : ∀ {Σ} {X} → (A : Algebra Σ) → Set _
-Env {Σ} {X} A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥
+Env : ∀ {Σ} → (X : Vars) → (A : Algebra Σ) → Set _
+Env {Σ} X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥
 \end{spec}
 
-\noindent Given a environment |θ : Env {X = X} A|, it's
+\noindent Given an environment |θ : Env {X = X} A|, it's
 straightforward extending it to terms. We write this extension
 with |(θ ↪)|.
+
+\paragraph{Extension of initial homomorphism.}
+Algebra |T Σ 〔 X 〕| has the universal \textit{freeness} property:
+Given a $\Sigma$-algebra $\mathcal{A}$, and an environment $\theta$,
+there exists an unique homomorphism $h$ from |T Σ 〔 X 〕| to
+$\mathcal{A}$ such that $h(x) = \theta(x)$ for all variable $x$.
+We define this unique homomorphism:
+
+\begin{spec}
+  TΣXHom : (θ : Env X A) → Homo (T Σ 〔 X 〕) A
+  TΣXHom = ...
+\end{spec}
 
 \paragraph{Substitutions}
 
 A substitution of variables to terms is simply an environment
-of the term algebra |T Σ 〔 X 〕|. If |σ| is a substitution, we
-write the extension to terms with |σ ↪s|.
+of the term algebra |∣T∣ Σ 〔 X 〕|. 
 
 \begin{spec}
   Subst : Set
-  Subst = Env {X = X} (T Σ 〔 X 〕)
-
-  _↪s : Subst → {s} → ∥ ∣T∣ ⟦ s ⟧ₛ ∥ → ∥ ∣T∣ ⟦ s ⟧ₛ ∥
-  _↪s σ t = (σ ↪) t
+  Subst = Env X (T Σ 〔 X 〕)
 \end{spec}
-  
+
 \subsection{Equations, satisfactibility and provability}
 
 \paragraph{Equations}
@@ -112,7 +121,7 @@ We can give a short notation for non-conditional equations:
 ⋀ t ≈ t' = ⋀ t ≈ t' if「 [] 」 (⟨⟩ , ⟨⟩)
 \end{spec}
 
-A \textbf{theory} consist of a signature and a set of equations.
+A \textbf{theory} consists of a signature and a set of equations.
 The type of heterogeneous vectors is appropiate to formalize the
 set of equations, possibly of different sorts. Thus, a theory is
 defined as a vector of equations of a signature $\Sigma$ and a set
@@ -145,13 +154,13 @@ _⊨_ A  (⋀ t ≈ t' if「 _ 」 (us , us')) =
 \noindent where |_≈ᵢ_| and |_≈ₛ_| are the corresponding equivalence
 relations of each sort.
 
-We say that $\mathcal{A}$ satisfies a theory $T$ if satisfies each
-equation in $T$.
+We say that $\mathcal{A}$ satisfies a theory $T$ if it satisfies each
+equation in $T$ (we say that $\mathcal{A}$ is \textit{a model} of
+$T$).
 
 \begin{spec}
-record  ⊨T {Σ X ar} (E : Theory Σ X ar) (A : Algebra Σ) : Set _ where
-  field
-    satAll : ∀ {s} {e : Equation Σ X s} → e ∈ E → A ⊨ e
+_⊨T_ : ∀ {Σ X ar} → (A : Algebra Σ) → (E : Theory Σ X ar) → Set _
+A ⊨T E = ∀ {e} → e ∈ E → A ⊨ e
 \end{spec}
 
 \noindent Type |_∈_| formalizes the relation of membership in vectors.
@@ -218,7 +227,7 @@ axioms in $T$, $\mathcal{A}$ satisfies $e$.
 
 \begin{spec}
   correctness :  ∀ {Σ X} {ar} {s} {T : Theory Σ X ar} {e : Equation Σ X s}
-                 → T ⊢ e → (A : Algebra Σ) → ⊨T E A → A ⊨ e
+                 → T ⊢ e → (A : Algebra Σ) → A ⊨T E → A ⊨ e
   correctness : ...
 \end{spec}
 
@@ -228,12 +237,35 @@ $\mathcal{A}$ satisfies an equation $e$, then $e$ is provably in $T$.
 
 \begin{spec}
 complete : ∀ {Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
-{e : Equation Σ X s} → ((A : Algebra Σ) → ⊨T E A → A ⊨ e) → E ⊢ e
+{e : Equation Σ X s} → ((A : Algebra Σ) → A ⊨T E → A ⊨ e) → E ⊢ e
 complete = ...
 \end{spec}
 
 \manu{Ver qué podemos decir de esas pruebas. Quizás contar la idea de
 la prueba de completitud.}
+
+\subsection{Theory implication}
+Let $T_1$ and $T_2$ be two $\Sigma$-theories, we say that $T_1$ implies
+$T_2$ if for each axiom $e \in T_2$ there exists a proof
+$T_1 \vdash (\forall X)\, e$.
+
+\begin{spec}
+_⇒T_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
+_⇒T_ T₁ T₂ = ∀ {s} {ax} → ax ∈ T₂ → T₁ ⊢ ax
+\end{spec}
+
+\noindent If we have that a theory $T_1$ implies another theory
+$T_2$, then for any model $\mathcal{A}$ of $T_1$, $\mathcal{A}$ is
+model of $T_2$. The proof is direct by correctness: Let $e \in T_2$,
+then we have $T_1 \vdash (\forall X)\, e$, and because of correctness
+we have $\mathcal{A} \models e$.
+
+\begin{spec}
+⊨T⇒ : ∀  {Σ X ar ar'} → (T₁ : Theory Σ X ar) (T₂ : Theory Σ X ar')
+         (p⇒ : T₁ ⇒T T₂) → (A : Algebra Σ) → A ⊨T T₁ → A ⊨T T₂
+⊨T⇒ T₁ T₂ p⇒ A satAll = λ ax → correctness (p⇒ ax) A satAll
+\end{spec}
+    
 
 \subsection{An example}
 

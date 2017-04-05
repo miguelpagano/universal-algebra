@@ -528,14 +528,13 @@ module GoguenMeseguer where
     sat₆ θ x | false = refl
     sat₆ θ x | true = refl
 
-    -- Para poder probar que es modelo, debería poder probar true ≡ false en agda.
     sat₇ : model ⊨ fooax
     sat₇ θ ∼⟨⟩ with (θ {a} tt)
     sat₇ θ ∼⟨⟩ | ()
     
 
-    ismodel : ⊨T Th model
-    ismodel = record { satAll = sat }
+    ismodel : model ⊨T Th
+    ismodel = sat
       where sat : {s : sorts∼} {e : Equation _ Vars∼ s} → e ∈ Th → model ⊨ e
             sat ax₁ = sat₁
             sat ax₂ = λ θ _ → refl
@@ -546,7 +545,11 @@ module GoguenMeseguer where
             sat ax₇ = sat₇
             sat noax 
 
+
+    -- para poder usar corrección deberíamos dar un entorno. Es decir
+    -- una asignación de cada variable en los carriers del álgebra, pero
+    -- no podemos dar una función que vaya de Vars (que es no vacío) a ⊥
     abs : true ≡ false
-    abs = correctness t≈f model ismodel (λ { {bool} x → true ; {a} x → {!x!} }) ∼⟨⟩
+    abs = correctness t≈f model ismodel {!!} ∼⟨⟩
       where open Proof
 

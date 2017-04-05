@@ -219,10 +219,12 @@ homCond (ar ↦ s) h f =   (as : ∥ A ⟦ ar ⟧ₛ* ∥) →
 \end{spec}
 \noindent where |_≈ₛ_| is the equivalence relation of the setoid
 |B ⟦ s ⟧ₛ| and |map h| is the obvious extension of |h| over vectors.
-
 For |H : Homo A B|, the family of setoid morphism is |′ H ′ : A ⟿ B|
-and |cond H| is the proof for |homCond ′ H ′|; and for |a : A ⟦ s ⟧ₛ|, we
-have |′ H ′ s ⟨$⟩ a : B ⟦ s ⟧ₛ|.
+and |cond H| is the proof for |homCond ′ H ′|.
+
+It is straightforward to define the product |A₁ × A₂| of algebras |A₁|
+and |A₂| and the projection homomorphisms |Πᵢ : Homo (A₁ × A₂) Aᵢ| where
+|′ Πᵢ ′ _ ⟨$⟩ p = projᵢ p|.
 
 \subsection{Quotient and subalgebras}
 In order to prove the more basic results of universal algebra, we need

@@ -219,7 +219,7 @@ module BoolModel where
   B = Bsort ∥ Bops
 
   open Equation
-
+{-
   Bsat₁ : B ⊨ Ax₁
   Bsat₁ θ ∼⟨⟩ with θ _ vp | θ _ vq | θ _ vr
   Bsat₁ θ ∼⟨⟩ | false | false | false = refl
@@ -295,13 +295,13 @@ module BoolModel where
 
   Bsat₁₃ : B ⊨ Ax₁₃
   Bsat₁₃ θ _ = refl
-
+-}
 
   open import Data.Empty
 
   boolabsurd : true ≡ false → ⊥
   boolabsurd ()
-
+{-
   Bsat≡≈ : B ⊨ Ax≡≈
   Bsat≡≈ θ satcond with θ _ vp | θ _ vq | inspect (θ _) vp | inspect (θ _) vq
   ... | true | true | c | d = refl
@@ -335,7 +335,7 @@ module BoolModel where
           sall ax≡≈ = Bsat≡≈
           sall axrefl≡ = BsatRefl≡
           sall noaxₚ
-
+-}
 
 open import Data.String renaming (_++_ to _++s_)
 

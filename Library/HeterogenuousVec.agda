@@ -1,12 +1,12 @@
 module HeterogenuousVec where
 
-open import Data.List renaming (map to lmap)
+open import Data.List renaming (map to lmap) hiding (zip)
 open import Relation.Binary
 open import Level
 open import Data.Fin
 open import Function
 open import Relation.Binary.PropositionalEquality
-open import Data.Product hiding (map)
+open import Data.Product hiding (map;zip)
 
 -- Types
 
@@ -29,17 +29,13 @@ data _∈_ {l} {I} {A : I → Set l} : {i : I} {is : List I} → A i →
 
 -- Operations
 
-{-
-List indexing.
--}
+{- List indexing. -}
 _‼_ : ∀ {l} {A : Set l} (xs : List A) → Fin (length xs) → A
 [] ‼ ()
 (x ∷ _) ‼ zero     = x
 (_ ∷ xs) ‼ (suc n) = xs ‼ n
 
-{-
-HVec indexing
--}
+{- HVec indexing -}
 _‼v_ : ∀ {l I} {is : List I} {A : I → Set l} →
          (vs : HVec A is) → (n : Fin (length is)) → A (is ‼ n)
 ⟨⟩ ‼v ()
@@ -52,13 +48,20 @@ _++v_ : ∀ {l I} {is is' : List I} {A : I → Set l} →
 ⟨⟩ ++v vs' = vs'
 (v ▹ vs) ++v vs' = v ▹ (vs ++v vs')
 
-{-
-Map
--}
+
+{- Zipping -}
+
+zip : ∀ {l₀ l₁ I} {A : I → Set l₀} {B : I → Set l₁}  {is : List I} →
+          (vs : HVec A is) → (vs' : HVec B is) → HVec (λ i → A i × B i) is
+zip ⟨⟩ ⟨⟩ = ⟨⟩
+zip (v ▹ vs) (v' ▹ vs') = (v , v') ▹ zip vs vs'
+
+{- Map -}
 map : ∀ {l₀ l₁ I} {A : I → Set l₀} {A' : I → Set l₁} {is : List I} →
          (f : (i : I) → (A i) → (A' i)) → (vs : HVec A is) → HVec A' is
 map {is = []} f ⟨⟩ = ⟨⟩
 map {is = i₀ ∷ is} f (v₀ ▹ vs) = f i₀ v₀ ▹ map f vs
+
 
 mapId : ∀ {l₀ I} {A : I → Set l₀} {is : List I} →
           (vs : HVec A is) → map (λ _ a → a) vs ≡ vs
@@ -74,6 +77,19 @@ data _⇨v_ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁
      ⇨v⟨⟩ : P ⇨v ⟨⟩
      ⇨v▹ : ∀ {i} {is} {v} {vs} → (pv : P i v) →
              (pvs : _⇨v_ P {is} vs) → P ⇨v (_▹_ {i = i} v vs)
+
+open import Relation.Unary using (Pred)
+_⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁) → 
+           {is : List I} → Pred (HVec A is) (l₀ ⊔ l₁)
+P ⇨v = P ⇨v_
+
+
+⇨₂ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁} → 
+           {is : List I}
+           (as : HVec (λ i → Σ[ a ∈ A i ] (P i a)) is) →
+           (P ⇨v map (λ _ → proj₁) as)
+⇨₂ {P = P} {[]} ⟨⟩ = ⇨v⟨⟩
+⇨₂ {P = P} {i ∷ is} ((a , p) ▹ as) = ⇨v▹ p (⇨₂ {P = P} {is} as)
 
 ⇨vtoΣ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
            {is} {vs : HVec A is} → P ⇨v vs → HVec (λ i → Σ[ a ∈ A i ] P i a) is
@@ -109,7 +125,27 @@ data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} 
      ∼⟨⟩ : ⟨⟩ ∼v ⟨⟩
      ∼▹  : ∀ {i} {is} {t₁} {t₂} {ts₁ : HVec A is} {ts₂ : HVec A is} →
            R i t₁ t₂ → _∼v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ∼v (t₂ ▹ ts₂)
-        
+
+_* : ∀ {l₀ l₁ I} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁)
+R * = _∼v_ {R = R}
+
+
+{- Alternatively we can take a relation R over A as a predicate over A × A;
+  under this view, the extension of R is the same as the extension of the
+  predicate over the zipped vectors.
+-}
+private  
+  _*' : ∀ {l₀ l₁ I} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁)
+  _*' {A = A} R {is} a b = _⇨v_ {A = λ i → A i × A i} (λ { i (a , b) → R i a b} ) {is} (zip a b)
+
+  from : ∀ {l₀ l₁ I} {is} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → (as as' : HVec A is) → (R *') as as' → (R *) as as'
+  from {is = []} R ⟨⟩ ⟨⟩ ⇨v⟨⟩ = ∼⟨⟩
+  from {is = x ∷ is} R (v ▹ as) (v₁ ▹ as') (⇨v▹ {v = .v , .v₁} pv rel) = ∼▹ pv (from R as as' rel)
+
+  to : ∀ {l₀ l₁ I} {is} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → (as as' : HVec A is) → (R *) as as' → (R *') as as'
+  to {is = []} R ⟨⟩ ⟨⟩ ∼⟨⟩ = ⇨v⟨⟩ 
+  to {is = x ∷ is} R (v ▹ as) (v₁ ▹ as') (∼▹ x₁ rel) = ⇨v▹ x₁ (to R as as' rel)
+  
 map∼v : ∀ {l₀ l₁ l₂ I} {A : I → Set l₀}
         {R : (i : I) → Rel (A i) l₁} {R' : (i : I) → Rel (A i) l₂}
         {is : List I} {vs vs' : HVec A is} →

@@ -61,7 +61,7 @@ urlcolor=blue]{ hyperref }
 \DeclareUnicodeCharacter{12297}{)}
 \newcommand{\cL}{{\cal L}}
 \newcommand{\ie}{i.e.\@@ }
-\newcommand{\manu}[1]{\textcolor{red}{#1}}
+\newcommand{\manu}[1]{} % \textcolor{red}{#1}}
 
 \begin{document}
 
@@ -80,7 +80,7 @@ urlcolor=blue]{ hyperref }
 
 \title{Formalization of Universal Algebra}
 
-\author{Emmanuel Gunther \and Miguel Pagano \and Alejandro Gadea}
+\author{Emmanuel Gunther \and Alejandro Gadea \and Miguel Pagano}
 
 \institute{FaMAFyC, UNC - CONICET}
 
@@ -88,12 +88,12 @@ urlcolor=blue]{ hyperref }
 %% \authorinfo{Emmanuel Gunther}
 %%            {FaMAF, UNC - CONICET}
 %%            {gunther@@famaf.unc.edu.ar}
-%% \authorinfo{Miguel Pagano}
-%%            {FaMAF, UNC}
-%%            {pagano@@famaf.unc.edu.ar}
 %% \authorinfo{Alejandro Gadea}
 %%            {FaMAF, UNC - CONICET}
 %%            {gadea@@famaf.unc.edu.ar}
+%% \authorinfo{Miguel Pagano}
+%%            {FaMAF, UNC}
+%%            {pagano@@famaf.unc.edu.ar}
 
 \maketitle
 
@@ -123,6 +123,4 @@ universal algebra, formalization of mathematics, equational logic
 
 \bibliographystyle{plainnat}
 \bibliography{biblio}
-
-
 \end{document}

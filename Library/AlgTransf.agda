@@ -1,5 +1,6 @@
 module AlgTransf where
 
+open import Setoids
 open import UnivAlgebra
 
 open import Relation.Binary
@@ -29,7 +30,6 @@ module FormalTerm (Σ : Signature) where
 
 module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) where
   open FormalTerm Σ
-
   mutual
 
     ⟦_⟧⊩ : ∀ {ar s} → ar ⊩ s → A ⟦ ar ⟧ₛ* → ∥ A ⟦ s ⟧ₛ ∥
@@ -161,7 +161,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
           open InitHomoExt 〈 T Σₜ 〔 Xₜ 〕 〉 θv
 
   open Homo
-
+  
   -- Equations translation
   eq↝ : ∀ {s} → Equation Σₛ Xₛ s → Equation Σₜ Xₜ (↝ₛ Σ↝ s)
   eq↝ {s} (⋀ t ≈ t' if「 carty 」 cond) =
@@ -226,20 +226,20 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
               he₂ s x = Setoid.refl (A ⟦ s ∼ ⟧ₛ)
 
 
-    lemma : ∀ {s ℓ₁ ℓ₂} → (e : Equation Σₛ Xₛ s) → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) →
-                           A ⊨ (eq↝ e) → 〈 A 〉 ⊨ e
-    lemma {s} (⋀ t ≈ t' if「 carty 」 cond) A sat θ eq = 
-              begin
-                (θ ↪) t
-               ≈⟨ {!!} ⟩
-                (θ ↪) t'
-               ∎
-      where open EqR (A ⟦ ↝ₛ Σ↝ s ⟧ₛ)
-            open EnvExt 〈 A 〉
+    -- lemma : ∀ {s ℓ₁ ℓ₂} → (e : Equation Σₛ Xₛ s) → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) →
+    --                        A ⊨ (eq↝ e) → 〈 A 〉 ⊨ e
+    -- lemma {s} (⋀ t ≈ t' if「 carty 」 cond) A sat θ eq = 
+    --           begin
+    --             (θ ↪) t
+    --            ≈⟨ {!!} ⟩
+    --             (θ ↪) t'
+    --            ∎
+    --   where open EqR (A ⟦ ↝ₛ Σ↝ s ⟧ₛ)
+    --         open EnvExt 〈 A 〉
 
-    ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) → ⊨T Thₜ A → ⊨T Thₛ 〈 A 〉
-    ⊨T↝ A record { satAll = satAll } =
-                 record { satAll = λ {s} {e} ax θ x₁ →
-                           lemma e A (correctness (p⇒ ax) A (record { satAll = satAll })) θ x₁
-                         }
+    -- ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) → ⊨T Thₜ A → ⊨T Thₛ 〈 A 〉
+    -- ⊨T↝ A record { satAll = satAll } =
+    --              record { satAll = λ {s} {e} ax θ x₁ →
+    --                        lemma e A (correctness (p⇒ ax) A (record { satAll = satAll })) θ x₁
+    --                      }
 

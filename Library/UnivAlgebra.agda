@@ -19,53 +19,7 @@ open import HeterogenuousVec
 pattern _↦_ ar s = (ar , s)
 
 open Setoid
-
-
-∥_∥ : ∀ {l₁ l₂} → (Setoid l₁ l₂) → Set l₁
-∥_∥ {l₁} {l₂} S = Carrier S
-
-≡to≈ : ∀ {ℓ₁ ℓ₂} → (S : Setoid ℓ₁ ℓ₂) →
-         {x y : Carrier S } → x ≡ y →
-         Setoid._≈_ S x y
-≡to≈ S refl = Setoid.refl S
-
--- Extensional equality
-
-module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoid ℓ₃ ℓ₄} where
-  private
-    _≈B_ : _
-    _≈B_ = _≈_ B
-
-    _≈A_ : _
-    _≈A_ = _≈_ A
-
-  _≈→_ : Rel (A ⟶ B) _
-  f ≈→ g  = ∀ (a : ∥ A ∥) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
-
-  ≈→-preserves-≈ : ∀ a a' f g → f ≈→ g → a ≈A a' → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a')
-  ≈→-preserves-≈ a a' f g f≈g a≈a' =
-                      begin
-                        f ⟨$⟩ a
-                          ≈⟨ Π.cong f a≈a' ⟩
-                        f ⟨$⟩ a'
-                          ≈⟨ f≈g a' ⟩
-                        g ⟨$⟩ a'
-                        ∎
-     where open EqR B
-    
-  Equiv≈→ : IsEquivalence (_≈→_)
-  Equiv≈→ = record { refl = λ {f} → isRefl {f}
-                    ; sym = λ {f} {g} prf → isSym {f} {g} prf
-                    ; trans = λ {f} {g} {h} p q → isTrans {f} {g} {h} p q
-                    }
-    where isRefl : Reflexive (_≈→_)
-          isRefl {f} a = Setoid.refl B {f ⟨$⟩ a}
-          isSym : Symmetric (_≈→_)
-          isSym {f} {g} p a = Setoid.sym B (p a)
-          isTrans : Transitive (_≈→_)
-          isTrans {f} {g} {h} p q a = Setoid.trans B (p a) (q a)
-
-
+open import Setoids
 
 record Signature : Set₁ where 
   field
@@ -101,9 +55,9 @@ private
     data O : (List S) × S → Set where
       consℕ  : (n : ℕ) → O ([] , nat)
       True False  : O ([] , bool)
-      plus prod   : O ( nat ∷ [ nat ] , nat)
+      plus    : O ( nat ∷ [ nat ] , nat)
       eq     : O ( nat ∷ [ nat ] , bool)
-      cand cor     : O ( bool ∷ [ bool ] , bool)
+      cand   : O ( bool ∷ [ bool ] , bool)
 
     Sig₁ : Signature
     Sig₁ = record { sorts = S ; ops = O }
@@ -118,7 +72,6 @@ private
     monoNat : ∀ {ar} → (o : O (ar , nat)) → monoSorted o
     monoNat (consℕ n) = isMono (consℕ n) []
     monoNat plus = isMono plus (_≡_.refl ∷ _≡_.refl ∷ [])
-    monoNat prod = isMono prod (_≡_.refl ∷ _≡_.refl ∷ [])
 
     open import Data.Empty
     fail : (∀ {ar} → (o : O (ar , bool)) → monoSorted o) → ⊥
@@ -133,10 +86,8 @@ private
     iO : ∀ {ar s} → ops Sig₁ (ar ↦ s) → (iS ✳ ar) ⟶ iS s
     iO (consℕ n)  = record  { _⟨$⟩_ = λ { ⟨⟩ → n } ; cong = {! !} }
     iO plus  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ + n₂} ; cong = {! !} }
-    iO prod  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ * n₂} ; cong = {! !} }
     iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → ? } ; cong = {! !} }
     iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂} ; cong = {! !} }
-    iO or    = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∨ b₂} ; cong = {! !} }
              
     Alg₁ : Algebra Sig₁
     Alg₁ = ? -- record { _⟦_⟧ₛ = iS , _⟦_⟧ₒ = iO }
@@ -255,6 +206,149 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
                                               (_⟨$⟩_ ∘ ′ H₁ ′)) ⟩
                           A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₀ A₂ comp as)
                         ∎
+
+
+
+open Hom
+open Homo
+open Algebra
+
+-- Homomorphism identity
+HomId : ∀ {ℓ₁ ℓ₂} {Σ} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
+          Homo A A
+HomId {A = A} = record { ′_′ = λ s → FE.id
+                       ; cond = λ { {ar , s} f as →
+                                    Π.cong (A ⟦ f ⟧ₒ)
+                                    (≡to∼v (λ i → Setoid.isEquivalence (A ⟦ i ⟧ₛ))
+                                    (PE.sym (mapId as))) }
+                       }
+
+
+open import Function.Bijection renaming (_∘_ to _∘b_) 
+open import Function.Surjection hiding (_∘_)
+
+open Bijective
+
+invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
+          (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
+          (h : Homo A A') → (bj : (s : sorts Σ) → Bijective (′ h ′ s)) →
+          Homo A' A
+invHomo {Σ = Σ} A A' h bj = record { ′_′ = h⁻¹
+                                   ; cond = cond⁻¹
+                                   }
+  where h⁻¹ : A' ⟿ A
+        h⁻¹ s =  from (bj s)
+        cond⁻¹ : ∀ {ty} (f : ops Σ ty) → homCond A' A h⁻¹ f
+        cond⁻¹ {ar , s} f as = 
+               begin
+                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ as)
+               ≈⟨ Π.cong (h⁻¹ s) (Π.cong (A' ⟦ f ⟧ₒ)
+                         (∼↑v (λ i a' → Setoid.sym (A' ⟦ i ⟧ₛ) (right-inverse-of (bj i) a'))
+                         as)) ⟩
+                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ map (λ i a' → ′ h ′ i ⟨$⟩ (h⁻¹ i ⟨$⟩ a')) as)
+               ≈⟨ Π.cong (h⁻¹ s) (Π.cong (A' ⟦ f ⟧ₒ)
+                 (Setoid.sym (_⟦_⟧ₛ A' ✳ ar) (≡to≈ (_⟦_⟧ₛ A' ✳ ar) (propMapV∘ as (λ i → _⟨$⟩_ (h⁻¹ i))
+                                                                               (λ i → _⟨$⟩_ (′ h ′ i)))))) ⟩
+                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ map (λ i → _⟨$⟩_ (′ h ′ i)) (map (λ i → _⟨$⟩_ (h⁻¹ i)) as))
+               ≈⟨ Π.cong (h⁻¹ s) (Setoid.sym (A' ⟦ s ⟧ₛ) (cond h f (map (λ i → _⟨$⟩_ (h⁻¹ i)) as))) ⟩
+                 h⁻¹ s ⟨$⟩ (′ h ′ s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ (map (λ i → _⟨$⟩_ (h⁻¹ i)) as)))
+               ≈⟨ left-inverse-of (bj s) (A ⟦ f ⟧ₒ ⟨$⟩ (map (λ i → _⟨$⟩_ (h⁻¹ i)) as)) ⟩
+                 A ⟦ f ⟧ₒ ⟨$⟩ map⟿ A' A h⁻¹ as
+               ∎
+          where open EqR (A ⟦ s ⟧ₛ)
+
+
+
+record Isomorphism {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
+                   (A : Algebra {ℓ₁} {ℓ₂} Σ) (A' : Algebra {ℓ₃} {ℓ₄} Σ) : 
+                                    Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+  field
+    hom : Homo A A'
+    bij : (s : sorts Σ) → Bijective (′ hom ′ s)
+
+open Isomorphism
+
+-- Isomorphic algebras
+record _≅_ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ)
+               (B : Algebra {ℓ₃} {ℓ₄} Σ) : Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄)) where
+  field
+    iso : Isomorphism A B
+
+{- The relation of isomorphism between algebras is an equivalence relation -}
+
+reflIso : ∀ {ℓ₁ ℓ₂ Σ} → Reflexive (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ})
+reflIso {Σ = Σ} {A} = record { hom = HomId
+                              ; bij = λ s → record { injective = F.id
+                                                    ; surjective = surj s } }
+  where surj : (s : sorts Σ) → Surjective (′ HomId {A = A} ′ s)
+        surj s = record { from = FE.id
+                        ; right-inverse-of = λ x → Setoid.refl (A ⟦ s ⟧ₛ) }
+
+symIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
+          (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
+          Isomorphism A A' → Isomorphism A' A
+symIso {Σ = Σ} A A' i = record { hom = h⁻¹
+                               ; bij = bij⁻¹ }
+  where h⁻¹ : Homo A' A
+        h⁻¹ = invHomo A A' (hom i) (bij i)
+        surj⁻¹ : (s : sorts Σ) → Surjective (′ h⁻¹ ′ s)
+        surj⁻¹ s = record { from = ′ hom i ′ s
+                          ; right-inverse-of = left-inverse-of (bij i s)
+                          }
+        bij⁻¹ : (s : sorts Σ) → Bijective (′ h⁻¹ ′ s)
+        bij⁻¹ s = record { injective = λ {x} {y} h⁻¹x≈h⁻¹y →
+                             begin
+                               x
+                             ≈⟨ Setoid.sym (A' ⟦ s ⟧ₛ) (right-inverse-of (bij i s) x) ⟩
+                               ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ x)
+                             ≈⟨ Π.cong (′ hom i ′ s) h⁻¹x≈h⁻¹y ⟩
+                               ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ y)
+                             ≈⟨ right-inverse-of (bij i s) y ⟩
+                               y
+                             ∎
+                         ; surjective = surj⁻¹ s }
+              where open EqR (A' ⟦ s ⟧ₛ)
+
+transIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆} {Σ : Signature} → 
+             (A₀ : Algebra {ℓ₁} {ℓ₂} Σ) → (A₁ : Algebra {ℓ₃} {ℓ₄} Σ) →
+             (A₂ : Algebra {ℓ₅} {ℓ₆} Σ) →
+             Isomorphism A₀ A₁ → Isomorphism A₁ A₂ → Isomorphism A₀ A₂
+transIso {Σ = Σ} A₀ A₁ A₂ iso₀ iso₁ =
+            record { hom = hom iso₁ ∘ₕ hom iso₀
+                   ; bij = λ s → bijective (bj₁ s ∘b bj₀ s) }
+  where open HomComp
+        open Bijection
+        bj₀ : (s : sorts Σ) → Bijection (A₀ ⟦ s ⟧ₛ) (A₁ ⟦ s ⟧ₛ)
+        bj₀ s = record { to = ′ hom iso₀ ′ s
+                       ; bijective = bij iso₀ s }
+        bj₁ : (s : sorts Σ) → Bijection (A₁ ⟦ s ⟧ₛ) (A₂ ⟦ s ⟧ₛ)
+        bj₁ s = record { to = ′ hom iso₁ ′ s
+                       ; bijective = bij iso₁ s }
+        
+
+-- Theorem 2.10 del Handbook. Debo poner los mismos niveles en ambas
+-- algebras para que pueda ser una relación binaria en un mismo tipo.
+isoEquiv : ∀ {ℓ₁ ℓ₂} {Σ} → IsEquivalence (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ})
+isoEquiv {Σ = Σ} = record { refl = reflIso
+                          ; sym = λ {A} {A'} i → symIso A A' i
+                          ; trans = λ {A₀} {A₁} {A₂} i₀ i₁ →
+                                           transIso A₀ A₁ A₂ i₀ i₁
+                          }
+
+
+
+{- Theo 2.11 -}
+theo211 : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆} {Σ : Signature} → 
+             (A : Algebra {ℓ₁} {ℓ₂} Σ) → (B : Algebra {ℓ₃} {ℓ₄} Σ) →
+             (C : Algebra {ℓ₅} {ℓ₆} Σ) → A ≅ B →
+             (Homo B C → Homo A C) × (Homo C B → Homo C A)
+theo211 A B C A≅B = (λ h → h ∘ₕ hom i) ,
+                    (λ h → invHomo A B (hom i) (bij i) ∘ₕ h)
+  where open HomComp
+        open _≅_
+        i : Isomorphism A B
+        i = iso A≅B
+
 
 Total : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _ 
 Total _≈_ = ∀ a a' → a ≈ a'
@@ -385,31 +479,83 @@ module InitTermAlg (Σ : Signature) where
   ∣T∣isInitial = record  { alg = ∣T∣
                         ; init = λ A → ∣H∣ A , total A }
 
+open import Relation.Binary.Product.Pointwise using (_×-setoid_)
 
-open Algebra
+module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+        {Σ : Signature}
+       (A : Algebra {ℓ₁} {ℓ₂} Σ) 
+       (B : Algebra {ℓ₃} {ℓ₄} Σ) where
 
-open Hom
--- Homomorphism identity
-HomId : ∀ {ℓ₁ ℓ₂} {Σ} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
-          Homo A A
-HomId {A = A} = record { ′_′ = λ s → FE.id
-                       ; cond = λ { {ar , s} f as →
-                                    Π.cong (A ⟦ f ⟧ₒ)
-                                    (≡to∼v (λ i → Setoid.isEquivalence (A ⟦ i ⟧ₛ))
-                                    (PE.sym (mapId as))) }
-                       }
+  std : (s : sorts Σ) → Setoid _ _
+  std s = (A ⟦ s ⟧ₛ) ×-setoid (B ⟦ s ⟧ₛ)
+  _≈*_ : {ar : Arity Σ} → _
+  _≈*_ {ar} = _≈_ (std ✳ ar)
+  -- these two proofs should be abstracted.
+  ≈₁ : ∀ {ar} {vs vs' : ∥ std ✳ ar ∥} 
+      → vs ≈* vs' → _≈_ (_⟦_⟧ₛ A ✳ ar) (map (λ _ → proj₁) vs) (map (λ _ → proj₁) vs')
+  ≈₁ {[]} ∼⟨⟩ = ∼⟨⟩
+  ≈₁ {i ∷ is} (∼▹ (eq , _) equ) = ∼▹ eq (≈₁ equ)
+  ≈₂ : ∀ {ar} {vs vs' : ∥ std ✳ ar ∥} 
+      → vs ≈* vs' → _≈_ (_⟦_⟧ₛ B ✳ ar) (map (λ _ → proj₂) vs) (map (λ _ → proj₂) vs')
+  ≈₂ {[]} ∼⟨⟩ = ∼⟨⟩
+  ≈₂ {i ∷ is} (∼▹ (_ , eq) equ) = ∼▹ eq (≈₂ equ)
 
+  {- Product of algebras -}
+  _×-alg_ : Algebra {ℓ₃ ⊔ ℓ₁} {ℓ₄ ⊔ ℓ₂} Σ
+  _×-alg_ = record {
+            _⟦_⟧ₛ = λ s → (A ⟦ s ⟧ₛ) ×-setoid (B ⟦ s ⟧ₛ)
+          ; _⟦_⟧ₒ = λ {ar} {s} f → record { _⟨$⟩_ = if f ; cong = cng f}
+          }
+    where if : ∀ {ar s} (f : ops Σ (ar , s)) → _ → _
+          if {ar} {s} f vs =  A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) vs
+                            , B ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₂) vs
+          cng : ∀ {ar s} (f : ops Σ (ar , s)) → {vs vs' : ∥ std ✳ ar ∥} 
+              → vs ≈* vs' → _≈_ (std s) (if f vs) (if f vs')
+          cng {ar} f equ = (Π.cong (_⟦_⟧ₒ A f) (≈₁ equ)) ,
+                           ((Π.cong (_⟦_⟧ₒ B f) (≈₂ equ)))
+
+  {- Projections -}
+  Π₁ : Homo _×-alg_ A
+  Π₁ = record { ′_′ = λ s → record { _⟨$⟩_ = proj₁ ; cong = λ { (eq , _) → eq }}
+              ; cond = λ { {ar , s} f as → Setoid.refl (A ⟦ s ⟧ₛ ) }
+              }
+
+  {- Projections -}
+  Π₂ : Homo _×-alg_ B
+  Π₂ = record { ′_′ = λ s → record { _⟨$⟩_ = proj₂ ; cong = λ { (_ , eq) → eq }}
+              ; cond = λ { {ar , s} f as → Setoid.refl (B ⟦ s ⟧ₛ ) }
+              }
+
+
+open import Relation.Unary hiding (_⊆_;_⇒_)
+
+OpClosed : ∀ {ℓ₁ ℓ₂ ℓ₃ Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+                  (P : (s : sorts Σ) → Pred (∥ A ⟦ s ⟧ₛ ∥) ℓ₃) → Set _
+OpClosed {ℓ₃ = ℓ₃} {Σ = Σ} A P = ∀ {ar s} (f : ops Σ (ar , s)) →
+             (P ⇨v ⟨→⟩ P s) (A ⟦ f ⟧ₒ ⟨$⟩_)
+
+private
+  module _ {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ)
+           (rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₃)
+           (req : (s : sorts Σ) → IsEquivalence (rel s))
+           (wd : (s : sorts Σ) → WellDefRel (A ⟦ s ⟧ₛ) (rel s)) where
+
+    open ProdAlg
+    substi : Set _
+    substi =  ∀ {ar s} (f : ops Σ (ar , s)) → rel * =[ A ⟦ f ⟧ₒ ⟨$⟩_ ]⇒ rel s
+
+    pred' : (s : sorts Σ) → Pred (∥ (A ×-alg A) ⟦ s ⟧ₛ ∥) ℓ₃
+    pred' s = λ {(a , a') → rel s a a'}
+    
+    -- Claim: substi ↔ OpClosed (A ×-alg A) pred'
 
 record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}
                   (A : Algebra {ℓ₁} {ℓ₂} Σ) : Set (lsuc ℓ₃ ⊔ ℓ₂ ⊔ ℓ₁) where
   field
     rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₃
-    welldef : ∀ {s} {x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)} →
-                    _≈_ (A ⟦ s ⟧ₛ) x₁ x₂ → _≈_ (A ⟦ s ⟧ₛ) y₁ y₂ →
-                    rel s x₁ y₁ → rel s x₂ y₂
+    welldef : (s : sorts Σ) → WellDefRel (A ⟦ s ⟧ₛ) (rel s)
     cequiv : (s : sorts Σ) → IsEquivalence (rel s)
-    csubst : ∀ {ar} {s} → (f : ops Σ (ar , s)) → 
-              _∼v_ {R = rel} {is = ar}  =[ _⟨$⟩_ (A ⟦ f ⟧ₒ) ]⇒ rel s
+    csubst : ∀ {ar s} (f : ops Σ (ar , s)) → rel * =[ A ⟦ f ⟧ₒ ⟨$⟩_ ]⇒ rel s
 
 
 open Congruence
@@ -417,108 +563,57 @@ open Congruence
 
 _⊆_ : ∀ {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
         Congruence {ℓ₃} A → Congruence {ℓ₃} A → Set _
-Φ ⊆ Ψ = ∀ s → rel Φ s ⇒ rel Ψ s
+Φ ⊆ Ψ = ∀ s → (rel Φ s) ⇒ (rel Ψ s)
 
--- Álgebra Cociente
-Quotient : ∀ {ℓ₁ ℓ₂ ℓ₃} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence {ℓ₃} A) →
+-- Quotient Algebra
+_/_ : ∀ {ℓ₁ ℓ₂ ℓ₃} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence {ℓ₃} A) →
                             Algebra {ℓ₁} {ℓ₃} Σ
-Quotient A C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
+A / C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
                               ; _≈_ = rel C s
                               ; isEquivalence = cequiv C s })
                ∥
                (λ {ar} {s} f → record { _⟨$⟩_ = λ v → A ⟦ f ⟧ₒ ⟨$⟩ v
                                       ; cong = csubst C f } )
-                          
 
--- SUBALGEBRAS
-
-{-
-
-  Dado un tipo A, un subconjunto B de A está dado por (A → Set), es decir
-    un predicado sobre A.
-
-  Subset A P = Σ[a ∈ A] (P a)
-
-  Para definir subsetoide, necesitamos un predicado sobre el carrier
-  del setoide y (aunque no lo usamos!!) una prueba de que el predicado
-  es cerrado respecto de la equivalencia.
-
-  Si tengo B ⊆ A y (φ : Rel A), entonces φ_B = (B × B) ∩ φ
-
-  Podemos ver si (ψ : Rel B), entonces ψ ∩ φ : Rel B
-
--}
-
-
-open import Relation.Unary hiding (_⊆_)
-Subset : ∀ {ℓ₁ ℓ₂} → (A : Set ℓ₁) → (Pred A ℓ₂) → Set _
-Subset A P = Σ[ a ∈ A ] (P a)
-restr : ∀ {ℓ₁ ℓ₂ ℓ₃} → (A : Set ℓ₁) → (P : Pred A ℓ₂) →  (φ : Rel A ℓ₃) → Rel (Subset A P) _
-restr A P φ (a , p) (a' , q) = φ a a'
-
-
-record SetoidPredicate {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) :
-                           Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃))  where
-  field
-    predicate   : Pred (Carrier S) ℓ₃
-    predWellDef : ∀ {x y : Carrier S} → (_≈_ S) x y →
-                                      predicate x → predicate y
-
+-- Subalgebras
 
 open SetoidPredicate
 
-SubSetoid : ∀ {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) → (P : SetoidPredicate {ℓ₃ = ℓ₃} S) →
-                         Setoid _ _
-SubSetoid S P = record { Carrier = Subset (Carrier S) (predicate P)--Σ[ e ∈ Carrier S ] (predicate P e)
-                       ; _≈_ = λ { (e₁ , _) (e₂ , _) → (_≈_ S) e₁ e₂ }
-                       ; isEquivalence = pequiv
-                       }
-  where pequiv : _
-        pequiv = record { refl = Setoid.refl S
-                        ; sym = Setoid.sym S
-                        ; trans = Setoid.trans S }
-
-{- Induced Subalgebra -}
-
 record SubAlg {ℓ₃ ℓ₁ ℓ₂} {Σ} (A : Algebra {ℓ₁} {ℓ₂} Σ) :
                                           Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃)) where
-  constructor _⊢⊣_
+
   field
     pr   : (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)
-    sacond : ∀ {ar} {s} → (f : ops Σ (ar , s)) →
-                  (_⇨v_ (predicate ∘ pr) ⟨→⟩ predicate (pr s)) (_⟨$⟩_ (A ⟦ f ⟧ₒ))
-
+    opClosed : OpClosed {Σ = Σ} A (λ s x → predicate (pr s) x)
+    
+  pcong : ∀ {ar} {v₁ v₂ : HVec (λ s → Carrier $ SubSetoid (A ⟦ s ⟧ₛ) (predicate (pr s))) ar} →
+                           _∼v_ {l₁ = ℓ₂} {R = λ s x x₁ → Setoid._≈_ (A ⟦ s ⟧ₛ) (proj₁ x) (proj₁ x₁)} {is = ar} v₁ v₂ →
+                           _∼v_ {l₁ = ℓ₂} {R = λ s → Setoid._≈_ (A ⟦ s ⟧ₛ)} (map (λ _ → proj₁) v₁ ) (map (λ _ → proj₁) v₂)
+  pcong {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
+  pcong {i ∷ is} (∼▹ x eq) = ∼▹ x (pcong eq)
+  
 
 SubAlgebra : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
                    SubAlg {ℓ₃ = ℓ₃} A → Algebra Σ
-SubAlgebra {Σ} {A = A} (Pₛ ⊢⊣ cond) = (λ s → SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s))
-                                    ∥ if
-  where if : ∀ {ar} {s} → (f : ops Σ (ar , s)) → _
-        if {ar} {s} f = record { _⟨$⟩_ = λ v → (A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) v)
-                                       , cond f (vpred v)
-                               ; cong = λ { {v₁} {v₂} eq → Π.cong (A ⟦ f ⟧ₒ) (pcong eq) }
-                               }
-           where pcong : ∀ {ar} {v₁ v₂ : HVec (λ s → Carrier $ SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s)) ar} →
-                           _∼v_ {is = ar} v₁ v₂ →
-                           map (λ _ → proj₁) v₁ ∼v map (λ _ → proj₁) v₂
-                 pcong {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
-                 pcong {i ∷ is} (∼▹ x eq) = ∼▹ x (pcong eq)
-                 vpred : ∀ {ar'} →
-                         (v : HVec (λ z → Σ[ e ∈ Carrier (A ⟦ z ⟧ₛ) ] predicate (Pₛ z) e) ar') →
-                         (predicate ∘ Pₛ) ⇨v map (λ _ → proj₁) v
-                 vpred {[]} ⟨⟩ = ⇨v⟨⟩
-                 vpred {i ∷ is} (v ▹ v₁) = ⇨v▹ (proj₂ v) (vpred v₁)
+SubAlgebra {Σ} {A = A} S = is ∥ if 
+           where
+             open SubAlg S 
+             is : sorts Σ → _
+             is s = SubSetoid (A ⟦ s ⟧ₛ) (predicate (pr s))
+             if : ∀ {ar} {s} → (f : ops Σ (ar , s)) → is ✳ ar ⟶ is s
+             if {ar} {s} f = record { _⟨$⟩_ = λ v → (A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) v)
+                                         , opClosed f (⇨₂ v)
+                                  ; cong = λ { {v₁} {v₂} eq → Π.cong (A ⟦ f ⟧ₒ) (pcong eq) }
+                                  }
 
 
-open Hom
-open Homo
 
 {- Homomorphic image is a SubAlgebra of B -}
 
 SubImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
                               (B : Algebra {ℓ₃} {ℓ₄} Σ) →
                               (h : Homo A B) → SubAlg B
-SubImg {Σ} A B h = subipr ⊢⊣ subicond
+SubImg {Σ} A B h = record { pr = subipr ; opClosed = subicond }
   where subiwdef : ∀ {s} {b₀ b₁} → _≈_ (B ⟦ s ⟧ₛ) b₀ b₁ →
                      ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b₀) →
                      ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b₁)
@@ -570,16 +665,16 @@ Kernel : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Algebra {ℓ₁} {ℓ₂} �
                              Congruence {ℓ₃ = ℓ₄} A
 Kernel {Σ} {ℓ₄ = ℓ₄} {A = A} {B} h =
        record { rel = krel
-              ; welldef = krelWdef
+              ; welldef = λ {s {(x , y)} {(w , z)} eq p → krelWdef s (proj₁ eq) (proj₂ eq) p }
               ; cequiv = krelEquiv
               ; csubst = krsubst
               }
   where krel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₄
         krel s = λ a₁ a₂ → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a₁ ) (′ h ′ s ⟨$⟩ a₂)
-        krelWdef : ∀ {s} {x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)} →
+        krelWdef : ∀ s {x₁ x₂ y₁ y₂ : Carrier (A ⟦ s ⟧ₛ)} →
                    _≈_ (A ⟦ s ⟧ₛ) x₁ x₂ → _≈_ (A ⟦ s ⟧ₛ) y₁ y₂ →
                    krel s x₁ y₁ → krel s x₂ y₂
-        krelWdef {s} {x₁} {x₂} {y₁} {y₂} eqx eqy x₁ry₁ =
+        krelWdef s {x₁} {x₂} {y₁} {y₂} eqx eqy x₁ry₁ =
                         begin
                           ′ h ′ s ⟨$⟩ x₂
                           ≈⟨ Setoid.sym (B ⟦ s ⟧ₛ) (Π.cong (′ h ′ s) eqx) ⟩
@@ -614,18 +709,17 @@ Kernel {Σ} {ℓ₄ = ℓ₄} {A = A} {B} h =
                 p {[]} ∼⟨⟩ = ∼⟨⟩
                 p {i ∷ is} (∼▹ x eq₁) = ∼▹ x (p eq₁)
 
-
+open import Relation.Binary.Product.Pointwise using (_×-setoid_)
 
 QuotHom : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-                        (Q : Congruence {ℓ₃} A) → Homo A (Quotient A Q)
+                        (Q : Congruence {ℓ₃} A) → Homo A (A / Q)
 QuotHom {Σ} A Q = record { ′_′ = fₕ
                          ; cond = condₕ }
-  where fₕ : A ⟿ Quotient A Q
+  where fₕ : A ⟿ (A / Q)
         fₕ s = record { _⟨$⟩_ = F.id
-                      ; cong = λ eq → welldef Q (Setoid.refl (A ⟦ s ⟧ₛ)) eq
-                                              (IsEquivalence.refl (cequiv Q s)) }
+                      ; cong = PC-resp-~ {S = A ⟦ s ⟧ₛ} (rel Q s) (welldef Q s , (cequiv Q s)) }
           where open IsEquivalence
-        condₕ : ∀ {ty} (f : ops Σ ty) → homCond A (Quotient A Q) fₕ f
+        condₕ : ∀ {ty} (f : ops Σ ty) → homCond A (A / Q) fₕ f
         condₕ {ar , s} f as = subst ((rel Q s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
                                     (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) mapid≡)
                                     (IsEquivalence.refl (cequiv Q s))
@@ -636,145 +730,22 @@ QuotHom {Σ} A Q = record { ′_′ = fₕ
                 mapid≡ {as' = v ▹ as'} = PE.cong (λ as'' → v ▹ as'') mapid≡ 
 
 
-open import Function.Bijection renaming (_∘_ to _∘b_) 
-open import Function.Surjection hiding (_∘_)
-
-open Bijective
-
-invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
-          (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
-          (h : Homo A A') → (bj : (s : sorts Σ) → Bijective (′ h ′ s)) →
-          Homo A' A
-invHomo {Σ = Σ} A A' h bj = record { ′_′ = h⁻¹
-                                   ; cond = cond⁻¹
-                                   }
-  where h⁻¹ : A' ⟿ A
-        h⁻¹ s =  from (bj s)
-        cond⁻¹ : ∀ {ty} (f : ops Σ ty) → homCond A' A h⁻¹ f
-        cond⁻¹ {ar , s} f as = 
-               begin
-                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ as)
-               ≈⟨ Π.cong (h⁻¹ s) (Π.cong (A' ⟦ f ⟧ₒ)
-                         (∼↑v (λ i a' → Setoid.sym (A' ⟦ i ⟧ₛ) (right-inverse-of (bj i) a'))
-                         as)) ⟩
-                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ map (λ i a' → ′ h ′ i ⟨$⟩ (h⁻¹ i ⟨$⟩ a')) as)
-               ≈⟨ Π.cong (h⁻¹ s) (Π.cong (A' ⟦ f ⟧ₒ)
-                 (Setoid.sym (_⟦_⟧ₛ A' ✳ ar) (≡to≈ (_⟦_⟧ₛ A' ✳ ar) (propMapV∘ as (λ i → _⟨$⟩_ (h⁻¹ i))
-                                                                               (λ i → _⟨$⟩_ (′ h ′ i)))))) ⟩
-                 h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ map (λ i → _⟨$⟩_ (′ h ′ i)) (map (λ i → _⟨$⟩_ (h⁻¹ i)) as))
-               ≈⟨ Π.cong (h⁻¹ s) (Setoid.sym (A' ⟦ s ⟧ₛ) (cond h f (map (λ i → _⟨$⟩_ (h⁻¹ i)) as))) ⟩
-                 h⁻¹ s ⟨$⟩ (′ h ′ s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ (map (λ i → _⟨$⟩_ (h⁻¹ i)) as)))
-               ≈⟨ left-inverse-of (bj s) (A ⟦ f ⟧ₒ ⟨$⟩ (map (λ i → _⟨$⟩_ (h⁻¹ i)) as)) ⟩
-                 A ⟦ f ⟧ₒ ⟨$⟩ map⟿ A' A h⁻¹ as
-               ∎
-          where open EqR (A ⟦ s ⟧ₛ)
-
-
-
-record Isomorphism {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
-                   (A : Algebra {ℓ₁} {ℓ₂} Σ) (A' : Algebra {ℓ₃} {ℓ₄} Σ) : 
-                                    Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
-  field
-    hom : Homo A A'
-    bij : (s : sorts Σ) → Bijective (′ hom ′ s)
-
-open Isomorphism
-
--- Isomorphic algebras
-record _≅_ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ)
-               (B : Algebra {ℓ₃} {ℓ₄} Σ) : Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄)) where
-  field
-    iso : Isomorphism A B
-
-{- The relation of isomorphism between algebras is an equivalence relation -}
-
-reflIso : ∀ {ℓ₁ ℓ₂ Σ} → Reflexive (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ})
-reflIso {Σ = Σ} {A} = record { hom = HomId
-                              ; bij = λ s → record { injective = F.id
-                                                    ; surjective = surj s } }
-  where surj : (s : sorts Σ) → Surjective (′ HomId {A = A} ′ s)
-        surj s = record { from = FE.id
-                        ; right-inverse-of = λ x → Setoid.refl (A ⟦ s ⟧ₛ) }
-
-symIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
-          (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
-          Isomorphism A A' → Isomorphism A' A
-symIso {Σ = Σ} A A' i = record { hom = h⁻¹
-                               ; bij = bij⁻¹ }
-  where h⁻¹ : Homo A' A
-        h⁻¹ = invHomo A A' (hom i) (bij i)
-        surj⁻¹ : (s : sorts Σ) → Surjective (′ h⁻¹ ′ s)
-        surj⁻¹ s = record { from = ′ hom i ′ s
-                          ; right-inverse-of = left-inverse-of (bij i s)
-                          }
-        bij⁻¹ : (s : sorts Σ) → Bijective (′ h⁻¹ ′ s)
-        bij⁻¹ s = record { injective = λ {x} {y} h⁻¹x≈h⁻¹y →
-                             begin
-                               x
-                             ≈⟨ Setoid.sym (A' ⟦ s ⟧ₛ) (right-inverse-of (bij i s) x) ⟩
-                               ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ x)
-                             ≈⟨ Π.cong (′ hom i ′ s) h⁻¹x≈h⁻¹y ⟩
-                               ′ hom i ′ s ⟨$⟩ (′ h⁻¹ ′ s ⟨$⟩ y)
-                             ≈⟨ right-inverse-of (bij i s) y ⟩
-                               y
-                             ∎
-                         ; surjective = surj⁻¹ s }
-              where open EqR (A' ⟦ s ⟧ₛ)
-
-transIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆} {Σ : Signature} → 
-             (A₀ : Algebra {ℓ₁} {ℓ₂} Σ) → (A₁ : Algebra {ℓ₃} {ℓ₄} Σ) →
-             (A₂ : Algebra {ℓ₅} {ℓ₆} Σ) →
-             Isomorphism A₀ A₁ → Isomorphism A₁ A₂ → Isomorphism A₀ A₂
-transIso {Σ = Σ} A₀ A₁ A₂ iso₀ iso₁ =
-            record { hom = hom iso₁ ∘ₕ hom iso₀
-                   ; bij = λ s → bijective (bj₁ s ∘b bj₀ s) }
-  where open HomComp
-        open Bijection
-        bj₀ : (s : sorts Σ) → Bijection (A₀ ⟦ s ⟧ₛ) (A₁ ⟦ s ⟧ₛ)
-        bj₀ s = record { to = ′ hom iso₀ ′ s
-                       ; bijective = bij iso₀ s }
-        bj₁ : (s : sorts Σ) → Bijection (A₁ ⟦ s ⟧ₛ) (A₂ ⟦ s ⟧ₛ)
-        bj₁ s = record { to = ′ hom iso₁ ′ s
-                       ; bijective = bij iso₁ s }
-        
-
--- Theorem 2.10 del Handbook. Debo poner los mismos niveles en ambas
--- algebras para que pueda ser una relación binaria en un mismo tipo.
-isoEquiv : ∀ {ℓ₁ ℓ₂} {Σ} → IsEquivalence (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ})
-isoEquiv {Σ = Σ} = record { refl = reflIso
-                          ; sym = λ {A} {A'} i → symIso A A' i
-                          ; trans = λ {A₀} {A₁} {A₂} i₀ i₁ →
-                                           transIso A₀ A₁ A₂ i₀ i₁
-                          }
-
-
-
-{- Theo 2.11 -}
-theo211 : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆} {Σ : Signature} → 
-             (A : Algebra {ℓ₁} {ℓ₂} Σ) → (B : Algebra {ℓ₃} {ℓ₄} Σ) →
-             (C : Algebra {ℓ₅} {ℓ₆} Σ) → A ≅ B →
-             (Homo B C → Homo A C) × (Homo C B → Homo C A)
-theo211 A B C A≅B = (λ h → h ∘ₕ hom i) ,
-                    (λ h → invHomo A B (hom i) (bij i) ∘ₕ h)
-  where open HomComp
-        open _≅_
-        i : Isomorphism A B
-        i = iso A≅B
-
 
     
 open Surjective
 
-firstHomTheo : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-                             (B : Algebra {ℓ₃} {ℓ₄} Σ) →
-                             (h : Homo A B) →
-                             (surj : (s : sorts Σ) → Surjective (′ h ′ s)) →
-                             Isomorphism (Quotient A (Kernel h)) B
-firstHomTheo {Σ} A B h surj =
+-- Isomorphism Theorems
+module FirstHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
+                     (A : Algebra {ℓ₁} {ℓ₂} Σ)
+                     (B : Algebra {ℓ₃} {ℓ₄} Σ)
+                     (h : Homo A B) where
+
+ firstHomTheo : (surj : (s : sorts Σ) → Surjective (′ h ′ s)) → Isomorphism (A / Kernel h) B
+ firstHomTheo surj =
              record { hom = homo₁
                     ; bij = bij₁
                     }
-  where homo₁ : Homo (Quotient A (Kernel h)) B
+  where homo₁ : Homo (A / Kernel h) B
         homo₁ = record { ′_′ = λ s → record { _⟨$⟩_ = λ a → ′ h ′ s ⟨$⟩ a
                                             ; cong = F.id }
                        ; cond = λ { {ar , s} f as → cond h f as }
@@ -790,7 +761,7 @@ firstHomTheo {Σ} A B h surj =
         bij₁ s = record { injective = F.id
                         ; surjective = surj₁ s }
 
-{-
+
 module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                      (A : Algebra {ℓ₁} {ℓ₂} Σ)
                      (B : SubAlg {ℓ₃} A)
@@ -798,52 +769,145 @@ module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
 
   -- Trace of a congruence in a subalgebra.
   trace : (s : sorts Σ) → Rel ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ _
-<<<<<<< Updated upstream
   trace s (b , _) (b' , _) = rel Φ s b b' 
-=======
-  trace s = λ {(b₁ , _) (b₂ , _) → rel Φ s b₁ b₂ }
->>>>>>> Stashed changes
 
   -- Collection of equivalence classes that intersect B
-  A/Φ∩B : (s : sorts Σ) → Pred ∥ (Quotient A Φ) ⟦ s ⟧ₛ ∥ _
-  A/Φ∩B s = λ a → Σ[ b ∈ ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ ] _≈_ (A ⟦ s ⟧ₛ) a (proj₁ b)
+  A/Φ∩B : (s : sorts Σ) → Pred ∥ (A / Φ) ⟦ s ⟧ₛ ∥ _
+  A/Φ∩B s = λ a → Σ[ b ∈ ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ ] (rel Φ s) a (proj₁ b)
 
   -- Item 1 of theorem. The trace of Φ in B is a congruence on B.
-  theo₁ : Congruence (SubAlgebra B) 
+  theo₁ : Congruence (SubAlgebra B)
   theo₁ = record { rel = trace
-                 ; welldef = λ { {s} eq eq' rel → welldef Φ eq eq' rel}
-                 ; cequiv = {!!}
-                 ; csubst = {!!} }
+                 ; welldef = wellDef
+                 ; cequiv = cEquiv
+                 ; csubst = λ f x → csubst Φ f (relπ₁ x)
+                 }
+        where wellDef : (s : sorts Σ) → WellDefRel (SubAlgebra B ⟦ s ⟧ₛ) (trace s)
+              wellDef s (eq₁ , eq₂) a₁~a₂ = welldef Φ s (eq₁ , eq₂) a₁~a₂
+              cEquiv :  (s : sorts Σ) → IsEquivalence (trace s)
+              cEquiv s = record { refl = λ {x} → IsEquivalence.refl (cequiv Φ s) {proj₁ x}
+                                ; sym = λ x → IsEquivalence.sym (cequiv Φ s) x
+                                ; trans = λ x x₁ → IsEquivalence.trans (cequiv Φ s) x x₁ }
+              relπ₁ : {ar : List (sorts Σ)} {i j : HVec (λ z → Carrier (SubAlgebra B ⟦ z ⟧ₛ)) ar} →
+                         (eq : _∼v_ {R = trace } i j) → map (λ _ → proj₁) i ∼v map (λ _ → proj₁) j
+              relπ₁ ∼⟨⟩ = ∼⟨⟩
+              relπ₁ (∼▹ x eq) = ∼▹ x (relπ₁ eq)
+  open SubAlg
+  isor : (s : sorts Σ) → SetoidPredicate ((A / Φ) ⟦ s ⟧ₛ)
+  isor s = record { predicate = A/Φ∩B s
+                  ; predWellDef = λ { {x} {y} x~y ((a , pa) , eq) → (a , pa) ,
+                                          tr (sy x~y) eq }
+                  }
+                where open IsEquivalence (cequiv Φ s) renaming (trans to tr ; sym to sy)
 
-  -- A/Φ∩B is a subalgebra of A/Φ
-  theo₂ : SubAlg (Quotient A Φ)
-  theo₂ = (λ s → record { predicate = A/Φ∩B s
-                         ; predWellDef = {!!} })
-          ⊢⊣
-          {!!}
+  bs : ∀ ar → (vs : HVec (λ z → Carrier ((A / Φ) ⟦ z ⟧ₛ)) ar) → 
+            (as : vs Relation.Unary.∈ _⇨v_ ((predicate) ∘ isor)) → 
+          HVec (λ i → Σ[ a ∈ (Carrier (A ⟦ i ⟧ₛ)) ] (predicate (pr B i) a)) ar
+  bs [] ⟨⟩ ⇨v⟨⟩ = ⟨⟩
+  bs (i ∷ is) (v ▹ vs₁) (⇨v▹ ((b , pv) , bv) as₁) = (  (b , pv)) ▹ bs is vs₁ as₁
+     where open IsEquivalence (cequiv Φ i) renaming (trans to tr ; sym to sy)
+  bseq :  ∀ {ar} 
+          (vs : HVec (λ z → Carrier ((A / Φ) ⟦ z ⟧ₛ)) ar) → 
+          (as : vs Relation.Unary.∈ _⇨v_ ((predicate) ∘ isor)) →
+          _∼v_ {R = rel Φ} vs (map (λ _ → proj₁) (bs ar vs as))
+  bseq {[]} ⟨⟩ ⇨v⟨⟩ = ∼⟨⟩
+  bseq {i ∷ is} (v ▹ vs) (⇨v▹ pv as₁) = ∼▹ (proj₂ pv)
+                                                  (bseq {is} vs as₁)
+
+
+-- A/Φ∩B is a subalgebra of A/Φ
+  theo₂ : SubAlg (A / Φ)
+  theo₂ = record { pr = isor ; opClosed = io } 
+          where
+            io : ∀ {ar s} → (f : ops Σ (ar , s)) →
+              (_⇨v_ (( predicate) ∘ isor) ⟨→⟩ predicate (isor s)) (_⟨$⟩_ ((A / Φ) ⟦ f ⟧ₒ))
+            io {ar} {s} f {vs} as = SubAlgebra B ⟦ f ⟧ₒ ⟨$⟩ bs ar vs as
+                                  , csubst Φ f (bseq vs as)
+
+  open IsEquivalence  renaming (refl to ref;sym to symm;trans to tran)
 
   -- A/Φ∩B is isomorphic to B/(the trace of Φ in B)
-  theo₃ : Isomorphism (SubAlgebra theo₂) (Quotient (SubAlgebra B) theo₁)
-  theo₃ = {!!}
+  theo₃ : Isomorphism (SubAlgebra theo₂) (SubAlgebra B / theo₁)
+  theo₃ = record {
+        hom = record {
+            ′_′ = ⇉
+        ; cond = cond⇉ }
+      ; bij = λ s → record
+            { injective = λ { {a , (b , pb) , a~b}
+                              {c , (d , pd) , c~d} x₁ →
+                                tran (cequiv Φ s) a~b
+                                (tran (cequiv Φ s) x₁
+                                  (symm (cequiv Φ s) c~d)) }
+            ; surjective = record {
+                           from = record { _⟨$⟩_ = λ { (a , pa) → a , ((a , pa) , (ref (cequiv Φ s) {a})) }
+                                         ; cong = λ { {a , pa} {b , pb} x → x }}
+                         ; right-inverse-of = λ x → ref (cequiv Φ s)
+                         }
+            }
+      }
+      where ⇉ : SubAlgebra theo₂ ⟿ (SubAlgebra B / theo₁)
+            ⇉ s = record { _⟨$⟩_ = λ x → proj₁ (proj₂ x)
+                                     ; cong = λ { {a , (b , pb) , a~b}
+                                            {c , (d , pd) , c~d} x →
+                                            tran (cequiv Φ s) (symm (cequiv Φ s) a~b)
+                                            (tran (cequiv Φ s) x c~d)}
+                                     }
+            mutual 
+
+              cond⇉ : {ty : _} (f : ops Σ ty) →
+                    homCond (SubAlgebra theo₂) (SubAlgebra B / theo₁) ⇉ f
+              cond⇉  f as = csubst Φ f  (cond⇉* as)
+              cond⇉* : ∀ {ar} as →  map (λ _ → proj₁) (bs ar (map (λ _ → proj₁) as)
+                                                         (⇨₂ as))
+                                    ∼v
+                                 map (λ _ → proj₁) (map (( _⟨$⟩_) ∘ ⇉) as)
+              cond⇉* {[]} ⟨⟩ = ∼⟨⟩
+              cond⇉* {i ∷ is} (v ▹ as) = ∼▹ (ref (cequiv Φ i)) (cond⇉* as)
 
 
 module ThirdHomTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
                     (A : Algebra {ℓ₁} {ℓ₂} Σ)
                     (Φ Ψ : Congruence {ℓ₃} A)
-                    (Φ⊆Ψ : Φ ⊆ Ψ)
+                    (Ψ⊆Φ : Ψ ⊆ Φ )
                     where
 
+  open IsEquivalence renaming (trans to tr ; sym to sy ; refl to re) 
   -- Φ/Ψ is a congruence on A/Ψ
-  theo₁ : Congruence (Quotient A Ψ)
-  theo₁ = record { rel = λ s a₁ a₂ → rel Φ s a₁ a₂
-                 ; welldef = {!!}
-                 ; cequiv = {!!}
-                 ; csubst = {!!} }
+  theo₁ : Congruence (A / Ψ)
+  theo₁ = record { rel = λ {s x x₁ → rel Φ s x x₁ } 
+                 ; welldef = λ { s {a , b} {c , d} (a~c , b~d) a~b →
+                        tr (cequiv Φ s) (sy (cequiv Φ s) (Ψ⊆Φ s a~c))
+                       (tr (cequiv Φ s) a~b ((Ψ⊆Φ s b~d))) }
+                 ; cequiv = λ s → cequiv Φ s
+                 ; csubst = csubst Φ
+                 }
+
+                 
+
 
   -- A/Φ is isomorphic to (A/Ψ)/(Φ/Ψ)
-  theo₂ : Isomorphism (Quotient A Φ) (Quotient (Quotient A Ψ) theo₁)
-  theo₂ = {!!}
+  theo₂ : Isomorphism (A / Φ) ((A / Ψ) / theo₁)
+  theo₂ = record { hom = ho
+                 ; bij = λ s → record { injective = λ x₁ → x₁
+                                      ; surjective = record { from = act s
+                                        ; right-inverse-of = λ x → re (cequiv Φ s) {x} }
+                                      }
+                 }
+        where
+              act : (A / Φ) ⟿ ((A / Ψ) / theo₁)
+              act s = record { _⟨$⟩_ = F.id ; cong = λ x → x }
+              condₕ : ∀ {ty} (f : ops Σ ty) →  homCond (A / Φ) ((A / Ψ) / theo₁) act f
+              condₕ {ar , s} f as = subst ((rel Φ s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
+                                    (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) mapid≡)
+                                    (IsEquivalence.refl (cequiv Φ s))
+                where open IsEquivalence
+                      mapid≡ : ∀ {ar'} {as' : Carrier (_⟦_⟧ₛ A ✳ ar')} →
+                               as' ≡ map (λ _ a → a) as'
+                      mapid≡ {as' = ⟨⟩} = PE.refl
+                      mapid≡ {as' = v ▹ as'} = PE.cong (λ as'' → v ▹ as'') mapid≡ 
 
--}
-
+              ho : Homo (A / Φ) ((A / Ψ) / theo₁)
+              ho = record { ′_′ = act
+                          ; cond = condₕ
+                          }
 

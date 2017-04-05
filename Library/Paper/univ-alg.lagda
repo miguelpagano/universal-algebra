@@ -61,8 +61,8 @@ data S : Set where nat : S ; bool : S
 data O : (List S) × S → Set where
   const       :  ℕ → O ([] , nat)
   eq          :  O ([ nat , nat ] , bool)
-  and or      :  O ([ bool , bool ] , bool)
-  plus prod   :  O ([ nat , nat ] , nat)
+  and         :  O ([ bool , bool ] , bool)
+  plus        :  O ([ nat , nat ] , nat)
 
 Sig₁ : Signature
 Sig₁ = record { sorts = S ; ops = O }
@@ -82,9 +82,8 @@ data monoSorted {ar s} : ops (ar ↦ s) → Set where
 monoNat : ∀ {ar} → (o : O (ar  ↦ nat)) → monoSorted o
 monoNat (const n) = isMono (const n) []
 monoNat plus = isMono plus (_≡_.refl ∷ _≡_.refl ∷ [])
-monoNat prod = isMono prod (_≡_.refl ∷ _≡_.refl ∷ [])
 \end{spec}
-There are only three cases in |monoNat| because the other
+There are only two cases in |monoNat| because the other
 constructors of |O| have target sort |bool|.
 
 \paragraph{Algebra.}
@@ -183,10 +182,8 @@ iS bool  = setoid Bool
 iO : ∀ {ar s} → ops Sig₁ (ar ↦ s) → (iS ✳ ar) ⟶ iS s
 iO (const n)  = record  { _⟨$⟩_ = λ { ⟨⟩ → n } ; cong = {! !} }
 iO plus  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ + n₂} ; cong = {! !} }
-iO prod  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ * n₂} ; cong = {! !} }
 iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ =ₙ n₂} ; cong = {! !} }
 iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂} ; cong = {! !} }
-iO or    = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∨ b₂} ; cong = {! !} }
        
 Alg₁ : Algebra Sig₁
 Alg₁ = record { _⟦_⟧ₛ = iS ; _⟦_⟧ₒ = iO }
@@ -218,10 +215,10 @@ and a proof that it satisfies condition \eqref{eq:homcond}, expressed by
 \begin{spec}
 homCond : ∀ ty → A ⟿ B → ops Σ ty → Set _
 homCond (ar ↦ s) h f =   (as : ∥ A ⟦ ar ⟧ₛ* ∥) → 
-         h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as) ≈ₛ B ⟦ f ⟧ₒ ⟨$⟩ map⟿ h as
+         h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as) ≈ₛ B ⟦ f ⟧ₒ ⟨$⟩ map h as
 \end{spec}
 \noindent where |_≈ₛ_| is the equivalence relation of the setoid
-|B ⟦ s ⟧ₛ| and |map⟿ h| is the obvious extension of |h| over vectors.
+|B ⟦ s ⟧ₛ| and |map h| is the obvious extension of |h| over vectors.
 
 For |H : Homo A B|, the family of setoid morphism is |′ H ′ : A ⟿ B|
 and |cond H| is the proof for |homCond ′ H ′|; and for |a : A ⟦ s ⟧ₛ|, we
@@ -229,7 +226,57 @@ have |′ H ′ s ⟨$⟩ a : B ⟦ s ⟧ₛ|.
 
 \subsection{Quotient and subalgebras}
 In order to prove the more basic results of universal algebra, we need
-to formalize congruence relations, quotients, and sub-algebras.
+to formalize subalgebras, congruence relations, and quotients.
+
+\paragraph{Subalgebra}
+
+Usually, a subalgebra $\mathcal{B}$ of an algebra $\mathcal{A}$
+consists of a family of subsets $\mathcal{B}_s \subseteq
+\mathcal{A}_s$, that are closed by the interpretation of operations;
+that is, for every $ f : [s_1, \ldots,s_n] \Rightarrow s$ the following
+condition holds
+This condition is called \emph{substitutivity} and can
+be formalized using the point-wise extension of $Q$ over vectors: for
+every operation $ f : [s_1, \ldots,s_n] \Rightarrow s$
+\begin{equation}
+(a_1,\ldots,a_n) \in \mathcal{B}_{s_1} \times \cdots \times\mathcal{B}_{s_n}   \text{ implies }
+  f_\mathcal{A}(a_1,\ldots,a_n) \in B_{s} \enspace .
+ \label{eq:opclosed}
+\end{equation} 
+
+As shown by \citet{salvesen-subsets}, subsets cannot be added as a
+construction in intensional type-theory because they lack desirable
+properties; however, one can represent the subset |{ a ∈ A : P a}| as
+the dependent sum |Σ[ a ∈ A ] P| whose inhabitants are pairs |(a , p)|
+where |a : A| and |p : P a|. We can lift this construction to setoids:
+the carrier of |SubSetoid A P| is |Σ[ a ∈ ∥ A ∥ ] P| and we take the
+equality over the first projections, this clearly yields an
+equivalence relation.
+
+If |P| is well-defined, then related elements in |A| are either both
+or none of them in the subsetoid; this is a natural property to expect
+for subalgebras. For |A : Algebra Σ|, a family of predicates |P|
+indexed over the sorts satisfies \eqref{eq:opclosed} if
+\begin{spec}
+    opClosed : ((s : sorts Σ) → Pred (∥ A ⟦ s ⟧ₛ∥)) → Set
+    opClosed P = ∀ {ar s} (f : ops Σ (ar , s)) → (P ⇨v ⟨→⟩ P s) (A ⟦ f ⟧ₒ ⟨$⟩_)
+\end{spec}
+\noindent We denote with |P ⇨v| the point-wise extension of |P| over
+vectors; |(Q ⟨→⟩ R) f| can be read as the pre-condition |Q| implies
+post-condition |R| after applying |f|. In summary, given a family |P|
+of predicates, such that |P s| is well-defined and |P| is |opClosed|
+we can define the |SubAlgebra A P|:
+\begin{spec}
+  SubAlgebra : ∀ {Σ} A P → WellDef P → opClosed P → Algebra Σ
+  SubAlgebra A P _ opC = record  {
+        _⟦_⟧ₛ s = SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s) 
+  ;     _⟦_⟧ₒ f = record { _⟨$⟩_ = if  ; cong = ? } }
+    where  if : ∀ {ar s} → (f : ops Σ (ar , s)) → _
+           if f vs = A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) vs , opC f (⇨₂ vs)
+\end{spec}
+\noindent We interpret operations as in the original algebra over the first
+components of the vector |vs|; to show that the results
+satisfies |P s|, we can apply |opC f| to |⇨₂ vs : P ⇨v map (λ_ → proj₁) as|.
 
 \paragraph{Congruence and Quotients}
 A \emph{congruence} on a $\Sigma$-algebra $\mathcal{A}$ is a family
@@ -241,6 +288,9 @@ every operation $ f : [s_1, \ldots,s_n] \Rightarrow s$
   (\vec{a},\vec{b}) \in Q_{s_1} \times \cdots \times Q_{s_n} \text{ implies }
  (f_{\mathcal{A}}(\vec{a}) , f_{\mathcal{A}}(\vec{b})) \in Q_s\label{eq:congcond}
 \end{equation} 
+\noindent Let us remark that this condition could be defined as
+\eqref{eq:opclosed} taking $Q$ as a predicate over $\mathcal{A} \times
+\mathcal{A}$.
 
 Remember that a binary relation over a setoid is well-defined if it is
 preserved by the setoid equality; this notion can be extended over
@@ -255,7 +305,7 @@ for all |a,b ∈ A|, |(a,b) ∈ P| implies |(f a, f b) ∈ Q|.
 record Congruence (A : Algebra Σ) : Set _ where
   field
     rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) _
-    welldef : (s : sorts Σ) → WellDef (rel s)
+    welldef : (s : sorts Σ) → WellDefBin (rel s)
     cequiv : (s : sorts Σ) → IsEquivalence (rel s)
     csubst : ∀ {ar s} → (f : ops Σ (ar , s)) → rel * =[ A ⟦ f ⟧ₒ ⟨$⟩_  ]⇒ rel s
 \end{spec}
@@ -267,83 +317,10 @@ as the set of equivalence classes $\mathcal{A}_s / Q$; the condition
 \Rightarrow s$ can be interpreted as the function mapping the vector
 $([a_1],\ldots,[a_n])$ of equivalence classes into the class $[
 f_\mathcal{A}(a_1,\ldots,a_n)]$. In Agda, we take the same carriers
-from |A| and use |Q s| as the equivalence relation over |A ⟦ s ⟧ₛ|
-and operations are interpreted just as in |A|; operations are 
+from |A| and use |Q s| as the equivalence relation over |∥ A ⟦ s ⟧ₛ ∥|;
+operations are interpreted just as in |A|; operations are 
 interpreted as before and the congruence proof is given by |csubst Q|.
 
-\paragraph{Subalgebra}
-
-In classic logic, a subalgebra consists simply of a subset of the
-carrier of each sort closed by the interpretation of operations.
-In type theory is more complicated, because the notion of subset
-is not the same. Particullary in Agda we don't have subtypes.
-We implement subsetoids in the same way than Capretta. An element
-in a subsetoid of $S$ is a pair consisting of an element $e \in S$ and
-the proof that $e$ satisfies a predicate. The equality of the subsetoid
-is the same than $S$, ignoring the second component of each element:
-
-\begin{spec}
-record SetoidPredicate (S : Setoid _ _) : Set _  where
-  field
-    predicate   : (Carrier S) → Set _
-    predWellDef : ∀ {x y : Carrier S}  → (_≈_ S) x y →
-                                       predicate x → predicate y
-\end{spec}
-
-With a setoid predicate |P|, we can define a subsetoid:
-
-\begin{spec}
-SubSetoid : (S : Setoid _ _) → (P : SetoidPredicate S) → Setoid _ _
-SubSetoid S P = record  { Carrier = Σ[ e ∈ Carrier S ] (predicate P e)
-                        ; _≈_ = λ { (e₁ , _) (e₂ , _) → (_≈_ S) e₁ e₂ }
-                        ; isEquivalence = {! !}
-                        }
-\end{spec}
-
-\noindent We omit the proof of the relation is of equivalence.
-
-Having implemented predicates and subsetoids, we can define the
-condition necessary to construct a subalgebra.
-We need a setoid predicate for each sort, and the condition asserting
-that if we have a vector where each element satisfies the predicate
-(i.e., all elements are in the subset), then applying an operation
-results in an element that satisfies the predicate. 
-
-\begin{spec}
-record SubAlg (A : Algebra Σ) : Set _ where
-  constructor _⊢⊣_
-  field
-    pr   : (s : sorts Σ) → SetoidPredicate (A ⟦ s ⟧ₛ)
-    sacond : ∀  {ar} {s} → (f : ops Σ (ar , s)) →
-                (_⇨v_ (predicate ∘ pr) ⟨→⟩ predicate (pr s))
-                (_⟨$⟩_ (A ⟦ f ⟧ₒ))
-
-\end{spec}
-
-\noindent Function |_⇨v_| extends a predicate over vectors, and
-function |_⟨→⟩_|, from standard library, expresses the condition
-mentioned above.
-
-With |SubAlg A| we can construct a $\Sigma$-algebra. The carriers are
-elements in the subsetoid induced by the predicate |pr|, and for each
-operation, we must give a function from a vector of elements in the
-corresponding subsetoids to another element in a subsetoid.
-The condition |sacond| ensures that we can give the proof that this
-element satisfies the corresponding predicate.
-
-\begin{spec}
-  SubAlgebra : ∀ {Σ} {A} → SubAlg A → Algebra Σ
-  SubAlgebra (Pₛ ⊢⊣ cond)  = (λ s → SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s))
-                           ∥ if
-    where  if : ∀ {ar} {s} → (f : ops Σ (ar , s)) → _
-           if f = record { _⟨$⟩_ = λ v →  (A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) v)
-                                          , cond f (vpred v)
-\end{spec}
-
-\noindent where |vpred| converts the vector v (of elements in the
-subsetoids, i. e., pairs of an element and a predicate) to the extension
-of predicates.
-\manu{este último párrafo no está claro :-/}.
 
 \subsection{Term algebra is initial}
 \manu{Comentar más lo simple que sale respecto a lo que tiene Capretta.}

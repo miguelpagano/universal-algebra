@@ -40,7 +40,7 @@ T Σ 〔 X 〕 = (λ s → ∣T∣ ⟦ s ⟧ₛ)
                  ; {s₀ ∷ ar} {s} f → ∣T∣ ⟦ f ⟧ₒ })
   where open TermAlgebra (Σ 〔 X 〕)
 
-
+open import Setoids
 {- Environments -}
 Env : ∀ {Σ} {X : Vars Σ} {ℓ₁ ℓ₂} →
             (A : Algebra {ℓ₁} {ℓ₂} Σ) → Set ℓ₁
@@ -378,16 +378,15 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                ; welldef = pwdef
                ; cequiv = ⊢REquiv E
                ; csubst = pcsubst }
-  where pwdef : ∀ {s} {t₀ t₀' t₁ t₁'} → t₀ ≡ t₀' → t₁ ≡ t₁' → ⊢R E s t₀ t₁ →
-                                         ⊢R E s t₀' t₁'
-        pwdef {s} {t₀} {.t₀} {t₁} {.t₁} PE.refl PE.refl ⊢t₀≈t₁ = ⊢t₀≈t₁
+  where pwdef : ∀ s → WellDefRel (T Σ 〔 X 〕 ⟦ s ⟧ₛ) (⊢R E s)
+        pwdef s {(t , t')} {(.t , .t')} (PE.refl , PE.refl) ⊢t₀≈t₁ = ⊢t₀≈t₁
         pcsubst : ∀ {ar} {s} → (f : ops Σ (ar , s)) →
                     _∼v_ =[ _⟨$⟩_ (T Σ 〔 X 〕 ⟦ f ⟧ₒ) ]⇒ ⊢R E s
         pcsubst {[]} f ∼⟨⟩ = prefl
         pcsubst {s₀ ∷ ar} {s} f {ts} {ts'} ⊢ts≈ts' = preemp ⊢ts≈ts' f
         
 ⊢Quot : ∀ {Σ X ar} → (E : Theory Σ X ar) → Algebra {Level.zero} { (Level.zero)} Σ
-⊢Quot {Σ} {X} E = Quotient T Σ 〔 X 〕 (⊢Cong E)
+⊢Quot {Σ} {X} E = T Σ 〔 X 〕 / (⊢Cong E)
 
 
 ⊢Quot⊨E : ∀ {Σ X ar} → (E : Theory Σ X ar) → ⊨T {lzero} {lzero} E (⊢Quot E)
@@ -405,13 +404,14 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
 
 
     sall : ∀ {s} {e : Equation Σ X s} → _∈_ {is = ar} e E → (⊢Quot E) ⊨ e
-    sall {s} {e = ⋀ t ≈ t' if「 ar' 」 ( us , us') } e∈E θ us~us' = Congruence.welldef (⊢Cong E) (thm {s} {t} {θ}) (thm {s} {t'} {θ}) equi 
+    sall {s} {e = ⋀ t ≈ t' if「 ar' 」 ( us , us') } e∈E θ us~us' = Congruence.welldef (⊢Cong E) s (thm {s} {t} {θ} , thm {s} {t'} {θ}) equi 
           where open EqR (⊢RSetoid E s)
                 equi : E ⊢ (⋀ (θ ↪s) t ≈ (θ ↪s) t')
                 equi = psubst {Σ} {X} {ar} {E} {s} {ar'} {us} {us'} {t} {t'} e∈E θ
-                  (map∼v (λ {i} {ua} {ub} → Congruence.welldef (⊢Cong E)
-                                (Setoid.sym (_⟦_⟧ₛ T Σ 〔 X 〕 i) (thm {t = ua} {θ}))
-                                (Setoid.sym (_⟦_⟧ₛ T Σ 〔 X 〕 i) (thm {t = ub} {θ}))) us~us')
+                                (map∼v (λ {i} {ua} {ub} → Congruence.welldef (⊢Cong E) i
+                                ((Setoid.sym (_⟦_⟧ₛ T Σ 〔 X 〕 i) (thm {t = ua} {θ})) ,
+                                  (Setoid.sym (_⟦_⟧ₛ T Σ 〔 X 〕 i) (thm {t = ub} {θ})))) us~us')
+
 
 
 complete : ∀ {Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
@@ -420,8 +420,10 @@ complete : ∀ {Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
 complete {Σ} {X} {ar} {s} {E} {t} {t'} sall = begin t
                   ≈⟨ ≡to≈ (⊢RSetoid E s) (PE.sym (idSubst≡ t)) ⟩
                   ((λ x → term (inj₂ x) ⟨⟩) ↪s) t
-                  ≈⟨ Congruence.welldef (⊢Cong E ) (Setoid.sym ((_⟦_⟧ₛ T Σ 〔 X 〕 s)) (thm {t = t} {λ x → term (inj₂ x) ⟨⟩}))
-                                                   ((Setoid.sym ((_⟦_⟧ₛ T Σ 〔 X 〕 s)) (thm {t = t'} {λ x → term (inj₂ x) ⟨⟩}))) (sall (⊢Quot E) (⊢Quot⊨E E) (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
+                  ≈⟨ Congruence.welldef (⊢Cong E ) s
+                    ((Setoid.sym ((_⟦_⟧ₛ T Σ 〔 X 〕 s)) (thm {t = t} {λ x → term (inj₂ x) ⟨⟩})) ,
+                    ((Setoid.sym ((_⟦_⟧ₛ T Σ 〔 X 〕 s)) (thm {t = t'} {λ x → term (inj₂ x) ⟨⟩}))))
+                      (sall (⊢Quot E) (⊢Quot⊨E E) (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
                   ((λ x → term (inj₂ x) ⟨⟩) ↪s) t'
                   ≈⟨ ≡to≈ (⊢RSetoid E s) ((idSubst≡ t')) ⟩
                   t' ∎

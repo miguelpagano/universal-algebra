@@ -8,7 +8,7 @@ open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Data.Bool renaming (_≟_ to _≟b_)
 open import Data.List renaming (map to lmap)
-open import Relation.Binary.PropositionalEquality as PE hiding ( Reveal_·_is_;[_])
+open import Relation.Binary.PropositionalEquality as PE hiding ( Reveal_·_is_;[_];isEquivalence)
 
 open import Data.Fin hiding (_+_)
 
@@ -209,26 +209,58 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
 
 
 
-open Hom
-open Homo
-open Algebra
 
 -- Homomorphism identity
 HomId : ∀ {ℓ₁ ℓ₂} {Σ} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
-          Homo A A
+          Hom.Homo A A
 HomId {A = A} = record { ′_′ = λ s → FE.id
                        ; cond = λ { {ar , s} f as →
                                     Π.cong (A ⟦ f ⟧ₒ)
                                     (≡to∼v (λ i → Setoid.isEquivalence (A ⟦ i ⟧ₛ))
                                     (PE.sym (mapId as))) }
                        }
+      where open Hom
+            open Homo
+            open Algebra
 
+
+module HomLaws {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆ l₇ l₈}
+       {Σ : Signature}
+       {A₀ : Algebra {ℓ₁} {ℓ₂} Σ}
+       {A₁ : Algebra {ℓ₃} {ℓ₄} Σ}
+       {A₂ : Algebra {l₅} {l₆} Σ}
+       {A₃ : Algebra {l₇} {l₈} Σ} where
+
+  open Algebra
+
+  module _ where
+    open HomComp
+    open Hom A₀ A₁
+    right-unit : (H : Homo ) → (H ∘ₕ HomId {A = A₀}) ≈ₕ H
+    right-unit H s a = Setoid.refl (A₁ ⟦ s ⟧ₛ)
+
+  module _ where
+    open HomComp
+    open Hom A₀ A₁
+    left-unit : (H : Homo ) → (HomId {A = A₁} ∘ₕ H) ≈ₕ H
+    left-unit H s a = Setoid.refl (A₁ ⟦ s ⟧ₛ)
+
+  module _ where
+    open HomComp
+    open Hom hiding (_≈ₕ_)
+    open Hom A₀ A₃ using (_≈ₕ_)
+    assoc : (F : Homo A₀ A₁) (G : Homo A₁ A₂) (H : Homo A₂ A₃) →
+            ((H ∘ₕ G) ∘ₕ F) ≈ₕ (H ∘ₕ (G ∘ₕ F))
+    assoc F G H s a = Setoid.refl (A₃ ⟦ s ⟧ₛ)        
 
 open import Function.Bijection renaming (_∘_ to _∘b_) 
 open import Function.Surjection hiding (_∘_)
 
 open Bijective
 
+open Hom
+open Homo
+open Algebra
 invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
           (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
           (h : Homo A A') → (bj : (s : sorts Σ) → Bijective (′ h ′ s)) →

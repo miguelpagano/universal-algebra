@@ -269,13 +269,13 @@ we can define the |SubAlgebra A P|:
   SubAlgebra : ∀ {Σ} A P → WellDef P → opClosed P → Algebra Σ
   SubAlgebra A P _ opC = record  {
         _⟦_⟧ₛ s = SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s) 
-  ;     _⟦_⟧ₒ f = record { _⟨$⟩_ = if  ; cong = ? } }
-    where  if : ∀ {ar s} → (f : ops Σ (ar , s)) → _
-           if f vs = A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) vs , opC f (⇨₂ vs)
+  ;     _⟦_⟧ₒ f = record { _⟨$⟩_ = io  ; cong = ? } }
+    where  io : ∀ {ar s} → (f : ops Σ (ar , s)) → _
+           io f as = A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) as , opC f (⇨₂ as)
 \end{spec}
 \noindent We interpret operations as in the original algebra over the first
-components of the vector |vs|; to show that the results
-satisfies |P s|, we can apply |opC f| to |⇨₂ vs : P ⇨v map (λ_ → proj₁) as|.
+components of the vector |as|; to show that the results
+satisfies |P s|, we can apply |opC f| to |⇨₂ as : P ⇨v map (λ_ → proj₁) as|.
 
 \paragraph{Congruence and Quotients}
 A \emph{congruence} on a $\Sigma$-algebra $\mathcal{A}$ is a family
@@ -316,17 +316,17 @@ as the set of equivalence classes $\mathcal{A}_s / Q$; the condition
 \Rightarrow s$ can be interpreted as the function mapping the vector
 $([a_1],\ldots,[a_n])$ of equivalence classes into the class $[
 f_\mathcal{A}(a_1,\ldots,a_n)]$. In Agda, we take the same carriers
-from |A| and use |Q s| as the equivalence relation over |∥ A ⟦ s ⟧ₛ ∥|;
-operations are interpreted just as in |A|; operations are 
-interpreted as before and the congruence proof is given by |csubst Q|.
+from |A| and use |Q s| as the equivalence relation over |∥ A ⟦ s ⟧ₛ
+∥|; operations are interpreted just as in |A| and the congruence proof
+is given by |csubst Q|.
 
 \paragraph{Isomorphism Theorems} The definitions of subalgebras,
 quotients, and epimorphisms (surjective homomorphisms) are related by
-the three isomorphims theorems. They can be proved using almost the
-same reasoning, although there is some small overhead by the coding of
-subalgebras. We remark on passing that for proving these results we
-also defined the \emph{kernel} and the \emph{homomorphic}
-image of homomorphisms.
+the three isomorphims theorems. Although there is some small overhead
+by the coding of subalgebras, the proofs are almost the same as in
+informal mathematics. We remark on passing that for proving these results we also
+defined the \emph{kernel} and the \emph{homomorphic} image of
+homomorphisms.
 
 \begin{theorem}[First isomorphism theorem] If $h : \alg{A} \rightarrow \alg{B}$
 is an epimorhism, then $\alg{A} / \mathop{ker} h \iso \alg{B}$.

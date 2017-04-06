@@ -762,7 +762,55 @@ module FirstHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                         ; surjective = surj₁ s }
 
 
-module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
+
+module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
+                    (A : Algebra {ℓ₁} {ℓ₂} Σ)
+                    (Φ Ψ : Congruence {ℓ₃} A)
+                    (Ψ⊆Φ : Ψ ⊆ Φ )
+                    where
+
+  open IsEquivalence renaming (trans to tr ; sym to sy ; refl to re) 
+  -- Φ/Ψ is a congruence on A/Ψ
+  theo₁ : Congruence (A / Ψ)
+  theo₁ = record { rel = λ {s x x₁ → rel Φ s x x₁ } 
+                 ; welldef = λ { s {a , b} {c , d} (a~c , b~d) a~b →
+                        tr (cequiv Φ s) (sy (cequiv Φ s) (Ψ⊆Φ s a~c))
+                       (tr (cequiv Φ s) a~b ((Ψ⊆Φ s b~d))) }
+                 ; cequiv = λ s → cequiv Φ s
+                 ; csubst = csubst Φ
+                 }
+
+                 
+
+
+  -- A/Φ is isomorphic to (A/Ψ)/(Φ/Ψ)
+  theo₂ : Isomorphism (A / Φ) ((A / Ψ) / theo₁)
+  theo₂ = record { hom = ho
+                 ; bij = λ s → record { injective = λ x₁ → x₁
+                                      ; surjective = record { from = act s
+                                        ; right-inverse-of = λ x → re (cequiv Φ s) {x} }
+                                      }
+                 }
+        where
+              act : (A / Φ) ⟿ ((A / Ψ) / theo₁)
+              act s = record { _⟨$⟩_ = F.id ; cong = λ x → x }
+              condₕ : ∀ {ty} (f : ops Σ ty) →  homCond (A / Φ) ((A / Ψ) / theo₁) act f
+              condₕ {ar , s} f as = subst ((rel Φ s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
+                                    (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) mapid≡)
+                                    (IsEquivalence.refl (cequiv Φ s))
+                where open IsEquivalence
+                      mapid≡ : ∀ {ar'} {as' : Carrier (_⟦_⟧ₛ A ✳ ar')} →
+                               as' ≡ map (λ _ a → a) as'
+                      mapid≡ {as' = ⟨⟩} = PE.refl
+                      mapid≡ {as' = v ▹ as'} = PE.cong (λ as'' → v ▹ as'') mapid≡ 
+
+              ho : Homo (A / Φ) ((A / Ψ) / theo₁)
+              ho = record { ′_′ = act
+                          ; cond = condₕ
+                          }
+
+
+module ThirdHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                      (A : Algebra {ℓ₁} {ℓ₂} Σ)
                      (B : SubAlg {ℓ₃} A)
                      (Φ : Congruence {ℓ₄} A) where
@@ -864,50 +912,4 @@ module SecondHomTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
               cond⇉* {[]} ⟨⟩ = ∼⟨⟩
               cond⇉* {i ∷ is} (v ▹ as) = ∼▹ (ref (cequiv Φ i)) (cond⇉* as)
 
-
-module ThirdHomTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
-                    (A : Algebra {ℓ₁} {ℓ₂} Σ)
-                    (Φ Ψ : Congruence {ℓ₃} A)
-                    (Ψ⊆Φ : Ψ ⊆ Φ )
-                    where
-
-  open IsEquivalence renaming (trans to tr ; sym to sy ; refl to re) 
-  -- Φ/Ψ is a congruence on A/Ψ
-  theo₁ : Congruence (A / Ψ)
-  theo₁ = record { rel = λ {s x x₁ → rel Φ s x x₁ } 
-                 ; welldef = λ { s {a , b} {c , d} (a~c , b~d) a~b →
-                        tr (cequiv Φ s) (sy (cequiv Φ s) (Ψ⊆Φ s a~c))
-                       (tr (cequiv Φ s) a~b ((Ψ⊆Φ s b~d))) }
-                 ; cequiv = λ s → cequiv Φ s
-                 ; csubst = csubst Φ
-                 }
-
-                 
-
-
-  -- A/Φ is isomorphic to (A/Ψ)/(Φ/Ψ)
-  theo₂ : Isomorphism (A / Φ) ((A / Ψ) / theo₁)
-  theo₂ = record { hom = ho
-                 ; bij = λ s → record { injective = λ x₁ → x₁
-                                      ; surjective = record { from = act s
-                                        ; right-inverse-of = λ x → re (cequiv Φ s) {x} }
-                                      }
-                 }
-        where
-              act : (A / Φ) ⟿ ((A / Ψ) / theo₁)
-              act s = record { _⟨$⟩_ = F.id ; cong = λ x → x }
-              condₕ : ∀ {ty} (f : ops Σ ty) →  homCond (A / Φ) ((A / Ψ) / theo₁) act f
-              condₕ {ar , s} f as = subst ((rel Φ s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
-                                    (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) mapid≡)
-                                    (IsEquivalence.refl (cequiv Φ s))
-                where open IsEquivalence
-                      mapid≡ : ∀ {ar'} {as' : Carrier (_⟦_⟧ₛ A ✳ ar')} →
-                               as' ≡ map (λ _ a → a) as'
-                      mapid≡ {as' = ⟨⟩} = PE.refl
-                      mapid≡ {as' = v ▹ as'} = PE.cong (λ as'' → v ▹ as'') mapid≡ 
-
-              ho : Homo (A / Φ) ((A / Ψ) / theo₁)
-              ho = record { ′_′ = act
-                          ; cond = condₕ
-                          }
 

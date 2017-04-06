@@ -10,9 +10,10 @@
 \usepackage{amsmath}
 \usepackage{mathpartir}
 \usepackage{ upgreek }
+\usepackage[inline]{enumitem}
 \usepackage[numbers]{natbib}
-\usepackage{minted}
-\usemintedstyle{friendly}
+%\usepackage{minted}
+%\usemintedstyle{friendly}
 \usepackage[bookmarksopen,
 bookmarksdepth=2,
 breaklinks=true
@@ -62,7 +63,8 @@ urlcolor=blue]{ hyperref }
 \newcommand{\cL}{{\cal L}}
 \newcommand{\ie}{i.e.\@@ }
 \newcommand{\manu}[1]{} % \textcolor{red}{#1}}
-
+\newcommand{\alg}[1]{\mathcal{#1}}
+\newcommand{\iso}{\equiv}
 \begin{document}
 
 \special{papersize=8.5in,11in}

@@ -237,9 +237,6 @@ consists of a family of subsets $\mathcal{B}_s \subseteq
 \mathcal{A}_s$, that are closed by the interpretation of operations;
 that is, for every $ f : [s_1, \ldots,s_n] \Rightarrow s$ the following
 condition holds
-This condition is called \emph{substitutivity} and can
-be formalized using the point-wise extension of $Q$ over vectors: for
-every operation $ f : [s_1, \ldots,s_n] \Rightarrow s$
 \begin{equation}
 (a_1,\ldots,a_n) \in \mathcal{B}_{s_1} \times \cdots \times\mathcal{B}_{s_n}   \text{ implies }
   f_\mathcal{A}(a_1,\ldots,a_n) \in B_{s} \enspace .
@@ -322,6 +319,33 @@ f_\mathcal{A}(a_1,\ldots,a_n)]$. In Agda, we take the same carriers
 from |A| and use |Q s| as the equivalence relation over |∥ A ⟦ s ⟧ₛ ∥|;
 operations are interpreted just as in |A|; operations are 
 interpreted as before and the congruence proof is given by |csubst Q|.
+
+\paragraph{Isomorphism Theorems} The definitions of subalgebras,
+quotients, and epimorphisms (surjective homomorphisms) are related by
+the three isomorphims theorems. They can be proved using almost the
+same reasoning, although there is some small overhead by the coding of
+subalgebras. We remark on passing that for proving these results we
+also defined the \emph{kernel} and the \emph{homomorphic}
+image of homomorphisms.
+
+\begin{theorem}[First isomorphism theorem] If $h : \alg{A} \rightarrow \alg{B}$
+is an epimorhism, then $\alg{A} / \mathop{ker} h \iso \alg{B}$.
+\end{theorem}
+
+\begin{theorem}[Second isomorphism theorem] Let $\phi,\psi$ be congruences over $\alg A$,
+such that $\psi \subseteq \phi$, then $(\alg A / \phi) \iso \alg A / (\phi / \psi)$.
+\end{theorem}
+
+\begin{theorem}[Third isomorphism theorem] Let $\alg B$ is a
+subalgebra of $\alg A$ and $\phi$ is a congruence over $\alg A$. Let
+$[\alg B]^{\phi}=\{K \in A / \phi : K \cap B \not= \emptyset\}$ and
+let $\phi_B$ be the restriction of $\phi$ to $\alg B$, then
+\begin{enumerate*}[label=(\roman*),itemjoin={}]
+\item $\phi_B$ is a congruence over $\alg B$;
+\item $[\alg B]^{\phi}$ is a subalgebra of $\alg A$; and
+\item $[\alg B]^{\phi} \iso \alg B / \phi_B$.
+\end{enumerate*}
+\end{theorem}
 
 
 \subsection{Term algebra is initial}
@@ -446,6 +470,3 @@ interesting difficulties.
 \end{spec}
 
       
-\subsection{Theorems}
-
-We conclude this section with the proof of some theorems.

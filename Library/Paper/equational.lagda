@@ -218,17 +218,18 @@ two terms.
 
 \subsection{Correctness and completeness}
 
-We conclude the formalization of equational logic with proofs of
-correctness and completeness.
+We can prove now, that having a proof of an equation $e$ in a theory, and
+that all model of the theory satisfies $e$, are equivalent. This corresponds
+with proofs of soundness and completeness of the equational calculus presented.
 
-\paragraph{Correctness.} If an equation $e$ is provable in a theory
+\paragraph{Soundness.} If an equation $e$ is provable in a theory
 $T$, then for all $\Sigma$-algebra $\mathcal{A}$ that satisfies the
 axioms in $T$, $\mathcal{A}$ satisfies $e$.
 
 \begin{spec}
-  correctness :  ∀ {Σ X} {ar} {s} {T : Theory Σ X ar} {e : Equation Σ X s}
+  soundness :  ∀ {Σ X} {ar} {s} {T : Theory Σ X ar} {e : Equation Σ X s}
                  → T ⊢ e → (A : Algebra Σ) → A ⊨T E → A ⊨ e
-  correctness : ...
+  soundness : ...
 \end{spec}
 
 \paragraph{Completeness.} 

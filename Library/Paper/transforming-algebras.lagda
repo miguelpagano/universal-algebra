@@ -248,16 +248,15 @@ Because the \textit{freeness} property, we have an unique homomorphism
 from the $\Sigma_s$-algebra |T Σₛ 〔 Xₛ 〕| to any other extending an
 environment. In particular
 we can obtain the homomorphism to the algebra |T Σₜ 〔 Xₜ 〕|
-transformed via $t$, where the environment extended consists of assign to
-each variable $v \in X_s\;s$ the term $tvars\;v \in X_t (t\,s)$.
+transformed via $t$, where the environment extended consists of mapping 
+each variable $v \in X_s\;s$ to the term $tvars\;v \in X_t (t\,s)$.
 Thus, we get for free a function mapping |Σₛ 〔 Xₛ 〕|-terms to |Σₜ 〔 Xₜ 〕|-terms:
 
 \begin{spec}
   term↝ : Homo (T Σₛ 〔 Xₛ 〕) 〈 T Σₜ 〔 Xₜ 〕 〉
-  term↝ = TΣXHom 〈 T Σₜ 〔 Xₜ 〕 〉 θv
+  term↝ = TΣXHom (Σₜ 〔 Xₜ 〕) 〈 T Σₜ 〔 Xₜ 〕 〉 θv
     where θv : Env Xₛ 〈 T Σₜ 〔 Xₜ 〕 〉
           θv v = term (inj₂ (tvars v)) ⟨⟩
-          open InitHomoExt 〈 T Σₜ 〔 Xₜ 〕 〉 θv
 \end{spec}
 
-
+\paragraph{Implication of translated theories.}

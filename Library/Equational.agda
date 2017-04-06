@@ -10,7 +10,7 @@ open import Relation.Binary hiding (Total)
 open import Relation.Binary.PropositionalEquality as PE
 open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘e_)
-open import HeterogenuousVec renaming (map to mapV)
+open import HeterogeneousVec renaming (map to mapV)
 
 import Relation.Binary.EqReasoning as EqR
 
@@ -386,7 +386,7 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
         pcsubst {[]} f ∼⟨⟩ = prefl
         pcsubst {s₀ ∷ ar} {s} f {ts} {ts'} ⊢ts≈ts' = preemp ⊢ts≈ts' f
         
-⊢Quot : ∀ {Σ X ar} → (E : Theory Σ X ar) → Algebra {Level.zero} { (Level.zero)} Σ
+⊢Quot : ∀ {Σ X ar} → (E : Theory Σ X ar) → Algebra {Level.zero} {Level.zero} Σ
 ⊢Quot {Σ} {X} E = T Σ 〔 X 〕 / (⊢Cong E)
 
 ⊢Quot⊨E : ∀ {Σ X ar} → (E : Theory Σ X ar) → (⊢Quot E) ⊨T E

@@ -14,7 +14,7 @@ open import Data.Fin hiding (_+_)
 
 import Relation.Binary.EqReasoning as EqR
 
-open import HeterogenuousVec
+open import HeterogeneousVec
 
 pattern _↦_ ar s = (ar , s)
 

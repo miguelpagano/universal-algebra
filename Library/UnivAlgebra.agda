@@ -385,6 +385,15 @@ theo211 A B C A≅B = (λ h → h ∘ₕ hom i) ,
 Total : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _ 
 Total _≈_ = ∀ a a' → a ≈ a'
 
+private
+  module _ where
+
+  totalIsEquiv : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → (R : Rel A ℓ₂) → Total R → IsEquivalence R
+  totalIsEquiv R tot = record { refl = λ {x} → tot x x
+                              ; sym = λ {x} {y} _ → tot y x
+                              ; trans = λ {x} {y} {z} _ _ → tot x z
+                              }
+
 Unique : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _
 Unique {A = A} _≈_ = A × Total _≈_
 
@@ -402,6 +411,10 @@ module Initial (Σ : Signature)
     field
       alg   : Algebra {ℓ₁} {ℓ₂} Σ
       init  : (A : Algebra {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ alg A)
+
+  private
+    Initial' : ∀ {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) →  {ℓ₃ ℓ₄ : Level} → Set _
+    Initial' A {ℓ₃} {ℓ₄} = ∀ (B : Algebra {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ A B)
 
 
 module Final (Σ : Signature)

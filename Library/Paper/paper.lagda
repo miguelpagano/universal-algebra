@@ -26,7 +26,7 @@ urlcolor=blue]{ hyperref }
 %format ⟨⟨ = "\langle\!"
 %format ⟩⟩ = "\!\rangle"
 
-%format _≈→_ = "\ensuremath{\_≈_{\mathit{ext}}\_}"
+%format _≈→_ = "\ensuremath{\_\mathop{≈_{\mathit{ext}}}\_}"
 %format ≈→ = "\ensuremath{≈_{\mathit{ext}}}"
 %format Equiv≈→ = "\ensuremath{\mathsf{Equiv}≈_{\mathit{ext}}}"
 
@@ -65,6 +65,7 @@ urlcolor=blue]{ hyperref }
 \newcommand{\manu}[1]{} % \textcolor{red}{#1}}
 \newcommand{\alg}[1]{\mathcal{#1}}
 \newcommand{\iso}{\equiv}
+\newcommand{\comment}[1]{}
 \begin{document}
 
 \special{papersize=8.5in,11in}

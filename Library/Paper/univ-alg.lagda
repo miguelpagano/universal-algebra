@@ -121,10 +121,21 @@ Once sorts are interpreted as setoids, operations should be
 interpreted as setoid morphisms; \ie functions which preserve the
 equivalence relation.  Given two setoids |Ȧ := (A,_≈A_,p)| and |Ḃ :=
 (B,_≈B_,q)|, the inhabitants of |Ȧ ⟶ Ḃ| are morphism from |Ȧ| to |Ḃ|
-records with fields
-|_⟨$⟩_ : A → B| and |cong : ∀ a a' → a ≈A a' → _⟨$⟩_ a ≈B
-_⟨$⟩_ a'|. Similarly, predicates over setoids should
-be even over equal elements; thus we set
+records with fields |_⟨$⟩_ : A → B| and |cong : ∀ a a' → a ≈A a' →
+_⟨$⟩_ a ≈B _⟨$⟩_ a'|. Setoid morphisms will also play a role in the
+definition of homomorpisms between algebras and some theorems will say
+that two homomorphisms are equal; working in an intensional
+type-theory, this equality cannot be taken as the definitional
+equality. Of course, we want to equate morphisms |f , g : S₁ ⟶ S₂|,
+whenever the function parts of |f| and |g| are extensional equal:
+\begin{spec}
+  _≈→_ : Rel (S₁ ⟶ S₂) _
+  f ≈→ g  = ∀ (a : ∥ S₁ ∥) → (f ⟨$⟩ a) ≈S₂ (g ⟨$⟩ a)
+\end{spec}
+\comment{\noindent It is immediate to prove that this relation is of equivalence.}
+
+Predicates over setoids should also be even over equal elements; thus we
+set
 \begin{spec}
   WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃} → (A : Setoid ℓ₁ ℓ₂) → Pred (∥ A ∥) ℓ₃ → Set _
   WellDef A P = ∀ {a a'} → a ≈A a' → P a → P a'
@@ -204,17 +215,16 @@ such that for each operation $f : [s_1,...,s_n] \Rightarrow s$, the following ho
 \begin{equation}
   h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)\label{eq:homcond}
 \end{equation}
-
 We formalize homomorphisms from an algebra |A| to an algebra |B| as a
-family of functions indexed over sorts
+family of setoid morphisms indexed over sorts
 \begin{spec}
 _⟿_ : (A : Algebra Σ) → (B : Algebra Σ) → Set _
 A ⟿ B = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
 \end{spec}
-and a proof that it satisfies condition \eqref{eq:homcond}, expressed by
+\noindent and a proof that it satisfies condition \eqref{eq:homcond}, expressed by
 \begin{spec}
-homCond : ∀ ty → A ⟿ B → ops Σ ty → Set _
-homCond (ar ↦ s) h f =   (as : ∥ A ⟦ ar ⟧ₛ* ∥) → 
+homCond : A ⟿ B → Set _
+homCond h = ∀ ar s (f : ar ↦ s) (as : ∥ A ⟦ ar ⟧ₛ* ∥) → 
          h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as) ≈ₛ B ⟦ f ⟧ₒ ⟨$⟩ map h as
 \end{spec}
 \noindent where |_≈ₛ_| is the equivalence relation of the setoid
@@ -222,9 +232,21 @@ homCond (ar ↦ s) h f =   (as : ∥ A ⟦ ar ⟧ₛ* ∥) →
 For |H : Homo A B|, the family of setoid morphism is |′ H ′ : A ⟿ B|
 and |cond H| is the proof for |homCond ′ H ′|.
 
-It is straightforward to define the product |A₁ × A₂| of algebras |A₁|
+As expected, we have |Idₕ A : Homo A A| and |F ∘ₕ G : Homo A C| when
+|F : Homo A B| and |G : Homo B C|.  Two homomorphisms |F , F' : Homo A B| are
+equal when their corresponding setoid morphisms are extensionally equal:
+\begin{spec}
+  _≈ₕ_  : ∀ {A B} → Homo A B → Homo A B → Set _
+  F ≈ₕ F' = (s : sorts Σ) → ′ F ′ s ≈→ ′ F' ′ s
+\end{spec}
+\noindent Since |_≈→_| is an equivalence relation, |_≈ₕ_| is also of
+equivalence. With respect to this equality, it is straightforward to
+prove the associativity of the composition |_∘ₕ_| and that |Idₕ| is
+the identity for the composition.
+
+\comment{It is straightforward to define the product |A₁ × A₂| of algebras |A₁|
 and |A₂| and the projection homomorphisms |Πᵢ : Homo (A₁ × A₂) Aᵢ| where
-|′ Πᵢ ′ _ ⟨$⟩ p = projᵢ p|.
+|′ Πᵢ ′ _ ⟨$⟩ p = projᵢ p|.}
 
 \subsection{Quotient and subalgebras}
 In order to prove the more basic results of universal algebra, we need
@@ -347,57 +369,25 @@ let $\phi_B$ be the restriction of $\phi$ to $\alg B$, then
 \end{enumerate*}
 \end{theorem}
 
-
 \subsection{Term algebra is initial}
-\manu{Comentar más lo simple que sale respecto a lo que tiene Capretta.}
-\paragraph{Initial algebra.}
-A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for all
+
+A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for any
 $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
-from $\mathcal{A}$ to $\mathcal{B}$, i. e., if we have two
-homomorphisms from $\mathcal{A}$ to $\mathcal{B}$, then they are equals.
-
-We can define the notion of \textit{uniqueness} respects to an
-equivalence relation:
-
+from $\mathcal{A}$ to $\mathcal{B}$. We say that a set has a unique
+element with respecto to some relation as
 \begin{spec}
-Unique : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} →  (_≈_ : Rel A ℓ₂) →
-                                   IsEquivalence _≈_ → Set _
-Unique {A = A} _≈_ _ = A × (∀ a a' → a ≈ a')
+hasUnique : (A : Set) →  (_≈_ : Rel A) → Set
+hasUnique A _≈_ = A × (∀ a a' → a ≈ a')
 \end{spec}
-
-
-The appropiate notion of equality between homomorphisms is the
-extensional equality respects to the equivalence relation of the
-respectives setoids of each algebra.
-If |S₁| and |S₂| are setoids, and |≈S₂| is the equivalence relation of
-|S₂|, we define extensional equality:
-
+\comment{Obviously, if a set has a unique element, then the relation
+is an equivalence. Alternatively one can asks for a witness |a:A| and
+a proof of |(a':A) → a ≈ a'|; in this case one should also asks the
+relation to be of equivalence.}
+\noindent and initiality can be formalized directly as the predicate
+that the algebra has a unique homomorphism to any other algebra:
 \begin{spec}
-  _≈→_ : Rel (S₁ ⟶ S₂) _
-  f ≈→ g  = ∀ (a : ∥ S₁ ∥) → (f ⟨$⟩ a) ≈S₂ (g ⟨$⟩ a)
-\end{spec}
-
-\noindent It's easy to prove that this relation is of equivalence.
-Call |≈ₕequiv| to this proof.
-
-Two homomorphisms |H G : Homo A B| are equals if for every sort |s|,
-its corresponding setoid morphisms are extensionally equal, that is
-|′ H ′ s ≈→ ′ G ′ s|:
-
-\begin{spec}
-  _≈ₕ_  : ∀ A B → (H G : Homo A B) → Set _
-  H ≈ₕ G = (s : sorts Σ) → ′ H ′ s ≈→ ′ G ′ s
-\end{spec}
-
-We define the initial algebra of a signature |Σ| with a record with
-two elements: An algebra |alg| and the proof of uniqueness of the
-homomorphism between |alg| and any other:
-
-\begin{spec}
-record Initial  : Set _ where
-  field
-    alg   :  Algebra Σ
-    init  :  (A : Algebra Σ) → Unique (_≈ₕ_ alg A) ≈ₕequiv
+Initial : ∀ {Σ} → Algebra Σ → Set _
+Initial {Σ} A = ∀ (B : Algebra Σ) → hasUnique (_≈ₕ_ A B)
 \end{spec}
 
 \paragraph{Term algebra.}
@@ -414,7 +404,6 @@ for $\mathcal{T}$:
 {f\,(t_0,...,t_{n-1}) \in \mathcal{T}_s}
 \]
 This inductive definition can be directly written in Agda:
-
 \begin{spec}
   data HU : (s : sorts Σ) → Set where
     term : ∀  {ar s} → (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s

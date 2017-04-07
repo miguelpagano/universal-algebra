@@ -259,4 +259,46 @@ Thus, we get for free a function mapping |Σₛ 〔 Xₛ 〕|-terms to |Σₜ �
           θv v = term (inj₂ (tvars v)) ⟨⟩
 \end{spec}
 
+\noindent It's straightforward to extend this definition to equations,
+we call |eq↝| to this extension.
+
 \paragraph{Implication of translated theories.}
+From a signature translation $t : \intSign{\Sigma_s}{\Sigma_t}$, we
+can think how to relate theories $Th_s$ and $Th_t$ of each signature
+respectivelly.
+
+A first interesting definition is the translation of a
+$\Sigma_s$-theory. It means, to translate each $\Sigma_s$-equation, and
+we need to translate variables. Under some restrictions over the
+translation $t$, we can construct a set of variables $X_t$ in $\Sigma_t$ and
+we can define the mapping of variables: $X_s \rightarrow X_t$. Then
+we can define the translation of theories:
+
+\begin{spec}
+〈_〉T : ∀ {ar} → (Thₛ : Theory Σₛ Xₛ ar) → Theory Σₜ Xₜ (lmap (↝ₛ Σ↝) ar)
+\end{spec}
+
+Other interesting definition is to say when $Th_t$ implies $Th_s$:
+
+\begin{spec}
+Thₜ ⇒T~ Thₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Thₛ → Thₜ ⊢ eq↝ ax
+\end{spec}
+
+\noindent Again we need to translate variables.
+
+In both cases, under restrictions, we can prove that models of $Th_t$ are
+models of $Th_s$, and we can enunciate this preservation of models in
+this way:
+
+\paragraph{Model preservation from a translated theory:}
+
+\begin{spec}
+⊨T↝ : ∀ {ar} → (A : Algebra Σₜ) → A ⊨T 〈 Tₛ 〉T → 〈 A 〉 ⊨T Tₛ
+\end{spec}
+
+\paragraph{Model preservation from a implicated theory:}
+
+\begin{spec}
+⊨T↝ : Thₜ ⇒T~ Thₛ → (A : Algebra Σₜ) → A ⊨T Thₜ → 〈 A 〉 ⊨T Thₛ
+\end{spec}
+

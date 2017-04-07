@@ -190,8 +190,6 @@ record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
 
 
 {- Explicar la decisión de indexar la teoría en el conjunto de variables -}
-
-
 Theory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
 Theory Σ X ar = HVec (Equation Σ X) ar
 

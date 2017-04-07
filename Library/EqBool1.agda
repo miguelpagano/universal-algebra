@@ -8,7 +8,7 @@ open import Data.List
 open import Data.Product
 open import Data.Nat
 open import Data.Sum
-open import HeterogenuousVec
+open import HeterogeneousVec
 
 
 
@@ -329,11 +329,11 @@ module Translation where
   form↝ = {!′ term↝ '!}
 
   -- Tbool₂ implica a Tbool₁:
-  open TheoryTrans Σtrans Vars₁ Vars₂ id
+{-  open TheoryTrans Σtrans Vars₁ Vars₂ id
 
   T₂⇒T₁ : Tbool₂ ⇒T~ Tbool₁
   T₂⇒T₁ = {!!}
-
+-}
 
 module GoguenMeseguer where
 
@@ -451,13 +451,13 @@ module GoguenMeseguer where
         T
       ≈⟨ psym (psubst ax₃ σ₁ ∼⟨⟩) ⟩
         (fu av ∨ (¬ (fu av)))
-      ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst ax₇ idSubst ∼⟨⟩)) ∼⟨⟩)) or∼ ⟩
+      ≈⟨ preemp ∼⟨⟨ prefl , psym (psubst ax₇ idSubst ∼⟨⟩) ⟩⟩∼ or∼ ⟩
         (fu av ∨ fu av)
       ≈⟨ psubst ax₆ σ₁ ∼⟨⟩ ⟩
         fu av
       ≈⟨ psym (psubst ax₅ σ₁ ∼⟨⟩) ⟩
         (fu av ∧ fu av)
-      ≈⟨ preemp (∼▹ prefl (∼▹ (psubst ax₇ idSubst ∼⟨⟩) ∼⟨⟩)) and∼ ⟩
+      ≈⟨ preemp ∼⟨⟨ prefl , psubst ax₇ idSubst ∼⟨⟩ ⟩⟩∼ and∼ ⟩
         (fu av ∧ (¬ (fu av)))
       ≈⟨ psubst ax₄ σ₁ ∼⟨⟩ ⟩
         F

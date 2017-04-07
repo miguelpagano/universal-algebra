@@ -184,29 +184,27 @@ module TermTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 
 
 module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
-                   (V : Set) where
-
-  Xₛ : Vars Σₛ
-  Xₛ _ = V
+                   (Xₛ : Vars Σₛ) where
 
   Xₜ : Vars Σₜ
-  Xₜ _ = V
+  Xₜ s = V
 
+{-
   〈_〉T : ∀ {ar} → (Tₛ : Theory Σₛ Xₛ ar) → Theory Σₜ Xₜ (lmap (↝ₛ Σ↝) ar)
   〈 ⟨⟩ 〉T = ⟨⟩
   〈 _▹_ {s} {ar} e es 〉T = eq↝ e ▹ 〈 es 〉T
     where open TermTrans Σ↝ Xₛ Xₜ id
-
+-}
   open Hom
   open AlgTrans Σ↝
-
+{-
 --  lemma : ∀ {s} → (e : Equation Σₛ Xₛ s) → A ⊨ (eq↝ e) → 〈 A 〉 ⊨ e
 --  lemma e 
 
   ⊨T↝ : ∀ {ℓ₁ ℓ₂ ar} → (Tₛ : Theory Σₛ Xₛ ar) → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) →
            A ⊨T 〈 Tₛ 〉T → 〈 A 〉 ⊨T Tₛ
   ⊨T↝ Tₛ A sat {s} {e} ax θ ≈cond = sat {!eq↝ ax!} {!θ!} {!≈cond!}
-
+-}
 {-
 module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
                    (Xₛ : Vars Σₛ) (Xₜ : Vars Σₜ)
@@ -329,7 +327,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 {-                begin
                   (θ ↪ₛ) t
                 ≈⟨ Setoid.sym ((A ⟦ ↝ₛ Σ↝ s ⟧ₛ)) (lemma₀ t) ⟩
-                  --((θₜ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t))
+                  ((θₜ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t))
                 ≈⟨ sat θₜ {!!} ⟩
                   ((θₜ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t'))
                 ≈⟨ lemma₀ t' ⟩

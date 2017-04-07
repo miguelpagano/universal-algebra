@@ -376,8 +376,8 @@ $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
 from $\mathcal{A}$ to $\mathcal{B}$. We say that a set has a unique
 element with respecto to some relation as
 \begin{spec}
-hasUnique : (A : Set) →  (_≈_ : Rel A) → Set
-hasUnique A _≈_ = A × (∀ a a' → a ≈ a')
+hasUnique : {A : Set} →  (_≈_ : Rel A) → Set
+hasUnique {A} _≈_ = A × (∀ a a' → a ≈ a')
 \end{spec}
 \comment{Obviously, if a set has a unique element, then the relation
 is an equivalence. Alternatively one can asks for a witness |a:A| and
@@ -403,7 +403,7 @@ for $\mathcal{T}$:
 \inferrule*{f : [s_0,...,s_{n-1}] \Rightarrow s\\  \text{ for all } 0 \leq i \leq n-1,\  t_i \in \mathcal{T}_{s_i} }
 {f\,(t_0,...,t_{n-1}) \in \mathcal{T}_s}
 \]
-This inductive definition can be directly written in Agda:
+This inductive definition can be written directly in Agda:
 \begin{spec}
   data HU : (s : sorts Σ) → Set where
     term : ∀  {ar s} → (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
@@ -418,44 +418,37 @@ $f(t_1,\ldots,t_n)$ in $\mathcal{T}_s$; we omit the proof
 of |cong|.
 \begin{spec}
   |T| : Algebra Σ
-  |T| = (setoid ∘ HU) ∥ (λ f → record  { _⟨$⟩_ = term f ; cong = {!!}})
+  ∣T∣ = record  { _⟦_⟧ₛ = setoid ∘ HU ; _⟦_⟧ₒ  = ∣_|ₒ }
+    where | f ∣ₒ = record { _⟨$⟩_ = term f ; cong = ? }
 \end{spec}
 
-\noindent Now we turn to prove that the term algebra is initial; so for any
-$\Sigma$-algebra $\mathcal{A}$ we define the homomorphism $h_A \colon
-\mathcal{T} \to \mathcal{A}$ \[
+\noindent Recursively interpreting terms yields an homomorphism
+$h_A \colon \mathcal{T} \to \mathcal{A}$ defined by
+\[
   h_A (f(t_1,\ldots,t_n)) = f_{\mathcal{A}}\,(h_A\,t_1,...,h_A\,t_n) \enspace .
 \] 
-\noindent We can define in Agda this homomorphism in a way similar to
-this\footnote{Indead, because of the Agda termination checker, we must
-define two mutually recursive functions, one
-mappings terms to elements of $\mathcal{A}$ and the other mapping
-vectors of terms to vectors of $\mathcal{A}$}:
+\noindent We cannot translate this definition directly in Agda, instead
+we have to mutually define | ∣h∣→A | and its extension over vectors
+| ∣h*∣→A A {ar} : Vec HU ar → A ⟦ ar ⟧ₛ*|
 \begin{spec}
-  ∣h∣→A : ∀ {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
-  ∣h∣→A (term f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (map ∣h∣→A ts)
-\end{spec}
- 
-With the function |∣h∣→A| we can define the homomorphism. The proofs of
-|cong| and the homomorphism condition are straightforward,
-we omit them.
-
-\begin{spec}
-|h|A : (A : Algebra Σ) → Homo |T| A
-|h|A = record  { ′_′  =  λ s → record 
-                         {_⟨$⟩_ = ∣h∣→A {s}
-                         ; cong  = {!!}}
-               ; cond = {!!}}
+  ∣h∣→A : (A : Algebra Σ) → {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
+  ∣h∣→A A (term f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (∣h*∣→A ts)
 \end{spec}
 
-With this homomorphism we can define the proof of initiality of the
-term algebra. We omit the proof of uniqueness because presents no
-interesting difficulties.
-
+\noindent It is straightforward to prove that |∣h∣→A| preserves propositional equality
+and satisfies the homomorphism condition by construction; thus we define
 \begin{spec}
-  |T|isInitial : Initial
-  |T|isInitial = record  { alg = |T|
-                         ; init = λ A → |h|A , {! !} }
+|h|A  : (A : Algebra Σ) → Homo |T| A
+|h|A A = record  { ′_′  =  λ s → record {_⟨$⟩_ = ∣h∣→A A {s} ; cong  = {!!}}
+                 ; cond = {!!}}
+\end{spec}
+
+\noindent We let | ∣h∣A | be the unique homomorphism from |∣T∣| to |A| are equal;
+by recursion on the structure of the term one can prove that any pair of homomorphism
+are equal, thus having the initiality of | ∣T∣ |.
+\begin{spec}
+  |T|isInitial : Initial ∣T∣
+  |T|isInitial A = ∣h∣→A A , ?
 \end{spec}
 
       

@@ -1,36 +1,23 @@
 \section{Equational Logic}
 
-In this section we formalize (conditional) equational logic, for this
-we extend the term algebra with variables and introduce a formal
-system for conditional equations; we show that this system is sound a
-complete. 
+In this section we formalize (conditional) equational logic, extending
+the term algebra with variables and introducing a formal system for
+conditional equations; we show that this system is sound and complete.
+This section can be seen as a formalization of the system
+proposed by \citet{goguen-equational}.
 
-%\subsection{Variables, environments and substitution}
 \subsection{Free algebra with variables}
 The first step to define equations is to add variables to the set of
 terms. Given a signature |Σ|, we say that |X : sorts Σ → Set| is a
 family of variables for |Σ|, we let |Vars Σ = sorts Σ → Set|. For each
 family |X : Vars Σ| we enlarge the signature by taking the variables as
 new constants (\ie, operations with arity |[]|).
-% \paragraph{Variables} A signature $\Sigma$ consists of sorts and operation
-% symbols. We can add variables of each sort and construct a new
-% signature, consisting of the same operations than $\Sigma$, but
-% adding new constant symbols, one for each variable:
 \begin{spec}
   _〔_〕 : (Σ : Signature) → (X : Vars Σ) → Signature
   Σ 〔 X 〕 = record  { sorts = sorts Σ ; ops =  ops' }
      where   ops' ([] , s)   = ops Σ ([] , s) ⊎ X s
              ops' (ar , s)   = ops Σ (ar , s)
 \end{spec}%
-% We define variables as a family indexed by sorts of |Σ|, and
-% the new signature |Σ 〔 X 〕| is defined with the disjoint union
-% from standard
-% library. For each sort, constants symbols are divided in the
-% two injections. The first one contains the original constant
-% symbols of sort |s|, and the second
-% one contains the variables of sort |s|. Note the benefit of having
-% defined operations with a family indexed by arities. We can refer
-% to constants symbols in a simple way.
 \comment{In some literature this new signature is a special case of
   a more general construction where one takes the disjoint union of
   two signatures. A signature $\Sigma$ is said to be \emph{ground}
@@ -52,13 +39,13 @@ T Σ 〔 X 〕  = |T| (Σ 〔 X 〕) ⟦_⟧ₛ) ∥ io
 We let |Env {Σ} X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥ | be the set of
 \emph{environments} from |X| to |A|; an environment |θ : Env X A|
 yields a |Σ 〔 X 〕|-algebra by interpreting a variable |x| as |θ x|.
-Since any |Σ 〔 X 〕|-algebra can be seen in this way, from the
-initiality of |T Σ 〔 X 〕| we deduce that it enjoys the universal
-\textit{freeness} property: Given a $\Sigma$-algebra $\mathcal{A}$,
-and an environment $\theta$, there exists an unique homomorphism $h$
-from |T Σ 〔 X 〕| to $\mathcal{A}$ such that $h(x) = \theta(x)$ for
-all variable $x$.
-
+The free algebra |T Σ 〔 X 〕| has the universal
+\emph{freeness} property: given a $\Sigma$-algebra $\mathcal{A}$
+and an environment $\theta$, there exists an unique homomorphism |⟦_⟧θ|
+from |T Σ 〔 X 〕| to $\mathcal{A}$ such that |⟦ x ⟧θ  = θ(x)| for
+|x ∈ X|.%
+\comment{Any |Σ 〔 X 〕|-algebra can be decomposed as |Σ|-algebra
+  paired with an environment.}%
 % A substitution of variables to terms is simply an environment
 % of the term algebra |∣T∣ Σ 〔 X 〕|. 
 
@@ -69,81 +56,67 @@ all variable $x$.
 
 \subsection{Equations, satisfactibility and provability}
 
-\paragraph{Equations}
-A $\Sigma$-equation consists of a family of variables $X$,
-two $\Sigma(X)$-terms of the same sort $t$ and $t'$, and a
-(possibly empty) set of pairs of $\Sigma(X)$-terms $u_i , u'_i$
-each of the same sort. In \cite{goguen-equational} an equation
-is writen in the form $(\forall X) t = t' \,\text{if}\, u_1=u'_1,...,
-u_n=u'_n$.
-We define equation in Agda with a record parameterized on a
-signature, a family of variables and a sort:
+\paragraph{Equations} In the mono-sorted setting an equation is a pair
+of terms where all the variables are assumed to be universally
+quantified and an equational theory is a (finite) set of equations. In
+our multi-sorted framework we have \textit{sorted}
+equations. Moreover, we allow for conditional equations
+$t = t' \text{, if } t_1 = t'_1, \ldots, t_n = t'_n$; notice that
+each condition $t_i = t'_i$ is of a given sort. \comment{In this section
+we use in different contexts our definition of heterogeneous vectors:
+to define the conditions of an equation, as the definition of a theory,
+and, finally, as premises in rules of the deduction system.}
 
+Let |Σ| be a signature and let |Eq Σ X s| be pairs of terms of sorts
+|s|. A conditional equation is a tuple of the equation itself and the
+list of conditions, since the conditions are sorted we also
+need the list of sorts typing each condition.
 \begin{spec}
-record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
-  constructor ⋀_≈_if「_」_
+record Equation (Σ ) (X : Vars Σ) (s : sorts Σ) : Set where
+  constructor ⋀_if_
   field
-    left  : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
-    right : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
-    carty : Arity Σ
-    cond :  HVec (λ s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) carty ×
-            HVec (λ s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) carty
+    eq  :   Eq Σ X s
+    cond : Σ[ carty ∈ Arity Σ ] (HVec (Eq Σ X) carty)
 \end{spec}
 
-\noindent The two terms of the equation are fields |left|
-and |right|. If the equation is conditional, we have a non-empty
-arity |carty| and two vectors of terms with arity |carty|.
+% \noindent The two terms of the equation are fields |left|
+% and |right|. If the equation is conditional, we have a non-empty
+% arity |carty| and two vectors of terms with arity |carty|.
+% We can give a short notation for non-conditional equations:
+% \begin{spec}
+% ⋀_≈_ : ∀ {Σ X s} → (t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) → Equation Σ X s
+% ⋀ t ≈ t' = ⋀ t ≈ t' if「 [] 」 (⟨⟩ , ⟨⟩)
+% \end{spec}
 
-We can give a short notation for non-conditional equations:
-
-\begin{spec}
-⋀_≈_ : ∀ {Σ X s} → (t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) → Equation Σ X s
-⋀ t ≈ t' = ⋀ t ≈ t' if「 [] 」 (⟨⟩ , ⟨⟩)
-\end{spec}
-
-A \textbf{theory} consists of a signature and a set of equations.
-The type of heterogeneous vectors is appropiate to formalize the
-set of equations, possibly of different sorts. Thus, a theory is
-defined as a vector of equations of a signature $\Sigma$ and a set
-of variables $X$:
-
+A \emph{theory} over the signature $\Sigma$ is given by vector of equations.
 \begin{spec}
 Theory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
 Theory Σ X ar = HVec (Equation Σ X) ar
 \end{spec}
 
-\paragraph{Satisfactibility.}
-Given a $\Sigma$-equation $e \doteq (\forall X) t = t' \,\text{if}\,
-u_1=u'_1,..., u_n=u'_n$ and a $\Sigma$-algebra $\mathcal{A}$,
-$\mathcal{A}$ \textbf{satisfies} $e$, writen $A \models e$, iff
-for any environment $\theta$, if $\theta(u_i)=\theta(u'_i)$, for
-$1 \leq i \leq n$, then $\theta(t)=\theta(t')$.
-
-We formalize this definition using the extension of a relation to
-vectors. Each condition $\theta(u_i)=\theta(u'_i)$, where $u_i$ and
-$u'_i$ are terms of sort $s_i$, is an element of
-the extension to vectors of the equality of the carrier of $s_i$.
-
+\paragraph{Satisfaction} We recall that a $\Sigma$-algebra
+$\mathcal{A}$ \emph{satisfies} a conditional equation
+$t = t', \text{ if } t_1 = t'_1,\ldots,t_n=t'_n$ if for any
+environment $\theta : X \to \mathcal{A}$, $⟦ t ⟧θ = ⟦ t' ⟧θ$, whenever
+$⟦ t_i ⟧θ = ⟦ t'_i ⟧θ$ for $1 \leqslant i \leqslant n$.  In order to
+formalize satisfaction we first define when an environment models an equation.
 \begin{spec}
-_⊨_ : ∀ {Σ X s} → (A : Algebra Σ) → Equation Σ X s → Set _
-_⊨_ A  (⋀ t ≈ t' if「 _ 」 (us , us')) =
-       (θ : Env A) → _∼v_ {R = λ _ uᵢ uᵢ' → ((θ ↪) uᵢ) ≈ᵢ ((θ ↪) uᵢ')} us us' →
-       ((θ ↪) t) ≈ₛ ((θ ↪) t')
+_,_⊨ₑ_ : ∀ {Σ X A} → (θ : Env X A) → (s : sorts Σ) → Eq Σ X s → Set
+θ , s ⊨ₑ (t , t') = _≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧ θ) (⟦ t' ⟧ θ)
+\end{spec}
+\noindent Using the point-wise extension of the previous predicate we can
+write directly the notion of satisfaction.
+\begin{spec} 
+_⊨_ : ∀ {Σ X} (A : Algebra Σ) → (s : sort Σ) → Equation Σ X s → Set
+A , s ⊨ (⋀ eq if (_ , eqs)) = ∀ θ → (θ ,_⊨ₑ_) ⇨v eqs) → θ , s ⊨ₑ eq
 \end{spec}
 
-\noindent where |_≈ᵢ_| and |_≈ₛ_| are the corresponding equivalence
-relations of each sort.
-
-We say that $\mathcal{A}$ satisfies a theory $T$ if it satisfies each
-equation in $T$ (we say that $\mathcal{A}$ is \textit{a model} of
-$T$).
-
+\noindent We say that $\mathcal{A}$ is a \emph{model} of the theory
+$T$ if it satisfies each equation in $T$.
 \begin{spec}
-_⊨T_ : ∀ {Σ X ar} → (A : Algebra Σ) → (E : Theory Σ X ar) → Set _
-A ⊨T E = ∀ {e} → e ∈ E → A ⊨ e
+_⊨ₜ_ : ∀ {Σ X ar} → (A : Algebra Σ) → (E : Theory Σ X ar) → Set
+A ⊨ₜ E = (A ,_⊨_) ⇨v E
 \end{spec}
-
-\noindent Type |_∈_| formalizes the relation of membership in vectors.
 
 \paragraph{Provability.}
 Now we proceed to define equational proofs. Given a $\Sigma$-theory

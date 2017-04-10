@@ -309,9 +309,9 @@ every operation $ f : [s_1, \ldots,s_n] \Rightarrow s$
   (\vec{a},\vec{b}) \in Q_{s_1} \times \cdots \times Q_{s_n} \text{ implies }
  (f_{\mathcal{A}}(\vec{a}) , f_{\mathcal{A}}(\vec{b})) \in Q_s\label{eq:congcond}
 \end{equation} 
-\noindent Let us remark that this condition could be defined as
+\comment{\noindent Let us remark that this condition could be defined as
 \eqref{eq:opclosed} taking $Q$ as a predicate over $\mathcal{A} \times
-\mathcal{A}$.
+\mathcal{A}$.}
 
 Remember that a binary relation over a setoid is well-defined if it is
 preserved by the setoid equality; this notion can be extended over
@@ -373,10 +373,9 @@ let $\phi_B$ be the restriction of $\phi$ to $\alg B$, then
 
 A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for any
 $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
-from $\mathcal{A}$ to $\mathcal{B}$. We say that a set has a unique
-element with respecto to some relation as
+from $\mathcal{A}$ to $\mathcal{B}$. We say that a set |A| has a unique
+element with respecto to some relation |R| if
 \begin{spec}
-hasUnique : {A : Set} →  (_≈_ : Rel A) → Set
 hasUnique {A} _≈_ = A × (∀ a a' → a ≈ a')
 \end{spec}
 \comment{Obviously, if a set has a unique element, then the relation
@@ -390,14 +389,12 @@ Initial : ∀ {Σ} → Algebra Σ → Set _
 Initial {Σ} A = ∀ (B : Algebra Σ) → hasUnique (_≈ₕ_ A B)
 \end{spec}
 
-\paragraph{Term algebra.}
-
 Given a signature $\Sigma$ we can define the \emph{term algebra}
 $\mathcal{T}$, whose carriers are sets of well-typed words built up
 from the function symbols.  Sometimes this universe is called the
-\emph{Herbrand Universe} (although, according to \cite{wirth-2009},
+\emph{Herbrand Universe} \comment{(although, according to \cite{wirth-2009},
 Herbrand did not thought of $\mathcal{T}$ but only finite
-approximations of it). It is customary to use an inductive definition
+approximations of it)}. It is customary to use an inductive definition
 for $\mathcal{T}$:
 \[
 \inferrule*{f : [s_0,...,s_{n-1}] \Rightarrow s\\  \text{ for all } 0 \leq i \leq n-1,\  t_i \in \mathcal{T}_{s_i} }
@@ -434,21 +431,21 @@ we have to mutually define | ∣h∣→A | and its extension over vectors
   ∣h∣→A : (A : Algebra Σ) → {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
   ∣h∣→A A (term f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (∣h*∣→A ts)
 \end{spec}
-
-\noindent It is straightforward to prove that |∣h∣→A| preserves propositional equality
-and satisfies the homomorphism condition by construction; thus we define
-\begin{spec}
-|h|A  : (A : Algebra Σ) → Homo |T| A
-|h|A A = record  { ′_′  =  λ s → record {_⟨$⟩_ = ∣h∣→A A {s} ; cong  = {!!}}
-                 ; cond = {!!}}
-\end{spec}
-
-\noindent We let | ∣h∣A | be the unique homomorphism from |∣T∣| to |A|;
-by recursion on the structure of the term one can prove that any pair of homomorphism
-are equal, thus having the initiality of | ∣T∣ |.
-\begin{spec}
-  |T|isInitial : Initial ∣T∣
-  |T|isInitial A = ∣h∣→A A , ?
-\end{spec}
-
-      
+\noindent It is straightforward to prove that |∣h∣→A| preserves
+propositional equality and satisfies the homomorphism condition by
+construction; thus we know that there is a homomorphism
+| ∣h∣A : (A : Algebra Σ) → Homo (|T| Σ) A|; to finish the proof that | ∣T∣ Σ | is initial,
+we prove, by recursion on the
+structure of terms,that any pair of homomorphism are
+equal.
+%\begin{spec}
+%|h|A  : (A : Algebra Σ) → Homo |T| A
+%|h|A A = record  { ′_′  =  λ s → record {_⟨$⟩_ = ∣h∣→A A {s} ; cong  = {!!}}
+%                 ; cond = {!!}}
+%\end{spec}
+%
+%\noindent We let | ∣h∣A |
+%\begin{spec}
+%  |T|isInitial : Initial ∣T∣
+%  |T|isInitial A = ∣h∣→A A , ?
+%\end{spec}

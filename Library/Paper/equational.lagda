@@ -1,91 +1,71 @@
 \section{Equational Logic}
 
-With the development of the previous section, we proceed to
-formalize Equational Logic in Agda.
+In this section we formalize (conditional) equational logic, for this
+we extend the term algebra with variables and introduce a formal
+system for conditional equations; we show that this system is sound a
+complete. 
 
-\subsection{Variables, environments and substitution}
-
-\paragraph{Variables} A signature $\Sigma$ consists of sorts and operation
-symbols. We can add variables of each sort and construct a new
-signature, consisting of the same operations than $\Sigma$, but
-adding new constant symbols, one for each variable:
-
+%\subsection{Variables, environments and substitution}
+\subsection{Free algebra with variables}
+The first step to define equations is to add variables to the set of
+terms. Given a signature |Σ|, we say that |X : sorts Σ → Set| is a
+family of variables for |Σ|, we let |Vars Σ = sorts Σ → Set|. For each
+family |X : Vars Σ| we enlarge the signature by taking the variables as
+new constants (\ie, operations with arity |[]|).
+% \paragraph{Variables} A signature $\Sigma$ consists of sorts and operation
+% symbols. We can add variables of each sort and construct a new
+% signature, consisting of the same operations than $\Sigma$, but
+% adding new constant symbols, one for each variable:
 \begin{spec}
-  Vars : (Σ : Signature) → Set₁
-  Vars Σ = (s : sorts Σ) → Set
-
   _〔_〕 : (Σ : Signature) → (X : Vars Σ) → Signature
-  Σ 〔 X 〕 = record  { sorts = sorts Σ
-                      ; ops =  λ { ([] , s) → ops Σ ([] , s) ⊎ X s
-                                 ; ty → ops Σ ty
-                               }
-                      }
-\end{spec}
-
-We define variables as a family indexed by sorts of |Σ|, and
-the new signature |Σ 〔 X 〕| is defined with the disjoint union
-from standard
-library. For each sort, constants symbols are divided in the
-two injections. The first one contains the original constant
-symbols of sort |s|, and the second
-one contains the variables of sort |s|. Note the benefit of having
-defined operations with a family indexed by arities. We can refer
-to constants symbols in a simple way.
-
-In the literature is used the term \textit{ground signature} for
-signatures consisting only of constant symbols. And a signature
-with variables is constructed via the union of a signature and a
-ground signature.
-
-From a signature |Σ| and a family of variables |X|, we can
-form a |Σ|-algebra with the terms of the term algebra of
-|Σ 〔 X 〕|, forgetting the variables:
-
+  Σ 〔 X 〕 = record  { sorts = sorts Σ ; ops =  ops' }
+     where   ops' ([] , s)   = ops Σ ([] , s) ⊎ X s
+             ops' (ar , s)   = ops Σ (ar , s)
+\end{spec}%
+% We define variables as a family indexed by sorts of |Σ|, and
+% the new signature |Σ 〔 X 〕| is defined with the disjoint union
+% from standard
+% library. For each sort, constants symbols are divided in the
+% two injections. The first one contains the original constant
+% symbols of sort |s|, and the second
+% one contains the variables of sort |s|. Note the benefit of having
+% defined operations with a family indexed by arities. We can refer
+% to constants symbols in a simple way.
+\comment{In some literature this new signature is a special case of
+  a more general construction where one takes the disjoint union of
+  two signatures. A signature $\Sigma$ is said to be \emph{ground}
+  if $\mathit{ops} \Sigma (ar , s) = \emptyset whenever ar \neq []$.
+  This is a contrived generalization which does not seem to add much;
+  for example, one needs that $X$ is a ground signature with the
+  same sorts of $\Sigma$.
+}%
+As we will see in the next section, an inclusion of signatures
+$\Sigma \subseteq \Sigma'$ induces a contra-variant inclusion of
+algebras; in the particular case of enlarging a signature with
+variables we can make explicit the inclusion of the term algebras:
 \begin{spec}
 T_〔_〕 : (Σ : Signature) → (X : Vars Σ) → Algebra Σ
-T Σ 〔 X 〕  = (λ s → ∣T∣ ⟦ s ⟧ₛ)
-             ∥ (λ  { {[]} {s} f       → ∣T∣ ⟦ inj₁ f ⟧ₒ
-                   ; {s₀ ∷ ar} {s} f  → ∣T∣ ⟦ f ⟧ₒ })
-  where open TermAlgebra (Σ 〔 X 〕)
+T Σ 〔 X 〕  = |T| (Σ 〔 X 〕) ⟦_⟧ₛ) ∥ io
+  where  io {[]}  f  = |T| (Σ 〔 X 〕) ⟦ inj₁ f ⟧ₒ
+         io {ar}  f  = |T| (Σ 〔 X 〕) ⟦ f ⟧ₒ
 \end{spec}
+We let |Env {Σ} X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥ | be the set of
+\emph{environments} from |X| to |A|; an environment |θ : Env X A|
+yields a |Σ 〔 X 〕|-algebra by interpreting a variable |x| as |θ x|.
+Since any |Σ 〔 X 〕|-algebra can be seen in this way, from the
+initiality of |T Σ 〔 X 〕| we deduce that it enjoys the universal
+\textit{freeness} property: Given a $\Sigma$-algebra $\mathcal{A}$,
+and an environment $\theta$, there exists an unique homomorphism $h$
+from |T Σ 〔 X 〕| to $\mathcal{A}$ such that $h(x) = \theta(x)$ for
+all variable $x$.
 
+% A substitution of variables to terms is simply an environment
+% of the term algebra |∣T∣ Σ 〔 X 〕|. 
 
-\paragraph{Environments}
-Given a $\Sigma$-algebra $\mathcal{A}$ and a family of variables
-$X$, we can define the set of environments from $X$ to
-$\mathcal{A}$. Each variable of sort $s$ is mapped to an element
-in the interpretation of $s$ in $\mathcal{A}$:
-
-\begin{spec}
-Env : ∀ {Σ} → (X : Vars) → (A : Algebra Σ) → Set _
-Env {Σ} X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥
-\end{spec}
-
-\noindent Given an environment |θ : Env {X = X} A|, it's
-straightforward extending it to terms. We write this extension
-with |(θ ↪)|.
-
-\paragraph{Extension of initial homomorphism.}
-Algebra |T Σ 〔 X 〕| has the universal \textit{freeness} property:
-Given a $\Sigma$-algebra $\mathcal{A}$, and an environment $\theta$,
-there exists an unique homomorphism $h$ from |T Σ 〔 X 〕| to
-$\mathcal{A}$ such that $h(x) = \theta(x)$ for all variable $x$.
-We define this unique homomorphism:
-
-\begin{spec}
-  TΣXHom : (θ : Env X A) → Homo (T Σ 〔 X 〕) A
-  TΣXHom = ...
-\end{spec}
-
-\paragraph{Substitutions}
-
-A substitution of variables to terms is simply an environment
-of the term algebra |∣T∣ Σ 〔 X 〕|. 
-
-\begin{spec}
-  Subst : Set
-  Subst = Env X (T Σ 〔 X 〕)
-\end{spec}
+% \begin{spec}
+%   Subst : Set
+%   Subst = Env X (T Σ 〔 X 〕)
+% \end{spec}
 
 \subsection{Equations, satisfactibility and provability}
 

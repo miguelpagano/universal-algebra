@@ -405,7 +405,7 @@ for $\mathcal{T}$:
 \]
 This inductive definition can be written directly in Agda:
 \begin{spec}
-  data HU : (s : sorts Σ) → Set where
+  data HU {Σ : Signature} : (s : sorts Σ) → Set where
     term : ∀  {ar s} → (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
 \end{spec}
 
@@ -417,8 +417,8 @@ tuple $⟨t_1,\ldots,t_n⟩$ to the term
 $f(t_1,\ldots,t_n)$ in $\mathcal{T}_s$; we omit the proof
 of |cong|.
 \begin{spec}
-  |T| : Algebra Σ
-  ∣T∣ = record  { _⟦_⟧ₛ = setoid ∘ HU ; _⟦_⟧ₒ  = ∣_|ₒ }
+  |T| : (Σ : Signature) Algebra Σ
+  |T| Σ = record  { _⟦_⟧ₛ = setoid ∘ (HU {Σ}) ; _⟦_⟧ₒ  = ∣_|ₒ }
     where | f ∣ₒ = record { _⟨$⟩_ = term f ; cong = ? }
 \end{spec}
 
@@ -443,7 +443,7 @@ and satisfies the homomorphism condition by construction; thus we define
                  ; cond = {!!}}
 \end{spec}
 
-\noindent We let | ∣h∣A | be the unique homomorphism from |∣T∣| to |A| are equal;
+\noindent We let | ∣h∣A | be the unique homomorphism from |∣T∣| to |A|;
 by recursion on the structure of the term one can prove that any pair of homomorphism
 are equal, thus having the initiality of | ∣T∣ |.
 \begin{spec}

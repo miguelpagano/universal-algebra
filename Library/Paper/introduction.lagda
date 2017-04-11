@@ -1,16 +1,47 @@
-\section{Introduction}
+\section{Introduction} Universal algebra has played a relevant role in
+computer science since its earliest days, in particular the seminal
+paper of \citet{birkhoff-70} uses regular languages as a prominent
+example.  The group ADJ promoted multi-sorted algebras as a key
+theoretical tool for specifying data types, for defining the semantics
+of programming languages \cite{goguen-77}, and for proving the
+correctness of compilers (as already advanced by \citet{burstall69}).
+In spite of its fruitful theory, there are little publicly available
+formalization of heterogeneous algebras in type-theory; as far as we
+know, since \citet{capretta-99} first mechanization of universal
+algebra and its further extension to equational logic
+\cite{capretta-eq}, the closest new work is
+\citet{kahl-2011}'s formalization of allegories. This situation is
+to be contrasted with impressive advances in mechanization of particular
+algebraic structures as witnessed, for example, by the proof of the
+Feit-Thompson theorem in Coq by \citet{gonthier2013machine}.
 
-There are many formalizations of algebraic structures in type-theory, some
-achieving amazing results (Feith-Thompson). However, the development of
-universal algebra in type theory is still little explored, passing nearly
-two decades since the work of Capretta, with his formalization in Coq.
+In this work we present a novel formalization of multi-sorted
+universal algebra in Agda, where heterogeneous signatures are modelled
+in type-theory using sets indexed by arities to represent operations,
+in contrast to Capretta's choice of representing arities as lists of
+sorts; this change allows for infinitary sorts and operations, but we
+think that it also eases the use of the resulting library. In the
+first part of the formalization, we proved some results of
+heterogeneous algebras, including the proof that the term algebra is
+initial and the three isomorphism theorems. We further formalize
+conditional equational theory and prove soundness and completeness. At
+the end, we define (derived) signature morphisms, from which we get
+the contra-variant functor between algebras; moreover, we also proved
+that, under some restrictions, the translation of a theory induces a
+contra-variant functor between models.
 
-Universal algebra is an interesting topic from a point of view of mathematics
-foundation and in computer sciences, and we offer a new formalization in Agda.
-We cover all the work realized in previous work, like Capretta's, but we
-improve it with novel definitions, like the way to define operations of signatures,
-the formalization of signature morphisms and the benefits of use heterogeneous
-vectors.
+%  is related with the interpretability of similarity types
+% in universal algebra (cf.\ \cite{garcia-84}), and has an extensive
+% literature: \citet{fujiwara-1959} introduced this notion as
+% \textit{mappings between algebraic systems}, \citet{janssen-98},
+% following the ADJ group, called it a \textit{polynomial derivor} and
+% \citet{mossakowski-15} refer to it as a \textit{derived signature
+% morphism}, a generalization of the more restricted \textit{signature
+% morphisms} in the theory of institutions
+% \cite{goguen-92}. Translations of signatures were analyzed
+% categorically by \citet{fiore-2010} for second order signatures and by
+% \citet{vidal-2012} for first order signatures.
+
 
 \paragraph{Outline.} In section 2, we define the main concepts of Universal
 Algebra: Signature, algebras and homomorphisms, congruences, quotients and

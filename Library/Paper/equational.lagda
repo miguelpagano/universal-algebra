@@ -171,8 +171,8 @@ using Agda's equational reasoning when constructing proofs.
 
 The proofs of soundness and completeness are proved as in the
 mono-sorted case; the first one proceeds by induction on the
-derivations, while the second is a consequence that the set of
-terms quotiened by provable equality is a model.
+derivations, while the second is a consequence that the quotient of
+the set of terms by provable equality is a model.
 \begin{theorem}[Soundness and Completeness]
   $T \vdash t ≈ t'$ iff $T \models_{\Sigma} t ≈ t'$.
 \end{theorem}
@@ -223,48 +223,49 @@ We use the abbreviation |Form₁ = HU (Σbool₁ 〔 Vars₁ 〕) tt| and
 define some smart constructors for constants, variables, and connectives: 
 \begin{spec}
 true false : Form₁
-true₁ = term (inj₁ t₁) ⟨⟩
-false₁ = term (inj₁ f₁) ⟨⟩
+true = term (inj₁ t) ⟨⟩
+false = term (inj₁ f) ⟨⟩
 
 p q r  : Form₁
 p = term (inj₂ 0) ⟨⟩
 q = term (inj₂ 1) ⟨⟩
 r = term (inj₂ 2) ⟨⟩
 
-_∧₁_ _∨₁_ : Form₁ → Form₁ → Form₁
-φ ∧₁ ψ = term and₁ ⟨⟨ φ , ψ ⟩⟩
-φ ∨₁ ψ = term or₁ ⟨⟨ φ , ψ ⟩⟩
+_∧_ _∨_ : Form₁ → Form₁ → Form₁
+φ ∧ ψ = term and ⟨⟨ φ , ψ ⟩⟩
+φ ∨ ψ = term or ⟨⟨ φ , ψ ⟩⟩
 
 ¬ : Form₁ → Form₁
-¬ φ = term neg₁ ⟨⟨ φ ⟩⟩
+¬ φ = term neg ⟨⟨ φ ⟩⟩
 \end{spec}
 \noindent The theory |TBool₁| consists of twelve axioms, but we only
 show two of them: the commutativity of meet and the definition of the
 least element:
 \begin{spec}
 commAnd leastDef : Equation Σbool₁ Vars₁ tt
-commAnd = ⋀ (p ∧₁ q) ≈ (q ∧₁ p)
-leastDef = ⋀ (p ∧₁ (¬ p)) ≈ false₁
+commAnd = ⋀ (p ∧ q) ≈ (q ∧ p)
+leastDef = ⋀ (p ∧ (¬ p)) ≈ false
 
-Tbool₁ : Theory Σbool₁ Vars₁ [ tt , tt ]
-Tbool₁ = ⟨ commAnd₁ , leastDef , … ⟩
+Tbool₁ : Theory Σbool₁ Vars₁ [ tt , tt , … ]
+Tbool₁ = ⟨ commAnd , leastDef , … ⟩
 \end{spec}
-\noindent We can use pattern-synonyms for referring to axioms, for example
+\noindent To use the substitution rule we need to refer to the axioms
+of the theory; in the formalization this is achieved by a proof that
+the axiom is in the theory, by using pattern-synonyms we can refer to
+the axioms by a more convenient (and conventional) name:
 \begin{spec}
 pattern commAndAx  = here
 pattern leastDefAx = there here
 \end{spec}
-will let us refer to each axiom by its name and not by the proof
-that the axiom is in the theory. We show the equational proof for
-|⋀ ¬ p ∧₁ p ≈ false₁|.
+We show the equational proof for |⋀ ¬ p ∧ p ≈ false|.
 \begin{spec}
-  p₁ : Tbool₁ ⊢ (⋀ ¬ p ∧₁ p ≈ false₁)
+  p₁ : Tbool₁ ⊢ (⋀ ¬ p ∧ p ≈ false)
   p₁ = begin
-         ¬ p ∧₁ p
+         ¬ p ∧ p
          ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩
-         p ∧₁ ¬ p
+         p ∧ ¬ p
          ≈⟨ psubst leastDefAx idSubst ∼⟨⟩ ⟩
-         false₁
+         false
        ∎
 \end{spec}
 \noindent Here we use the notation of Equational reasoning from

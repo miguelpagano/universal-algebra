@@ -103,16 +103,15 @@ urlcolor=blue]{ hyperref }
 
 \begin{abstract} In this work we present a novel formalization of
 universal algebra in Agda. We show that heterogeneous signatures can
-be elegantly modelled in type-theory using sets indexed by arities
-to represent operations. We prove all the elementary results of
-heterogeneous algebras, \ie that the term algebra is initial and
-the three isomorphism theorems. We further internalise equational
-theory and prove correctness and completeness. At the end, we define
-the (derived) signature morphisms, from which we get the
-contra-variant functor between algebras; moreover, we prove that the
-translation of a theory induce a contra-variant functor between
-models.
-
+be elegantly modelled in type-theory using sets indexed by arities to
+represent operations. We prove elementary results of heterogeneous
+algebras, including the proof that the term algebra is initial and the
+three isomorphism theorems. We further formalize equational theory and
+prove soundness and completeness. At the end, we define (derived)
+signature morphisms, from which we get the contra-variant functor
+between algebras; moreover, we also proved that, under some
+restrictions, the translation of a theory induces a contra-variant
+functor between models.
 \end{abstract}
 
 

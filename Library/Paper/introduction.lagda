@@ -52,7 +52,8 @@ equations, theories, satisfactibility and provability, ending with the Birkhoff
 proofs of soundness and completeness.
 In section 4 we introduce a new representation of (derived) signature morphisms and
 reduct algebras (and homomorphisms), and we explore translation and implication
-of theories, with the property of preservation of models, under some
-restrictions.
-Finally, we conclude in section 5, discussing the work realized, and pointing
+of theories.
+% with the property of preservation of models, under some
+%restrictions.
+Finally, we conclude in section 5, discussing the work done, and pointing
 out possible future directions.

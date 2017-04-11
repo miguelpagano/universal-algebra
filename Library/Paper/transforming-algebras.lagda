@@ -5,7 +5,7 @@ Let us consider the example of the previous section. We defined a
 signature |Σbool₁| for boolean algebras, with complementation, meet and
 join. There are other theories for boolean logic, with another
 operators. For example, consider the boolean logic consisting
-of constants True and False, and operators for disjunction and
+of constants True and False, and operators for join and
 equivalence. We can give a signature |Σbool₂|:
 
 \begin{spec}
@@ -21,7 +21,7 @@ data Σops₂ : List ⊤ × ⊤ → Set where
 
 \noindent This signature corresponds to the propositional logic of
 Dijkstra-Scholten and it is proved to be equivalent to the theory of previous
-section in \cite{rocha-bool}. % (where are called $T_{Bool}$ and $T_{DS}$).
+section in \cite{DBLP:conf/RelMiCS/RochaM08}. % (where are called $T_{Bool}$ and $T_{DS}$).
 It is clear that we could translate any formula in the language
 described by |Σbool₁| to a formula in |Σbool₂|. The constants and the join operator
  are mapped to their name-sake;  $\neg$ and $\wedge$ should be translated

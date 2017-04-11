@@ -86,7 +86,7 @@ urlcolor=blue]{ hyperref }
 
 \author{Emmanuel Gunther \and Alejandro Gadea \and Miguel Pagano}
 
-\institute{FaMAFyC, UNC - CONICET}
+\institute{FaMAF, UNC - CONICET}
 
 
 %% \authorinfo{Emmanuel Gunther}
@@ -101,7 +101,8 @@ urlcolor=blue]{ hyperref }
 
 \maketitle
 
-\begin{abstract} In this work we present a novel formalization of
+\begin{abstract}
+In this work we present a novel formalization of
 universal algebra in Agda. We show that heterogeneous signatures can
 be elegantly modelled in type-theory using sets indexed by arities to
 represent operations. We prove elementary results of heterogeneous

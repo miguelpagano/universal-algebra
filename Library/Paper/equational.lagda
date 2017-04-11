@@ -9,7 +9,7 @@ equations; we show that this system is sound and complete.
 The first step to define equations is to add variables to the set of
 terms. Given a signature |Σ|, we define |Vars Σ = sorts Σ → Set| as
 the set of families of variables for |Σ| and for each |X : Vars Σ| we
- the signature by taking the variables as new constants
+define a new signature extending |Σ|, taking the variables as new constants
 (i.e. , operations with arity []).
 \begin{spec}
   _〔_〕 : (Σ : Signature) → (X : Vars Σ) → Signature
@@ -25,6 +25,9 @@ the set of families of variables for |Σ| and for each |X : Vars Σ| we
   for example, one needs that $X$ is a ground signature with the
   same sorts of $\Sigma$.
 }%
+Note that it's easy to refer to constant operations and extend them, thanks
+to the way that we defined operations in a signature.
+
 As we will see in the next section, an inclusion of signatures
 $\Sigma \subseteq \Sigma'$ induces a contra-variant inclusion of
 algebras; in the particular case of enlarging a signature with
@@ -132,10 +135,12 @@ is more subtle than expected. We formalize the system presented in
 \citet{goguen2005specifying}, shown in \ref{fig:deduction}, and prove
 soundness and completeness with respect to the satisfaction given
 before. The first three rules are reflexivity, symmetry and
-transitivity; the fourth rule is substitution and allows to use
-axioms; finally, the last rule internalizes Leibniz rule, for
-replacing equals by equals. Notice the absence of a rule for deducing
-axioms as they are, in general, conditional equations.
+transitivity; the fourth rule allows to use
+axioms where is applied a substitution $\sigma$; finally, the last rule
+internalizes Leibniz rule, for replacing equals by equals in subterms.
+
+%Notice the absence of a rule for deducing
+%axioms as they are, in general, conditional equations.
 \begin{figure}[t]
   \centering
   \begin{alignat*}{1}
@@ -249,7 +254,8 @@ leastDef = ⋀ (p ∧ (¬ p)) ≈ false
 Tbool₁ : Theory Σbool₁ Vars₁ [ tt , tt , … ]
 Tbool₁ = ⟨ commAnd , leastDef , … ⟩
 \end{spec}
-\noindent To use the substitution rule we need to refer to the axioms
+\noindent To use the substitution rule (called |psubst|),
+we need to refer to the axioms
 of the theory; in the formalization this is achieved by a proof that
 the axiom is in the theory, by using pattern-synonyms we can refer to
 the axioms by a more convenient (and conventional) name:
@@ -270,7 +276,7 @@ We show the equational proof for |⋀ ¬ p ∧ p ≈ false|.
 \end{spec}
 \noindent Here we use the notation of Equational reasoning from
 standard library and the relevant actions of the substitution |σ₁| are
-|σ₁ p = ¬ p| and | σ₁ q = p|.
+|σ₁ p = ¬ p| and | σ₁ q = p|. 
 
 % The first step is performed by the |psubst| rule, with the
 % first axiom of theory |Tbool₁|, the commutativity of conjunction.

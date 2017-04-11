@@ -165,9 +165,10 @@ data _⊢_ {Σ X ar} (E : Theory Σ X ar) : ∀ {s} → Eqn Σ X s → Set where
     ptrans : ∀    {s} {t₀ t₁ t₂ : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
                   E ⊢ t₀ ≈ t₁ → E ⊢ t₁ ≈ t₂ → E ⊢ t₀ ≈ t₂
 \end{spec}
-% It's straightforward to define a setoid, where the carrier are the
-% terms of |Σ 〔 X 〕|, and the relation is a proof of equality of
-% two terms.
+It is straightforward to define a setoid over |T Σ 〔 X 〕| with
+provable equality as the equivalence relation; this is useful for
+using Agda's equational reasoning when constructing proofs.
+
 The proofs of soundness and completeness are proved as in the
 mono-sorted case; the first one proceeds by induction on the
 derivations, while the second is a consequence that the set of
@@ -180,136 +181,104 @@ paper. We remark, however, that one cannot speak of all the algebras
 satisfying some predicate (for example, being the model of a theory),
 but only of the algebras of some levels.
 
-Let $T$ and $T'$ be two $\Sigma$-theories, we say that $T$ is
-\emph{stronger} than $T'$ if every axiom $e \in T'$ can be deduced
-from $T$.
-\begin{spec}
-_≤ₜ_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
-T' ≤ₜ T =  ∀ {ar eqs s eq} → (⋀ eq if (_ , eqs)) ∈ T' →
-             (T ⊢_) ⇨v eqs → T ⊢ eq
-\end{spec}
-\noindent Obviously if $T$ is stronger than $T'$, then any equation that can
-be deduced from $T'$ can also be deduced from $T$. From which we conclude
-\begin{enumerate*}[label=(\roman*),itemjoin={}]
-\item any model of $T$ is also a model of $T'$, and
-\item equivalent theories have the same models.
-\end{enumerate*}
-\begin{spec}
-⊨≤ₜ : ∀  {Σ X A ar ar'} {T T'} → T' ≤ₜ T → A ⊨ₘ T → A ⊨ₘ T'
-⊨≤ₜ T' T p⇒ A model = ?
-\end{spec}
+% Let $T$ and $T'$ be two $\Sigma$-theories, we say that $T$ is
+% \emph{stronger} than $T'$ if every axiom $e \in T'$ can be deduced
+% from $T$.
+% \begin{spec}
+% _≤ₜ_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
+% T' ≤ₜ T =  ∀ {ar eqs s eq} → (⋀ eq if (_ , eqs)) ∈ T' →
+%              (T ⊢_) ⇨v eqs → T ⊢ eq
+% \end{spec}
+% \noindent Obviously if $T$ is stronger than $T'$, then any equation that can
+% be deduced from $T'$ can also be deduced from $T$. From which we conclude
+% \begin{enumerate*}[label=(\roman*),itemjoin={}]
+% \item any model of $T$ is also a model of $T'$, and
+% \item equivalent theories have the same models.
+% \end{enumerate*}
+% \begin{spec}
+% ⊨≤ₜ : ∀  {Σ X A ar ar'} {T T'} → T' ≤ₜ T → A ⊨ₘ T → A ⊨ₘ T'
+% ⊨≤ₜ T' T p⇒ A model = ?
+% \end{spec}
     
-\subsection{An example}
-
-Lets consider a boolean equational theory. The language consists of
-two constants $t$ and $f$, one unary operator $\neg$ and two binary
-operators $\wedge , \vee$.
-
+\subsection{A theory for Boolean Algebras }
+In this section we show how to encode an axiomatization of Boolean
+Algebras. This example, taken from \citet{DBLP:conf/RelMiCS/RochaM08},
+shows that it is easy to specify equational theories in our framework.
+Since the signature is mono-sorted, we use the unit type |⊤|, whose
+only inhabitant is |tt|, as the only sort.
 \begin{spec}
-data Σops₁ : List ⊤ × ⊤ → Set where
-  t₁    : Σops₁ ([] ↦ tt)
-  f₁    : Σops₁ ([] ↦ tt)
-  neg₁  : Σops₁ ([ tt ] ↦ tt)
-  and₁  : Σops₁ (([ tt , tt ]) ↦ tt)
-  or₁   : Σops₁ (([ tt , tt ]) ↦ tt)
+data boolOps : List ⊤ × ⊤ → Set where
+  t    : boolOps ([] ↦ tt)
+  f    : boolOps ([] ↦ tt)
+  neg  : boolOps ([ tt ] ↦ tt)
+  and  : boolOps (([ tt , tt ]) ↦ tt)
+  or   : boolOps (([ tt , tt ]) ↦ tt)
 
-Σbool₁ : Signature
-Σbool₁ = ⟨ ⊤ , Σops₁ ⟩
+Σbool : Signature
+Σbool = record { sorts = ⊤ ; ops = boolOps }
 \end{spec}
-
-\noindent This signature is monosorted. Type |⊤| is the unit type of
-agda, which has exactly one inhabitant.
-
-In order to define a theory in our formalization, we have to choose
-a set of variables for each sort. In this case, we have only one sort.
-We use natural numbers as variables:
-
+In order to define a theory in our formalization we have to choose a
+family of variables for each sort; in our case we let |Vars₁ ⊤ = ℕ|.
+We use the abbreviation |Form₁ = HU (Σbool₁ 〔 Vars₁ 〕) tt| and
+define some smart constructors for constants, variables, and connectives: 
 \begin{spec}
-Vars₁ : Vars Σbool₁
-Vars₁ _ = ℕ
-\end{spec}
+true false : Form₁
+true₁ = term (inj₁ t₁) ⟨⟩
+false₁ = term (inj₁ f₁) ⟨⟩
 
-The formulas of this boolean logic are terms in the term algebra of
-|Σbool₁ 〔 Vars₁ 〕|. We define smart constructors for this formulas:
+p q r  : Form₁
+p = term (inj₂ 0) ⟨⟩
+q = term (inj₂ 1) ⟨⟩
+r = term (inj₂ 2) ⟨⟩
 
-\begin{spec}
-Form₁ : Set
-Form₁ = HU (Σbool₁ 〔 Vars₁ 〕) tt
-
-_∧₁_ : Form₁ → Form₁ → Form₁
+_∧₁_ _∨₁_ : Form₁ → Form₁ → Form₁
 φ ∧₁ ψ = term and₁ ⟨⟨ φ , ψ ⟩⟩
-
-_∨₁_ : Form₁ → Form₁ → Form₁
 φ ∨₁ ψ = term or₁ ⟨⟨ φ , ψ ⟩⟩
 
 ¬ : Form₁ → Form₁
 ¬ φ = term neg₁ ⟨⟨ φ ⟩⟩
-
-p : Form₁
-p = term (inj₂ 0) ⟨⟩
-
-q : Form₁
-q = term (inj₂ 1) ⟨⟩
-
-true₁ : Form₁
-true₁ = term (inj₁ t₁) ⟨⟩
-
-false₁ : Form₁
-false₁ = term (inj₁ f₁) ⟨⟩
 \end{spec}
-
-\noindent |p|, |q| and |r| are smart constructors for three variables,
-necessary to define the axioms.
-
-The theory consists of 12 axioms. We show only two of them:
-Commutativity of $\wedge$, and the definition of $f$:
-
+\noindent The theory |TBool₁| consists of twelve axioms, but we only
+show two of them: the commutativity of meet and the definition of the
+least element:
 \begin{spec}
-commAnd₁ : Eq₁
-commAnd₁ = ⋀ p ∧₁ q ≈ (q ∧₁ p)
-
-andF : Eq₁
-andF = ⋀ p ∧₁ (¬ p) ≈ false₁
+commAnd leastDef : Equation Σbool₁ Vars₁ tt
+commAnd = ⋀ (p ∧₁ q) ≈ (q ∧₁ p)
+leastDef = ⋀ (p ∧₁ (¬ p)) ≈ false₁
 
 Tbool₁ : Theory Σbool₁ Vars₁ [ tt , tt ]
-Tbool₁ = ⟪ commAnd₁ , andF ⟫
-
-pattern ax₁ = here
-pattern ax₂ = there here
+Tbool₁ = ⟨ commAnd₁ , leastDef , … ⟩
 \end{spec}
-
-\noindent We define two patterns for constructors of the type |_∈_|,
-necessary if we need to use the rule |psubst|.
-
-Let see a proof of the equation |⋀ ¬ p ∧₁ p ≈ false₁|. The axiom
-|andF| expresses something similar, but the operands in the left side
-are inverted. We can use first the commutativity axiom and then
-axiom |andF|:
-
+\noindent We can use pattern-synonyms for referring to axioms, for example
+\begin{spec}
+pattern commAndAx  = here
+pattern leastDefAx = there here
+\end{spec}
+will let us refer to each axiom by its name and not by the proof
+that the axiom is in the theory. We show the equational proof for
+|⋀ ¬ p ∧₁ p ≈ false₁|.
 \begin{spec}
   p₁ : Tbool₁ ⊢ (⋀ ¬ p ∧₁ p ≈ false₁)
   p₁ = begin
          ¬ p ∧₁ p
-         ≈⟨ psubst ax₁ σ₁ ∼⟨⟩ ⟩
+         ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩
          p ∧₁ ¬ p
-         ≈⟨ psubst ax₂ idSubst ∼⟨⟩ ⟩
+         ≈⟨ psubst leastDefAx idSubst ∼⟨⟩ ⟩
          false₁
        ∎
-    where σ₁ : Subst
-          σ₁ 0 = ¬ p
-          σ₁ 1 = p
-          σ₁ n = term (inj₂ n) ⟨⟩
 \end{spec}
+\noindent Here we use the notation of Equational reasoning from
+standard library and the relevant actions of the substitution |σ₁| are
+|σ₁ p = ¬ p| and | σ₁ q = p|.
 
-\noindent We use the notation of Equational reasoning from standard
-library. The first step is performed by the |psubst| rule, with the
-first axiom of theory |Tbool₁|, the commutativity of conjunction.
-The substitution used consists of mapping the first variable
-(whose term we called |p|) to the term
-resulting of the negation of that variable, i. e., |¬ p|. And mapping
-the second variable (whose term we called |q|) to the first one (|p|).
-For the rest, we can define the identity substitution.
-Once we proved the first step, the conclussion is exactly the left side
-of the second axiom, so we can use |psubst| rule with the identity
-substitution.
+% The first step is performed by the |psubst| rule, with the
+% first axiom of theory |Tbool₁|, the commutativity of conjunction.
+% The substitution used consists of mapping the first variable
+% (whose term we called |p|) to the term
+% resulting of the negation of that variable, i. e., |¬ p|. And mapping
+% the second variable (whose term we called |q|) to the first one (|p|).
+% For the rest, we can define the identity substitution.
+% Once we proved the first step, the conclussion is exactly the left side
+% of the second axiom, so we can use |psubst| rule with the identity
+% substitution.
 

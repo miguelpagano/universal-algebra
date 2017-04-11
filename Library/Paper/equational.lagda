@@ -1,10 +1,9 @@
 \section{Equational Logic}
 
-In this section we formalize (conditional) equational logic, extending
-the term algebra with variables and introducing a formal system for
-conditional equations; we show that this system is sound and complete.
-This section can be seen as a formalization of the system
-proposed by \citet{goguen-equational}.
+In this section we formalize (conditional) equational logic as
+presented by \citet{goguen2005specifying}, extending the term algebra
+with variables and introducing a formal system for conditional
+equations; we show that this system is sound and complete.
 
 \subsection{Free algebra with variables}
 The first step to define equations is to add variables to the set of
@@ -78,7 +77,9 @@ record Equation (Σ ) (X : Vars Σ) (s : sorts Σ) : Set where
     eq  :   Eq Σ X s
     cond : Σ[ carty ∈ Arity Σ ] (HVec (Eq Σ X) carty)
 \end{spec}
-
+\comment{\noindent Notice that we follow Goguen and Messeguer in that equations
+are given explicitly over a set of variables. This, in turn, leads us
+to define satisfability as proposed by Huet and Oppen.}
 % \noindent The two terms of the equation are fields |left|
 % and |right|. If the equation is conditional, we have a non-empty
 % arity |carty| and two vectors of terms with arity |carty|.
@@ -107,117 +108,93 @@ _,_⊨ₑ_ : ∀ {Σ X A} → (θ : Env X A) → (s : sorts Σ) → Eq Σ X s �
 \noindent Using the point-wise extension of the previous predicate we can
 write directly the notion of satisfaction.
 \begin{spec} 
-_⊨_ : ∀ {Σ X} (A : Algebra Σ) → (s : sort Σ) → Equation Σ X s → Set
+_,_⊨_ : ∀ {Σ X} (A : Algebra Σ) → (s : sort Σ) → Equation Σ X s → Set
 A , s ⊨ (⋀ eq if (_ , eqs)) = ∀ θ → (θ ,_⊨ₑ_) ⇨v eqs) → θ , s ⊨ₑ eq
 \end{spec}
 
 \noindent We say that $\mathcal{A}$ is a \emph{model} of the theory
-$T$ if it satisfies each equation in $T$.
+$T$ if it satisfies each equation in $T$; as usual an equation is a
+consequence of a theory, if every model of the theory, satisfies the
+equation.
 \begin{spec}
-_⊨ₜ_ : ∀ {Σ X ar} → (A : Algebra Σ) → (E : Theory Σ X ar) → Set
-A ⊨ₜ E = (A ,_⊨_) ⇨v E
-\end{spec}
+_⊨ₘ_ : ∀ {Σ X ar} → (A : Algebra Σ) → (E : Theory Σ X ar) → Set
+A ⊨ₘ E = (A ,_⊨_) ⇨v E
 
-\paragraph{Provability.}
-Now we proceed to define equational proofs. Given a $\Sigma$-theory
-$T$, a $\Sigma$-equation $e$ is provable if it is the conclusion of one
-of the next rules:
-
-\begin{itemize}
-  \item[*] $T \vdash (\forall X)\, t = t$
-  \item[*] If $T \vdash (\forall X)\, t = t'$, then
-              $T \vdash (\forall X)\, t' = t$
-  \item[*] If $T \vdash (\forall X)\, t_0 = t_1$ and
-              $T \vdash (\forall X)\, t_1 = t_2$, then
-              $T \vdash (\forall X)\, t_0 = t_2$
-  \item[*] If $(\forall X) t = t' \,\text{if}\,
-              u_1=u'_1,..., u_n=u'_n \in T$,
-              $\sigma$ is a substitution and
-              $T \vdash (\forall X)\, \sigma(u_i) = \sigma(u'_i)$,
-              for $1 \leq i \leq n$, then
-              $T \vdash (\forall X)\, \sigma(t) = \sigma(t')$
-  \item[*] If $T \vdash (\forall X)\, t_i = t'_i$, with each $t_i$ term
-              of sort $s_i$, for $1 \leq i \leq n$, and
-              $f : [s_1,...,s_n] \Rightarrow s$ is an operation of
-              $\Sigma$, then
-              $T \vdash (\forall X)\, f\,(t_1,...,t_n) = f\,(t'_1,...,t'_n)$           
-\end{itemize}
-
-\noindent The first three rules are reflexivity, symetry and
-          transitivity, so the relation is of equivalence.
-          Next rule is often called \textit{substitution}, and allows
-          to apply an axiom by replacing variables by terms. The last
-          rule is often called \textit{replacement}, and allows us to
-          apply equalities on subterms.
-
-We define the relation of provability with an inductive type,
+_⊨Σ_ : ∀ {Σ X ar s} → (Theory Σ X ar) → (Equation Σ X s) → Set
+_⊨Σ_ {Σ} {s = s} E e = (A : Algebra Σ) → A ⊨ₘ E → A , s ⊨ e
+\end{spec}%
+\comment{\noindent  We notice that we choose to formalize the notion of
+satisfability defined by \citet{huet-oppen}.}%
+%
+\paragraph{Provability} As noticed by \citet{huet-rewrite}, the
+definition of a sound deduction system for multi-sorted equality logic
+is more subtle than expected. We formalize the system presented in
+\citet{goguen2005specifying}, shown in \ref{fig:deduction}, and prove
+soundness and completeness with respect to the satisfaction given
+before. The first three rules are reflexivity, symmetry and transitivity;
+the fourth rule is substitution and allows to
+use axioms (notice the absence of a rule for deducing
+axioms as they are, in general, conditional equations); finally,
+the last rule internalizes Leibniz rule, for replacing equals
+by equals.
+\begin{figure}[t]
+  \centering
+  \begin{alignat*}{1}
+      \inferrule*{ }{T \vdash (\forall X)\, t = t}\quad &
+      \inferrule*{ T \vdash (\forall X)\, t = t'}
+        {T \vdash (\forall X)\, t' = t}  \quad
+      \inferrule*{T \vdash (\forall X)\, t_0 = t_1 \\ 
+              T \vdash (\forall X)\, t_1 = t_2}
+              {T \vdash (\forall X)\, t_0 = t_2} \\
+    &\inferrule*{(\forall X) t = t' \,\text{if}\,
+      t_1=t'_1,\ldots, t_n=t'_n \in T\ \ 
+      T \vdash \forall X, \sigma(t_i) = \sigma(t'_i)
+    }{T \vdash \forall X, \sigma(t) = \sigma(t')} 
+    \\
+    &\inferrule*{T \vdash (\forall X)\, t_i = t'_i}
+              {T \vdash (\forall X)\, f\,(t_1,\ldots,t_n) = f\,(t'_1,\ldots,t'_n)}
+  \end{alignat*}
+  \caption{Deduction system}
+  \label{fig:deduction}
+\end{figure}
+We define the relation of provability as an inductive type,
 parameterized in the theory |T|, and indexed by the equation that is
-the conclusion of the proof. We omit the definitions for reasons of space:
-
+the conclusion of the proof. For conciseness, we only show the
+constructor for the transitivity rule:
 \begin{spec}
-data _⊢_ {Σ X}  {ar : Arity Σ} (E : Theory Σ X ar) :
-                {s : sorts Σ} → Equation Σ X s → Set where
-  prefl   : ...
-  psym    : ...
-  ptrans  : ...
-  psubst  : ...
-  preemp  : ...
+data _⊢_ {Σ X ar} (E : Theory Σ X ar) : ∀ {s} → Eqn Σ X s → Set where
+    ptrans : ∀    {s} {t₀ t₁ t₂ : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
+                  E ⊢ t₀ ≈ t₁ → E ⊢ t₁ ≈ t₂ → E ⊢ t₀ ≈ t₂
 \end{spec}
+% It's straightforward to define a setoid, where the carrier are the
+% terms of |Σ 〔 X 〕|, and the relation is a proof of equality of
+% two terms.
+The proofs of soundness and completeness are proved as in the
+mono-sorted case; the first one proceeds by induction on the
+derivations, while the second is a consequence that the set of
+terms quotiened by provable equality is a model.
+\begin{theorem}[Soundness and Completeness]
+  $T \vdash t ≈ t'$ iff $T \models_{\Sigma} t ≈ t'$.
+\end{theorem}
+The formal statement and the proofs of this theorem is almost as in
+paper. We remark, however, that one cannot speak of all the algebras
+satisfying some predicate (for example, being the model of a theory),
+but only of the algebras of some levels.
 
-It's straightforward to define a setoid, where the carrier are the
-terms of |Σ 〔 X 〕|, and the relation is a proof of equality of
-two terms.
-
-
-\subsection{Correctness and completeness}
-
-We can prove now, that having a proof of an equation $e$ in a theory, and
-that all model of the theory satisfies $e$, are equivalent. This corresponds
-with proofs of soundness and completeness of the equational calculus presented.
-
-\paragraph{Soundness.} If an equation $e$ is provable in a theory
-$T$, then for all $\Sigma$-algebra $\mathcal{A}$ that satisfies the
-axioms in $T$, $\mathcal{A}$ satisfies $e$.
-
+Let $T$ and $T'$ be two $\Sigma$-theories, we say that $T$ is
+\emph{stronger} than $T'$ if every axiom $e \in T'$ can be deduced
+from $T$.
 \begin{spec}
-  soundness :  ∀ {Σ X} {ar} {s} {T : Theory Σ X ar} {e : Equation Σ X s}
-                 → T ⊢ e → (A : Algebra Σ) → A ⊨T E → A ⊨ e
-  soundness : ...
+_≤ₜ_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
+T' ≤ₜ T =  ∀ {ar eqs s eq} → (⋀ eq if (_ , eqs)) ∈ T' →
+             (T ⊢_) ⇨v eqs → T ⊢ eq
 \end{spec}
-
-\paragraph{Completeness.} 
-If all $\Sigma$-algebra $\mathcal{A}$ that satisfies the axioms in $T$,
-$\mathcal{A}$ satisfies an equation $e$, then $e$ is provably in $T$.
-
+\noindent This order of theories is preserved by models: if $T$ is stronger
+than $T'$ any model of $T$ is also a model of $T'$. In particular, equivalent
+theories have the same models.
 \begin{spec}
-complete : ∀ {Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
-{e : Equation Σ X s} → ((A : Algebra Σ) → A ⊨T E → A ⊨ e) → E ⊢ e
-complete = ...
-\end{spec}
-
-\manu{Ver qué podemos decir de esas pruebas. Quizás contar la idea de
-la prueba de completitud.}
-
-\subsection{Theory implication}
-Let $T_1$ and $T_2$ be two $\Sigma$-theories, we say that $T_1$ implies
-$T_2$ if for each axiom $e \in T_2$ there exists a proof
-$T_1 \vdash (\forall X)\, e$.
-
-\begin{spec}
-_⇒T_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
-_⇒T_ T₁ T₂ = ∀ {s} {ax} → ax ∈ T₂ → T₁ ⊢ ax
-\end{spec}
-
-\noindent If we have that a theory $T_1$ implies another theory
-$T_2$, then for any model $\mathcal{A}$ of $T_1$, $\mathcal{A}$ is
-model of $T_2$. The proof is direct by correctness: Let $e \in T_2$,
-then we have $T_1 \vdash (\forall X)\, e$, and because of correctness
-we have $\mathcal{A} \models e$.
-
-\begin{spec}
-⊨T⇒ : ∀  {Σ X ar ar'} → (T₁ : Theory Σ X ar) (T₂ : Theory Σ X ar')
-         (p⇒ : T₁ ⇒T T₂) → (A : Algebra Σ) → A ⊨T T₁ → A ⊨T T₂
-⊨T⇒ T₁ T₂ p⇒ A satAll = λ ax → correctness (p⇒ ax) A satAll
+⊨≤ₜ : ∀  {Σ X A ar ar'} {T T'} → T' ≤ₜ T → A ⊨ₘ T → A ⊨ₘ T'
+⊨≤ₜ T' T p⇒ A model = ?
 \end{spec}
     
 

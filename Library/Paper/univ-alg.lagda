@@ -147,11 +147,10 @@ setoids:
 \begin{spec}
   WellDefBin : ∀ {ℓ₁ ℓ₂ ℓ₃} → (A : Setoid ℓ₁ ℓ₂) → Rel (∥ A ∥) ℓ₃ → Set _
   WellDefBin A R = WellDef (A ×-setoid A) (λ {(a , b) → R a b}) 
-\end{spec}
-\noindent Expanding this definition we discover that |WellDefBin A R|
+\end{spec}%
+\comment{\noindent Expanding this definition we discover that |WellDefBin A R|
 iff for all |a₁ ≈A a₂| and |a'₁ ≈A a'₂|, |R a₁ a'₁| implies |R a₂
-a'₂|. 
-
+a'₂|. }%
 We formalize the product $\mathcal{A}_{s_1} \times ... \times
 \mathcal{A}_{s_n}$ as the setoid of \emph{heterogeneous vectors}. The
 type of heterogeneous vectors is parameterized by a set of codes
@@ -346,16 +345,15 @@ is given by |csubst Q|.
 quotients, and epimorphisms (surjective homomorphisms) are related by
 the three isomorphims theorems. Although there is some small overhead
 by the coding of subalgebras, the proofs are almost the same as in
-informal mathematics. We remark on passing that for proving these results we also
-defined the \emph{kernel} and the \emph{homomorphic} image of
-homomorphisms.
+informal mathematics. For proving these results we also defined the
+\emph{kernel} and the \emph{homomorphic} image of homomorphisms.
 
 \begin{theorem}[First isomorphism theorem] If $h : \alg{A} \rightarrow \alg{B}$
-is an epimorhism, then $\alg{A} / \mathop{ker} h \iso \alg{B}$.
+is an epimorphism, then $\alg{A} / \mathop{ker} h \simeq \alg{B}$.
 \end{theorem}
 
 \begin{theorem}[Second isomorphism theorem] Let $\phi,\psi$ be congruences over $\alg A$,
-such that $\psi \subseteq \phi$, then $(\alg A / \phi) \iso \alg A / (\phi / \psi)$.
+such that $\psi \subseteq \phi$, then $(\alg A / \phi) \simeq \alg A / (\phi / \psi)$.
 \end{theorem}
 
 \begin{theorem}[Third isomorphism theorem] Let $\alg B$ is a
@@ -365,7 +363,7 @@ let $\phi_B$ be the restriction of $\phi$ to $\alg B$, then
 \begin{enumerate*}[label=(\roman*),itemjoin={}]
 \item $\phi_B$ is a congruence over $\alg B$;
 \item $[\alg B]^{\phi}$ is a subalgebra of $\alg A$; and
-\item $[\alg B]^{\phi} \iso \alg B / \phi_B$.
+\item $[\alg B]^{\phi} \simeq \alg B / \phi_B$.
 \end{enumerate*}
 \end{theorem}
 
@@ -373,8 +371,9 @@ let $\phi_B$ be the restriction of $\phi$ to $\alg B$, then
 
 A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for any
 $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
-from $\mathcal{A}$ to $\mathcal{B}$. We say that a set |A| has a unique
-element with respecto to some relation |R| if
+from $\mathcal{A}$ to $\mathcal{B}$. We give an abstract definition of
+this universal property, existence of an unique element, for any set
+|A| and any relation |R|
 \begin{spec}
 hasUnique {A} _≈_ = A × (∀ a a' → a ≈ a')
 \end{spec}
@@ -414,8 +413,8 @@ tuple $⟨t_1,\ldots,t_n⟩$ to the term
 $f(t_1,\ldots,t_n)$ in $\mathcal{T}_s$; we omit the proof
 of |cong|.
 \begin{spec}
-  |T| : (Σ : Signature) Algebra Σ
-  |T| Σ = record  { _⟦_⟧ₛ = setoid ∘ (HU {Σ}) ; _⟦_⟧ₒ  = ∣_|ₒ }
+  T : (Σ : Signature) Algebra Σ
+  T Σ = record  { _⟦_⟧ₛ = setoid ∘ (HU {Σ}) ; _⟦_⟧ₒ  = ∣_|ₒ }
     where | f ∣ₒ = record { _⟨$⟩_ = term f ; cong = ? }
 \end{spec}
 
@@ -433,11 +432,10 @@ we have to mutually define | ∣h∣→A | and its extension over vectors
 \end{spec}
 \noindent It is straightforward to prove that |∣h∣→A| preserves
 propositional equality and satisfies the homomorphism condition by
-construction; thus we know that there is a homomorphism
-| ∣h∣A : (A : Algebra Σ) → Homo (|T| Σ) A|; to finish the proof that | ∣T∣ Σ | is initial,
-we prove, by recursion on the
-structure of terms,that any pair of homomorphism are
-equal.
+construction; thus we know that there is a homomorphism | ∣h∣A : (A :
+Algebra Σ) → Homo (T Σ) A|; to finish the proof that | T Σ | is
+initial, we prove, by recursion on the structure of terms,that any
+pair of homomorphism are equal.
 %\begin{spec}
 %|h|A  : (A : Algebra Σ) → Homo |T| A
 %|h|A A = record  { ′_′  =  λ s → record {_⟨$⟩_ = ∣h∣→A A {s} ; cong  = {!!}}

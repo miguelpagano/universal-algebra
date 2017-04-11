@@ -289,14 +289,15 @@ Thₜ ⇒T~ Thₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Thₛ → Th
 In both cases, under restrictions, we can prove that models of $Th_t$ are
 models of $Th_s$, and we can enunciate this preservation of models in
 this way:
+\medskip
 
-\paragraph{Model preservation from a translated theory:}
+\textit{Model preservation from a translated theory:}
 
 \begin{spec}
 ⊨T↝ : ∀ {ar} → (A : Algebra Σₜ) → A ⊨T 〈 Tₛ 〉T → 〈 A 〉 ⊨T Tₛ
 \end{spec}
 
-\paragraph{Model preservation from a implicated theory:}
+\textit{Model preservation from a implicated theory:}
 
 \begin{spec}
 ⊨T↝ : Thₜ ⇒T~ Thₛ → (A : Algebra Σₜ) → A ⊨T Thₜ → 〈 A 〉 ⊨T Thₛ

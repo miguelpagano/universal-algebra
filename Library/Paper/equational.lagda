@@ -7,10 +7,10 @@ equations; we show that this system is sound and complete.
 
 \subsection{Free algebra with variables}
 The first step to define equations is to add variables to the set of
-terms. Given a signature |Σ|, we say that |X : sorts Σ → Set| is a
-family of variables for |Σ|, we let |Vars Σ = sorts Σ → Set|. For each
-family |X : Vars Σ| we enlarge the signature by taking the variables as
-new constants (\ie, operations with arity |[]|).
+terms. Given a signature |Σ|, we define |Vars Σ = sorts Σ → Set| as
+the set of families of variables for |Σ| and for each |X : Vars Σ| we
+ the signature by taking the variables as new constants
+(i.e. , operations with arity []).
 \begin{spec}
   _〔_〕 : (Σ : Signature) → (X : Vars Σ) → Signature
   Σ 〔 X 〕 = record  { sorts = sorts Σ ; ops =  ops' }
@@ -131,12 +131,11 @@ definition of a sound deduction system for multi-sorted equality logic
 is more subtle than expected. We formalize the system presented in
 \citet{goguen2005specifying}, shown in \ref{fig:deduction}, and prove
 soundness and completeness with respect to the satisfaction given
-before. The first three rules are reflexivity, symmetry and transitivity;
-the fourth rule is substitution and allows to
-use axioms (notice the absence of a rule for deducing
-axioms as they are, in general, conditional equations); finally,
-the last rule internalizes Leibniz rule, for replacing equals
-by equals.
+before. The first three rules are reflexivity, symmetry and
+transitivity; the fourth rule is substitution and allows to use
+axioms; finally, the last rule internalizes Leibniz rule, for
+replacing equals by equals. Notice the absence of a rule for deducing
+axioms as they are, in general, conditional equations.
 \begin{figure}[t]
   \centering
   \begin{alignat*}{1}
@@ -151,7 +150,7 @@ by equals.
       T \vdash \forall X, \sigma(t_i) = \sigma(t'_i)
     }{T \vdash \forall X, \sigma(t) = \sigma(t')} 
     \\
-    &\inferrule*{T \vdash (\forall X)\, t_i = t'_i}
+    &\inferrule*{T \vdash (\forall X)\, t_i = t'_i \ \text{ for } 1 \leqslant i \leqslant n}
               {T \vdash (\forall X)\, f\,(t_1,\ldots,t_n) = f\,(t'_1,\ldots,t'_n)}
   \end{alignat*}
   \caption{Deduction system}
@@ -189,15 +188,17 @@ _≤ₜ_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
 T' ≤ₜ T =  ∀ {ar eqs s eq} → (⋀ eq if (_ , eqs)) ∈ T' →
              (T ⊢_) ⇨v eqs → T ⊢ eq
 \end{spec}
-\noindent This order of theories is preserved by models: if $T$ is stronger
-than $T'$ any model of $T$ is also a model of $T'$. In particular, equivalent
-theories have the same models.
+\noindent Obviously if $T$ is stronger than $T'$, then any equation that can
+be deduced from $T'$ can also be deduced from $T$. From which we conclude
+\begin{enumerate*}[label=(\roman*),itemjoin={}]
+\item any model of $T$ is also a model of $T'$, and
+\item equivalent theories have the same models.
+\end{enumerate*}
 \begin{spec}
 ⊨≤ₜ : ∀  {Σ X A ar ar'} {T T'} → T' ≤ₜ T → A ⊨ₘ T → A ⊨ₘ T'
 ⊨≤ₜ T' T p⇒ A model = ?
 \end{spec}
     
-
 \subsection{An example}
 
 Lets consider a boolean equational theory. The language consists of

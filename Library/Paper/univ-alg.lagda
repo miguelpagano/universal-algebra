@@ -129,15 +129,14 @@ type-theory, this equality cannot be taken as the definitional
 equality. Of course, we want to equate morphisms |f , g : S₁ ⟶ S₂|,
 whenever the function parts of |f| and |g| are extensional equal:
 \begin{spec}
-  _≈→_ : Rel (S₁ ⟶ S₂) _
+  _≈→_ : Rel (S₁ ⟶ S₂)
   f ≈→ g  = ∀ (a : ∥ S₁ ∥) → (f ⟨$⟩ a) ≈S₂ (g ⟨$⟩ a)
-\end{spec}
-\comment{\noindent It is immediate to prove that this relation is of equivalence.}
-
+\end{spec}%
+\comment{\noindent It is immediate to prove that this relation is of equivalence.}%
 Predicates over setoids should also be even over equal elements; thus we
 set
 \begin{spec}
-  WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃} → (A : Setoid ℓ₁ ℓ₂) → Pred (∥ A ∥) ℓ₃ → Set _
+  WellDef : (A : Setoid) → Pred (∥ A ∥) → Set
   WellDef A P = ∀ {a a'} → a ≈A a' → P a → P a'
 \end{spec}
 \noindent If |P| is well-defined, we deduce |P a ↔ P a'| if |a ≈
@@ -145,7 +144,7 @@ a'|, because equality is symmetric. Notice also that we can
 define that a relation is well-defined using the product of 
 setoids:
 \begin{spec}
-  WellDefBin : ∀ {ℓ₁ ℓ₂ ℓ₃} → (A : Setoid ℓ₁ ℓ₂) → Rel (∥ A ∥) ℓ₃ → Set _
+  WellDefBin : (A : Setoid) → Rel (∥ A ∥) → Set
   WellDefBin A R = WellDef (A ×-setoid A) (λ {(a , b) → R a b}) 
 \end{spec}%
 \comment{\noindent Expanding this definition we discover that |WellDefBin A R|
@@ -157,7 +156,7 @@ type of heterogeneous vectors is parameterized by a set of codes
 (sorts) and a family of sets indexed by those codes and indexed over a
 list of codes:
 \begin{spec}
-data HVec {ℓ} {I : Set}  (A : I → Set ℓ) : List I → Set ℓ where
+data HVec {I : Set}  (A : I → Set) : List I → Set where
   ⟨⟩  : HVec A []
   _▹_ : ∀  {i is} → A i → HVec A is → HVec A (i ∷ is)
 \end{spec}
@@ -172,13 +171,13 @@ vectors given a family of setoids |A : I → Setoid|; for |is : List I|,
 An algebra for a signature $\Sigma$ is a record with two fields: the
 interpretation for sorts and the interpretation for operations.
 \begin{spec}
-record Algebra {ℓ₁ ℓ₂}  (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
+record Algebra (Σ : Signature) : Set₁  where
   field
-    _⟦_⟧ₛ   : sorts Σ → Setoid ℓ₁ ℓ₂
+    _⟦_⟧ₛ   : sorts Σ → Setoid
     _⟦_⟧ₒ    : ∀  {ar s} → ops Σ (ar , s) → _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 \end{spec}
 % Me parece que esto no es necesario!
-%  _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
+%  _⟦_⟧ₛ* : (ar : Arity Σ) → Set
 %  _⟦_⟧ₛ* ar = Carrier (HVecSet (sorts Σ) _⟦_⟧ₛ ar)
 
 
@@ -190,10 +189,10 @@ iS nat   = setoid ℕ
 iS bool  = setoid Bool
 
 iO : ∀ {ar s} → ops Sig₁ (ar ↦ s) → (iS ✳ ar) ⟶ iS s
-iO (const n)  = record  { _⟨$⟩_ = λ { ⟨⟩ → n } ; cong = {! !} }
-iO plus  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ + n₂} ; cong = {! !} }
-iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ =ₙ n₂} ; cong = {! !} }
-iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂} ; cong = {! !} }
+iO (const n)  = record  { _⟨$⟩_ = λ { ⟨⟩ → n } ; cong = ? }
+iO plus  = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ + n₂} ; cong = ? }
+iO eq    = record { _⟨$⟩_ = λ {⟨⟨ n₁ , n₂ ⟩⟩ → n₁ =ₙ n₂} ; cong = ? }
+iO and   = record { _⟨$⟩_ = λ {⟨⟨ b₁ , b₂ ⟩⟩ → b₁ ∧ b₂} ; cong = ? }
        
 Alg₁ : Algebra Sig₁
 Alg₁ = record { _⟦_⟧ₛ = iS ; _⟦_⟧ₒ = iO }
@@ -201,28 +200,29 @@ Alg₁ = record { _⟦_⟧ₛ = iS ; _⟦_⟧ₒ = iO }
 
 \noindent We omit the proofs that each function preserve the
 definitional relation as they are utterly uninteresting (here and
-there we use |{! !}| to indicate omitted code). When one uses Agda
-interactively, the type-checker infers the argument of the
-interpretation of each operation.
+there we use |?| to indicate omitted code). % When one uses Agda
+% interactively, the type-checker infers the argument of the
+% interpretation of each operation.
 
 \paragraph{Homomorphism} % In this section we fix a signature |Σ: Signature|; in the
 % formalization this is achieved with a module with parameters.
-Let $\mathcal{A}$ and $\mathcal{B}$ be two $\Sigma$-algebras, a \emph{homomorphism}
-$h$ from $\mathcal{A}$ to $\mathcal{B}$ is a family of functions indexed by the
-sorts $h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$,
-such that for each operation $f : [s_1,...,s_n] \Rightarrow s$, the following holds:
+Let $\mathcal{A}$ and $\mathcal{B}$ be two $\Sigma$-algebras, a
+\emph{homomorphism} $h$ from $\mathcal{A}$ to $\mathcal{B}$ is a
+family of functions indexed by the sorts
+$h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$, such that for each
+operation $f : [s_1,...,s_n] \Rightarrow s$, the following holds:
 \begin{equation}
   h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)\label{eq:homcond}
 \end{equation}
 We formalize homomorphisms from an algebra |A| to an algebra |B| as a
 family of setoid morphisms indexed over sorts
 \begin{spec}
-_⟿_ : (A : Algebra Σ) → (B : Algebra Σ) → Set _
+_⟿_ : (A : Algebra Σ) → (B : Algebra Σ) → Set
 A ⟿ B = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
 \end{spec}
 \noindent and a proof that it satisfies condition \eqref{eq:homcond}, expressed by
 \begin{spec}
-homCond : A ⟿ B → Set _
+homCond : A ⟿ B → Set
 homCond h = ∀ ar s (f : ar ↦ s) (as : ∥ A ⟦ ar ⟧ₛ* ∥) → 
          h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as) ≈ₛ B ⟦ f ⟧ₒ ⟨$⟩ map h as
 \end{spec}
@@ -287,10 +287,9 @@ post-condition |R| after applying |f|. In summary, given a family |P|
 of predicates, such that |P s| is well-defined and |P| is |opClosed|
 we can define the |SubAlgebra A P|:
 \begin{spec}
-  SubAlgebra : ∀ {Σ} A P → WellDef P → opClosed P → Algebra Σ
-  SubAlgebra A P _ opC = record  {
-        _⟦_⟧ₛ s = SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s) 
-  ;     _⟦_⟧ₒ f = record { _⟨$⟩_ = io  ; cong = ? } }
+SubAlgebra : ∀ {Σ} A P → WellDef P → opClosed P → Algebra Σ
+SubAlgebra A P _ opC = record   { _⟦_⟧ₛ s = SubSetoid (A ⟦ s ⟧ₛ) (Pₛ s) 
+                               ; _⟦_⟧ₒ f = record { _⟨$⟩_ = io  ; cong = ? } }
     where  io : ∀ {ar s} → (f : ops Σ (ar , s)) → _
            io f as = A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) as , opC f (⇨₂ as)
 \end{spec}
@@ -322,9 +321,9 @@ operator |_=[_]⇒_| of the standard library, where |P =[ f ]⇒ Q| if,
 for all |a,b ∈ A|, |(a,b) ∈ P| implies |(f a, f b) ∈ Q|.
 
 \begin{spec}
-record Congruence (A : Algebra Σ) : Set _ where
+record Congruence (A : Algebra Σ) : Set where
   field
-    rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) _
+    rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ))
     welldef : (s : sorts Σ) → WellDefBin (rel s)
     cequiv : (s : sorts Σ) → IsEquivalence (rel s)
     csubst : ∀ {ar s} → (f : ops Σ (ar , s)) → rel * =[ A ⟦ f ⟧ₒ ⟨$⟩_  ]⇒ rel s
@@ -384,7 +383,7 @@ relation to be of equivalence.}
 \noindent and initiality can be formalized directly as the predicate
 that the algebra has a unique homomorphism to any other algebra:
 \begin{spec}
-Initial : ∀ {Σ} → Algebra Σ → Set _
+Initial : ∀ {Σ} → Algebra Σ → Set
 Initial {Σ} A = ∀ (B : Algebra Σ) → hasUnique (_≈ₕ_ A B)
 \end{spec}
 

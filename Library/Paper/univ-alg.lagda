@@ -13,7 +13,7 @@ Our reference for heterogeneous universal algebra is
 definitions in order to explain the most salient aspects of our
 formalization, and its more bureaucratic and less interesting parts
 will be omitted. The complete development is available at
-\url{https://cs.famaf.unc.edu.ar/~mpagano/univ-alg/}.
+\url{https://cs.famaf.unc.edu.ar/~mpagano/universal-algebra/}.
 
 \subsection{Signature, algebra and homomorphism}
 
@@ -389,15 +389,15 @@ Initial {Σ} A = ∀ (B : Algebra Σ) → hasUnique (_≈ₕ_ A B)
 Given a signature $\Sigma$ we can define the \emph{term algebra}
 $\mathcal{T}$, whose carriers are sets of well-typed words built up
 from the function symbols.  Sometimes this universe is called the
-\emph{Herbrand Universe} \comment{(although, according to \cite{wirth-2009},
-Herbrand did not thought of $\mathcal{T}$ but only finite
-approximations of it)}. It is customary to use an inductive definition
-for $\mathcal{T}$:
-\[
-\inferrule*{f : [s_0,...,s_{n-1}] \Rightarrow s\\  \text{ for all } 0 \leq i \leq n-1,\  t_i \in \mathcal{T}_{s_i} }
-{f\,(t_0,...,t_{n-1}) \in \mathcal{T}_s}
-\]
-This inductive definition can be written directly in Agda:
+\emph{Herbrand Universe}  and is inductively defined:
+\begin{prooftree}
+\AxiomC{$t_1 \in \mathcal{T}_{s_1}$}
+\AxiomC{$\cdots$}
+\AxiomC{$t_n \in \mathcal{T}_{s_n}$}
+\RightLabel{$f : [s_1,...,s_{n}] \Rightarrow s$}
+\TrinaryInfC{$f\,(t_1,...,t_{n}) \in \mathcal{T}_s$}
+\end{prooftree}
+\noindent This inductive definition can be written directly in Agda:
 \begin{spec}
   data HU {Σ : Signature} : (s : sorts Σ) → Set where
     term : ∀  {ar s} → (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s

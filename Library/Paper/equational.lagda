@@ -132,7 +132,7 @@ satisfability defined by \citet{huet-oppen}.}%
 \paragraph{Provability} As noticed by \citet{huet-rewrite}, the
 definition of a sound deduction system for multi-sorted equality logic
 is more subtle than expected. We formalize the system presented in
-\citet{goguen2005specifying}, shown in \ref{fig:deduction}, and prove
+\citet{goguen2005specifying}, shown in Fig.~\ref{fig:deduction}, and prove
 soundness and completeness with respect to the satisfaction given
 before. The first three rules are reflexivity, symmetry and
 transitivity; the fourth rule allows to use
@@ -143,21 +143,35 @@ internalizes Leibniz rule, for replacing equals by equals in subterms.
 %axioms as they are, in general, conditional equations.
 \begin{figure}[t]
   \centering
-  \begin{alignat*}{1}
-      \inferrule*{ }{T \vdash (\forall X)\, t = t}\quad &
-      \inferrule*{ T \vdash (\forall X)\, t = t'}
-        {T \vdash (\forall X)\, t' = t}  \quad
-      \inferrule*{T \vdash (\forall X)\, t_0 = t_1 \\ 
-              T \vdash (\forall X)\, t_1 = t_2}
-              {T \vdash (\forall X)\, t_0 = t_2} \\
-    &\inferrule*{(\forall X) t = t' \,\text{if}\,
-      t_1=t'_1,\ldots, t_n=t'_n \in T\ \ 
-      T \vdash \forall X, \sigma(t_i) = \sigma(t'_i)
-    }{T \vdash \forall X, \sigma(t) = \sigma(t')} 
-    \\
-    &\inferrule*{T \vdash (\forall X)\, t_i = t'_i \ \text{ for } 1 \leqslant i \leqslant n}
-              {T \vdash (\forall X)\, f\,(t_1,\ldots,t_n) = f\,(t'_1,\ldots,t'_n)}
-  \end{alignat*}
+  \bottomAlignProof
+  \AxiomC{}
+  \UnaryInfC{$T \vdash \forall X,\, t = t$}
+  \DisplayProof\hspace{2ex}
+%
+  \bottomAlignProof
+  \AxiomC{$T \vdash \forall X,\, t_0 = t_1$}
+  \UnaryInfC{$T \vdash \forall X,\, t_1 = t_0$}
+  \DisplayProof \hspace{2ex}
+% 
+ \bottomAlignProof
+ \AxiomC{$T \vdash \forall X,\, t_0 = t_1$}
+  \AxiomC{$T \vdash \forall X,\, t_1 = t_2$}
+  \BinaryInfC{$T \vdash \forall X,\, t_0 = t_2$}
+  \DisplayProof
+\\[6pt]
+  \AxiomC{$\forall X,\,t = t' \,\text{if}\,
+      t_1=t'_1,\ldots, t_n=t'_n \in T$}
+  \AxiomC{$T \vdash \forall X,\,\sigma(t_i) = \sigma(t'_i)$}
+  \RightLabel{$\sigma \colon X \rightarrow T_\Sigma(X)$}
+  \BinaryInfC{$T \vdash \forall X,\, \sigma(t) = \sigma(t')$}
+  \DisplayProof
+\\[6pt]
+  \AxiomC{$T \vdash \forall X,\, t_1 = t'_1$}
+  \AxiomC{$\cdots$}
+  \AxiomC{$T \vdash \forall X,\, t_n = t'_n$}
+  \RightLabel{$f : [s_1,...,s_{n}] \Rightarrow_{\Sigma} s$}
+  \TrinaryInfC{$T \vdash \forall X,\, f\,(t_1,\ldots,t_n) = f\,(t'_1,\ldots,t'_n)$}
+  \DisplayProof
   \caption{Deduction system}
   \label{fig:deduction}
 \end{figure}
@@ -182,10 +196,7 @@ the set of terms by provable equality is a model.
   $T \vdash t ≈ t'$ iff $T \models_{\Sigma} t ≈ t'$.
 \end{theorem}
 The formal statement and the proofs of this theorem is almost as in
-paper. We remark, however, that one cannot speak of all the algebras
-satisfying some predicate (for example, being the model of a theory),
-but only of the algebras of some levels.
-
+paper.
 % Let $T$ and $T'$ be two $\Sigma$-theories, we say that $T$ is
 % \emph{stronger} than $T'$ if every axiom $e \in T'$ can be deduced
 % from $T$.
@@ -213,46 +224,41 @@ Since the signature is mono-sorted, we use the unit type |⊤|, whose
 only inhabitant is |tt|, as the only sort.
 \begin{spec}
 data boolOps : List ⊤ × ⊤ → Set where
-  t    : boolOps ([] ↦ tt)
-  f    : boolOps ([] ↦ tt)
+  f t    : boolOps ([] ↦ tt)
   neg  : boolOps ([ tt ] ↦ tt)
-  and  : boolOps (([ tt , tt ]) ↦ tt)
-  or   : boolOps (([ tt , tt ]) ↦ tt)
+  and or  : boolOps (([ tt , tt ]) ↦ tt)
 
 Σbool : Signature
 Σbool = record { sorts = ⊤ ; ops = boolOps }
 \end{spec}
-In order to define a theory in our formalization we have to choose a
-family of variables for each sort; in our case we let |Vars₁ ⊤ = ℕ|.
-We use the abbreviation |Form₁ = HU (Σbool₁ 〔 Vars₁ 〕) tt| and
-define some smart constructors for constants, variables, and connectives: 
+We let |Vars ⊤ = ℕ| be the set of variables and write |Form|
+as an abbreviation for |HU (Σbool 〔 Vars 〕) tt|, for which we define some smart constructors:
 \begin{spec}
-true false : Form₁
+true false : Form
 true = term (inj₁ t) ⟨⟩
 false = term (inj₁ f) ⟨⟩
 
-p q r  : Form₁
+p q r  : Form
 p = term (inj₂ 0) ⟨⟩
 q = term (inj₂ 1) ⟨⟩
 r = term (inj₂ 2) ⟨⟩
 
-_∧_ _∨_ : Form₁ → Form₁ → Form₁
+_∧_ _∨_ : Form → Form → Form
 φ ∧ ψ = term and ⟨⟨ φ , ψ ⟩⟩
 φ ∨ ψ = term or ⟨⟨ φ , ψ ⟩⟩
 
-¬ : Form₁ → Form₁
+¬ : Form → Form
 ¬ φ = term neg ⟨⟨ φ ⟩⟩
 \end{spec}
-\noindent The theory |TBool₁| consists of twelve axioms, but we only
-show two of them: the commutativity of meet and the definition of the
+\noindent We show only two of the twelve theorems of the theory |TBool|, the commutativity of meet and the definition of the
 least element:
 \begin{spec}
-commAnd leastDef : Equation Σbool₁ Vars₁ tt
+commAnd leastDef : Equation Σbool Vars tt
 commAnd = ⋀ (p ∧ q) ≈ (q ∧ p)
 leastDef = ⋀ (p ∧ (¬ p)) ≈ false
 
-Tbool₁ : Theory Σbool₁ Vars₁ [ tt , tt , … ]
-Tbool₁ = ⟨ commAnd , leastDef , … ⟩
+Tbool : Theory Σbool Vars [ tt , tt , … ]
+Tbool = ⟨ commAnd , leastDef , … ⟩
 \end{spec}
 \noindent To use the substitution rule (called |psubst|),
 we need to refer to the axioms
@@ -265,7 +271,7 @@ pattern leastDefAx = there here
 \end{spec}
 We show the equational proof for |⋀ ¬ p ∧ p ≈ false|.
 \begin{spec}
-  p₁ : Tbool₁ ⊢ (⋀ ¬ p ∧ p ≈ false)
+  p₁ : Tbool ⊢ (⋀ ¬ p ∧ p ≈ false)
   p₁ = begin
          ¬ p ∧ p
          ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩

@@ -1,129 +1,96 @@
 \section{Signature translation}
 \label{sec:trans}
-
-Let us consider the example of the previous section. We defined a
-signature |Σbool₁| for boolean algebras, with complementation, meet and
-join. There are other theories for boolean logic, with another
-operators. For example, consider the boolean logic consisting
-of constants True and False, and operators for join and
-equivalence. We can give a signature |Σbool₂|:
-
+The propositional calculus of \citet{dijkstra-scholten} is an alternative
+boolean theory whose only non-constants operation are equivalence and
+disjunction. We define its signature |Σbool'|:
 \begin{spec}
-data Σops₂ : List ⊤ × ⊤ → Set where
-  t₂     : Σops₂ ([] ↦ tt)
-  f₂     : Σops₂ ([] ↦ tt)
-  or₂    : Σops₂ ((tt ∷ [ tt ]) ↦ tt)
-  equiv₂ : Σops₂ ((tt ∷ [ tt ]) ↦ tt)
+data Σops' : List ⊤ × ⊤ → Set where
+  f' t'    : Σops' ([] ↦ tt)
+  iff' or' : Σops' (([ tt , tt ]) ↦ tt)
 
-Σbool₂ : Signature
-Σbool₂ = ⟨ ⊤ , Σops₂ ⟩
+Σbool' : Signature
+Σbool' = ⟨ ⊤ , Σops' ⟩
 \end{spec}
-
-\noindent This signature corresponds to the propositional logic of
-Dijkstra-Scholten and it is proved to be equivalent to the theory of previous
-section in \cite{DBLP:conf/RelMiCS/RochaM08}. % (where are called $T_{Bool}$ and $T_{DS}$).
-It is clear that we could translate any formula in the language
-described by |Σbool₁| to a formula in |Σbool₂|. The constants and the join operator
- are mapped to their name-sake;  $\neg$ and $\wedge$ should be translated
-differently, for instance, the term $\neg P$ should be mapped to $P \equiv False$, and a term
-$P \wedge Q$ to $(P \equiv Q) \equiv P \vee Q$. Instead of simply
-defining a function from terms in |Σbool₁| to terms in |Σbool₂|, we can do
-something more general, specifying
-how to interpret each operation in |Σbool₁| using operations in |Σbool₂|. In this
-way, if we have a |Σbool₂|-algebra (i.e., we have interpretations for each
-operation in |Σbool₂|) we can transform it in a |Σbool₁|-algebra; indeed, for each
-|Σbool₁|-operation, we use the translation to |Σbool₂|-operations, and then we
- interpret this translated term.
-In particular, the function mapping terms in |Σbool₁| to terms in
-|Σbool₂| will be the initial homomorphism between |∣T∣ Σbool₁| and the transformation of |∣T∣ Σbool₂|.
-
-In this section we proceed to formalize the concepts of
-\textit{derived signature morphism} and \textit{reduct algebra}, which we will
- call \textbf{signature translation} and \textbf{algebra transformation},
-respectively.
+It is clear that one can translate recursively any formula over
+|Σbool| to a formula in |Σbool'| preserving its
+semantics. % Tiene sentido decir cómo?
+An alternative and more general way is to specify how to translate
+each operation in |Σbool| using operations in |Σbool'|. In this way,
+any |Σbool'|-algebra can be seen as a |Σbool|-algebra: a
+|Σbool|-operation |f| is interpreted as the semantics of the
+translation of |f|. In particular, the translation of formulas is
+recovered as the initial homomorphism between |∣T∣ Σbool| and the
+transformation of |∣T∣ Σbool'|. In this section we formalize the
+concepts of \emph{derived signature morphism} and \emph{reduct
+  algebra}, which we will call \emph{signature translation} and
+\emph{algebra transformation}, respectively.
 
 \subsection{Signature translation}
 
-If we want to give rules for interpreting operations in |Σbool₁| with
-operations in |Σbool₂|, we note that is not simply a mapping between
-operations. For example the \textit{negation} operator has to be interpreted
-in |Σbool₂| by combining the operations \textit{equivalence} and the constant
-\textit{False}. % ($\neg P$ should be interpreted as $P \equiv False$).
-
-There is a need to have a way to define rules for mapping operations
-in the source signature, to meta-terms in the target signature. We
-call them \textbf{formal terms}.
-
+Although the disjunction from |Σbool| can be directly mapped to its
+namesake in |Σbool'|, there is no unary operation in |Σbool'| to
+translate the negation. In fact, we should be able to translate an
+operation in |Σbool| as a combination of operations in |Σbool'|,
+moreover we also need a way to refer to the arguments of the original
+operation.
 \newcommand{\sdash}[1]{\Vdash\!\!\!\!^{#1}}
 
-\paragraph{Formal terms.}
-We introduce a notion of \textit{formal terms},
-relative to a signature, which are formal composition of identifiers
-and operations. We introduce a typing system ensuring the
-well-formedness of terms, where the contexts are arities,
-\ie lists of sorts, and refer to variables by positions.
-The typing rules for formal terms are:
-
-\begin{gather*}
-\inferrule[(ident)]{ }{[s_{1},\ldots,s_{n}] \sdash{\Sigma} \sharp i : s_i}\\
-\inferrule[(op)]{f : [s_1,...,s_{n}] \Rightarrow_{\Sigma} s\ \ \ 
-  \mathit{ar} \sdash{\Sigma} t_1 : s_1\ \cdots\ \ \ 
-  \mathit{ar} \sdash{\Sigma} t_{n} : s_{n} }
-{\mathit{ar} \sdash{\Sigma} f\,(t_1,...,t_{n}) : s}
-\end{gather*}
-This typing system can be formalized as an inductive family
+We introduce the notion of \emph{formal terms} which are formal
+composition of projections and operations. We introduce a type
+system, shown in Fig.~\ref{fig:formalterms}, ensuring the
+well-formedness of these terms: the contexts are arities, \ie lists of
+sorts, and variables are pointers (like de Bruijn indices).
+\begin{figure}[t]
+  \centering
+    \bottomAlignProof
+    \AxiomC{}
+    \RightLabel{\textsc{(prj)}}
+    \UnaryInfC{$[s_{1},\ldots,s_{n}] \sdash{\Sigma} \sharp i : s_i$}
+  \DisplayProof
+% 
+  \bottomAlignProof
+  \insertBetweenHyps{\hskip -4pt}
+  \AxiomC{$f : [s_1,...,s_{n}] \Rightarrow_{\Sigma} s$}
+  \AxiomC{$\mathit{ar} \sdash{\Sigma} t_1 : s_1$}
+  \AxiomC{$\cdots$}
+  \AxiomC{$\mathit{ar} \sdash{\Sigma} t_n : s_n$}
+  \RightLabel{\textsc{(op)}}
+  \QuaternaryInfC{$\mathit{ar} \sdash{\Sigma} f\,(t_1,...,t_{n}) : s$}
+  \DisplayProof
+\caption{Type system for formal terms}
+\label{fig:formalterms}
+\end{figure}
+It can be formalized as an inductive family
 parameterized by arities and indexed by sorts. 
-
 \begin{spec}
  data _⊩_  (ar' : Arity Σ) : (sorts Σ) → Set where
-   ident  : (n : Fin (length ar')) → ar' ⊩ (ar' ‼ n)
-   op     : ∀ {ar s} → ops Σ (ar ⇒ s) → HVec (ar' ⊩_) ar → ar' ⊩ s
+   #_     : (n : Fin (length ar')) → ar' ⊩ (ar' ‼ n)
+   _∣$∣_    : ∀ {ar s} → ops Σ (ar ⇒ s) → HVec (ar' ⊩_) ar → ar' ⊩ s
 \end{spec}
+A formal term specifies how to interpret an operation from the source
+signature in the target signature. The arity |ar'| specifies the sort
+of each argument of the original operation. For example, since the
+operation |neg| is unary, we can use one identifier when defining its
+translation. Notice that |Σbool| and |Σbool'| share the sorts; in
+general, one also consider a mapping between sorts.
 
-\noindent A formal term specifies the way to interpret an operation
-from a source signature in the target signature. The arity |ar'|
-corresponds to the sorts of the identifiers that are posible to use
-in a rule. For example if we want to interpret the negation operator
-from signature |Σbool₁| in the signature |Σbool₂| we can
-define the following |Σbool₂|-formal term:
-\begin{spec}
-    op equiv₂ ⟨⟨ # zero , op f₂ ⟨⟩ ⟩⟩
-\end{spec}
-
-\noindent Because the operation |neg₁| is unary, we can use one
-identifier to define the corresponding formal term.  It consists of
-the application of |equiv₂| to the first identifier and the constant
-|f₂|, i.e., the application of |f₂| to the empty vector.  Henceforth,
-we use a simpler notation for formal terms: |#_| stands for the
-|ident| rule and |_∣$∣_|, for the |op| rule.
-
-\paragraph{Signature translation.}
-A \emph{signature translation} consists of two functions,
-mapping sorts and operations, respectively:
-
+A \emph{signature translation} consists of a mapping between sorts
+and a mapping from operations to formal terms:
 \begin{spec}
 record _↝_ (Σₛ Σₜ : Signature) : Set where
- field
-  ↝ₛ : sorts Σₛ → sorts Σₜ
-  ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → map ↝ₛ ar ⊢ ↝ₛ s
+  field
+    ↝ₛ : sorts Σₛ → sorts Σₜ
+    ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → (map ↝ₛ ar) ⊩ (↝ₛ s)
 \end{spec}
-
-\noindent Let us see a translation from |Σbool₁| to |Σbool₂|:
-
+\noindent We show the translation of the operations |neg| and |and|
 \begin{spec}
-  ops↝ : ∀  {ar s} → (f : Σops₁ (ar ↦ s)) → lmap id ar ⊩ s
-  ops↝ t₁    = t₂ ∣$∣ ⟨⟩
-  ops↝ f₁    = f₂ ∣$∣ ⟨⟩
-  ops↝ or₁   = or₂ ∣$∣ ⟨⟨ # zero , # (suc zero) ⟩⟩ 
-  ops↝ neg₁  = equiv₂ ∣$∣ ⟨⟨ # zero , f₂ ∣$∣ ⟨⟩ ⟩⟩
-  ops↝ and₁  = equiv₂ ∣$∣ ⟨⟨ equiv₂ ∣$∣ ⟨⟨ p , q ⟩⟩ , or₂ ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
+  ops↝ : ∀  {ar s} → (f : Σops (ar ↦ s)) → map id ar ⊩ s
+  ops↝ {[]} f = ?
+  ops↝ neg  = equiv' ∣$∣ ⟨⟨ # zero , f' ∣$∣ ⟨⟩ ⟩⟩
+  ops↝ and  = equiv' ∣$∣ ⟨⟨ equiv' ∣$∣ ⟨⟨ p , q ⟩⟩ , or' ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
     where  p = # zero
            q = # (suc zero)
-
-  Σtrans : Σbool₁ ↝ Σbool₂
-  Σtrans = record { ↝ₛ = id ; ↝ₒ = ops↝ }
 \end{spec}
-
 \newcommand{\intSign}[2]{#1 \hookrightarrow #2}
 \newcommand{\algTrans}[1]{\widetilde{\mathcal{#1}}}
 \newcommand{\mapSort}[2]{#1\,#2}
@@ -135,7 +102,7 @@ A translation $\intSign{\Sigma_s}{\Sigma_t}$ induces a transformation of
 $\Sigma_t$-algebras into $\Sigma_s$-algebras; notice the contravariance
 of the transformation with respect to the signature translation. This is a
 well-known concept in the theory of institutions and
-\citet{sannella2012foundations} use the notion \textit{reduct algebra
+\citet{sannella2012foundations}  \textit{reduct algebra
 with respect to a derived signature morphism} for a transformed algebra
 induced by a signature translation.
 
@@ -172,11 +139,10 @@ the interpretation of operations is a little more complicated, since we need to 
 that any vector |vs : VecH' (A ⟦_⟧ₛ ∘ ↝ₛ) is| has also the type
 |VecH' A (map ↝ₛ is)|, which is accomplished by |reindex|-ing the vector.
 \begin{spec}
- _⟨_⟩ₛ : ∀  {ℓ₀ ℓ₁} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
-            (s : sorts Σₛ) → Setoid _ _
+ _⟨_⟩ₛ : (A : Algebra Σₜ) → (s : sorts Σₛ) → Setoid
  A ⟨ s ⟩ₛ = A ⟦ ↝ₛ t s ⟧ₛ
 
- _⟨_⟩ₒ :  ∀  {ℓ₀ ℓ₁ ar s} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
+ _⟨_⟩ₒ :  ∀  {ar s} → (A : Algebra Σₜ) →
              ops Σₛ (ar ⇒ s) → (A ⟨_⟩ₛ) ✳ ar ⟶  A ⟨ s ⟩ₛ
  A ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ t f ⟧⊩ ∘ reindex (↝ₛ t) 
                        ;  cong =  ?  }
@@ -194,25 +160,25 @@ Furthermore, we can also translate any homomorphism $h : \mathcal{A}
    〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ t ; cond = ? }
 \end{spec}
 
-With the signature translation |Σtrans : Σbool₁ ↝ Σbool₂| we can
-transform any |Σbool₂|-algebra to a |Σbool₁|-algebra. Let us consider
-the most natural |Σbool₂|-algebra Bool₂:
+With the signature translation |Σtrans : Σbool ↝ Σbool'| we can
+transform any |Σbool'|-algebra to a |Σbool|-algebra. Let us consider
+the most natural |Σbool'|-algebra Bool':
 
 \begin{spec}
-Bool₂ : Algebra Σbool₂
-Bool₂ = record {_⟦_⟧ₛ = BCarrier ; _⟦_⟧ₒ = Bops }
+Bool' : Algebra Σbool'
+Bool' = record {_⟦_⟧ₛ = BCarrier ; _⟦_⟧ₒ = Bops }
   where BCarrier = λ _ → setoid Bool
-        Bops : ∀  {ar s} → (f : ops Σbool₂ (ar , s)) →
+        Bops : ∀  {ar s} → (f : ops Σbool' (ar , s)) →
                   BCarrier ✳ ar ⟶ BCarrier s
         Bops = ?
 \end{spec}
 
-\noindent where |Bops| is the interpretation of each |Σbool₂|-operation
-by the correspoding meta-operation. We can see |Bool₂| as a |Σbool₁|-algebra, \ie we can obtain for
-free the interpretation of each operation in |Σbool₁| in the setoid |Bool|:
+\noindent where |Bops| is the interpretation of each |Σbool'|-operation
+by the correspoding meta-operation. We can see |Bool'| as a |Σbool|-algebra, \ie we can obtain for
+free the interpretation of each operation in |Σbool| in the setoid |Bool|:
 \begin{spec}
-Bool₁ : Algebra Σbool₁
-Bool₁= 〈  B₂ 〉
+Bool : Algebra Σbool
+Bool = 〈  B' 〉
 \end{spec}
 
 

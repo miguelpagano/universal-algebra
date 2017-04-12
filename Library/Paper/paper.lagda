@@ -8,7 +8,7 @@
 % numbers       To obtain numeric citation style instead of author/year.
 
 \usepackage{amsmath}
-\usepackage{mathpartir}
+\usepackage{bussproofs}
 \usepackage{ upgreek }
 \usepackage[inline]{enumitem}
 \usepackage[numbers]{natbib}

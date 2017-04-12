@@ -119,18 +119,18 @@ library it is also defined the point-wise extension of two setoids
 
 Once sorts are interpreted as setoids, operations should be
 interpreted as setoid morphisms; \ie functions which preserve the
-equivalence relation.  Given two setoids |Ȧ := (A,_≈A_,p)| and |Ḃ :=
-(B,_≈B_,q)|, the inhabitants of |Ȧ ⟶ Ḃ| are morphism from |Ȧ| to |Ḃ|
-records with fields |_⟨$⟩_ : A → B| and |cong : ∀ a a' → a ≈A a' →
+equivalence relation.  Given setoids |A| and |B|, the type
+|A ⟶ B| corresponds to morphism from |A| to |B| whose inhabitants are
+records with fields |_⟨$⟩_ : ∥A∥ → ∥B∥| and |cong : ∀ a a' → a ≈A a' →
 _⟨$⟩_ a ≈B _⟨$⟩_ a'|. Setoid morphisms will also play a role in the
 definition of homomorpisms between algebras and some theorems will say
 that two homomorphisms are equal; working in an intensional
 type-theory, this equality cannot be taken as the definitional
-equality. Of course, we want to equate morphisms |f , g : S₁ ⟶ S₂|,
+equality. Of course, we equate morphisms |f , g : A ⟶ B|,
 whenever the function parts of |f| and |g| are extensional equal:
 \begin{spec}
-  _≈→_ : Rel (S₁ ⟶ S₂)
-  f ≈→ g  = ∀ (a : ∥ S₁ ∥) → (f ⟨$⟩ a) ≈S₂ (g ⟨$⟩ a)
+  _≈→_ : Rel (A ⟶ B)
+  f ≈→ g  = ∀ (a : ∥ A ∥) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
 \end{spec}%
 \comment{\noindent It is immediate to prove that this relation is of equivalence.}%
 Predicates over setoids should also be even over equal elements; thus we
@@ -184,7 +184,7 @@ record Algebra (Σ : Signature) : Set₁  where
 Let us see an example of a |Sig₁|-algebra. The sorts |nat| and |bool|
 are interpreted by the trivial setoids over |ℕ| and |Bool|, respectively.
 \begin{spec}
-iS : sorts Sig₁ → Setoid _ _
+iS : sorts Sig₁ → Setoid
 iS nat   = setoid ℕ
 iS bool  = setoid Bool
 
@@ -235,7 +235,7 @@ As expected, we have |Idₕ A : Homo A A| and |F ∘ₕ G : Homo A C| when
 |F : Homo A B| and |G : Homo B C|.  Two homomorphisms |F , F' : Homo A B| are
 equal when their corresponding setoid morphisms are extensionally equal:
 \begin{spec}
-  _≈ₕ_  : ∀ {A B} → Homo A B → Homo A B → Set _
+  _≈ₕ_  : ∀ {A B} → Homo A B → Homo A B → Set
   F ≈ₕ F' = (s : sorts Σ) → ′ F ′ s ≈→ ′ F' ′ s
 \end{spec}
 \noindent Since |_≈→_| is an equivalence relation, |_≈ₕ_| is also of
@@ -269,9 +269,8 @@ construction in intensional type-theory because they lack desirable
 properties; however, one can represent the subset |{ a ∈ A : P a}| as
 the dependent sum |Σ[ a ∈ A ] P| whose inhabitants are pairs |(a , p)|
 where |a : A| and |p : P a|. We can lift this construction to setoids:
-the carrier of |SubSetoid A P| is |Σ[ a ∈ ∥ A ∥ ] P| and we take the
-equality over the first projections, this clearly yields an
-equivalence relation.
+the carrier of |SubSetoid A P| is |Σ[ a ∈ ∥ A ∥ ] P| and its equivalence
+relation is that of |A|.
 
 If |P| is well-defined, then related elements in |A| are either both
 or none of them in the subsetoid; this is a natural property to expect

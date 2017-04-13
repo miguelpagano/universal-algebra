@@ -117,6 +117,9 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
   TΣX⇝A s = record { _⟨$⟩_ = (a ↪)
                     ; cong = conga↪ }
 
+  ⟦_⟧ : ∀ {s} → ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥ → ∥ A ⟦ s ⟧ₛ ∥
+  ⟦_⟧ {s} = _⟨$⟩_ (TΣX⇝A s)
+
   {- Homomorphism condition of TΣX⇝A -}
   TΣXcond : ∀ {ty} (f : ops Σ ty) → (homCond (T Σ 〔 X 〕) A) TΣX⇝A f
   TΣXcond {.[] , s} f ⟨⟩ = Setoid.refl (A ⟦ s ⟧ₛ)

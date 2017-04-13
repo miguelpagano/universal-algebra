@@ -15,7 +15,7 @@ open import Relation.Binary.PropositionalEquality as PE
 open import Induction.WellFounded
 open import Data.String
 open import Data.Fin hiding (#_)
-open import HeterogeneousVec
+open import HeterogeneousVec 
 
 open Signature
 open Algebra
@@ -144,217 +144,163 @@ import Relation.Binary.EqReasoning as EqR
 open import Equational
 open _↝_
 
-module TermTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
-                 (Xₛ : Vars Σₛ) (Xₜ : Vars Σₜ)
-                 (tvars : ∀ {s} → Xₛ s → Xₜ (↝ₛ Σ↝ s)) where
+Img⁻¹ : ∀ {A B : Set} → (f : A → B) → (b : B) → Set
+Img⁻¹ {A} f b = Σ[ a ∈ A ] (f a ≡ b)
+
+
+module TermTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ) where
+
+  -- Variable translation
+  _↝̬ : Vars Σₛ → Vars Σₜ
+  (X ↝̬) s' = Σ[ p ∈ Img⁻¹ (↝ₛ Σ↝) s' ] X (proj₁ p) 
 
   open Hom
   open AlgTrans Σ↝
   open import Data.Sum hiding (map)
   open import Data.Product renaming (map to pmap)
 
-  open import Relation.Nullary 
+  term↝ : (Xₛ : Vars Σₛ) → Homo (T Σₛ 〔 Xₛ 〕) (〈 T Σₜ 〔 Xₛ ↝̬ 〕 〉)
+  term↝ Xₛ = TΣXHom
+    where open TermAlgebra (Σₜ 〔 Xₛ ↝̬ 〕)
+          θv : Env Xₛ 〈 T Σₜ 〔 Xₛ ↝̬ 〕 〉
+          θv {s} v = term (inj₂ ((s , refl) , v)) ⟨⟩
+          open InitHomoExt 〈 T Σₜ 〔 Xₛ ↝̬ 〕 〉 θv
 
-  -- Terms translation
-  term↝ : Homo (T Σₛ 〔 Xₛ 〕) 〈 T Σₜ 〔 Xₜ 〕 〉
-  term↝ = TΣXHom
-    where open TermAlgebra (Σₜ 〔 Xₜ 〕)
-          θv : Env Xₛ 〈 T Σₜ 〔 Xₜ 〕 〉
-          θv v = term (inj₂ (tvars v)) ⟨⟩
-          open InitHomoExt 〈 T Σₜ 〔 Xₜ 〕 〉 θv
+  -- Environment translation: We have a bijection
+  〈_〉ₑ : ∀ {ℓ₁ ℓ₂} {Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ} {Xₛ : Vars Σₛ} →
+          (θ : Env (Xₛ ↝̬) Aₜ) → Env Xₛ 〈 Aₜ 〉
+  〈 θ 〉ₑ = λ {s} v → θ ((s , refl) , v)
 
-  open Homo
-  
-  -- Equations translation
-  eq↝ : ∀ {s} → Equation Σₛ Xₛ s → Equation Σₜ Xₜ (↝ₛ Σ↝ s)
-  eq↝ {s} (⋀ t ≈ t' if「 carty 」 cond) =
-           ⋀ ′ term↝ ′ s ⟨$⟩ t ≈ ′ term↝ ′ s ⟨$⟩ t'
-                     if「 lmap (↝ₛ Σ↝) carty 」 (eq↝vec carty cond)
-    where open TermAlgebra (Σₜ 〔 Xₜ 〕) renaming (∣T∣ to ∣T∣ₜ)
-          open TermAlgebra (Σₛ 〔 Xₛ 〕) renaming (∣T∣ to ∣T∣ₛ)
-          eq↝vec : (ar : Arity Σₛ) →
-                    HVec (λ s' → ∥ ∣T∣ₛ ⟦ s' ⟧ₛ ∥) ar ×
-                    HVec (λ s' → ∥ ∣T∣ₛ ⟦ s' ⟧ₛ ∥) ar →
-                    HVec (λ s' → ∥ ∣T∣ₜ ⟦ s' ⟧ₛ ∥) (lmap (↝ₛ Σ↝) ar) ×
-                    HVec (λ s' → ∥ ∣T∣ₜ ⟦ s' ⟧ₛ ∥) (lmap (↝ₛ Σ↝) ar)
-          eq↝vec [] (⟨⟩ , ⟨⟩) = ⟨⟩ , ⟨⟩
-          eq↝vec (s₀ ∷ is) (t₀ ▹ ts , t₀' ▹ ts') =
-                           ((′ term↝ ′ s₀ ⟨$⟩ t₀) ▹ proj₁ (eq↝vec is (ts , ts'))) ,
-                           ((′ term↝ ′ s₀ ⟨$⟩ t₀') ▹ proj₂ (eq↝vec is (ts , ts')))
+  _↝ₑ : ∀ {ℓ₁ ℓ₂} {Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ} {Xₛ : Vars Σₛ} →
+          (θ : Env Xₛ 〈 Aₜ 〉) → Env (Xₛ ↝̬) Aₜ
+  _↝ₑ {Aₜ = Aₜ} {Xₛ} θ {s} ((s' , eq) , v) = subst (λ s₀ → ∥ Aₜ ⟦ s₀ ⟧ₛ ∥) eq (θ v)
 
 
 module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
                    (Xₛ : Vars Σₛ) where
 
-  Xₜ : Vars Σₜ
-  Xₜ s = V
-
-{-
-  〈_〉T : ∀ {ar} → (Tₛ : Theory Σₛ Xₛ ar) → Theory Σₜ Xₜ (lmap (↝ₛ Σ↝) ar)
-  〈 ⟨⟩ 〉T = ⟨⟩
-  〈 _▹_ {s} {ar} e es 〉T = eq↝ e ▹ 〈 es 〉T
-    where open TermTrans Σ↝ Xₛ Xₜ id
--}
-  open Hom
+  open TermTrans Σ↝
   open AlgTrans Σ↝
-{-
---  lemma : ∀ {s} → (e : Equation Σₛ Xₛ s) → A ⊨ (eq↝ e) → 〈 A 〉 ⊨ e
---  lemma e 
-
-  ⊨T↝ : ∀ {ℓ₁ ℓ₂ ar} → (Tₛ : Theory Σₛ Xₛ ar) → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) →
-           A ⊨T 〈 Tₛ 〉T → 〈 A 〉 ⊨T Tₛ
-  ⊨T↝ Tₛ A sat {s} {e} ax θ ≈cond = sat {!eq↝ ax!} {!θ!} {!≈cond!}
--}
-{-
-module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
-                   (Xₛ : Vars Σₛ) (Xₜ : Vars Σₜ)
-                   (tvars : ∀ {s} → Xₛ s → Xₜ (↝ₛ Σ↝ s)) where
-
-
   open Hom
-  open AlgTrans Σ↝
-  open import Data.Sum hiding (map)
-  open import Data.Product renaming (map to pmap)
+  open Setoid
 
-  open import Relation.Nullary 
+  private Xₜ : Vars Σₜ
+  Xₜ = Xₛ ↝̬
 
-  -- Terms translation
-  term↝ : Homo (T Σₛ 〔 Xₛ 〕) 〈 T Σₜ 〔 Xₜ 〕 〉
-  term↝ = TΣXHom
-    where open TermAlgebra (Σₜ 〔 Xₜ 〕)
-          θv : Env Xₛ 〈 T Σₜ 〔 Xₜ 〕 〉
-          θv v = term (inj₂ (tvars v)) ⟨⟩
-          open InitHomoExt 〈 T Σₜ 〔 Xₜ 〕 〉 θv
+  private _∼ : (s : sorts Σₛ) → sorts Σₜ
+  s ∼ = ↝ₛ Σ↝ s
 
   open Homo
-  
-  -- Equations translation
+
+  private _∼ₜ : ∀ {s} → ∥ T Σₛ 〔 Xₛ 〕 ⟦ s ⟧ₛ ∥ → ∥ T Σₜ 〔 Xₛ ↝̬ 〕 ⟦ s ∼ ⟧ₛ ∥
+  _∼ₜ {s} t = ′ term↝ Xₛ ′ s ⟨$⟩ t
+
+  open import Data.Product renaming (map to pmap)
+
+
+  module ReductTheorem {ℓ₁ ℓ₂}
+                       (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ)
+                       (θ : Env (Xₛ ↝̬) Aₜ) where
+
+    open InitHomoExt Aₜ θ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
+    open InitHomoExt 〈 Aₜ 〉 (〈_〉ₑ {Aₜ = Aₜ} θ)  renaming
+                       (⟦_⟧ to ⟦_⟧Σₛ ; tot to totΣₛ ; TΣXHom to ∣H∣ₛ ; HomEnv to HomEnvₛ)
+    open Homo
+    open HomoTrans Σ↝ (T Σₜ 〔 Xₛ ↝̬ 〕) Aₜ
+    open HomComp
+    
+    reductTh : ∀ {s} → (t : ∥ T Σₛ 〔 Xₛ 〕 ⟦ s ⟧ₛ ∥) →
+                 _≈_ (〈 Aₜ 〉 ⟦ s ⟧ₛ) ⟦ t ⟧Σₛ ⟦ t ∼ₜ ⟧Σₜ
+    reductTh {s} t = totΣₛ ∣H∣ₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ) he₁ he₂ s t
+      where he₂ : HomEnvₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ)
+            he₂ s x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
+            he₁ : HomEnvₛ ∣H∣ₛ
+            he₁ s x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
+
+
+  -- Equation translation
   eq↝ : ∀ {s} → Equation Σₛ Xₛ s → Equation Σₜ Xₜ (↝ₛ Σ↝ s)
   eq↝ {s} (⋀ t ≈ t' if「 carty 」 cond) =
-           ⋀ ′ term↝ ′ s ⟨$⟩ t ≈ ′ term↝ ′ s ⟨$⟩ t'
-                     if「 lmap (↝ₛ Σ↝) carty 」 (eq↝vec carty cond)
-    where open TermAlgebra (Σₜ 〔 Xₜ 〕) renaming (∣T∣ to ∣T∣ₜ)
-          open TermAlgebra (Σₛ 〔 Xₛ 〕) renaming (∣T∣ to ∣T∣ₛ)
-          eq↝vec : (ar : Arity Σₛ) →
-                    HVec (λ s' → ∥ ∣T∣ₛ ⟦ s' ⟧ₛ ∥) ar ×
-                    HVec (λ s' → ∥ ∣T∣ₛ ⟦ s' ⟧ₛ ∥) ar →
-                    HVec (λ s' → ∥ ∣T∣ₜ ⟦ s' ⟧ₛ ∥) (lmap (↝ₛ Σ↝) ar) ×
-                    HVec (λ s' → ∥ ∣T∣ₜ ⟦ s' ⟧ₛ ∥) (lmap (↝ₛ Σ↝) ar)
-          eq↝vec [] (⟨⟩ , ⟨⟩) = ⟨⟩ , ⟨⟩
-          eq↝vec (s₀ ∷ is) (t₀ ▹ ts , t₀' ▹ ts') =
-                           ((′ term↝ ′ s₀ ⟨$⟩ t₀) ▹ proj₁ (eq↝vec is (ts , ts'))) ,
-                           ((′ term↝ ′ s₀ ⟨$⟩ t₀') ▹ proj₂ (eq↝vec is (ts , ts')))
+           ⋀ t ∼ₜ ≈ t' ∼ₜ
+                     if「 lmap (↝ₛ Σ↝) carty 」 pmap fcond fcond cond
+    where fcond : _
+          fcond = (reindex (↝ₛ Σ↝) ∘ map (_⟨$⟩_ ∘ ′ term↝ Xₛ ′))
+
+  -- Reduct theorem extended to equations
+  module SatProp {ℓ₁ ℓ₂}
+                    (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) where
 
 
-    
+    -- This theorem is usually called "satisfaction property" and
+    -- "satisfaction condition" in the handbook (Definition 6.1)
+    satProp : ∀ {s} → (e : Equation Σₛ Xₛ s) → Aₜ ⊨ (eq↝ e) → 〈 Aₜ 〉 ⊨ e
+    satProp {s} (⋀ t ≈ t' if「 ar 」 (us , us')) sat θ us≈us' =
+                   begin
+                     ⟦ t ⟧Σₛ
+                   ≈⟨ reductTh t ⟩
+                     ⟦ t ∼ₜ ⟧Σₜ
+                   ≈⟨ sat θₜ (∼v-reindex _∼ (reductTh* us≈us')) ⟩
+                     ⟦ t' ∼ₜ ⟧Σₜ
+                   ≈⟨ Setoid.sym (〈 Aₜ 〉 ⟦ s ⟧ₛ) (reductTh t') ⟩ 
+                     ⟦ t' ⟧Σₛ
+                   ∎
+      where open InitHomoExt 〈 Aₜ 〉 θ renaming
+                             (⟦_⟧ to ⟦_⟧Σₛ ; tot to totΣₛ ; TΣXHom to ∣H∣ₛ ; HomEnv to HomEnvₛ)
+            θₜ : Env Xₜ Aₜ
+            θₜ = _↝ₑ {Aₜ = Aₜ} θ
+            open InitHomoExt Aₜ θₜ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
+            open ReductTheorem Aₜ θₜ
+            reductTh* : ∀ {ar₀}
+                        {us₀ us₀' : HVec (λ s' → ∥ T Σₛ 〔 Xₛ 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
+                        _∼v_ {R = λ sᵢ uᵢ uᵢ' → _≈_ (〈 Aₜ 〉 ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧Σₛ ⟦ uᵢ' ⟧Σₛ} us₀ us₀' →
+                        _∼v_ {R = λ sᵢ uᵢ∼ uᵢ∼' → _≈_ (Aₜ ⟦ sᵢ ∼ ⟧ₛ) ⟦ uᵢ∼ ⟧Σₜ ⟦ uᵢ∼' ⟧Σₜ}
+                             (map (λ s₀ → _∼ₜ {s₀}) us₀)
+                             (map (λ s₀ → _∼ₜ {s₀}) us₀')
+            reductTh* {[]} ∼⟨⟩ = ∼⟨⟩
+            reductTh* {s₀ ∷ ar₀} (∼▹ {t₁ = u₀} {u₀'} u₀≈u₀' eq) =
+                      ∼▹ (begin
+                           ⟦ u₀ ∼ₜ ⟧Σₜ
+                          ≈⟨ Setoid.sym (Aₜ ⟦ s₀ ∼ ⟧ₛ) (reductTh u₀) ⟩
+                           ⟦ u₀ ⟧Σₛ
+                          ≈⟨ u₀≈u₀' ⟩
+                           ⟦ u₀' ⟧Σₛ
+                          ≈⟨ reductTh u₀' ⟩
+                           ⟦ u₀' ∼ₜ ⟧Σₜ
+                          ∎)
+                          (reductTh* eq)
+              where open EqR (Aₜ ⟦ s₀ ∼ ⟧ₛ)
+            open EqR (〈 Aₜ 〉 ⟦ s ⟧ₛ)
 
---    (I → Set) → (I → I') → (I' → Set)
 
-  -- f : (sorts Σₜ) → Σ[ s ∈ sorts Σₛ ] 
 
-  -- Vars translation
---  ⟨_⟩V : Vars Σₛ → Vars Σₜ
---  ⟨ X ⟩V = λ s with (↝ₛ Σ↝ 
+  -- Translation of theories
+  _↝T : ∀ {ar} → (Thₛ : Theory Σₛ Xₛ ar) → Theory Σₜ Xₜ (lmap (↝ₛ Σ↝) ar)
+  Thₛ ↝T = reindex _∼ (map (λ s → eq↝ {s}) Thₛ)
 
-  -- Theory translation
---  ⟨_⟩T : Theory Σₛ Xₛ ar' → Theory Σₜ X
+  ∈↝T : ∀ {ar} {s} {e : Equation Σₛ Xₛ s} → (Thₛ : Theory Σₛ Xₛ ar) →
+                    e ∈ Thₛ → (eq↝ e) ∈ (Thₛ ↝T)
+  ∈↝T {[]} ⟨⟩ ()
+  ∈↝T {s ∷ ar} (e ▹ Thₛ) here = here
+  ∈↝T {s₀ ∷ ar} (e ▹ Thₛ) (there e∈Thₛ) = there (∈↝T Thₛ e∈Thₛ)
 
-  -- Theory implication
+  -- Implication of theories
   _⇒T~_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set
   Tₜ ⇒T~ Tₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Tₛ → Tₜ ⊢ eq↝ ax
 
-  -- Importante: Nuestro sistema de pruebas sólo permite demostrar ecuaciones no condicionales.
-  -- Si tenemos axiomas con condiciones, entonces no podríamos probarlos en la otra teoría.
+  
 
+  module ModelPreserv {ar} (Thₛ : Theory Σₛ Xₛ ar) where
 
-  -- Model translation
-  module ModelTrans {ar : Arity Σₛ} {ar' : Arity Σₜ}
-                    (Thₛ : Theory Σₛ Xₛ ar) (Thₜ : Theory Σₜ Xₜ ar')
-                    (p⇒ : Thₜ ⇒T~ Thₛ) where
+    -- Model preservation from a translated theory
+    ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨T (Thₛ ↝T) → 〈 Aₜ 〉 ⊨T Thₛ
+    ⊨T↝ Aₜ sat = λ {s} {e} ax θ ceq → satProp e (sat (∈↝T Thₛ ax)) θ ceq
+      where open SatProp Aₜ
 
-
-    open Setoid
-
-
-    module Lemma₀ {ℓ₁ ℓ₂ : Level}
-                  (A : Algebra {ℓ₁} {ℓ₂} Σₜ)
-                  (θ : Env Xₜ A) where
-                  
-
-      open InitHomoExt A θ renaming (TΣXHom to ∣H∣ₜ)
-      
-      θ↝ : Env Xₛ 〈 A 〉
-      θ↝ {s} v = θ (tvars v)
-
-      open InitHomoExt 〈 A 〉 θ↝ renaming (TΣXHom to ∣H∣ₛ ; tot to totₛ ; HomEnv to HomEnvₛ)
-
-      private _∼ : (s : sorts Σₛ) → sorts Σₜ
-      s ∼ = ↝ₛ Σ↝ s
-
-      open TermAlgebra Σₛ
-      open FormalTerm Σₜ
-      open HomoTrans Σ↝ (T Σₜ 〔 Xₜ 〕) A
-      open HomComp
-
-      lemma₀ : ∀ {s} → (t : ∥ (T Σₛ 〔 Xₛ 〕) ⟦ s ⟧ₛ ∥) →
-                     _≈_ (〈 A 〉 ⟦ s ⟧ₛ) ((′ 〈 ∣H∣ₜ 〉ₕ ′ s) ⟨$⟩ (′ term↝ ′ s ⟨$⟩ t))
-                                        ((′ ∣H∣ₛ ′ s) ⟨$⟩ t)
-      lemma₀ {s} t = totₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝) ∣H∣ₛ he₁ he₂ s t
-        where he₁ : HomEnvₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝)
-              he₁ s x = Setoid.refl (A ⟦ s ∼ ⟧ₛ)
-              he₂ : HomEnvₛ ∣H∣ₛ
-              he₂ s x = Setoid.refl (A ⟦ s ∼ ⟧ₛ)
-
-
-      -- The lemma above is exactly the same that:
-      
-      open EnvExt Xₛ 〈 A 〉 renaming (_↪ to _↪ₛ)
-      open EnvExt Xₜ A renaming (_↪ to _↪ₜ)
-      lemma₀' : ∀ {s} → (t : ∥ (T Σₛ 〔 Xₛ 〕) ⟦ s ⟧ₛ ∥) →
-                        _≈_ (〈 A 〉 ⟦ s ⟧ₛ) ((θ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t))
-                                          ((θ↝ ↪ₛ) t)
-      lemma₀' = lemma₀
-                                          
-
-
-    module Lemma {ℓ₁ ℓ₂ : Level}
-               (A : Algebra {ℓ₁} {ℓ₂} Σₜ)
-               (fc : (s : sorts Σₜ) → ∥ A ⟦ s ⟧ₛ ∥) where
-               
-      lemma : ∀ {s} → (e : Equation Σₛ Xₛ s) →
-                            A ⊨ (eq↝ e) → 〈 A 〉 ⊨ e
-      lemma {s} (⋀ t ≈ t' if「 carty 」 cond) sat θ eq =  {!!}
-{-                begin
-                  (θ ↪ₛ) t
-                ≈⟨ Setoid.sym ((A ⟦ ↝ₛ Σ↝ s ⟧ₛ)) (lemma₀ t) ⟩
-                  ((θₜ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t))
-                ≈⟨ sat θₜ {!!} ⟩
-                  ((θₜ ↪ₜ) (′ term↝ ′ s ⟨$⟩ t'))
-                ≈⟨ lemma₀ t' ⟩
-                  (θ ↪ₛ) t'
-                ∎ -}
-          where open EqR (A ⟦ ↝ₛ Σ↝ s ⟧ₛ)
-                open EnvExt Xₛ 〈 A 〉 renaming (_↪ to _↪ₛ)
-                open EnvExt Xₜ A renaming (_↪ to _↪ₜ)
-                θₜ : Env Xₜ A
-                θₜ {s} x = {!!}
-                open Lemma₀ A θₜ
-
-{-
-            θₜ {s'} y with isImg s'
-            ... | yes _ = θ x
-              where x = ren⁻¹ y
-            ... | no _ = hab s'
--}
-
-            --open Lemma₀ A θₜ
-
-
-{-
-    ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σₜ) → A ⊨T Thₜ → 〈 A 〉 ⊨T Thₛ 
-    ⊨T↝ A satAll = λ {s} {e} ax θ x₁ →
-                           lemma e A (correctness (p⇒ ax) A satAll) θ x₁
-  -} 
-
-
--}
+    -- Model preservation from a implicated theory
+    ⊨T⇒↝ : ∀ {ℓ₁ ℓ₂} {ar'} →
+             (Thₜ : Theory Σₜ Xₜ ar') → (p⇒ : Thₜ ⇒T~ Thₛ) →
+             (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨T Thₜ → 〈 Aₜ 〉 ⊨T Thₛ 
+    ⊨T⇒↝ Thₜ p⇒ Aₜ satAll = λ {s} {e} ax θ ceq → satProp e
+                                          (correctness (p⇒ ax) Aₜ satAll) θ ceq
+      where open SatProp Aₜ
+  

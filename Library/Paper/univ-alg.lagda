@@ -3,13 +3,9 @@
 
 In this section we present our formalization in Agda of the core
 concepts of heterogenouos universal algebra, up to the three
-isomorphism theorems and initiality of the term algebra.  As far as we
-know, there are two formalizations of (multisorted) universal algebra
-in type-theory: Capretta's implementation in Coq and the formalization
-of allegories in Agda by \citet{kahl-2011}. 
-
-Our reference for heterogeneous universal algebra is
-\citet{meinke-tucker-1992}. We will recall some of the standard
+isomorphism theorems and initiality of the term algebra. Our reference
+for heterogeneous universal algebra is Meinke' and Tucker's chapter
+\cite{meinke-tucker-1992}. We will recall some of the standard
 definitions in order to explain the most salient aspects of our
 formalization, and its more bureaucratic and less interesting parts
 will be omitted. The complete development is available at
@@ -101,7 +97,7 @@ hides is that carriers are pairs of a set and its equality; in
 type-theory one makes this structure apparent by using Bishop's sets
 (\ie sets paired with an equivalence relation) as the interpretation
 of sorts. In type-theory Bishop's sets are better known as setoids and
-they were thoroughly studied by \citet{barthe-setoids-2003}; in the
+they were thoroughly studied by Barthe et al.~\cite{barthe-setoids-2003}; in the
 following, we introduce the defintion of setoids in Agda and some
 constructions around them.
 
@@ -264,7 +260,7 @@ condition holds
  \label{eq:opclosed}
 \end{equation} 
 
-As shown by \citet{salvesen-subsets}, subsets cannot be added as a
+As shown by Salvesen and Smith \cite{salvesen-subsets}, subsets cannot be added as a
 construction in intensional type-theory because they lack desirable
 properties; however, one can represent the subset |{ a ∈ A : P a}| as
 the dependent sum |Σ[ a ∈ A ] P| whose inhabitants are pairs |(a , p)|

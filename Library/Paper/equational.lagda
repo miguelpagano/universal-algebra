@@ -1,7 +1,7 @@
 \section{Equational Logic}
 
 In this section we formalize (conditional) equational logic as
-presented by \citet{goguen2005specifying}, extending the term algebra
+presented by Goguen and Lin \cite{goguen2005specifying}, extending the term algebra
 with variables and introducing a formal system for conditional
 equations; we show that this system is sound and complete.
 
@@ -129,10 +129,10 @@ _⊨Σ_ {Σ} {s = s} E e = (A : Algebra Σ) → A ⊨ₘ E → A , s ⊨ e
 \comment{\noindent  We notice that we choose to formalize the notion of
 satisfability defined by \citet{huet-oppen}.}%
 %
-\paragraph{Provability} As noticed by \citet{huet-rewrite}, the
+\paragraph{Provability} As noticed by Huet and Oppen \cite{huet-rewrite}, the
 definition of a sound deduction system for multi-sorted equality logic
 is more subtle than expected. We formalize the system presented in
-\citet{goguen2005specifying}, shown in Fig.~\ref{fig:deduction}, and prove
+\cite{goguen2005specifying}, shown in Fig.~\ref{fig:deduction}, and prove
 soundness and completeness with respect to the satisfaction given
 before. The first three rules are reflexivity, symmetry and
 transitivity; the fourth rule allows to use
@@ -218,7 +218,7 @@ paper.
     
 \subsection{A theory for Boolean Algebras }
 In this section we show how to encode an axiomatization of Boolean
-Algebras. This example, taken from \citet{DBLP:conf/RelMiCS/RochaM08},
+Algebras. This example, taken from \cite{DBLP:conf/RelMiCS/RochaM08},
 shows that it is easy to specify equational theories in our framework.
 Since the signature is mono-sorted, we use the unit type |⊤|, whose
 only inhabitant is |tt|, as the only sort.

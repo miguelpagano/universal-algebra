@@ -1,7 +1,7 @@
 \section{Introduction} Universal algebra has played a relevant role in
 computer science since its earliest days, in particular the seminal
-paper of \citet{birkhoff-70} features regular languages as a prominent
-example; shortly before \citet{burstall69} had proved properties of
+paper of Birkhoff \cite{birkhoff-70} features regular languages as a prominent
+example; shortly before Burstall \cite{burstall69} had proved properties of
 programs using structural induction, which is based on conceiving the
 language as an initial algebra.  The group ADJ promoted multi-sorted
 algebras as a key theoretical tool for specifying data
@@ -15,13 +15,13 @@ In spite of the rich mathematical theory of heterogeneous algebras
 (mostly inherited from the monosorted setting, but not always
 \cite{tarlecki-nuances}), there are few publicly available
 formalizations in type-theory; as far as we know, since
-\citet{capretta-99} first mechanization of universal algebra and its
+Capretta's \cite{capretta-99} first mechanization of universal algebra and its
 further extension to equational logic \cite{capretta-eq}, the closest
-new work is \citet{kahl-2011}'s formalization of allegories. This
+new work is Kahl's \cite{kahl-2011}'s formalization of allegories. This
 situation is to be contrasted with impressive advances in
 mechanization of particular algebraic structures as witnessed, for
 example, by the proof of the Feit-Thompson theorem in Coq by
-\citet{gonthier2013machine}.
+Gonthier and his team \cite{gonthier2013machine}.
 
 In this work we present a novel formalization of multi-sorted
 universal algebra in Agda, where heterogeneous signatures are modelled
@@ -51,7 +51,8 @@ contra-variant functor between models.
 % \citet{vidal-2012} for first order signatures.
 
 
-\paragraph{Outline.} In section 2, we define the main concepts of Universal
+\paragraph{Outline} In section 2 we introduce the basic concepts of
+ Universal
 Algebra: Signature, algebras and homomorphisms, congruences, quotients and
 subalgebras, the proofs of three isomorphisms theorems, and the proof
 of the initiality of the term algebra.

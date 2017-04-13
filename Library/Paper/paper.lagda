@@ -11,7 +11,6 @@
 \usepackage{bussproofs}
 \usepackage{ upgreek }
 \usepackage[inline]{enumitem}
-\usepackage[numbers]{natbib}
 %\usepackage{minted}
 %\usemintedstyle{friendly}
 \usepackage[bookmarksopen,
@@ -124,7 +123,6 @@ universal algebra, formalization of mathematics, equational logic
 %include equational.lagda
 %include transforming-algebras.lagda
 %include conclusions.lagda
-
-\bibliographystyle{plainnat}
+\bibliographystyle{splncs03}
 \bibliography{biblio}
 \end{document}

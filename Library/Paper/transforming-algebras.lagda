@@ -1,6 +1,6 @@
 \section{Signature translation}
 \label{sec:trans}
-The propositional calculus of \citet{dijkstra-scholten} is an alternative
+The propositional calculus of Dijkstra and Scholten \cite{dijkstra-scholten} is an alternative
 boolean theory whose only non-constants operation are equivalence and
 disjunction. 
 \begin{spec}
@@ -22,7 +22,7 @@ translation of |f|. In particular, the translation of formulas is
 recovered as the initial homomorphism between |∣T∣ Σbool| and the
 transformation of |∣T∣ Σbool'|. In this section we formalize the
 concepts of \emph{derived signature morphism} and \emph{reduct
-  algebra} as introduced, for example, by \citet{sannella2012foundations}.
+  algebra} as introduced, for example, by Sanella et al.~\cite{sannella2012foundations}.
 
 \subsection{Derived signature translation}
 

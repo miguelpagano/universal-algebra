@@ -1,4 +1,4 @@
-\section{Signature translation}
+\section{Morphisms between signatures}
 \label{sec:trans}
 The propositional calculus of Dijkstra and Scholten \cite{dijkstra-scholten} is an alternative
 boolean theory whose only non-constants operation are equivalence and
@@ -24,13 +24,13 @@ transformation of |∣T∣ Σbool'|. In this section we formalize the
 concepts of \emph{derived signature morphism} and \emph{reduct
   algebra} as introduced, for example, by Sanella et al.~\cite{sannella2012foundations}.
 
-\subsection{Derived signature translation}
+\subsection{Derived signature morphism}
 
 Although the disjunction from |Σbool| can be directly mapped to its
 namesake in |Σbool'|, there is no unary operation in |Σbool'| to
 translate the negation. In fact, we should be able to translate an
 operation as a combination of operations in |Σbool'| and
-also a way to refer to the arguments of the original operation.
+also refer to the arguments of the original operation.
 \newcommand{\sdash}[1]{\Vdash\!\!\!\!^{#1}}
 
 We introduce the notion of \emph{formal terms} which are formal
@@ -108,7 +108,7 @@ for interpreting an operation $f$ in the reduct algebra
 $\algTrans A$ we use the interpretation of the formal term $m f$, which
 is recursively defined by
 \begin{spec}
-  ⟦_⟧ₜ : ∀ {ar s} → ar ⊩ s → A ⟦ ar ⟧ₛ* → ∥ A ⟦ s ⟧ₛ ∥
+  ⟦_⟧ₜ : ∀ {ar s} → ar ⊩ s → ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ A ⟦ s ⟧ₛ ∥
   ⟦ # n ⟧ₜ      as =  as ‼v n
   ⟦ f ∣$∣ ts ⟧ₜ  as = A ⟦ f ⟧ₒ ⟨$⟩ ⟦ ts ⟧ₜ* as
 \end{spec}
@@ -133,7 +133,6 @@ module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   _〈_〉 : Algebra Σₛ
   _〈_〉 = 〈 ⟨_⟩ₛ , ⟨_⟩ₒ 〉
 \end{spec}
-
 The action of the functor on homomorphism is also straightforward: 
 \begin{spec}
 module ReductHomo {m : Σₛ ↝ Σₜ} {A A'} (H : Homo {Σₜ} A A')  where
@@ -141,36 +140,47 @@ module ReductHomo {m : Σₛ ↝ Σₜ} {A A'} (H : Homo {Σₜ} A A')  where
    〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ m ; cond = ? }
 \end{spec}
 
-\subsection{Translation of theories}
-Given a signature translation $t : \intSign{\Sigma_s}{\Sigma_t}$, two
-families $X_s$ and $X_t$ of variables indexed by the respective
-sorts, a function $tvars : X_s s \rightarrow X_t (t s)$,
-for each sort $s$ of $\Sigma_s$ and tow theories
-$\Sigma_t$-theory $Th_t$ and a $\Sigma_s$-theory $Th_s$, we say that
-$Th_t$ implies $Th_s$ if for each axiom $e \in Th_s$, there exists
-a proof of the translation of $e$ in $Th_t$.
+\newcommand{\theory}[1]{\ensuremath{\mathit{Th}_{#1}}}
 
-Let us define the translation of $\Sigma_s$-terms extended to $X_s$ to
-$\Sigma_t$-terms extended to $X_t$.
+\subsection{Translation of theories} From a signature morphism $m :
+\intSign{\Sigma_s}{\Sigma_t}$ one gets the translation of ground |Σₛ|
+terms as the initial homomorphism from |T Σₛ| to |⟨ T Σₜ ⟩|; one may
+expect that, with an appropiate extension to variables, this
+translation applied to a theory $\theory{s}$ over $\Sigma_s$ yields a
+theory $\theory{t}$ over $\Sigma_t$. Moreover for
+$\mathcal{A}_t\models\theory{t}$, one would think that the reduct
+$\langle \mathcal{A}_t \rangle$ is a model of the original theory, \ie
+$\langle \mathcal{A}_t \rangle \models \theory{s}$. More generally, we
+allow that $\theory{t}$ be stronger than the translation of
+$\theory{s}$, meaning that the translation of every equation of
+$\theory{s}$ can be deduced from $\theory{t}$.
 
-\paragraph{Terms translation.}
-Because of the \textit{freeness} property, we have an unique homomorphism
-from the $\Sigma_s$-algebra |T Σₛ 〔 Xₛ 〕| to any other algebra extended with an
-environment. In particular
-we can obtain the homomorphism to the algebra |T Σₜ 〔 Xₜ 〕|
-transformed via $t$, where the environment consists of mapping 
-each variable $v \in X_s\;s$ to the term $tvars\;v \in X_t (t\,s)$.
-Thus, we get for free a function mapping |Σₛ 〔 Xₛ 〕|-terms to |Σₜ 〔 Xₜ 〕|-terms:
-
+Having a morphism $m : \intSign{\Sigma_s}{\Sigma_t}$, the translation
+of open terms (terms with variables) from |T Σₛ 〔 Xₛ 〕| to
+|T Σₜ 〔 Xₜ 〕| can be defined using initiality if we have a renaming
+function |↝ᵥ : {s : sorts Σₛ} → Xₛ s → Xₜ (m ↝ₛ s)|.\comment{, which
+  is used to define an environment |θ : Xₛ → T Σₜ 〔 Xₜ 〕| . Let us
+  remark that |Xₜ (m ↝ₛ s)| should be inhabited when |Xₛ s| is also
+  inhabited. This condition, however, is not enough to prove the
+  preservation of models.}  In general, however, we cannot prove the
+\emph{satisfaction property}:
+if a $\Sigma_t$-algebra models the translation of an equation, then its
+reduct models the original equation. The technical issue is the
+impossibility of defining a $\Sigma_t$-environment from a
+$\Sigma_s$-environment. There is a well-known solution which consists
+on restricting the set of variable of the target signature by letting
+$X_t = \bigcup_{s \in \Sigma_s , t = m \hookrightarrow s} X_s$.
+Under this restriction, we can prove the satisfaction property
+and furthermore the preservation of models between a theory $\theory{t}$
+and any weaker theory $\theory{s}$:
 \begin{spec}
-  term↝ : Homo (T Σₛ 〔 Xₛ 〕) 〈 T Σₜ 〔 Xₜ 〕 〉
-  term↝ = TΣXHom (Σₜ 〔 Xₜ 〕) 〈 T Σₜ 〔 Xₜ 〕 〉 θv
-    where θv : Env Xₛ 〈 T Σₜ 〔 Xₜ 〕 〉
-          θv v = term (inj₂ (tvars v)) ⟨⟩
+ ⊨↝ : ∀ Aₜ Thₜ Thₛ → Aₜ ⊨T Thₜ → (Thₜ ⊢ ↝* Thₛ ) → 〈 Aₜ 〉 ⊨T Thₛ
 \end{spec}
-
-\noindent It's straightforward to extend this definition to equations,
-we call |eq↝| to this extension.
+We notice that this is somewhat inconvenient to use in practice for
+proving that from a model of the target theory one can obtain a model
+of the original theory, but we think that this restriction can be 
+alleviated if the original variables of $\theory{t}$ are included
+in the calculated set of variables.
 
 % \paragraph{Implication of translated theories.}
 % From a signature translation $t : \intSign{\Sigma_s}{\Sigma_t}$, we

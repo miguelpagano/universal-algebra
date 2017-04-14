@@ -55,6 +55,7 @@ urlcolor=blue]{ hyperref }
 \DeclareUnicodeCharacter{10140}{\ensuremath{\Rightarrow}}
 \DeclareUnicodeCharacter{10035}{\ensuremath{\ast}}
 \DeclareUnicodeCharacter{8338}{\ensuremath{_{o}}}
+\DeclareUnicodeCharacter{7525}{\ensuremath{_{v}}}
 \DeclareUnicodeCharacter{7506}{\ensuremath{^{o}}}
 \DeclareUnicodeCharacter{8407}{\ensuremath{^{\rightarrow}}}
 \DeclareUnicodeCharacter{12296}{(}

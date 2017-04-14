@@ -56,7 +56,7 @@ from |T Σ 〔 X 〕| to $\mathcal{A}$ such that |⟦ x ⟧θ  = θ(x)| for
 %   Subst = Env X (T Σ 〔 X 〕)
 % \end{spec}
 
-\subsection{Equations, satisfactibility and provability}
+\subsection{Equations, satisfiability, and provability}
 
 \paragraph{Equations} In the mono-sorted setting an equation is a pair
 of terms where all the variables are assumed to be universally
@@ -80,6 +80,14 @@ record Equation (Σ ) (X : Vars Σ) (s : sorts Σ) : Set where
     eq  :   Eq Σ X s
     cond : Σ[ carty ∈ Arity Σ ] (HVec (Eq Σ X) carty)
 \end{spec}
+A \emph{theory} over the signature $\Sigma$ is given by vector of equations.
+\begin{spec}
+Theory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
+Theory Σ X ar = HVec (Equation Σ X) ar
+\end{spec}
+Notice that in our formalization all the equations of a theory share
+the same set of variables, in contrast with Goguen' and Meseguer's
+calculus where each equation has its own set of quantified variables.
 \comment{\noindent Notice that we follow Goguen and Messeguer in that equations
 are given explicitly over a set of variables. This, in turn, leads us
 to define satisfability as proposed by Huet and Oppen.}
@@ -92,24 +100,18 @@ to define satisfability as proposed by Huet and Oppen.}
 % ⋀ t ≈ t' = ⋀ t ≈ t' if「 [] 」 (⟨⟩ , ⟨⟩)
 % \end{spec}
 
-A \emph{theory} over the signature $\Sigma$ is given by vector of equations.
-\begin{spec}
-Theory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
-Theory Σ X ar = HVec (Equation Σ X) ar
-\end{spec}
-
-\paragraph{Satisfaction} We recall that a $\Sigma$-algebra
+\paragraph{Satisfiability} We recall that a $\Sigma$-algebra
 $\mathcal{A}$ \emph{satisfies} a conditional equation
 $t = t', \text{ if } t_1 = t'_1,\ldots,t_n=t'_n$ if for any
 environment $\theta : X \to \mathcal{A}$, $⟦ t ⟧θ = ⟦ t' ⟧θ$, whenever
 $⟦ t_i ⟧θ = ⟦ t'_i ⟧θ$ for $1 \leqslant i \leqslant n$.  In order to
-formalize satisfaction we first define when an environment models an equation.
+formalize satisfiability we first define when an environment models an equation.
 \begin{spec}
 _,_⊨ₑ_ : ∀ {Σ X A} → (θ : Env X A) → (s : sorts Σ) → Eq Σ X s → Set
 θ , s ⊨ₑ (t , t') = _≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧ θ) (⟦ t' ⟧ θ)
 \end{spec}
 \noindent Using the point-wise extension of the previous predicate we can
-write directly the notion of satisfaction.
+write directly the notion of satisfiability.
 \begin{spec} 
 _,_⊨_ : ∀ {Σ X} (A : Algebra Σ) → (s : sort Σ) → Equation Σ X s → Set
 A , s ⊨ (⋀ eq if (_ , eqs)) = ∀ θ → (θ ,_⊨ₑ_) ⇨v eqs) → θ , s ⊨ₑ eq
@@ -133,7 +135,7 @@ satisfability defined by \citet{huet-oppen}.}%
 definition of a sound deduction system for multi-sorted equality logic
 is more subtle than expected. We formalize the system presented in
 \cite{goguen2005specifying}, shown in Fig.~\ref{fig:deduction}, and prove
-soundness and completeness with respect to the satisfaction given
+soundness and completeness with respect to the satisfiability given
 before. The first three rules are reflexivity, symmetry and
 transitivity; the fourth rule allows to use
 axioms where is applied a substitution $\sigma$; finally, the last rule

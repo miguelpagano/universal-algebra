@@ -88,6 +88,8 @@ module Theory where
                                          ; cong = λ { (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) → ∙-cong x₁ x₂ } } })
              where open IsMonoid isMon
 
+
+    {- Each monoid is a model of our theory. -}
     MonoidModel : ∀ {a l A _≈_ _∘_} {e : A} → (m : IsMonoid {a} {l} _≈_ _∘_ e) → MkMonoid m ⊨T MonTheory
     MonoidModel m here θ ∼⟨⟩ = IsSemigroup.assoc (isSemigroup m) (θ 0) (θ 1) (θ 2)
       where open IsMonoid
@@ -98,7 +100,26 @@ module Theory where
     MonoidModel m (there (there (there ()))) θ x₂
 
 
-    
+    open Algebra
+    open import Relation.Binary hiding (Total)
+    open Setoid
+    open import Function.Equality
+    open import Data.Unit
+    {- and we can also build a monoid from a model. -}
+    fromModel : ∀ {ℓ a} {A : Algebra {ℓ} {a} Σ-mon} → A ⊨T MonTheory → IsMonoid (_≈_ (A ⟦ tt ⟧ₛ))
+                                                                                (λ x y → A ⟦ op ⟧ₒ ⟨$⟩ ⟨⟨ x , y ⟩⟩ )
+                                                                                (A ⟦ e ⟧ₒ ⟨$⟩ ⟨⟩)
+    fromModel {A = A} mod = record { isSemigroup = record { isEquivalence = isEquivalence (A ⟦ tt ⟧ₛ)
+                                                          ; assoc = λ x₁ y₁ z₁ → mod here (η x₁ y₁ z₁) ∼⟨⟩
+                                                          ; ∙-cong = λ x₁ x₂ → cong (_⟦_⟧ₒ A op) (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) }
+                                   ; identity = (λ x₁ → mod (there here) (λ x₂ → x₁) ∼⟨⟩)
+                                              , (λ x₁ → mod (there (there here)) (λ _ → x₁) ∼⟨⟩)
+                                   }
+      where η : ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → Env X A
+            η a b c zero = a
+            η a b c (suc zero) = b
+            η a b c (suc (suc x₁)) = c
+
 
 
     

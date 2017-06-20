@@ -90,6 +90,9 @@ module GrpTheory where
         u' : _
         u' = toGrpF u
 
+        x' : _
+        x' = toGrpF x
+
         {- unit is its own inverse. -}
         p₁ : GrpTheory ⊢ (⋀ (u' ⁻) ≈ u')
         p₁ = begin ((u' ⁻))
@@ -99,6 +102,22 @@ module GrpTheory where
                    u'
                    ∎
 
-
-
+        inv-inv : GrpTheory ⊢ (⋀ x' ≈ ((x' ⁻) ⁻) if「 [] 」 (⟨⟩ , ⟨⟩))
+        inv-inv = begin x'
+                        ≈⟨ psym (psubst unitR-ax (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
+                        (x' ∘ u')
+                        ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst invL-ax (λ x₁ → x' ⁻) ∼⟨⟩)) ∼⟨⟩)) op ⟩
+                        (x' ∘ ((x' ⁻) ∘ (((x' ⁻)) ⁻)))
+                        ≈⟨ psym (psubst ass-ax σ ∼⟨⟩) ⟩
+                        ((x' ∘ (x' ⁻)) ∘ ((x' ⁻) ⁻))
+                        ≈⟨ preemp (∼▹ (psubst invL-ax (λ x₁ → x') ∼⟨⟩) (∼▹ prefl ∼⟨⟩)) op ⟩
+                        (u' ∘ ((x' ⁻) ⁻))
+                        ≈⟨ psubst unitL-ax (λ x → (x' ⁻) ⁻) ∼⟨⟩ ⟩
+                        ((x' ⁻) ⁻)
+                  ∎
+                  where σ : Subst
+                        σ zero = x'
+                        σ (suc zero) = x' ⁻
+                        σ (suc (suc zero)) = (x' ⁻) ⁻
+                        σ v = term (inj₂ v) ⟨⟩
     

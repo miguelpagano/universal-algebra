@@ -1,11 +1,28 @@
-\documentclass{llncs}
+\documentclass{entcs} \usepackage{entcsmacro}
+\input pdfcolor.tex 
+\sloppy
+% The following is enclosed to allow easy detection of differences in
+% ascii coding.
+% Upper-case    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+% Lower-case    a b c d e f g h i j k l m n o p q r s t u v w x y z
+% Digits        0 1 2 3 4 5 6 7 8 9
+% Exclamation   !           Double quote "          Hash (number) #
+% Dollar        $           Percent      %          Ampersand     &
+% Acute accent  '           Left paren   (          Right paren   )
+% Asterisk      *           Plus         +          Comma         ,
+% Minus         -           Point        .          Solidus       /
+% Colon         :           Semicolon    ;          Less than     <
+% Equals        =3D           Greater than >          Question mark ?
+% At            @           Left bracket [          Backslash     \
+% Right bracket ]           Circumflex   ^          Underscore    _
+% Grave accent  `           Left brace   {          Vertical bar  |
+% Right brace   }           Tilde        ~
 
-% The following \documentclass options may be useful:
+% A couple of exemplary definitions:
 
-% preprint      Remove this option only once the paper is in final form.
-% 10pt          To set in 10-point type instead of 9-point.
-% 11pt          To set in 11-point type instead of 9-point.
-% numbers       To obtain numeric citation style instead of author/year.
+\newcommand{\Nat}{{\mathbb N}}
+\newcommand{\Real}{{\mathbb R}}
+\def\lastname{Gunther, Gadea, and Pagano}
 
 \usepackage{amsmath}
 \usepackage{bussproofs}
@@ -13,11 +30,6 @@
 \usepackage[inline]{enumitem}
 %\usepackage{minted}
 %\usemintedstyle{friendly}
-\usepackage[bookmarksopen,
-bookmarksdepth=2,
-breaklinks=true
-colorlinks=true,
-urlcolor=blue]{ hyperref }
 %format VecH' = Vec
 %format HVec  = Vec
 %format 〉 = ")"
@@ -63,15 +75,9 @@ urlcolor=blue]{ hyperref }
 \newcommand{\cL}{{\cal L}}
 \newcommand{\ie}{i.e.\@@ }
 \newcommand{\manu}[1]{} % \textcolor{red}{#1}}
-\newcommand{\alg}[1]{\mathcal{#1}}
+\renewcommand{\alg}[1]{\mathcal{#1}}
 \newcommand{\iso}{\equiv}
 \newcommand{\comment}[1]{}
-\begin{document}
-
-\special{papersize=8.5in,11in}
-\setlength{\pdfpageheight}{\paperheight}
-\setlength{\pdfpagewidth}{\paperwidth}
-\setlength{\blanklineskip}{0ex}
 
 
 % Uncomment the publication rights you want to use.
@@ -79,27 +85,20 @@ urlcolor=blue]{ hyperref }
 %\publicationrights{licensed}     % this is the default
 %\publicationrights{author-pays}
 
-%\titlebanner{banner above paper title}        % These are ignored unless
-
-
-\title{Formalization of Universal Algebra}
-
-\author{Emmanuel Gunther \and Alejandro Gadea \and Miguel Pagano}
-
-\institute{FaMAF, UNC - CONICET}
-
-
-%% \authorinfo{Emmanuel Gunther}
-%%            {FaMAF, UNC - CONICET}
-%%            {gunther@@famaf.unc.edu.ar}
-%% \authorinfo{Alejandro Gadea}
-%%            {FaMAF, UNC - CONICET}
-%%            {gadea@@famaf.unc.edu.ar}
-%% \authorinfo{Miguel Pagano}
-%%            {FaMAF, UNC}
-%%            {pagano@@famaf.unc.edu.ar}
-
-\maketitle
+\newcommand{\mailto}[1]{\href{mailto:#1}{{\texttt{\normalshape #1}}}}
+\begin{document}
+\begin{frontmatter}
+\title{Formalization of Universal Algebra in Agda}
+\author[unc,coni]{Emmanuel Gunther
+   \thanksref{ALL}\thanksref{manumail}}
+  \author[unc,coni]{Alejandro Gadea\thanksref{ALL}\thanksref{alemail}}
+  \author[unc]{Miguel Pagano\thanksref{ALL}\thanksref{miguelmail}}
+  \address[unc]{FaMAF, UNC}
+  \address[coni]{CONICET}
+ \thanks[ALL]{Partially supported by PICT 2014-3058, ANPCyT, Argentina}
+ \thanks[manumail]{Email:\mailto{gunther@@famaf.unc.edu.ar}}
+ \thanks[alemail]{Email:\mailto{gadea@@famaf.unc.edu.ar}}
+ \thanks[miguelmail]{Email:\mailto{pagano@@famaf.unc.edu.ar}}
 
 \begin{abstract}
 In this work we present a novel formalization of
@@ -114,16 +113,17 @@ between algebras; moreover, we also proved that, under some
 restrictions, the translation of a theory induces a contra-variant
 functor between models.
 \end{abstract}
-
-
-\keywords
+\begin{keyword}
 universal algebra, formalization of mathematics, equational logic
+\end{keyword}
+\end{frontmatter}
+
 
 %include introduction.lagda
 %include univ-alg.lagda
 %include equational.lagda
 %include transforming-algebras.lagda
 %include conclusions.lagda
-\bibliographystyle{splncs03}
+\bibliographystyle{entcs}
 \bibliography{biblio}
 \end{document}

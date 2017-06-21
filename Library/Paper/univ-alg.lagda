@@ -107,10 +107,10 @@ possible, as a record with fields: the |Carrier : Set|, the relation
 |_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|. The
 operator | ∥_∥ | represents the forgetful functor from setoids to
 sets, so that | ∥ (A,_≈A_,_) ∥ = A|.\manu{Miguel pregunta si conviene
-notar que en Agda no hay coerciones} There is an obvios
+notar que en Agda no hay coerciones} There is an obvious
 functor |setoid : Set → Setoid| which maps a type |A| to the setoid
 defined by the propositional equality over that type. In the standard
-library it is also defined the point-wise extension of two setoids
+library it is also defined the point-wise extension of two setoids 
 |A ×-setoid B|.
 
 Once sorts are interpreted as setoids, operations should be
@@ -123,7 +123,7 @@ definition of homomorpisms between algebras and some theorems will say
 that two homomorphisms are equal; working in an intensional
 type-theory, this equality cannot be taken as the definitional
 equality. Of course, we equate morphisms |f , g : A ⟶ B|,
-whenever the function parts of |f| and |g| are extensional equal:
+whenever the function parts of |f| and |g| are extensionally equal:
 \begin{spec}
   _≈→_ : Rel (A ⟶ B)
   f ≈→ g  = ∀ (a : ∥ A ∥) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
@@ -400,7 +400,7 @@ from the function symbols.  Sometimes this universe is called the
 \end{spec}
 
 \noindent We use propositional equality to turn each
-$\mathcal{T}_s$ in a
+$\mathcal{T}_s$ into a
 setoid, thus completing the interpretation of sorts. To interpret
 an operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the
 tuple $⟨t_1,\ldots,t_n⟩$ to the term

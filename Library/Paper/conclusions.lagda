@@ -7,7 +7,7 @@ paper, we have developed in Agda a library with the main concepts of
 heterogeneous universal algebra, up to the proof of three isomorphisms
 theorems and the freenes of the term algebra over a set of
 variables. In order to define the term algebra we have introduced
-heteregeneous vectors, which later turned to be very useful in other
+heteregeneous vectors, which later turned out to be very useful in other
 parts of the library, for example as the set of axioms of finite
 theories and as premises of deduction rules.
 

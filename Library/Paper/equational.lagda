@@ -282,8 +282,8 @@ We show the equational proof for |⋀ ¬ p ∧ p ≈ false|.
          false
        ∎
 \end{spec}
-\noindent Here we use the notation of Equational reasoning from
-standard library and the relevant actions of the substitution |σ₁| are
+\noindent Here we use the notation of equational reasoning from
+the standard library and the relevant actions of the substitution |σ₁| are
 |σ₁ p = ¬ p| and | σ₁ q = p|. 
 
 % The first step is performed by the |psubst| rule, with the

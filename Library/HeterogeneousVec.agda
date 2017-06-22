@@ -1,3 +1,5 @@
+{- Heterogeneous vectors -}
+
 module HeterogeneousVec where
 
 open import Data.List renaming (map to lmap) hiding (zip)
@@ -50,7 +52,6 @@ _++v_ : ∀ {l I} {is is' : List I} {A : I → Set l} →
 
 
 {- Zipping -}
-
 zip : ∀ {l₀ l₁ I} {A : I → Set l₀} {B : I → Set l₁}  {is : List I} →
           (vs : HVec A is) → (vs' : HVec B is) → HVec (λ i → A i × B i) is
 zip ⟨⟩ ⟨⟩ = ⟨⟩
@@ -167,7 +168,7 @@ map∼v f (∼▹ vRv' vs≈Rvs') = ∼▹ (f vRv') (map∼v f vs≈Rvs')
                                                  ~v-pointwise vs₁ vs₂ eq n
 
 
-{- PONER UN NOMBRE MEJOR PARA ESTO -}
+
 ∼↑v : ∀ {l₀ l₁ I} {A : I -> Set l₀} {is : List I} {R : (i : I) → Rel (A i) l₁}
         {f : (i : I) → A i → A i} →
         (P : (i : I) → (a : A i) → R i a (f i a)) →
@@ -176,9 +177,7 @@ map∼v f (∼▹ vRv' vs≈Rvs') = ∼▹ (f vRv') (map∼v f vs≈Rvs')
 ∼↑v {is = i ∷ is} P (v ▹ vs) = ∼▹ (P i v) (∼↑v P vs)
       
 
--- Reindexing
-
-
+{- Reindexing -}
 reindex : ∀ {l} {I I' : Set}
               (fᵢ : I → I') → {A : I' → Set l} → {is : List I} →
               HVec (A ∘ fᵢ) is → HVec A (lmap fᵢ is)
@@ -226,7 +225,7 @@ mapReindex {is = i₀ ∷ is} fᵢ h (v ▹ vs) = cong (λ vs' → h (fᵢ i₀)
 -- Other properties
 
 {-
-Map y composición
+Map and composition
 -}
 propMapV∘ : ∀ {l₀ l₁ l₂ I is}  {A₀ : I → Set l₀} {A₁ : I → Set l₁}
               {A₂ : I → Set l₂} → (vs : HVec A₀ is) →
@@ -240,7 +239,7 @@ propMapV∘ {is = i₀ ∷ is} (v₀ ▹ vs) m m' = cong₂ (λ x y → x ▹ y)
                                                 (propMapV∘ vs m m')
 
 
--- HVec Setoid
+{- Setoid of heterogeneous vectors -}
 
 
 open Setoid
@@ -295,4 +294,3 @@ HVecSet I A is = record { Carrier = HVec (λ i → Carrier $ A i) is
 _✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) →
                                  List I → Setoid _ _
 _✳_ {I = I} = HVecSet I
-

@@ -1,6 +1,11 @@
+{- (conditional) equational logic: Signature with variables, environments,
+   equations, equational theories, proofs, models, birkhoff soundness and 
+   completeness. -}
+
 module Equational where
 
 open import UnivAlgebra
+open import Morphisms
 open import Data.List
 open import Data.Nat
 open import Data.Product
@@ -12,13 +17,13 @@ open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘e_)
 open import HeterogeneousVec renaming (map to mapV)
 
+import TermAlgebra
 import Relation.Binary.EqReasoning as EqR
-
 
 open Signature
 
-{- Variables symbols of a signature. In the bibliography is presented as
-   Ground Signature (signature with only constant symbols) -}
+{- Variables symbols of a signature. In the bibliography is presented too
+   as Ground Signature (signature with only constant symbols) -}
 Vars : (Σ : Signature) → Set₁
 Vars Σ = (s : sorts Σ) → Set
 
@@ -47,8 +52,6 @@ Env {Σ} X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥
 
 
 {- Extension of environments to terms -}
-
-
 module EnvExt {ℓ₁ ℓ₂ : Level} {Σ} (X : Vars Σ)
               (A : Algebra {ℓ₁} {ℓ₂} Σ) where
 
@@ -88,16 +91,11 @@ open Setoid
 
 
 {- Extension of the initial homomorphism to signatures with variables -}
-
-
-
 module InitHomoExt {ℓ₁ ℓ₂ : Level}
                 {Σ : Signature} {X : Vars Σ}
                 (A : Algebra {ℓ₁} {ℓ₂} Σ)
                 (a : Env X A) where
 
-
-  --open InitTermAlg (Σ)
   open TermAlgebra (Σ 〔 X 〕) renaming (∣T∣ to ∣T∣x)
   open EnvExt X A
   open ExtEq
@@ -176,7 +174,6 @@ open TermAlgebra
 
 
 {- Equations -}
-
 record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
   constructor ⋀_≈_if「_」_
   field
@@ -191,25 +188,12 @@ record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
 ⋀_≈_ : ∀ {Σ X s} → (t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) → Equation Σ X s
 ⋀ t ≈ t' = ⋀ t ≈ t' if「 [] 」 (⟨⟩ , ⟨⟩)
 
-
-{- Explicar la decisión de indexar la teoría en el conjunto de variables -}
 Theory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
 Theory Σ X ar = HVec (Equation Σ X) ar
 
 
 
--- Satisfactibility
-{-
-Discusión: En las reglas de substitución y reemplazo, hay dos conjuntos de variables
-           X e Y, para que tenga sentido debe haber una inclusión. Aquí estamos
-           indexando todas las definiciones en el conjunto de variables. No debería
-           haber problemas ya que en todo caso la cuantificación habla de variables
-           que pueden no ocurrir en los términos.
-           Esto que dije antes NO es cierto. Pero yo estoy usando un solo conjunto de
-           variables. No debería ser un problema ya que siempre puedo expresar las ecuaciones
-           con el conjunto de variables más grande posible.
--}
-
+{- Satisfactibility -}
 _⊨_ : ∀ {ℓ₁ ℓ₂ Σ X} {s : sorts Σ} →
         (A : Algebra {ℓ₁} {ℓ₂} Σ) → Equation Σ X s → Set (ℓ₂ Level.⊔ ℓ₁)
 _⊨_ {X = X} {s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
@@ -220,15 +204,12 @@ _⊨_ {X = X} {s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
   where open EnvExt X A
 
 
+{- A is model -}
 _⊨T_ : ∀ {ℓ₁ ℓ₂ Σ X ar} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
              (E : Theory Σ X ar) → Set _
 A ⊨T E = ∀ {s e} → _∈_ {i = s} e E → A ⊨ e
        
 
-{- Quisiera poder cuantificar universalmente sobre todas las álgebras
-   de una signatura, pero para ello debería poder cuantificar sobre todos
-   los niveles, y no puedo hacerlo en Agda. Debo dar una definición de ⊨All
-   para cada par de niveles -}
 ⊨All : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} → (E : Theory Σ X ar) →
                (e : Equation Σ X s) → Set (lsuc ℓ₂ Level.⊔ lsuc ℓ₁)
 ⊨All {ℓ₁} {ℓ₂} {Σ} E e = (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T E → A ⊨ e
@@ -283,17 +264,19 @@ module EnvSubst {Σ ℓ₁ ℓ₂ X} {A : Algebra {ℓ₁} {ℓ₂} Σ}
     map∘subst (t ▹ ts) = ∼▹ (∘subst t) (map∘subst ts)
 
 
-correctness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
+
+{- Birkhoff soundness and completeness -}
+soundness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
                 {e : Equation Σ X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E e
-correctness {X = X} {ar} {s} prefl = λ A _ _ _ → Setoid.refl (A ⟦ s ⟧ₛ)
-correctness {X = X} {ar} {s} {E} (psym pe) = 
+soundness {X = X} {ar} {s} prefl = λ A _ _ _ → Setoid.refl (A ⟦ s ⟧ₛ)
+soundness {X = X} {ar} {s} {E} (psym pe) = 
                  λ { A sall θ ∼⟨⟩ → Setoid.sym (A ⟦ s ⟧ₛ)
-                                    (correctness pe A sall θ ∼⟨⟩) }
-correctness {X = X} {ar} {s} {E} (ptrans pe₀ pe₁) =
+                                    (soundness pe A sall θ ∼⟨⟩) }
+soundness {X = X} {ar} {s} {E} (ptrans pe₀ pe₁) =
                  λ { A x θ ∼⟨⟩ → Setoid.trans (A ⟦ s ⟧ₛ)
-                                 (correctness pe₀ A x θ ∼⟨⟩)
-                                 (correctness pe₁ A x θ ∼⟨⟩) }
-correctness {Σ = Σ} {X} {ar} {s} {E}
+                                 (soundness pe₀ A x θ ∼⟨⟩)
+                                 (soundness pe₁ A x θ ∼⟨⟩) }
+soundness {Σ = Σ} {X} {ar} {s} {E}
             (psubst {us = us} {us'} {t} {t'} econd σ ⊢us≈us') A sall θ ∼⟨⟩ = A⊨econd
   where open EnvSubst {A = A} σ θ
         open EnvExt X A 
@@ -305,7 +288,7 @@ correctness {Σ = Σ} {X} {ar} {s} {E}
                _∼v_ {R = λ sᵢ uᵢ uᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ' ↪) ((σ ↪s) uᵢ))
                                                  ((θ' ↪) ((σ ↪s) uᵢ'))} us₀ us₀'
         iHus θ' ∼⟨⟩ = ∼⟨⟩
-        iHus θ' (∼▹ {s₀} {ar₀} {u₁} {u₂} ⊢u₁≈u₂ p) = ∼▹ (correctness ⊢u₁≈u₂ A sall θ' ∼⟨⟩)
+        iHus θ' (∼▹ {s₀} {ar₀} {u₁} {u₂} ⊢u₁≈u₂ p) = ∼▹ (soundness ⊢u₁≈u₂ A sall θ' ∼⟨⟩)
                                                        (iHus θ' p)
         A⊨econd : ((A ⟦ s ⟧ₛ) ≈ (θ ↪) ((σ ↪s) t))
                                ((θ ↪) ((σ ↪s) t'))
@@ -322,8 +305,8 @@ correctness {Σ = Σ} {X} {ar} {s} {E}
                    (θ ↪) ((σ ↪s) t')
                    ∎
           where open EqR (A ⟦ s ⟧ₛ)
-correctness {s = s} {E} (preemp {[]} ∼⟨⟩ f) = λ { A x θ ∼⟨⟩ → Setoid.refl (A ⟦ s ⟧ₛ) }
-correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
+soundness {s = s} {E} (preemp {[]} ∼⟨⟩ f) = λ { A x θ ∼⟨⟩ → Setoid.refl (A ⟦ s ⟧ₛ) }
+soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
             (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' f) A sall θ ∼⟨⟩ =
                 begin
                    (θ ↪) (term f ts)
@@ -347,7 +330,7 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                                     ∼▹ (ih ⊢t₀≈t₀' A sall θ ∼⟨⟩) (iHts ⊢ts₀≈ts₀')
           where ih : ∀ {s' : sorts Σ} {tᵢ tᵢ' : ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥} →
                        E ⊢ (⋀ tᵢ ≈ tᵢ') → ⊨All E (⋀ tᵢ ≈ tᵢ')
-                ih {s'} {tᵢ} {tᵢ'} peq = correctness peq
+                ih {s'} {tᵢ} {tᵢ'} peq = soundness peq
         map≈ : ∀ {ar'} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'} →
                (p : _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ ↪) tᵢ)
                                                  ((θ ↪) tᵢ')} ts₀ ts₀') →
@@ -407,7 +390,8 @@ correctness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
 
 
     sall : ∀ {s} {e : Equation Σ X s} → _∈_ {is = ar} e E → (⊢Quot E) ⊨ e
-    sall {s} {e = ⋀ t ≈ t' if「 ar' 」 ( us , us') } e∈E θ us~us' = Congruence.welldef (⊢Cong E) s (thm {s} {t} {θ} , thm {s} {t'} {θ}) equi 
+    sall {s} {e = ⋀ t ≈ t' if「 ar' 」 ( us , us') } e∈E θ us~us' =
+                Congruence.welldef (⊢Cong E) s (thm {s} {t} {θ} , thm {s} {t'} {θ}) equi 
           where open EqR (⊢RSetoid E s)
                 equi : E ⊢ (⋀ (θ ↪s) t ≈ (θ ↪s) t')
                 equi = psubst {Σ} {X} {ar} {E} {s} {ar'} {us} {us'} {t} {t'} e∈E θ
@@ -471,13 +455,13 @@ module ProvSetoid {Σ : Signature} {X : Vars Σ}
 
   
 
--- Theory implication
+{- Theory implication -}
 _⇒T_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
 _⇒T_ {Σ} {X} T₁ T₂ = ∀ {s} {ax : Equation Σ X s} → ax ∈ T₂ → T₁ ⊢ ax
 
 
 ⊨T⇒ : ∀ {ℓ₁ ℓ₂ Σ X ar ar'} → (T₁ : Theory Σ X ar) (T₂ : Theory Σ X ar')
         (p⇒ : T₁ ⇒T T₂) → (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T T₁ → A ⊨T T₂
-⊨T⇒ T₁ T₂ p⇒ A satAll = λ ax → correctness (p⇒ ax) A satAll
+⊨T⇒ T₁ T₂ p⇒ A satAll = λ ax → soundness (p⇒ ax) A satAll
 
 

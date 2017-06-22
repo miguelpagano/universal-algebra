@@ -1,3 +1,4 @@
+{- Definitions and properties about Setoids -}
 module Setoids where
 
 open import Relation.Binary hiding (Total)
@@ -12,7 +13,7 @@ import Relation.Binary.EqReasoning as EqR
 
 open Setoid
 
-
+{- Carrier -}
 ∥_∥ : ∀ {l₁ l₂} → (Setoid l₁ l₂) → Set l₁
 ∥_∥ {l₁} {l₂} S = Carrier S
 
@@ -20,8 +21,7 @@ open Setoid
          {x y : Carrier S } → x ≡ y → Setoid._≈_ S x y
 ≡to≈ S refl = Setoid.refl S
 
--- Extensional equality
-
+{- Extensional equality -}
 module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoid ℓ₃ ℓ₄} where
   private
     _≈B_ : _
@@ -56,30 +56,30 @@ module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoi
           isTrans : Transitive (_≈→_)
           isTrans {f} {g} {h} p q a = Setoid.trans B (p a) (q a)
 
--- A predicate over a setoid should be even with respect to the equality.
+{- A predicate over a setoid should be even with respect to the equality -}
 open import Relation.Unary
 WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Pred (Carrier S) ℓ₃ → Set _
 WellDef S P = ∀ {x y : Carrier S } → _≈_ S x y → P x → P y
 
--- A binary relation over a setoid should be even with respect to the equality.
+{- A binary relation over a setoid should be even with respect to the equality -}
 open import Data.Product
 WellDefRel : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Rel (Carrier S) ℓ₃ → Set _
 WellDefRel S R = WellDef S² (λ {(a , b) → R a b})
   where open import Relation.Binary.Product.Pointwise
         S² = S ×-setoid S
 
--- A pre-congruene is a well-defined equivalence relation.
+{- A pre-congruene is a well-defined equivalence relation -}
 PreCong : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Rel (Carrier S) ℓ₃ → Set _
 PreCong S R = WellDefRel S R × IsEquivalence R
 
---  The setoid equality is finer than a pre-congruence.
+{-  The setoid equality is finer than a pre-congruence -}
 PC-resp-~ : ∀ {ℓ₁ ℓ₂ ℓ₃} {S : Setoid ℓ₁ ℓ₂} (R : Rel (Carrier S) ℓ₃) →
   PreCong S R → {x y : Carrier S} → _≈_ S x y → R x y
 PC-resp-~ {S = S} R (wd , isEq) {x} {y} eq = wd (Setoid.refl S {x} , eq)
                                                 (IsEquivalence.refl isEq {x})
 
 
--- A setoid predicate is a well-defined predicate over a setoid.
+{- A setoid predicate is a well-defined predicate over a setoid -}
 record SetoidPredicate {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) :
                            Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃))  where
   field
@@ -91,7 +91,7 @@ open import Relation.Unary hiding (_⊆_)
 Subset : ∀ {ℓ₁ ℓ₂} → (A : Set ℓ₁) → (Pred A ℓ₂) → Set _
 Subset A P = Σ[ a ∈ A ] (P a)
 
--- A setoid predicate defines a setoid.
+{- A setoid predicate defines a setoid -}
 SubSetoid : ∀ {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) → (P : Pred ∥ S ∥ ℓ₃) →
                          Setoid _ _
 SubSetoid S P = record { Carrier = Subset (Carrier S) P
@@ -116,8 +116,8 @@ private
   W'↔W S R wd {a} {b} {c} {d} eq  eq' pa = wd (eq , eq') pa
 
 
--- Indexed setoids are different from the standard library because
--- the relation are homogeneous over the index.
+{- Indexed setoids are different from the standard library because
+   the relation are homogeneous over the index -}
 IRel : ∀ {i a} {I : Set i} →
          (I → Set a) → (ℓ : Level) → Set _
 IRel A ℓ = ∀ {i} → A i → A i → Set ℓ

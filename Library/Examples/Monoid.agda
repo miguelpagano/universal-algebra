@@ -1,9 +1,9 @@
 module Examples.Monoid where
 
-
 open import UnivAlgebra
 open import Equational
-open import AlgTransf
+open import Morphisms
+open import SigMorphism
 open import Data.Unit hiding (setoid)
 open import Data.List
 open import Data.Product
@@ -33,7 +33,7 @@ module Theory where
   Eq₁ : Set
   Eq₁ = Equation Σ-mon X tt
 
-  open TermAlgebra
+  open import TermAlgebra
 
   
   -- A formula is a term of the Term Algebra

@@ -1,7 +1,13 @@
+{- A compiler of an arithmetic language to a stack-based
+   machine, proved correct via Universal Algebra -}
+
 module Examples.CompilerArith where
 
 open import UnivAlgebra
-open import AlgTransf
+open import Setoids
+open import Morphisms
+import TermAlgebra
+open import SigMorphism
 open import Data.List renaming (map to lmap)
 open import Data.String
 open import Data.Product
@@ -10,12 +16,14 @@ open import Function.Equality renaming (_∘_ to _∘ₛ_ ; cong to Πcong)
 open import Data.Nat
 open import Data.Fin hiding (_+_ ; #_)
 open import Relation.Binary
-open import HeterogenuousVec
+open import HeterogeneousVec
 open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Data.Maybe hiding (map)
 open import Category.Monad
 open import Category.Monad.Identity 
 
+{- An example of use of signature morphisms:
+   A correct compiler for arithmetic expressions -}
 
 open Signature
 open Algebra
@@ -29,7 +37,7 @@ Var = String
 
 -- Syntax
 
-data Sortsₑ : Set where E : Sortsₑ ; E' : Sortsₑ
+data Sortsₑ : Set where E : Sortsₑ
 
 data Opsₑ : List Sortsₑ × Sortsₑ → Set where
   val   : (n : ℕ)   → Opsₑ ([] , E)
@@ -46,6 +54,7 @@ State = Var → ℕ
 
 ⟦_⟧ₑ : sorts Σₑ → Setoid _ _
 ⟦ E ⟧ₑ = State →-setoid ℕ
+
 
 iopsₑ : ∀ {ar s} → (f : ops Σₑ (ar , s)) → ∥ ⟦_⟧ₑ ✳ ar ∥ → ∥ ⟦ s ⟧ₑ ∥
 iopsₑ (val n) ⟨⟩ = λ σ → n
@@ -67,11 +76,10 @@ iₑ f = record  { _⟨$⟩_ = iopsₑ f ; cong = icongₑ f }
 Semₑ : Algebra Σₑ
 Semₑ =  ⟦_⟧ₑ ∥ iₑ
 
-open TermAlgebra Σₑ renaming (∣T∣ to ∣T∣ₑ)
+open TermAlgebra Σₑ renaming (∣T∣ to ∣T∣ₑ ; ∣H∣ to ∣H∣ₑ ; ∣T∣isInitial to ∣T∣ₑInit)
 
 hsem : Homo ∣T∣ₑ Semₑ
-hsem = ∣H∣ Semₑ
-  where open InitTermAlg Σₑ
+hsem = ∣H∣ₑ Semₑ
 
 
 {- Low Level Language -}
@@ -142,11 +150,10 @@ iₘ f = record  { _⟨$⟩_ = iopsₘ f
 Exec : Algebra Σₘ
 Exec = ⟦_⟧ₘ ∥ iₘ
 
-open TermAlgebra Σₘ renaming (∣T∣ to ∣T∣ₘ)
+open TermAlgebra Σₘ renaming (∣T∣ to ∣T∣ₘ ; ∣H∣ to ∣H∣ₘ)
 
 hexec : Homo ∣T∣ₘ Exec
-hexec = ∣H∣ Exec
-  where open InitTermAlg Σₘ
+hexec = ∣H∣ₘ Exec
 
 {- Translation -}
 
@@ -155,7 +162,7 @@ open FormalTerm Σₘ
 s↝ : sorts Σₑ → sorts Σₘ
 s↝ E = C
 
-op↝ : ∀ {ar s} → ops Σₑ (ar , s) → lmap s↝ ar ⊢ s↝ s
+op↝ : ∀ {ar s} → ops Σₑ (ar , s) → lmap s↝ ar ⊩ s↝ s
 op↝ (val n) = (pushₘ n) ∣$∣ ⟨⟩
 op↝ (var v) = (loadₘ v) ∣$∣ ⟨⟩
 op↝ plus = seqₘ  ∣$∣ ⟨⟨  # (suc zero)
@@ -165,7 +172,7 @@ op↝ plus = seqₘ  ∣$∣ ⟨⟨  # (suc zero)
 e↝m : Σₑ ↝ Σₘ
 e↝m = record  { ↝ₛ = s↝ ; ↝ₒ = op↝ }
 
-open AlgTrans e↝m
+open ReductAlgebra e↝m
 
 -- Transformation of Σₘ-algebras into Σₑ-algebras
 Tmₑ : Algebra Σₑ
@@ -176,12 +183,11 @@ Execₑ = 〈 Exec 〉
 
 hexecₑ : Homo Tmₑ Execₑ
 hexecₑ = 〈 hexec 〉ₕ
-  where open HomoTrans e↝m ∣T∣ₘ Exec
+  where open ReductHomo e↝m ∣T∣ₘ Exec
 
 -- compiler
 hcomp : Homo ∣T∣ₑ Tmₑ
-hcomp = ∣H∣ Tmₑ
-  where open InitTermAlg Σₑ
+hcomp = ∣H∣ₑ Tmₑ
 
 
 {- Homomorphism between semantics -}
@@ -210,9 +216,8 @@ open Initial.Initial
 {- Proof of correctness -}
 
 eqH : (hexecₑ ∘ₕ hcomp) ≈ₑₕ (encH ∘ₕ hsem)
-eqH = proj₂ (init ∣T∣isInitial Execₑ) h₁ h₂
-  where open InitTermAlg Σₑ
-        h₁ = hexecₑ ∘ₕ hcomp
+eqH = proj₂ (init ∣T∣ₑInit Execₑ) h₁ h₂
+  where h₁ = hexecₑ ∘ₕ hcomp
         h₂ = encH ∘ₕ hsem
 
 {- Externalist proof from algebraic approach -}
@@ -232,8 +237,8 @@ Code : Set
 Code = ∥ ∣T∣ₘ ⟦ C ⟧ₛ ∥
 
 {- Semantics of Code is the homomorphism between ∣T∣ₘ and Exec -}
-⟪_⟫ : Code → Conf → Maybe Stack
-⟪ c ⟫ = ′ hexec ′ C ⟨$⟩ c
+⟪∣_∣⟫ : Code → Conf → Maybe Stack
+⟪∣ c ∣⟫ = ′ hexec ′ C ⟨$⟩ c
 
 {- Compiler is the homomorphism resulting of translation -}
 compₑ : Expr → Code
@@ -242,6 +247,6 @@ compₑ e = ′ hcomp ′ E ⟨$⟩ e
 
 {- Correctness -}
 correct : ∀  e s σ →
-             ⟪ compₑ  e ⟫ (s , σ) ≡ just ((⟦ e ⟧ σ ) ∷ s) 
+             ⟪∣ compₑ  e ∣⟫ (s , σ) ≡ just ((⟦ e ⟧ σ ) ∷ s) 
 correct e s σ = eqH E e (s , σ)
 

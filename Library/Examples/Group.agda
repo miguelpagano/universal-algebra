@@ -1,9 +1,9 @@
 module Examples.Group where
 
-
 open import UnivAlgebra
 open import Equational
-open import AlgTransf
+open import Morphisms
+open import SigMorphism
 open import Data.Unit hiding (setoid)
 open import Data.List
 open import Data.Product
@@ -22,6 +22,9 @@ data op-grp : List ⊤ × ⊤ → Set where
 
 open import Data.Empty
 
+{- We extend the Monoid operations, adding
+   an unary operation (we can do this with a function (instead of a relation)
+   because there are no operations with the same arity) -}
 ops-grp : List ⊤ × ⊤ → Set
 ops-grp ([] , tt) = op-mon ([] , tt)
 ops-grp (tt ∷ [] , tt) = op-grp ([ tt ] , tt)
@@ -38,7 +41,7 @@ module GrpTheory where
   Eq-grp : Set
   Eq-grp = Equation Σ-grp X tt
 
-  open TermAlgebra
+  open import TermAlgebra
 
   
   -- A formula is a term of the Term Algebra

@@ -1,0 +1,79 @@
+*** Formalization of Universal Algebra in Agda ***
+
+This development corresponds to the formalization of concepts of
+Universal Algebra in Agda, submitted to LSFA 2017.
+
+This README file contains instructions to install agda and compile
+the library, and a description of the modules.
+
+** Installation **
+
+This formalization was tested on Ubuntu with Agda 2.5.2 installed and
+the standard library version 0.13.
+
+* How to install (using cabal) agda and standard library in Ubuntu:
+
+- Install emacs.
+- Install 'happy' and 'alex' using apt-get:
+  	  $ apt-get install happy alex
+- Install 'cpphs' using cabal:
+  	  $ cabal install cpphs
+- Install 'agda' using cabal:
+  	  $ cabal install agda
+- Download the standard library version 0.13 from
+  https://github.com/agda/agda-stdlib/archive/v0.13.tar.gz
+- Unpack the tar.gz file to somewhere, say '~/opt/Agda/agda-stdlib-0.13'.
+- Create the file '~/.agda/libraries' and put the text:
+  	 ~/opt/Agda/agda-stdlib-0.13/standard-library.agda-lib
+(replace folder '~/opt/Agda/agda-stdlib-0.13' if corresponds).
+- Create the file '~/.agda/defaults' with the line:
+  	 standard-library
+- Edit file .emacs. Put the following text:
+       	 (load-file (let ((coding-system-for-read 'utf-8))
+                (shell-command-to-string "agda-mode locate")))
+
+  	   
+
+** Modules **
+
+The formalization is modularized in these files:
+
+- UnivAlgebra.agda
+	Basic definitions of Heterogeneous Universal Algebra:
+   	Signature, Algebra, Homomorphism, Congruence, Quotient, Subalgebra.
+- Morphisms.agda
+	Definitions of Homomorphism, Homo composition and equality,
+        Isomorphism, Initial and Final Algebras, Homomorphic image and
+	Kernel of a congruence.
+- Setoids.agda
+	Definitions and properties about setoids.
+- HeterogeneousVec.agda
+	Definition, operations and properties of heterogeneous vectors.
+- IsoTheorems.agda
+	Proofs of the three isomorphism theorems.
+- TermAlgebra.agda
+	Definition of the term algebra of a signature and proof of initiality.
+- SigMorphism.agda
+	Definition of derived signature morphisms and reduct algebras.
+	Translation of terms and theories.
+- Equational.agda
+	Formalization of conditional equational logic: Signature with variables,
+	equations, environments, proofs, models, proof of Birkhoff soundness and
+	completeness.
+- Examples
+  -- EqBool.agda
+	  Definition of two theories of bool algebras. Translation from one to another.
+  -- Monoid.agda
+          Definition of the theory of Monoids. Bijection between the standard library
+	  definition of monoids and the universal algebra approach.
+  -- Group.agda
+	  Definition of the theory of Groups, extending theory of Monoids.
+  -- CompilerArith.agda
+          Development of a correct compiler of an arithmetic language to a stack-based
+	  machine language, via Universal Algebra.
+  -- GoguenMeseguer.agda
+	  
+
+
+
+

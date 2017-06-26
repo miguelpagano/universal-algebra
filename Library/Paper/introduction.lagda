@@ -34,7 +34,7 @@ algebra aiming both a reader with a background in the area of
 algebraic specifications and also the community of type-theory.  For
 the former, we try to explain enough Agda in order to keep the paper
 self-contained; we will recall the most important definitions of
-universal algebra. The main contribution of this paper are:
+universal algebra. The main contributions of this paper are:
 \begin{enumerate*}[label=(\roman*),itemjoin={}]
 \item the first formalization of basic universal algebra in Agda;
 \item the first, to our knowledge, formalization in type-theory of
@@ -51,9 +51,13 @@ and completeness. At the end, we define (derived) signature morphisms,
 from which we get the contra-variant functor between algebras;
 moreover, we also proved that, under some restrictions, the
 translation of a theory induces a contra-variant functor between
-models. In contrast with other formalization, our formalization allows
-for infinitary sorts and operations and also, we think, eases the use
-of the resulting library. Much of the library is based on
+models. We include several examples of use of the library.
+In contrast with other formalizations, we define operations
+of signatures as a family indexed by arities, which we think carries
+important benefits in the use of the library: The names of operations
+are constructors of a family of datatypes and so it's possible to perform
+pattern matching on them. Our representation of signature allows to define
+infinite sorts and operations too. Much of the library is based on
 heterogeneous vectors: while all the elements of a vector are of the
 same type, in a heterogeneous vector they can have different
 types.\footnote{Similar to the construction proposed in

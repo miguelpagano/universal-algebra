@@ -47,7 +47,7 @@ data Opsₑ : List Sortsₑ × Sortsₑ → Set where
 Σₑ : Signature
 Σₑ = record { sorts = Sortsₑ ; ops = Opsₑ }
 
--- Semantics
+-- Semantics: A Σₑ-algebra
 
 State : Set
 State = Var → ℕ
@@ -97,7 +97,7 @@ data Opsₘ : List Sortsₘ × Sortsₘ → Set where
 Σₘ : Signature
 Σₘ = record { sorts = Sortsₘ ; ops = Opsₘ }
 
--- Semantics
+-- Semantics: A Σₘ-algebra
 
 Stack : Set
 Stack = List ℕ
@@ -155,7 +155,7 @@ open TermAlgebra Σₘ renaming (∣T∣ to ∣T∣ₘ ; ∣H∣ to ∣H∣ₘ)
 hexec : Homo ∣T∣ₘ Exec
 hexec = ∣H∣ₘ Exec
 
-{- Translation -}
+{- Translation: A signature morphism from Σₑ to Σₘ -}
 
 open FormalTerm Σₘ
 
@@ -185,7 +185,8 @@ hexecₑ : Homo Tmₑ Execₑ
 hexecₑ = 〈 hexec 〉ₕ
   where open ReductHomo e↝m ∣T∣ₘ Exec
 
--- compiler
+-- Compiler: Defined by the unique homomorphism from term
+-- algebra of Σₑ to the term algebra of Σₘ viewed as a Σₑ-algebra.
 hcomp : Homo ∣T∣ₑ Tmₑ
 hcomp = ∣H∣ₑ Tmₑ
 
@@ -220,7 +221,8 @@ eqH = proj₂ (init ∣T∣ₑInit Execₑ) h₁ h₂
   where h₁ = hexecₑ ∘ₕ hcomp
         h₂ = encH ∘ₕ hsem
 
-{- Externalist proof from algebraic approach -}
+{- Externalist proof from algebraic approach: We extract the
+   proof from the algebraic development. -}
 
 {- High level language is the carrier of term algebra ∣T∣ₑ -}
 Expr : Set

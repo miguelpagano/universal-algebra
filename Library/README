@@ -74,6 +74,8 @@ The formalization is modularized in these files:
   -- GoguenMeseguer.agda
 	  
 
+** Type check  **
 
+You can load a file in emacs and type-check this with the command "C-c C-l".
 
 

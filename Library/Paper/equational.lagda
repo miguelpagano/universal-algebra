@@ -1,4 +1,5 @@
 \section{Equational Logic}
+\label{sec:eqlog}
 
 In this section we formalize (conditional) equational logic as
 presented by Goguen and Lin \cite{goguen2005specifying}, extending the term algebra

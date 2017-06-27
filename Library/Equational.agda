@@ -1,5 +1,5 @@
 {- (conditional) equational logic: Signature with variables, environments,
-   equations, equational theories, proofs, models, birkhoff soundness and 
+   equations, equational theories, proofs, models, Birkhoff soundness and 
    completeness. -}
 
 module Equational where
@@ -234,7 +234,7 @@ data _⊢_ {Σ X}
            E ⊢ (⋀ (σ ↪s) t ≈ (σ ↪s) t')
   preemp : ∀ {ar'} {s} {ts ts' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'} →
              _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' →
-             (f : ops (Σ 〔 X 〕) (ar' , s)) → E ⊢ (⋀ term f ts ≈ term f ts') 
+             {f : ops (Σ 〔 X 〕) (ar' , s)} → E ⊢ (⋀ term f ts ≈ term f ts') 
 
 
 
@@ -305,9 +305,9 @@ soundness {Σ = Σ} {X} {ar} {s} {E}
                    (θ ↪) ((σ ↪s) t')
                    ∎
           where open EqR (A ⟦ s ⟧ₛ)
-soundness {s = s} {E} (preemp {[]} ∼⟨⟩ f) = λ { A x θ ∼⟨⟩ → Setoid.refl (A ⟦ s ⟧ₛ) }
+soundness {s = s} {E} (preemp {[]} ∼⟨⟩ {f}) = λ { A x θ ∼⟨⟩ → Setoid.refl (A ⟦ s ⟧ₛ) }
 soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
-            (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' f) A sall θ ∼⟨⟩ =
+            (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' {f}) A sall θ ∼⟨⟩ =
                 begin
                    (θ ↪) (term f ts)
                  ≈⟨ TΣXcond f ts ⟩
@@ -368,7 +368,7 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
         pcsubst : ∀ {ar} {s} → (f : ops Σ (ar , s)) →
                     _∼v_ =[ _⟨$⟩_ (T Σ 〔 X 〕 ⟦ f ⟧ₒ) ]⇒ ⊢R E s
         pcsubst {[]} f ∼⟨⟩ = prefl
-        pcsubst {s₀ ∷ ar} {s} f {ts} {ts'} ⊢ts≈ts' = preemp ⊢ts≈ts' f
+        pcsubst {s₀ ∷ ar} {s} f {ts} {ts'} ⊢ts≈ts' = preemp ⊢ts≈ts' {f}
         
 ⊢Quot : ∀ {Σ X ar} → (E : Theory Σ X ar) → Algebra {Level.zero} {Level.zero} Σ
 ⊢Quot {Σ} {X} E = T Σ 〔 X 〕 / (⊢Cong E)

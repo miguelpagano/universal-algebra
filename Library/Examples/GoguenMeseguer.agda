@@ -143,13 +143,13 @@ module EqBool1 where
         T
       ≈⟨ psym (psubst ax₃ σ₁ ∼⟨⟩) ⟩
         (fu av ∨ (¬ (fu av)))
-      ≈⟨ preemp ∼⟨⟨ prefl , psym (psubst ax₇ idSubst ∼⟨⟩) ⟩⟩∼ or∼ ⟩
+      ≈⟨ preemp ∼⟨⟨ prefl , psym (psubst ax₇ idSubst ∼⟨⟩) ⟩⟩∼ ⟩
         (fu av ∨ fu av)
       ≈⟨ psubst ax₆ σ₁ ∼⟨⟩ ⟩
         fu av
       ≈⟨ psym (psubst ax₅ σ₁ ∼⟨⟩) ⟩
         (fu av ∧ fu av)
-      ≈⟨ preemp ∼⟨⟨ prefl , psubst ax₇ idSubst ∼⟨⟩ ⟩⟩∼ and∼ ⟩
+      ≈⟨ preemp ∼⟨⟨ prefl , psubst ax₇ idSubst ∼⟨⟩ ⟩⟩∼ ⟩
         (fu av ∧ (¬ (fu av)))
       ≈⟨ psubst ax₄ σ₁ ∼⟨⟩ ⟩
         F

@@ -336,9 +336,9 @@ module Theory₂ where
     T₂⊢idem∧ =
       begin
         ((p ≡ p) ≡ (p ∨ p))
-      ≈⟨ preemp (∼▹ (psubst axRefl≡ idSubst ∼⟨⟩) (∼▹ prefl ∼⟨⟩)) equiv₂ ⟩
+      ≈⟨ preemp ∼⟨⟨ psubst axRefl≡ idSubst ∼⟨⟩ , prefl ⟩⟩∼ ⟩
         (true₂ ≡ (p ∨ p))
-      ≈⟨ preemp (∼▹ prefl (∼▹ ((psubst axIdem∨ idSubst ∼⟨⟩)) ∼⟨⟩)) equiv₂ ⟩
+      ≈⟨ preemp ∼⟨⟨ prefl , psubst axIdem∨ idSubst ∼⟨⟩ ⟩⟩∼ ⟩
         (true₂ ≡ p)
       ≈⟨ psubst axComm≡ σ ∼⟨⟩ ⟩
         (p ≡ true₂)

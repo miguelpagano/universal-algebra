@@ -109,11 +109,11 @@ module GrpTheory where
         inv-inv = begin x'
                         ≈⟨ psym (psubst unitR-ax (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
                         (x' ∘ u')
-                        ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst invL-ax (λ x₁ → x' ⁻) ∼⟨⟩)) ∼⟨⟩)) op ⟩
+                        ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst invL-ax (λ x₁ → x' ⁻) ∼⟨⟩)) ∼⟨⟩)) ⟩
                         (x' ∘ ((x' ⁻) ∘ (((x' ⁻)) ⁻)))
                         ≈⟨ psym (psubst ass-ax σ ∼⟨⟩) ⟩
                         ((x' ∘ (x' ⁻)) ∘ ((x' ⁻) ⁻))
-                        ≈⟨ preemp (∼▹ (psubst invL-ax (λ x₁ → x') ∼⟨⟩) (∼▹ prefl ∼⟨⟩)) op ⟩
+                        ≈⟨ preemp (∼▹ (psubst invL-ax (λ x₁ → x') ∼⟨⟩) (∼▹ prefl ∼⟨⟩)) ⟩
                         (u' ∘ ((x' ⁻) ⁻))
                         ≈⟨ psubst unitL-ax (λ x → (x' ⁻) ⁻) ∼⟨⟩ ⟩
                         ((x' ⁻) ⁻)

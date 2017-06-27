@@ -226,9 +226,9 @@ data _⊢_ {Σ X}
                                                   E ⊢ (⋀ t' ≈ t)
   ptrans : ∀ {s} {t₀ t₁ t₂ : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
                  E ⊢ (⋀ t₀ ≈ t₁) → E ⊢ (⋀ t₁ ≈ t₂) → E ⊢ (⋀ t₀ ≈ t₂)
-  psubst : ∀ {s} {ar} {us us' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar}
+  psubst : ∀ {s} {ar'} {us us' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'}
            {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
-           (⋀ t ≈ t' if「 ar 」 (us , us')) ∈ E →
+           (⋀ t ≈ t' if「 ar' 」 (us , us')) ∈ E →
            (σ : Subst) →
            _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ (σ ↪s) uᵢ ≈ (σ ↪s) uᵢ')} us us' →
            E ⊢ (⋀ (σ ↪s) t ≈ (σ ↪s) t')
@@ -236,6 +236,13 @@ data _⊢_ {Σ X}
              _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' →
              {f : ops (Σ 〔 X 〕) (ar' , s)} → E ⊢ (⋀ term f ts ≈ term f ts') 
 
+
+-- Syntactic sugar
+_∣_ : ∀ {Σ X} {ar : Arity Σ} {E : Theory Σ X ar} {s}
+           {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
+           (⋀ t ≈ t') ∈ E → (σ : Subst) →
+           E ⊢ (⋀ (σ ↪s) t ≈ (σ ↪s) t')
+ax ∣ σ = psubst ax σ ∼⟨⟩
 
 
 module EnvSubst {Σ ℓ₁ ℓ₂ X} {A : Algebra {ℓ₁} {ℓ₂} Σ}

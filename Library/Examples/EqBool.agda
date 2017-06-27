@@ -323,7 +323,7 @@ module Theory₂ where
     T₂⊢idem∨ =
       begin
         p ∨ p
-      ≈⟨ psubst axIdem∨ idSubst ∼⟨⟩ ⟩
+      ≈⟨ axIdem∨ ∣ idSubst ⟩
         p
       ∎
 
@@ -339,13 +339,13 @@ module Theory₂ where
     T₂⊢idem∧ =
       begin
         ((p ≡ p) ≡ (p ∨ p))
-      ≈⟨ preemp ∼⟨⟨ psubst axRefl≡ idSubst ∼⟨⟩ , prefl ⟩⟩∼ ⟩
+      ≈⟨ preemp ∼⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ⟩
         (true₂ ≡ (p ∨ p))
-      ≈⟨ preemp ∼⟨⟨ prefl , psubst axIdem∨ idSubst ∼⟨⟩ ⟩⟩∼ ⟩
+      ≈⟨ preemp ∼⟨⟨ prefl , axIdem∨ ∣ idSubst ⟩⟩∼ ⟩
         (true₂ ≡ p)
-      ≈⟨ psubst axComm≡ σ ∼⟨⟩ ⟩
+      ≈⟨ axComm≡ ∣ σ ⟩
         (p ≡ true₂)
-      ≈⟨ psubst axNeu≡ idSubst ∼⟨⟩ ⟩
+      ≈⟨ axNeu≡ ∣ idSubst ⟩
         p
       ∎
       where σ : Subst
@@ -357,19 +357,16 @@ module Theory₂ where
     T₂⊢defF =
       begin
          (p ≡ (p ≡ false₂)) ≡ (p ∨ (p ≡ false₂))
-       ≈⟨ preemp (∼⟨⟨ psubst axAssoc≡ σ₁ ∼⟨⟩ ,
-                    psubst axDist∨≡ σ₁ ∼⟨⟩ ⟩⟩∼) ⟩
+       ≈⟨ preemp (∼⟨⟨ axAssoc≡ ∣ σ₁ , axDist∨≡ ∣ σ₁ ⟩⟩∼) ⟩
          ((p ≡ p) ≡ false₂) ≡ ((p ∨ p) ≡ (p ∨ false₂))
-       ≈⟨ preemp (∼⟨⟨ preemp (∼⟨⟨ psubst axRefl≡ idSubst ∼⟨⟩ , prefl ⟩⟩∼) ,
-                     preemp (∼⟨⟨ psubst axIdem∨ idSubst ∼⟨⟩ ,
-                                psubst axNeu∨ idSubst ∼⟨⟩ ⟩⟩∼) ⟩⟩∼) ⟩
+       ≈⟨ preemp ∼⟨⟨ preemp ∼⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ,
+                    preemp ∼⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼ ⟩⟩∼ ⟩
          (true₂ ≡ false₂) ≡ (p ≡ p)
-       ≈⟨ preemp (∼⟨⟨ psubst axComm≡ σ₂ ∼⟨⟩ ,
-                     psubst axRefl≡ idSubst ∼⟨⟩ ⟩⟩∼) ⟩
+       ≈⟨ preemp ∼⟨⟨ axComm≡ ∣ σ₂ , axRefl≡ ∣ idSubst ⟩⟩∼ ⟩
          (false₂ ≡ true₂) ≡ true₂
-       ≈⟨ preemp (∼⟨⟨ psubst axNeu≡ σ₃ ∼⟨⟩ , prefl ⟩⟩∼) ⟩
+       ≈⟨ preemp (∼⟨⟨ axNeu≡ ∣ σ₃ , prefl ⟩⟩∼) ⟩
          false₂ ≡ true₂
-       ≈⟨ psubst axNeu≡ σ₃ ∼⟨⟩ ⟩
+       ≈⟨ axNeu≡ ∣ σ₃ ⟩
          false₂
        ∎
       where σ₁ : Subst
@@ -393,12 +390,11 @@ module Theory₂ where
     T₂⊢3excl =
       begin
         p ∨ (p ≡ false₂)
-      ≈⟨ psubst axDist∨≡ σ₁ ∼⟨⟩ ⟩
+      ≈⟨ axDist∨≡ ∣ σ₁ ⟩
         (p ∨ p) ≡ (p ∨ false₂)
-      ≈⟨ preemp (∼⟨⟨ psubst axIdem∨ idSubst ∼⟨⟩ ,
-                   psubst axNeu∨ idSubst ∼⟨⟩ ⟩⟩∼) ⟩
+      ≈⟨ preemp (∼⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼) ⟩
         p ≡ p
-      ≈⟨ psubst axRefl≡ idSubst ∼⟨⟩ ⟩
+      ≈⟨ axRefl≡ ∣ idSubst ⟩
         true₂
       ∎
       where σ₁ : Subst
@@ -549,6 +545,6 @@ module BoolModel₁ where
   open Theory₂
   open Theory₂.Tbool₂⇒Tbool₁
   open TheoryTrans.ModelPreserv Σtrans Vars₁ Tbool₁
-  --⊨T⇒↝
+
   B₁model : B₁ ⊨T Tbool₁
-  B₁model = ⊨T⇒↝ Tbool₂ T₂⇒T₁ B₂ B₂model --⊨T⇒↝ Tbool₂ T₂⇒T₁ B₂
+  B₁model = ⊨T⇒↝ Tbool₂ T₂⇒T₁ B₂ B₂model

@@ -353,20 +353,6 @@ module Theory₂ where
             σ ( _ , 1 ) = p
             σ n = term (inj₂ n) ⟨⟩
 
-
-{-
-  ⋀ p ≡ (q ≡ r)   ≈ ((p ≡ q) ≡ r)
-  ⋀ p ≡ q         ≈ (q ≡ p)
-  ⋀ p ∨ (q ∨ r)   ≈ ((p ∨ q) ∨ r)
-  ⋀ p ∨ q         ≈ (q ∨ p)
-  ⋀ p ≡ true₂     ≈ p
-  ⋀ p ≡ p         ≈ true₂
-  ⋀ p ∨ true₂     ≈ true₂
-  ⋀ p ∨ false₂    ≈ p
-  ⋀ p ∨ p         ≈ p
-  ⋀ p ∨ (q ≡ r)   ≈ ((p ∨ q) ≡ (p ∨ r)) 
--}
-
     T₂⊢defF : Tbool₂ ⊢ eq↝ defF
     T₂⊢defF =
       begin

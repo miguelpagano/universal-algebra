@@ -353,6 +353,42 @@ module Theory₂ where
             σ ( _ , 1 ) = p
             σ n = term (inj₂ n) ⟨⟩
 
+
+    T₂⊢abs₂ : Tbool₂ ⊢ eq↝ abs₂
+    T₂⊢abs₂ =
+      begin
+        p ∨ ((p ≡ q) ≡ (p ∨ q))
+      ≈⟨ axDist∨≡ ∣ σ₁ ⟩
+        (p ∨ (p ≡ q)) ≡ (p ∨ (p ∨ q))
+      ≈⟨ preemp ∼⟨⟨ axDist∨≡ ∣ σ₂ , axAssoc∨ ∣ σ₂ ⟩⟩∼ ⟩
+        (((p ∨ p) ≡ (p ∨ q)) ≡ ((p ∨ p) ∨ q))
+      ≈⟨ preemp ∼⟨⟨ preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼
+                 , preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
+        (p ≡ (p ∨ q)) ≡ (p ∨ q)
+      ≈⟨ psym (axAssoc≡ ∣ σ₃) ⟩
+        p ≡ ((p ∨ q) ≡ (p ∨ q))
+      ≈⟨ preemp ∼⟨⟨ prefl , axRefl≡ ∣ σ₄ ⟩⟩∼ ⟩
+        p ≡ true₂
+      ≈⟨ axNeu≡ ∣ idSubst ⟩
+        p
+      ∎
+      where σ₁ : Subst
+            σ₁ (_ , 1) = p ≡ q
+            σ₁ (_ , 2) = p ∨ q
+            σ₁ x = term (inj₂ x) ⟨⟩
+            σ₂ : Subst
+            σ₂ (_ , 1) = p
+            σ₂ (_ , 2) = q
+            σ₂ x = term (inj₂ x) ⟨⟩
+            σ₃ : Subst
+            σ₃ (_ , 1) = p ∨ q
+            σ₃ (_ , 2) = p ∨ q
+            σ₃ x = term (inj₂ x) ⟨⟩
+            σ₄ : Subst
+            σ₄ (_ , 0) = p ∨ q
+            σ₄ x = term (inj₂ x) ⟨⟩
+            
+
     T₂⊢defF : Tbool₂ ⊢ eq↝ defF
     T₂⊢defF =
       begin
@@ -415,7 +451,7 @@ module Theory₂ where
     T₂⇒T₁ axDist∧∨ = {!!}
     T₂⇒T₁ axDist∨∧ = {!!}
     T₂⇒T₁ axAbs₁ = {!!}
-    T₂⇒T₁ axAbs₂ = {!!}
+    T₂⇒T₁ axAbs₂ = T₂⊢abs₂
     T₂⇒T₁ axDefF = T₂⊢defF
     T₂⇒T₁ ax3excl = T₂⊢3excl
     T₂⇒T₁ noax₁

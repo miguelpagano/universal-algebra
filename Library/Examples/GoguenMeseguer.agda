@@ -1,3 +1,5 @@
+{- Example from paper "Completeness of Many-sorted equational
+   logic" of Goguen and Meseguer. -}
 module Examples.GoguenMeseguer where
 
 open import UnivAlgebra
@@ -10,11 +12,6 @@ open import Data.Product
 open import Data.Nat
 open import Data.Sum
 open import HeterogeneousVec
-
-
-repeat : ∀ {A : Set} → A → ℕ → List A
-repeat a zero = []
-repeat a (suc n) = a ∷ repeat a n
 
 open Signature
 
@@ -29,7 +26,9 @@ module EqBool1 where
   open import Data.Sum
   open import HeterogeneousVec
 
-
+  {- The signature consists of sort bool with operations of
+     propositional logic, and a new sort 'a' with an operation
+     foo : a -> bool -}
   data sorts∼ : Set where
     bool : sorts∼
     a    : sorts∼
@@ -93,7 +92,8 @@ module EqBool1 where
 
   module Theory where
     open Smartcons
-    -- Axioms
+
+    {- The theory consist of seven axioms -}
     notT : Eq∼
     notT = ⋀ ¬ T ≈ F
   
@@ -115,7 +115,7 @@ module EqBool1 where
     fooax : Eq∼
     fooax = ⋀ fu av ≈ ¬ (fu av)
 
-    Th : Theory Σ∼ Vars∼ (repeat bool 7)
+    Th : Theory Σ∼ Vars∼ (replicate 7 bool)
     Th = notT ▹ notF ▹ 3exc ▹ b∧¬b ▹ idem∧ ▹ idem∨ ▹ fooax ▹ ⟨⟩
 
     pattern ax₁ = here
@@ -136,22 +136,23 @@ module EqBool1 where
     open Smartcons
     open TermAlgebra
 
-  
+
+    {- We can prove T ≈ F -}
     t≈f : Th ⊢ (⋀ T ≈ F)
     t≈f =
       begin
         T
-      ≈⟨ psym (psubst ax₃ σ₁ ∼⟨⟩) ⟩
+      ≈⟨ psym (ax₃ ∣ σ₁) ⟩
         (fu av ∨ (¬ (fu av)))
-      ≈⟨ preemp ∼⟨⟨ prefl , psym (psubst ax₇ idSubst ∼⟨⟩) ⟩⟩∼ ⟩
+      ≈⟨ preemp ∼⟨⟨ prefl , psym (ax₇ ∣ idSubst) ⟩⟩∼ ⟩
         (fu av ∨ fu av)
-      ≈⟨ psubst ax₆ σ₁ ∼⟨⟩ ⟩
+      ≈⟨ ax₆ ∣ σ₁ ⟩
         fu av
-      ≈⟨ psym (psubst ax₅ σ₁ ∼⟨⟩) ⟩
+      ≈⟨ psym (ax₅ ∣ σ₁) ⟩
         (fu av ∧ fu av)
-      ≈⟨ preemp ∼⟨⟨ prefl , psubst ax₇ idSubst ∼⟨⟩ ⟩⟩∼ ⟩
+      ≈⟨ preemp ∼⟨⟨ prefl , ax₇ ∣ idSubst ⟩⟩∼ ⟩
         (fu av ∧ (¬ (fu av)))
-      ≈⟨ psubst ax₄ σ₁ ∼⟨⟩ ⟩
+      ≈⟨ ax₄ ∣ σ₁ ⟩
         F
       ∎
       where σ₁ : Subst
@@ -160,6 +161,8 @@ module EqBool1 where
             σ₁ {a} tt = term (inj₂ tt) ⟨⟩
 
 
+
+  {- Now we try to prove true ≡ false via soundness of equational logic -}
   module NotCorrectness where
     open import Data.Bool
     open import Relation.Binary.PropositionalEquality as PE
@@ -241,7 +244,11 @@ module EqBool1 where
     -- give an environment from a non-empty set of variables to
     -- an empty carrier set.
     abs : true ≡ false
-    abs = soundness t≈f model ismodel {!!} ∼⟨⟩
+    abs = soundness t≈f model ismodel env ∼⟨⟩
       where open Proof
+            env : Env Vars∼ model
+            env {bool} v = true
+            -- We cannot give an element of ⊥
+            env {a} v = {!!}
 
 

@@ -192,7 +192,6 @@ Theory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
 Theory Σ X ar = HVec (Equation Σ X) ar
 
 
-
 {- Satisfactibility -}
 _⊨_ : ∀ {ℓ₁ ℓ₂ Σ X} {s : sorts Σ} →
         (A : Algebra {ℓ₁} {ℓ₂} Σ) → Equation Σ X s → Set (ℓ₂ Level.⊔ ℓ₁)

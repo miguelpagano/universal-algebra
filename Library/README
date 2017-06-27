@@ -8,24 +8,25 @@ the library, and a description of the modules.
 
 ** Installation **
 
-This formalization was tested on Ubuntu with Agda 2.5.2 installed and
+The formalization was tested on Ubuntu with Agda 2.5.2 installed and
 the standard library version 0.13.
 
-* How to install (using cabal) agda and standard library in Ubuntu:
+* How to install agda (using cabal) with emacs, and the standard
+library in Ubuntu:
 
 - Install emacs.
-- Install 'happy' and 'alex' using apt-get:
-  	  $ apt-get install happy alex
+- Install 'Haskell platform' using apt-get:
+  	  $ apt-get install haskell-platform
 - Install 'cpphs' using cabal:
   	  $ cabal install cpphs
 - Install 'agda' using cabal:
   	  $ cabal install agda
 - Download the standard library version 0.13 from
   https://github.com/agda/agda-stdlib/archive/v0.13.tar.gz
-- Unpack the tar.gz file to somewhere, say '~/opt/Agda/agda-stdlib-0.13'.
+- Unpack the tar.gz file to somewhere, say '~/.agda/agda-stdlib-0.13'.
 - Create the file '~/.agda/libraries' and put the text:
-  	 ~/opt/Agda/agda-stdlib-0.13/standard-library.agda-lib
-(replace folder '~/opt/Agda/agda-stdlib-0.13' if corresponds).
+  	 ~/.agda/agda-stdlib-0.13/standard-library.agda-lib
+(replace folder '~/.agda/agda-stdlib-0.13' if corresponds).
 - Create the file '~/.agda/defaults' with the line:
   	 standard-library
 - Edit file .emacs. Put the following text:
@@ -62,20 +63,25 @@ The formalization is modularized in these files:
 	completeness.
 - Examples
   -- EqBool.agda
-	  Definition of two theories of bool algebras. Translation from one to another.
+	  Definition of two theories of bool algebras. Translation from one to
+	  another. Preservation of models.
   -- Monoid.agda
-          Definition of the theory of Monoids. Bijection between the standard library
-	  definition of monoids and the universal algebra approach.
+          Definition of the theory of Monoids. Bijection between the standard
+	  library definition of monoids and the universal algebra approach.
   -- Group.agda
 	  Definition of the theory of Groups, extending theory of Monoids.
   -- CompilerArith.agda
-          Development of a correct compiler of an arithmetic language to a stack-based
-	  machine language, via Universal Algebra.
+          Development of a correct compiler of an arithmetic language to a
+	  stack-based machine language, via Universal Algebra.
   -- GoguenMeseguer.agda
-	  
+	  Example from paper "Completeness of many-sorted equational logic"
+	  (Goguen and Meseguer). The first example shown in paper is a
+	  counterexample of soundness. In our formalization is not.
 
-** Type check  **
+** Using the library **
 
 You can load a file in emacs and type-check this with the command "C-c C-l".
 
-
+A reference with commands to edit, type check and compile Agda code in emacs is
+available here:
+http://agda.readthedocs.io/en/v2.5.2/tools/emacs-mode.html

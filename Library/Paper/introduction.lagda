@@ -13,9 +13,7 @@ induction, which is based on conceiving the language as an initial
 algebra.  The group ADJ promoted multi-sorted algebras as a key
 theoretical tool for specifying data
 types\cite{adj-abstract-data-types}, semantics \cite{goguen-77}, and
-compilers.  In fact, our interest in formalizing universal algebra
-arose when we defined in Agda a correct compiler following the
-methodology proposed by ADJ. More recent connections of universal
+compilers. More recent connections of universal
 algebra with computer science can be found in institutions as the
 foundation of methodologies and frameworks for software specification
 and development \cite{sannella2012foundations}.
@@ -44,29 +42,30 @@ universal algebra. The main contributions of this paper are:
   arities; and
 \item an independent library of heterogeneous vectors.
 \end{enumerate*}
-We proved some results of heterogeneous algebras, including the proof
-that the term algebra is inital and the three isomorphism theorems. We
-further formalize conditional equational theory and prove soundness
-and completeness. At the end, we define (derived) signature morphisms,
-from which we get the contra-variant functor between algebras;
-moreover, we also proved that, under some restrictions, the
-translation of a theory induces a contra-variant functor between
-models. We include several examples of use of the library.
-In contrast with other formalizations, we define operations
-of signatures as a family indexed by arities, which we think carries
-important benefits in the use of the library: The names of operations
-are constructors of a family of datatypes and so it's possible to perform
-pattern matching on them. Our representation of signature allows to define
-infinite sorts and operations too. Much of the library is based on
-heterogeneous vectors: while all the elements of a vector are of the
-same type, in a heterogeneous vector they can have different
-types.\footnote{Similar to the construction proposed in
-  \url{https://lists.chalmers.se/pipermail/agda/2010/001826.html}}
+We formalized the proof that the term algebra is inital and the three
+isomorphism theorems; moreover we also define a deduction system for
+conditional equational logic and prove its soundness and completeness.
+We also showed that the translations of theories arising from derived
+signature morphisms induces a contra-variant functor between models.
+In the complete development, which is available at
+\url{https://cs.famaf.unc.edu.ar/~mpagano/universal-algebra/}, we
+include several examples featuring both the use of equational reasoning
+and the preservation of models by signature morphisms.
 
+% We include several examples of use of the
+% library.  In contrast with other formalizations, we define operations
+% of signatures as a family indexed by arities, which we think carries
+% important benefits in the use of the library: The names of operations
+% are constructors of a family of datatypes and so it's possible to
+% perform pattern matching on them. Our representation of signature
+% allows to define infinite sorts and operations too. Much of the
+% library is based on heterogeneous vectors: while all the elements of a
+% vector are of the same type, in a heterogeneous vector they can have
+% different types. %\footnote{Similar to the construction proposed in %
+% \url{https://lists.chalmers.se/pipermail/agda/2010/001826.html}}
 
 
 %% Mencionar qué esperamos que sepan los lectores
-
 
 %is related with the interpretability of similarity types
 % in universal algebra (cf.\ \cite{garcia-84}), and has an extensive

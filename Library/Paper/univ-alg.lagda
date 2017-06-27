@@ -2,93 +2,79 @@
 \label{sec:univ-alg}
 
 In this section we present our formalization in Agda of the core
-concepts of heterogenouos universal algebra, up to the three
-isomorphism theorems and initiality of the term algebra. Our reference
-for heterogeneous universal algebra is Meinke' and Tucker's chapter
-\cite{meinke-tucker-1992}. We will recall some of the standard
-definitions in order to explain the most salient aspects of our
-formalization, and its more bureaucratic and less interesting parts
-will be omitted. The complete development is available at
-\url{https://cs.famaf.unc.edu.ar/~mpagano/universal-algebra/}.
+concepts of heterogenouos universal algebra; in the next two sections
+we focus respectively on equational logic and signature morphisms.
 
-\subsection{Signature, algebra and homomorphism}
+Meinke' and Tucker's chapter \cite{meinke-tucker-1992} is our
+reference for heterogeneous universal algebra; we will recall some
+definitions and state all the results we formalized. Bove et
+al.~\cite{agda-intro} offer a gentle introduction to Agda; we expect
+the reader to be familiar with Haskell or some other functional
+language.
 
-\paragraph{Signature.}
+\subsection{Signature, algebra, and homomorphism}
+
+\paragraph{Signature}
 
 A \emph{signature} is a pair of sets $(S,F)$, called \textit{sorts}
-and \textit{operations} (or \textit{function symbols})
-respectively. An operation is a triple $(f,[s_1,\ldots,s_n],s)$
-consisting of a \textit{name}, a list of sorts (its \textit{arity)},
-and another sort (its \textit{target sort}). We write operations as a
-type declaration $f : [s_1,...,s_n] \Rightarrow s$ and say ``$f$ has
-type $[s_1,...,s_n] \Rightarrow s$''.
+and \textit{operations} (or \textit{function symbols}) respectively;
+each operation is a triple $(f,[s_1,\ldots,s_n],s)$ consisting of a
+\textit{name}, its \textit{arity}, and the \textit{target sort} (we
+also use the notation $f \colon [s_1,...,s_n] \Rightarrow s$).
+Semantically, the sorts will be interpreted as sets and the
+function symbols as operations.
 
-We prefer to think of operations as a family of sets indexed by
-types. Thus, we represent signatures in Agda by a record with fields
-|sorts|, which is a Set, and |ops|, which is a family of sets indexed
-by the types of operations:
-
+In Agda we use dependent records (meaning that the type of some field
+may depend on the value of a previous one) to represent signatures.
+Type-theoretically one can take operations as a family of sets indexed
+by the arity and target sort, |A × B| corresponds to the
+non-dependent cartesian product of |A| and |B|.
 \begin{spec}
 record Signature : Set₁ where
   field
-    sorts  : Set
-    ops  : List sorts × sorts → Set 
-
-  Arity : Set
-  Arity = List sorts
+    sorts  :   Set
+    ops    :   List sorts × sorts → Set 
 \end{spec}
-
-\noindent
-This way of defining the set of operations admits of having an
-infinite number of sorts and operations, contrasting with Capretta's
-formalization where both the set of sorts and operations are
-finite. More important, we can define functions or predicates over
-operations of a given type.
-\manu{pensar en por qué es una ventaja
-  tener infinitos sorts y operaciones. Y encontrar algún predicado o
-  función interesante.}
-
-As an example, consider the signature for arithmetic and boolean
-expressions; we introduce operations with the same type in the
-same line.
+\noindent In order to declare a concrete signature one first declares
+the set of sorts and the set of operations, which are then bundled
+toghether in a record. For the mono-sorted signature of monoids has
+one sort --|tt| is the only element of the unit type |⊤|-- and two
+operations (note that constructors can start with a lower-case
+letter or a symbol).
 \begin{spec}
-data S : Set where nat : S ; bool : S 
-
-data O : (List S) × S → Set where
-  const       :  ℕ → O ([] , nat)
-  eq          :  O ([ nat , nat ] , bool)
-  and         :  O ([ bool , bool ] , bool)
-  plus        :  O ([ nat , nat ] , nat)
-
-Sig₁ : Signature
-Sig₁ = record { sorts = S ; ops = O }
+data monoid-op : List ⊤ × ⊤ → Set where
+   e : monoid-op ([ ] , tt)
+   ∙ : monoid-op ( tt ∷ [ tt ] , tt)
+monoid-sig : Signature
+monoid-sig = record { sorts = ⊤ ; ops = monoid-op }
 \end{spec}
-
-\noindent Notice that there is a constant operation |const n| for each
-natural number |n|, thus permitting a straightforward encoding of
-numbers as terminals of the abstract grammar of expressions.
-% ¿adelantar que frases de la gramática abstracta son las expresiones?
-Let us illustrate the possibility of proving properties of operations
-according to their types by showing that operations with target sort
-|nat| are monosorted:
+\noindent The signature of monoid actions has two sorts, one for the
+monoid and the other for the set on which the monoid acts (we declare
+both constructors in the same line).
 \begin{spec}
-data monoSorted {ar s} : ops (ar ↦ s) → Set where
-   isMono : (o : ops (ar ↦ s)) → All (_≡_ s) ar → monoSorted o  
-
-monoNat : ∀ {ar} → (o : O (ar  ↦ nat)) → monoSorted o
-monoNat (const n) = isMono (const n) []
-monoNat plus = isMono plus (_≡_.refl ∷ _≡_.refl ∷ [])
+data actMonₛ : Set where mon set : actMonₛ
+data actMonₒ : List actMonₛ × actMonₛ → Set where
+  e  : actMonₒ ([ ] , mon)
+  *  : actMonₒ (mon ∷ [ mon ] , mon)
+  ∙  : actMonₒ (mon ∷ [ set ] , set)
+actMon-sig : Signature
+actMon-sig = record { sorts = actMonₛ ; ops = actMonₒ }
 \end{spec}
-There are only two cases in |monoNat| because the other
-constructors of |O| have target sort |bool|.
+\noindent Defining operations as a family indexed by arities and target sorts
+carries some benefits in the use of the library: as in the above
+examples, the names of operations are constructors of a family of
+datatypes and so it is possible to perform pattern matching on
+them. Notice also that infinitary signatures can be represented in our
+setting; in fact, all the results are valid for any signature, be it
+finite or infinite.
 
 \paragraph{Algebra.}
 
-Usually, an \emph{algebra} $\mathcal{A}$ for the signature $\Sigma$,
-or a $\Sigma$-algebra, consists of a family of sets indexed by the
-sorts of $\Sigma$ and a family of functions indexed by the operations
-of $\Sigma$. We use $\mathcal{A}_s$ for the \emph{interpretation} or
-the \emph{carrier} of the sort $s$; given an operation
+An \emph{algebra} $\mathcal{A}$ for the signature $\Sigma$ consists of
+a family of sets indexed by the sorts of $\Sigma$ and a family of
+functions indexed by the operations of $\Sigma$. We use
+$\mathcal{A}_s$ for the \emph{interpretation} or the \emph{carrier} of
+the sort $s$; given an operation
 $f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a
 total function
 $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
@@ -97,21 +83,29 @@ hides is that carriers are pairs of a set and its equality; in
 type-theory one makes this structure apparent by using Bishop's sets
 (\ie sets paired with an equivalence relation) as the interpretation
 of sorts. In type-theory Bishop's sets are better known as setoids and
-they were thoroughly studied by Barthe et al.~\cite{barthe-setoids-2003}; in the
-following, we introduce the defintion of setoids in Agda and some
-constructions around them.
-
-Setoids are defined in the the standard library
-\cite{danielsson-agdalib} of Agda, which we conveniently use as far as
-possible, as a record with fields: the |Carrier : Set|, the relation
-|_≈_ : Rel Carrier|, and the proof that |IsEquivalence _≈_|. The
-operator | ∥_∥ | represents the forgetful functor from setoids to
-sets, so that | ∥ (A,_≈A_,_) ∥ = A|.\manu{Miguel pregunta si conviene
-notar que en Agda no hay coerciones} There is an obvious
-functor |setoid : Set → Setoid| which maps a type |A| to the setoid
-defined by the propositional equality over that type. In the standard
-library it is also defined the point-wise extension of two setoids 
-|A ×-setoid B|.
+they were thoroughly studied by Barthe et
+al.~\cite{barthe-setoids-2003}. Setoids are defined in the the
+standard library \cite{danielsson-agdalib} of Agda, which we
+conveniently use as far as possible, as a record with three fields.
+\begin{spec}
+record Setoid : Set₁ where
+  field
+    Carrier       : Set                     
+    _≈_           : Carrier → Carrier → Set 
+    isEquivalence : IsEquivalence _≈_       
+\end{spec}
+\noindent The relation is given as family of types indexed over a pair
+of elements of the carrier (|a b : Carrier| are related if the type |a
+≈ b| is inhabited); |IsEquivalence _≈_| is again a record whose fields
+correspond to the proofs of reflexivity, symmetry, and transitivity. A
+proof of reflexivity of |_≈_| is given by a function with type |(a :
+Carrier) → a ≈ a|; \ie a method that for each |a : Carrier| produces a
+proof for |a ≈ a|. The operator | ∥_∥ | represents the forgetful
+functor from setoids to sets, so that | ∥ (A,_≈A_,_) ∥ = A|. There is
+an obvious functor |setoid : Set → Setoid| which maps a type |A| to
+the setoid defined by the propositional equality over that type. In
+the standard library it is also defined the point-wise extension of
+two setoids |A ×-setoid B|.
 
 Once sorts are interpreted as setoids, operations should be
 interpreted as setoid morphisms; \ie functions which preserve the
@@ -441,3 +435,4 @@ pair of homomorphism are equal.
 %  |T|isInitial : Initial ∣T∣
 %  |T|isInitial A = ∣h∣→A A , ?
 %\end{spec}
+

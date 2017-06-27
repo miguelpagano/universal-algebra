@@ -323,13 +323,39 @@ module Theory₂ where
       ≈⟨ psubst axIdem∨ idSubst ∼⟨⟩ ⟩
         p
       ∎
-      
+
+    T₂⊢assoc∧ : Tbool₂ ⊢ eq↝ assocAnd₁
+    T₂⊢assoc∧ =
+      begin
+        {!!}
+      ≈⟨ {!!} ⟩
+        {!!}
+      ∎
+    
+    T₂⊢idem∧ : Tbool₂ ⊢ eq↝ idemAnd₁
+    T₂⊢idem∧ =
+      begin
+        ((p ≡ p) ≡ (p ∨ p))
+      ≈⟨ preemp (∼▹ (psubst axRefl≡ idSubst ∼⟨⟩) (∼▹ prefl ∼⟨⟩)) equiv₂ ⟩
+        (true₂ ≡ (p ∨ p))
+      ≈⟨ preemp (∼▹ prefl (∼▹ ((psubst axIdem∨ idSubst ∼⟨⟩)) ∼⟨⟩)) equiv₂ ⟩
+        (true₂ ≡ p)
+      ≈⟨ psubst axComm≡ σ ∼⟨⟩ ⟩
+        (p ≡ true₂)
+      ≈⟨ psubst axNeu≡ idSubst ∼⟨⟩ ⟩
+        p
+      ∎
+      where σ : Subst
+            σ ( _ , 0 ) = true₂
+            σ ( _ , 1 ) = p
+            σ n = term (inj₂ n) ⟨⟩
+    
     T₂⇒T₁ : Tbool₂ ⇒T~ Tbool₁
-    T₂⇒T₁ axAssoc∧ = {!!}
+    T₂⇒T₁ axAssoc∧ = T₂⊢assoc∧
     T₂⇒T₁ axComm∧ = {!!}
     T₂⇒T₁ axAssoc∨₁ = {!!}
     T₂⇒T₁ axComm∨₁ = {!!}
-    T₂⇒T₁ axIdem∧ = {!!}
+    T₂⇒T₁ axIdem∧ = T₂⊢idem∧
     T₂⇒T₁ axIdem∨₁ = T₂⊢idem∨
     T₂⇒T₁ axDist∧∨ = {!!}
     T₂⇒T₁ axDist∨∧ = {!!}
@@ -338,8 +364,6 @@ module Theory₂ where
     T₂⇒T₁ axDefF = {!!}
     T₂⇒T₁ ax3excl = {!!}
     T₂⇒T₁ noax₁
-
-
 
 -- Bool is model of Tbool₂
 module BoolModel₂ where

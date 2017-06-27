@@ -213,14 +213,17 @@ module Theory₂ where
   Form₂ : Set
   Form₂ = HU (Σbool₂ 〔 Vars₂ 〕) tt
 
+  var : Vars₁ tt → Vars₂ tt
+  var n = (tt , refl) , n
+
   varp : Vars₂ tt
-  varp = ((tt , refl) , 0)
+  varp = var 0
 
   varq : Vars₂ tt
-  varq = ((tt , refl) , 1)
+  varq = var 1
 
   varr : Vars₂ tt
-  varr = ((tt , refl) , 2)
+  varr = var 2
 
   module Smartcons where
   
@@ -311,7 +314,7 @@ module Theory₂ where
     open import Relation.Binary.EqReasoning (ProvSetoid Tbool₂ tt)
 
   
-    {- We have to proof each axiom of
+    {- We have to prove each axiom of
       Tbool₁ in theory Tbool₂ -}
 
     open Subst
@@ -349,7 +352,77 @@ module Theory₂ where
             σ ( _ , 0 ) = true₂
             σ ( _ , 1 ) = p
             σ n = term (inj₂ n) ⟨⟩
+
+
+{-
+  ⋀ p ≡ (q ≡ r)   ≈ ((p ≡ q) ≡ r)
+  ⋀ p ≡ q         ≈ (q ≡ p)
+  ⋀ p ∨ (q ∨ r)   ≈ ((p ∨ q) ∨ r)
+  ⋀ p ∨ q         ≈ (q ∨ p)
+  ⋀ p ≡ true₂     ≈ p
+  ⋀ p ≡ p         ≈ true₂
+  ⋀ p ∨ true₂     ≈ true₂
+  ⋀ p ∨ false₂    ≈ p
+  ⋀ p ∨ p         ≈ p
+  ⋀ p ∨ (q ≡ r)   ≈ ((p ∨ q) ≡ (p ∨ r)) 
+-}
+
+    T₂⊢defF : Tbool₂ ⊢ eq↝ defF
+    T₂⊢defF =
+      begin
+         (p ≡ (p ≡ false₂)) ≡ (p ∨ (p ≡ false₂))
+       ≈⟨ preemp (∼⟨⟨ psubst axAssoc≡ σ₁ ∼⟨⟩ ,
+                    psubst axDist∨≡ σ₁ ∼⟨⟩ ⟩⟩∼) ⟩
+         ((p ≡ p) ≡ false₂) ≡ ((p ∨ p) ≡ (p ∨ false₂))
+       ≈⟨ preemp (∼⟨⟨ preemp (∼⟨⟨ psubst axRefl≡ idSubst ∼⟨⟩ , prefl ⟩⟩∼) ,
+                     preemp (∼⟨⟨ psubst axIdem∨ idSubst ∼⟨⟩ ,
+                                psubst axNeu∨ idSubst ∼⟨⟩ ⟩⟩∼) ⟩⟩∼) ⟩
+         (true₂ ≡ false₂) ≡ (p ≡ p)
+       ≈⟨ preemp (∼⟨⟨ psubst axComm≡ σ₂ ∼⟨⟩ ,
+                     psubst axRefl≡ idSubst ∼⟨⟩ ⟩⟩∼) ⟩
+         (false₂ ≡ true₂) ≡ true₂
+       ≈⟨ preemp (∼⟨⟨ psubst axNeu≡ σ₃ ∼⟨⟩ , prefl ⟩⟩∼) ⟩
+         false₂ ≡ true₂
+       ≈⟨ psubst axNeu≡ σ₃ ∼⟨⟩ ⟩
+         false₂
+       ∎
+      where σ₁ : Subst
+            -- q ⟶ p ; r ⟶ false ; x ⟶ x
+            σ₁ (_ , 1) = p
+            σ₁ (_ , 2) = false₂
+            σ₁ x = term (inj₂ x) ⟨⟩
+            -- p ⟶ true ; q ⟶ false ; x ⟶ x
+            σ₂ : Subst
+            σ₂ (_ , 0) = true₂
+            σ₂ (_ , 1) = false₂
+            σ₂ x = term (inj₂ x) ⟨⟩
+            -- p ⟶ false ; x ⟶ x
+            σ₃ : Subst
+            σ₃ (_ , 0) = false₂
+            σ₃ x = term (inj₂ x) ⟨⟩
+            
+
     
+    T₂⊢3excl : Tbool₂ ⊢ eq↝ 3excl
+    T₂⊢3excl =
+      begin
+        p ∨ (p ≡ false₂)
+      ≈⟨ psubst axDist∨≡ σ₁ ∼⟨⟩ ⟩
+        (p ∨ p) ≡ (p ∨ false₂)
+      ≈⟨ preemp (∼⟨⟨ psubst axIdem∨ idSubst ∼⟨⟩ ,
+                   psubst axNeu∨ idSubst ∼⟨⟩ ⟩⟩∼) ⟩
+        p ≡ p
+      ≈⟨ psubst axRefl≡ idSubst ∼⟨⟩ ⟩
+        true₂
+      ∎
+      where σ₁ : Subst
+            -- q ⟶ p
+            σ₁ (_ , 1) = p
+            -- r ⟶ false
+            σ₁ (_ , 2) = false₂
+            -- x ⟶ x
+            σ₁ x = term (inj₂ x) ⟨⟩
+
     T₂⇒T₁ : Tbool₂ ⇒T~ Tbool₁
     T₂⇒T₁ axAssoc∧ = T₂⊢assoc∧
     T₂⇒T₁ axComm∧ = {!!}
@@ -361,8 +434,8 @@ module Theory₂ where
     T₂⇒T₁ axDist∨∧ = {!!}
     T₂⇒T₁ axAbs₁ = {!!}
     T₂⇒T₁ axAbs₂ = {!!}
-    T₂⇒T₁ axDefF = {!!}
-    T₂⇒T₁ ax3excl = {!!}
+    T₂⇒T₁ axDefF = T₂⊢defF
+    T₂⇒T₁ ax3excl = T₂⊢3excl
     T₂⇒T₁ noax₁
 
 -- Bool is model of Tbool₂

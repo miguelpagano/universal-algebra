@@ -21,7 +21,7 @@ and development \cite{sannella2012foundations}.
 In spite of the rich mathematical theory of heterogeneous algebras
 (mostly inherited from the monosorted setting, but not always
 \cite{tarlecki-nuances}), there are few publicly available
-formalizations in type-theory (which we discuss in the conclusion).
+formalizations in type theory (which we discuss in the conclusion).
 This situation is to be contrasted with impressive advances in
 mechanization of particular algebraic structures as witnessed, for
 example, by the proof of the Feit-Thompson theorem in Coq by Gonthier
@@ -29,16 +29,16 @@ and his team \cite{gonthier2013machine}.
 
 In this work we present an Agda library of multi-sorted universal
 algebra aiming both a reader with a background in the area of
-algebraic specifications and also the community of type-theory.  For
+algebraic specifications and also the community of type theory.  For
 the former, we try to explain enough Agda in order to keep the paper
 self-contained; we will recall the most important definitions of
 universal algebra. The main contributions of this paper are:
 \begin{enumerate*}[label=(\roman*),itemjoin={}]
 \item the first formalization of basic universal algebra in Agda;
-\item the first, to our knowledge, formalization in type-theory of
+\item the first, to our knowledge, formalization in type theory of
   derived signature morphisms and the reduct algebras induced by them;
 \item a novel representation of heterogeneous signatures in
-  type-theory, where operations are modelled using sets indexed by
+  type theory, where operations are modelled using sets indexed by
   arities; and
 \item an independent library of heterogeneous vectors.
 \end{enumerate*}

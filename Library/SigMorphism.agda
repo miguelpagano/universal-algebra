@@ -68,6 +68,26 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
   ↝ₛ : sorts Σₛ → sorts Σₜ
   ↝ₒ : ∀ {ar s}  → ops Σₛ (ar , s) → lmap ↝ₛ ar ⊩ ↝ₛ s
 
+-- module SigMorCat where
+
+--   module Id-mor (Σ : Signature) where
+--     open FormalTerm Σ
+--     id-π : (ar : Arity Σ) → HVec (λ _ → Fin (length ar)) ar
+--     id-π [] = ⟨⟩
+--     id-π (_ ∷ ar) = zero ▹ (map (λ _ x → suc x) (id-π ar))
+
+--     id-mor : Σ ↝ Σ
+--     id-mor = record { ↝ₛ = id
+--                     ; ↝ₒ = λ {ar} {s} f → f ∣$∣ {!!} -- (map (λ i x → {!# x!}) (id-π ar))
+--                     }
+          
+--   module ∘-mor (Σ₁ Σ₂ Σ₃ : Signature) where
+--     open FormalTerm
+--     open _↝_
+--     _∘↝_ : (m : Σ₁ ↝ Σ₂) (m' : Σ₂ ↝ Σ₃) → Σ₁ ↝ Σ₃
+--     m ∘↝ m' = record { ↝ₛ = λ s → ↝ₛ m' (↝ₛ m s)
+--                      ; ↝ₒ = {!!}
+--                      }
 
 {- Reduct algebras -}
 module ReductAlgebra {Σₛ Σₜ} (t : Σₛ ↝ Σₜ) where
@@ -106,9 +126,9 @@ module ReductHomo {Σₛ Σₜ}  {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
   hcond↝ : ∀ {l₀ l₁ l₂ l₃}
              {A : Algebra {l₀} {l₁} Σₜ}
              {A' : Algebra {l₂} {l₃} Σₜ}
-             {ty : Type Σₛ} → (h : Homo A A') → 
-             (f : ops Σₛ ty) → homCond 〈 A 〉 〈 A' 〉 (′ h ′ ∘ ↝ₛ t) f 
-  hcond↝  {A = A} {A'} {ar ↦ s} h f as = 
+             (h : Homo A A') → 
+             homCond 〈 A 〉 〈 A' 〉 (′ h ′ ∘ ↝ₛ t) 
+  hcond↝  {A = A} {A'} h {ar} {s} f as = 
                        subst (λ vec → Setoid._≈_ (A' ⟦ ↝ₛ t s ⟧ₛ)
                                     (′ h ′ (↝ₛ t s) ⟨$⟩
                                            ⟦_⟧⊩ A (↝ₒ t f) (reindex (↝ₛ t) as))

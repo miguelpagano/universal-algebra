@@ -25,7 +25,6 @@ pattern _↦_ ar s = (ar , s)
 open Setoid
 open import Setoids
 
-
 {- Multisort Signature -}
 record Signature : Set₁ where 
   field

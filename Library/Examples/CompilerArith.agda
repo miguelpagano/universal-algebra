@@ -199,8 +199,7 @@ enc E = record  {
                                     (f≈g σ) }
   }
 
-condEnc : ∀ {ty}  (f : ops Σₑ ty) →
-                  homCond Semₑ Execₑ enc f
+condEnc : homCond Semₑ Execₑ enc
 condEnc (val n)   ⟨⟩           (s , σ) = _≡_.refl
 condEnc (var v)   ⟨⟩           (s , σ) = _≡_.refl
 condEnc plus       ⟨⟨ f , g ⟩⟩  (s , σ) = _≡_.refl

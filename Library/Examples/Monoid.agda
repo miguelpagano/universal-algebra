@@ -16,7 +16,6 @@ open Signature
 open Algebra
 open Hom
 
-
 data op-mon : List ⊤ × ⊤ → Set where
   e    : op-mon ([] ↦ tt)
   op   : op-mon ((tt ∷ [ tt ]) ↦ tt)
@@ -24,6 +23,55 @@ data op-mon : List ⊤ × ⊤ → Set where
 
 Σ-mon : Signature
 Σ-mon = record { sorts = ⊤ ; ops = op-mon }
+
+
+
+{- Booleans with false and ∨ are a monoid. -}
+module ∨-Monoid where
+  open import Data.Bool
+  open import Relation.Binary.PropositionalEquality using (setoid;refl;_≡_)
+  open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
+
+  ∨-Monₛ : ⊤ → _
+  ∨-Monₛ tt = setoid Bool
+
+  ∨-Monₒ : ∀ {ar s } → ops Σ-mon (ar , s) → (∨-Monₛ ✳ ar) ⟶ ∨-Monₛ s
+  ∨-Monₒ e = record { _⟨$⟩_ = λ { ⟨⟩  → false }; cong = λ { ∼⟨⟩ → refl }}
+  ∨-Monₒ op = record { _⟨$⟩_ = ∨-fun ; cong = ∨-cong }
+         where ∨-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
+               ∨-fun (b ▹ b' ▹ ⟨⟩) = b ∨ b'
+               ∨-cong : ∀ {bs bs'} → _∼v_ {R = λ _ → _≡_} bs bs' → ∨-fun bs ≡ ∨-fun bs'
+               ∨-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
+
+  ∨-Alg : Algebra Σ-mon
+  ∨-Alg = ∨-Monₛ ∥ ∨-Monₒ
+
+
+  ∧-Monₛ : ⊤ → _
+  ∧-Monₛ tt = setoid Bool
+
+  ∧-Monₒ : ∀ {ar s } → ops Σ-mon (ar , s) → (∧-Monₛ ✳ ar) ⟶ ∧-Monₛ s
+  ∧-Monₒ e = record { _⟨$⟩_ = λ { ⟨⟩  → true }; cong = λ { ∼⟨⟩ → refl }}
+  ∧-Monₒ op = record { _⟨$⟩_ = ∧-fun ; cong = ∧-cong }
+         where ∧-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
+               ∧-fun (b ▹ b' ▹ ⟨⟩) = b ∧ b'
+               ∧-cong : ∀ {bs bs'} → _∼v_ {R = λ _ → _≡_} bs bs' → ∧-fun bs ≡ ∧-fun bs'
+               ∧-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
+
+  ∧-Alg : Algebra Σ-mon
+  ∧-Alg = ∧-Monₛ ∥ ∧-Monₒ
+
+  open import Morphisms
+  ¬-⟿ : ∨-Alg ⟿ ∧-Alg
+  ¬-⟿ = λ s → record { _⟨$⟩_ = λ x → not x ; cong = λ { refl → refl }}
+
+  ¬-cond : homCond ∨-Alg ∧-Alg ¬-⟿
+  ¬-cond {.[]} {.tt} e ⟨⟩ = refl
+  ¬-cond {.(tt ∷ tt ∷ [])} {.tt} op (false ▹ b' ▹ ⟨⟩) = refl
+  ¬-cond {.(tt ∷ tt ∷ [])} {.tt} op (true ▹ b' ▹ ⟨⟩) = refl
+
+  ¬-Hom : Homo ∨-Alg ∧-Alg
+  ¬-Hom = record { ′_′ = ¬-⟿ ; cond = ¬-cond }
 
 module Theory where
 

@@ -119,9 +119,9 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
   ⟦_⟧ {s} = _⟨$⟩_ (TΣX⇝A s)
 
   {- Homomorphism condition of TΣX⇝A -}
-  TΣXcond : ∀ {ty} (f : ops Σ ty) → (homCond (T Σ 〔 X 〕) A) TΣX⇝A f
-  TΣXcond {.[] , s} f ⟨⟩ = Setoid.refl (A ⟦ s ⟧ₛ)
-  TΣXcond {s₀ ∷ ar' , s} f (t ▹ ts) =
+  TΣXcond : (homCond (T Σ 〔 X 〕) A) TΣX⇝A
+  TΣXcond {.[]} {s} f ⟨⟩ = Setoid.refl (A ⟦ s ⟧ₛ)
+  TΣXcond {s₀ ∷ ar'} {s} f (t ▹ ts) =
                 ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩
                                             (TΣX⇝A s₀ ⟨$⟩ t) ▹ ts')
                                map↪≡map)

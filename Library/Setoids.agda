@@ -15,7 +15,7 @@ open Setoid
 
 {- Carrier -}
 ∥_∥ : ∀ {l₁ l₂} → (Setoid l₁ l₂) → Set l₁
-∥_∥ {l₁} {l₂} S = Carrier S
+∥ S ∥ =  Carrier S
 
 ≡to≈ : ∀ {ℓ₁ ℓ₂} → (S : Setoid ℓ₁ ℓ₂) →
          {x y : Carrier S } → x ≡ y → Setoid._≈_ S x y

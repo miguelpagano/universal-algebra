@@ -28,8 +28,6 @@
 \usepackage{bussproofs}
 \usepackage{ upgreek }
 \usepackage[inline]{enumitem}
-%\usepackage{minted}
-%\usemintedstyle{friendly}
 %format VecH' = Vec
 %format HVec  = Vec
 %format 〉 = ")"

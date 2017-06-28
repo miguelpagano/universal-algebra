@@ -351,7 +351,7 @@ MACRO {tcs} {"Theoretical Computer Science"}
 FUNCTION {write.url}
 { url empty$
     { skip$ }
-    { "\newline\urlprefix\url{" url * "}" * write$ newline$ }
+    { skip$}
   if$
 }
 

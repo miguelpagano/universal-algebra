@@ -22,6 +22,7 @@ open Signature
 open Setoid
 
 {- Homomorphism from A to B -}
+
 module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
        {Σ : Signature}
        (A : Algebra {ℓ₁} {ℓ₂} Σ) 
@@ -40,14 +41,12 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
 
 
   --Homomorphism condition
-  homCond : {ty : Type Σ} →
-            (h : _⟿_) → (f : ops Σ ty) → Set _
-  homCond {ty = (ar , s)} h f =
-            (as : A ⟦ ar ⟧ₛ*) → (h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as))
+  homCond : (h : _⟿_) → Set _
+  homCond h = ∀ {ar s} (f : ops Σ (ar , s)) → 
+            (as : A ⟦ ar ⟧ₛ*) → let _≈ₛ_ = _≈_ (B ⟦ s ⟧ₛ) in
+            (h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as))
                              ≈ₛ 
                              (B ⟦ f ⟧ₒ ⟨$⟩ (map⟿ h as))
-      where _≈ₛ_ : _
-            _≈ₛ_ = _≈_ (B ⟦ s ⟧ₛ)
 
   ℓ' : _
   ℓ' = lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)
@@ -57,7 +56,7 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
   record Homo : Set ℓ' where
     field
       ′_′    : _⟿_
-      cond  : ∀ {ty} (f : ops Σ ty) → homCond ′_′ f
+      cond  : homCond ′_′
 
   open Homo
   open ExtEq
@@ -99,8 +98,8 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
         where comp : A₀ ⟿ A₂
               comp s = ′ H₁ ′ s ∘ₛ ′ H₀ ′ s
   
-              ∘ₕcond :  ∀ {ty} (f : ops Σ ty) → homCond A₀ A₂ comp f
-              ∘ₕcond {ar , s} f as = 
+              ∘ₕcond : homCond A₀ A₂ comp 
+              ∘ₕcond {ar} {s} f as = 
                 begin
                   comp s ⟨$⟩ (A₀ ⟦ f ⟧ₒ ⟨$⟩ as)
                     ≈⟨ Π.cong (′ H₁ ′ s) (p₀ as) ⟩
@@ -114,10 +113,11 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
                       ty = (ar , s)
                       p₁ = cond H₁ f
                       p₀ = cond H₀ f
+                      propMapMorph :  _
                       propMapMorph = 
                         begin
                           A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₁ A₂ (′ H₁ ′) $
-                                              map⟿  A₀ A₁ (′ H₀ ′) as)
+                                              map⟿ A₀ A₁ (′ H₀ ′ ) as )
                             ≈⟨ ≡to≈ (A₂ ⟦ s ⟧ₛ) $ PE.cong (A₂ ⟦ f ⟧ₒ ⟨$⟩_ )
                                               (propMapV∘ as (_⟨$⟩_ ∘ ′ H₀ ′)
                                               (_⟨$⟩_ ∘ ′ H₁ ′)) ⟩
@@ -131,7 +131,7 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
 HomId : ∀ {ℓ₁ ℓ₂} {Σ} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
           Hom.Homo A A
 HomId {A = A} = record { ′_′ = λ s → FE.id
-                       ; cond = λ { {ar , s} f as →
+                       ; cond = λ { {ar} {s} f as →
                                     Π.cong (A ⟦ f ⟧ₒ)
                                     (≡to∼v (λ i → Setoid.isEquivalence (A ⟦ i ⟧ₛ))
                                     (PE.sym (mapId as))) }
@@ -161,8 +161,8 @@ invHomo {Σ = Σ} A A' h bj = record { ′_′ = h⁻¹
                                    }
   where h⁻¹ : A' ⟿ A
         h⁻¹ s =  from (bj s)
-        cond⁻¹ : ∀ {ty} (f : ops Σ ty) → homCond A' A h⁻¹ f
-        cond⁻¹ {ar , s} f as = 
+        cond⁻¹ : homCond A' A h⁻¹ 
+        cond⁻¹ {ar} {s} f as = 
                begin
                  h⁻¹ s ⟨$⟩ ((A' ⟦ f ⟧ₒ) ⟨$⟩ as)
                ≈⟨ Π.cong (h⁻¹ s) (Π.cong (A' ⟦ f ⟧ₒ)
@@ -412,8 +412,8 @@ QuotHom {Σ} A Q = record { ′_′ = fₕ
         fₕ s = record { _⟨$⟩_ = F.id
                       ; cong = PC-resp-~ {S = A ⟦ s ⟧ₛ} (rel Q s) (welldef Q s , (cequiv Q s)) }
           where open IsEquivalence
-        condₕ : ∀ {ty} (f : ops Σ ty) → homCond A (A / Q) fₕ f
-        condₕ {ar , s} f as = subst ((rel Q s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
+        condₕ : homCond A (A / Q) fₕ
+        condₕ {ar} {s} f as = subst ((rel Q s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
                                     (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) mapid≡)
                                     (IsEquivalence.refl (cequiv Q s))
           where open IsEquivalence

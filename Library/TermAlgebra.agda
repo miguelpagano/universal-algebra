@@ -72,9 +72,9 @@ map|T|→A≡map {ar = s ∷ ar} {t ▹ ts} {A} =
         fun|T|ₕ s = record { _⟨$⟩_ = ∣h∣→A {s = s} A
                            ; cong  = congfun {s}
                            }
-        |T|ₕcond : ∀ {ty} (f : ops Σ ty) → (homCond ∣T∣ A) fun|T|ₕ f
-        |T|ₕcond {_ ↦ s} f ⟨⟩ = ≡to≈ (A ⟦ s ⟧ₛ) PE.refl
-        |T|ₕcond {_ ↦ s} f (t ▹ ts) =
+        |T|ₕcond : (homCond ∣T∣ A) fun|T|ₕ
+        |T|ₕcond {_} {s} f ⟨⟩ = ≡to≈ (A ⟦ s ⟧ₛ) PE.refl
+        |T|ₕcond {_} {s} f (t ▹ ts) =
                  ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (λ ts' → A ⟦ f ⟧ₒ ⟨$⟩
                                  (∣h∣→A A t ▹ ts')) map|T|→A≡map)
 

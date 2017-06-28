@@ -66,8 +66,10 @@ The formalization is modularized in these files:
 	  Definition of two theories of bool algebras. Translation from one to
 	  another. Preservation of models.
   -- Monoid.agda
-          Definition of the theory of Monoids. Bijection between the standard
-	  library definition of monoids and the universal algebra approach.
+          Definition of the theory of Monoids. Examples of monoids and a
+	  homomorphism between them. 
+	  Bijection between the standard library definition of monoids
+	  and the universal algebra approach.	  
   -- Group.agda
 	  Definition of the theory of Groups, extending theory of Monoids.
   -- CompilerArith.agda
@@ -80,8 +82,10 @@ The formalization is modularized in these files:
 
 ** Using the library **
 
-You can load a file in emacs and type-check this with the command "C-c C-l".
-
+You can load a file in emacs and type-check it with the command "C-c C-l".
+Alternatively you can type-check from the command line:
+  $ agda Examples/Monoid.agda
+  
 A reference with commands to edit, type check and compile Agda code in emacs is
 available here:
 http://agda.readthedocs.io/en/v2.5.2/tools/emacs-mode.html

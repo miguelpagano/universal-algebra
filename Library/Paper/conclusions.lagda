@@ -2,7 +2,7 @@
 \label{sec:conclusions}
 
 As far as we know, heterogeneous universal algebra has not attracted a
-great interest in the academic community of type-theory. In this
+great interest in the academic community of type theory. In this
 paper, we have developed in Agda a library with the main concepts of
 heterogeneous universal algebra, up to the proof of three isomorphisms
 theorems and the freenes of the term algebra over a set of

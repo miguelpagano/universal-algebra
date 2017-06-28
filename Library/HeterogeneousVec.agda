@@ -79,6 +79,14 @@ data _⇨v_ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁
      ⇨v▹ : ∀ {i} {is} {v} {vs} → (pv : P i v) →
              (pvs : _⇨v_ P {is} vs) → P ⇨v (_▹_ {i = i} v vs)
 
+
+open import Data.Unit
+
+_*′ : ∀ {I } {A : I → Set} → (R : (i : I) →  (A i) → A i → Set) → {is : List I} →  (HVec A is) → (HVec A is) → Set
+(R *′) {[]} ⟨⟩ ⟨⟩ = ⊤
+(R *′) {x ∷ is} (v ▹ as) (v₁ ▹ as') = R x v v₁ × (R *′) as as'
+
+
 open import Relation.Unary using (Pred)
 _⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁) → 
            {is : List I} → Pred (HVec A is) (l₀ ⊔ l₁)
@@ -246,8 +254,8 @@ open Setoid
 
 HVecSet : ∀ {l₁ l₂} → (I : Set) → (A : I → Setoid l₁ l₂) →
                        List I → Setoid _ _
-HVecSet I A is = record { Carrier = HVec (λ i → Carrier $ A i) is
-                       ; _≈_ = _∼v_ {R = λ i → _≈_ (A i)}
+HVecSet I A is = record { Carrier = HVec (Carrier ∘ A) is
+                       ; _≈_ = _∼v_ {R = _≈_ ∘ A}
                        ; isEquivalence = record { refl = refl~v is
                                                 ; sym = sym~v is
                                                 ; trans = trans~v is }

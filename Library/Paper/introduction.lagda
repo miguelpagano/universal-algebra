@@ -10,7 +10,7 @@ seminal paper of Birkhoff \cite{birkhoff-70} features regular
 languages as a prominent example; shortly before Burstall
 \cite{burstall69} had proved properties of programs using structural
 induction, which is based on conceiving the language as an initial
-algebra.  The group ADJ promoted multi-sorted algebras as a key
+algebra.  The ADJ group promoted multi-sorted algebras as a key
 theoretical tool for specifying data
 types\cite{adj-abstract-data-types}, semantics \cite{goguen-77}, and
 compilers. More recent connections of universal
@@ -42,7 +42,7 @@ universal algebra. The main contributions of this paper are:
   arities; and
 \item an independent library of heterogeneous vectors.
 \end{enumerate*}
-We formalized the proof that the term algebra is inital and the three
+We formalized the proof that the term algebra is initial and the three
 isomorphism theorems; moreover we also define a deduction system for
 conditional equational logic and prove its soundness and completeness.
 We also showed that the translations of theories arising from derived

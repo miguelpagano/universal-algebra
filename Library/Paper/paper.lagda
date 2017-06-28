@@ -88,15 +88,12 @@
 \begin{frontmatter}
 \title{Formalization of Universal Algebra in Agda}
 \author[unc,coni]{Emmanuel Gunther
-   \thanksref{ALL}\thanksref{manumail}}
-  \author[unc,coni]{Alejandro Gadea\thanksref{ALL}\thanksref{alemail}}
-  \author[unc]{Miguel Pagano\thanksref{ALL}\thanksref{miguelmail}}
+   \thanksref{mails}}
+  \author[unc,coni]{Alejandro Gadea\thanksref{mails}}
+  \author[unc]{Miguel Pagano\thanksref{mails}}
   \address[unc]{FaMAF, UNC}
   \address[coni]{CONICET}
- \thanks[ALL]{Partially supported by PICT 2014-3058, ANPCyT, Argentina}
- \thanks[manumail]{Email:\mailto{gunther@@famaf.unc.edu.ar}}
- \thanks[alemail]{Email:\mailto{gadea@@famaf.unc.edu.ar}}
- \thanks[miguelmail]{Email:\mailto{pagano@@famaf.unc.edu.ar}}
+ \thanks[mails]{Email:\mailto{\{gunther,gadea,pagano\}@@famaf.unc.edu.ar}}
 
 \begin{abstract}
 In this work we present a novel formalization of

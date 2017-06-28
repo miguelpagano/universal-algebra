@@ -81,11 +81,11 @@ module Theory₁ where
   open Smartcons
 
   -- Equations for each axiom of the theory
-  assocAnd₁ : Eq₁
-  assocAnd₁ = ⋀ p ∧ (q ∧ r) ≈ ((p ∧ q) ∧ r)
+  assocAnd : Eq₁
+  assocAnd = ⋀ p ∧ (q ∧ r) ≈ ((p ∧ q) ∧ r)
 
-  commAnd₁ : Eq₁
-  commAnd₁ = ⋀ p ∧ q ≈ (q ∧ p)
+  commAnd : Eq₁
+  commAnd = ⋀ p ∧ q ≈ (q ∧ p)
 
   assocOr₁ : Eq₁
   assocOr₁ = ⋀ p ∨ (q ∨ r) ≈ ((p ∨ q) ∨ r)
@@ -93,17 +93,17 @@ module Theory₁ where
   commOr₁ : Eq₁
   commOr₁ = ⋀ p ∨ q ≈ (q ∨ p)
 
-  idemAnd₁ : Eq₁
-  idemAnd₁ = ⋀ p ∧ p ≈ p
+  idemAnd : Eq₁
+  idemAnd = ⋀ p ∧ p ≈ p
 
   idemOr₁ : Eq₁
   idemOr₁ = ⋀ p ∨ p ≈ p
 
-  distAndOr₁ : Eq₁
-  distAndOr₁ = ⋀ p ∧ (q ∨ r) ≈ ((p ∧ q) ∨ (p ∧ r))
+  distAndOr : Eq₁
+  distAndOr = ⋀ p ∧ (q ∨ r) ≈ ((p ∧ q) ∨ (p ∧ r))
 
-  distOrAnd₁ : Eq₁
-  distOrAnd₁ = ⋀ p ∨ (q ∧ r) ≈ ((p ∨ q) ∧ (p ∨ r))
+  distOrAnd : Eq₁
+  distOrAnd = ⋀ p ∨ (q ∧ r) ≈ ((p ∨ q) ∧ (p ∨ r))
 
   abs₁ : Eq₁
   abs₁ = ⋀ p ∧ (p ∨ q) ≈ p
@@ -120,9 +120,9 @@ module Theory₁ where
 
   {- The theory is a vector with the 12 axioms -}
   Tbool₁ : Theory Σbool₁ Vars₁ (replicate 12 tt)
-  Tbool₁ = assocAnd₁ ▹ commAnd₁ ▹ assocOr₁ ▹
-           commOr₁ ▹ idemAnd₁ ▹ idemOr₁ ▹
-           distAndOr₁ ▹ distOrAnd₁ ▹ abs₁ ▹
+  Tbool₁ = assocAnd ▹ commAnd ▹ assocOr₁ ▹
+           commOr₁ ▹ idemAnd ▹ idemOr₁ ▹
+           distAndOr ▹ distOrAnd ▹ abs₁ ▹
            abs₂ ▹ defF ▹ 3excl ▹ ⟨⟩
 
   {- An axiom of Tbool₁ is an element of the vector, so we need 
@@ -327,15 +327,7 @@ module Theory₂ where
         p
       ∎
 
-    T₂⊢assoc∧ : Tbool₂ ⊢ eq↝ assocAnd₁
-    T₂⊢assoc∧ =
-      begin
-        {!!}
-      ≈⟨ {!!} ⟩
-        {!!}
-      ∎
-    
-    T₂⊢idem∧ : Tbool₂ ⊢ eq↝ idemAnd₁
+    T₂⊢idem∧ : Tbool₂ ⊢ eq↝ idemAnd
     T₂⊢idem∧ =
       begin
         ((p ≡ p) ≡ (p ∨ p))
@@ -353,6 +345,53 @@ module Theory₂ where
             σ ( _ , 1 ) = p
             σ n = term (inj₂ n) ⟨⟩
 
+
+
+    T₂⊢assoc∨₁ : Tbool₂ ⊢ eq↝ assocOr₁
+    T₂⊢assoc∨₁ =
+     begin
+        p ∨ (q ∨ r)
+      ≈⟨ axAssoc∨ ∣ idSubst ⟩
+        (p ∨ q) ∨ r
+      ∎
+
+
+    T₂⊢comm∨₁ : Tbool₂ ⊢ eq↝ commOr₁
+    T₂⊢comm∨₁ =
+     begin
+        p ∨ q
+      ≈⟨ axComm∨ ∣ idSubst ⟩
+        q ∨ p
+      ∎
+
+
+    --p ∧ (p ∨ q) ≈ p
+    T₂⊢abs₁ : Tbool₂ ⊢ eq↝ abs₁
+    T₂⊢abs₁ =
+      begin
+        (p ≡ (p ∨ q)) ≡ (p ∨ (p ∨ q))
+      ≈⟨ preemp ∼⟨⟨ prefl , axAssoc∨ ∣ σ₁ ⟩⟩∼ ⟩
+        ((p ≡ (p ∨ q)) ≡ ((p ∨ p) ∨ q))
+      ≈⟨ preemp ∼⟨⟨ prefl , preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
+        (p ≡ (p ∨ q)) ≡ (p ∨ q)
+      ≈⟨ psym (axAssoc≡ ∣ σ₂) ⟩
+        p ≡ ((p ∨ q) ≡ (p ∨ q))
+      ≈⟨ preemp ∼⟨⟨ prefl , axRefl≡ ∣ σ₃ ⟩⟩∼ ⟩
+        (p ≡ true₂)
+      ≈⟨ axNeu≡ ∣ idSubst ⟩
+        p
+      ∎
+      where σ₁ : Subst
+            σ₁ (_ , 1) = p
+            σ₁ (_ , 2) = q
+            σ₁ x = term (inj₂ x) ⟨⟩
+            σ₂ : Subst
+            σ₂ (_ , 1) = p ∨ q
+            σ₂ (_ , 2) = p ∨ q
+            σ₂ x = term (inj₂ x) ⟨⟩
+            σ₃ : Subst
+            σ₃ (_ , 0) = p ∨ q
+            σ₃ x = term (inj₂ x) ⟨⟩
 
     T₂⊢abs₂ : Tbool₂ ⊢ eq↝ abs₂
     T₂⊢abs₂ =
@@ -441,16 +480,22 @@ module Theory₂ where
             -- x ⟶ x
             σ₁ x = term (inj₂ x) ⟨⟩
 
+    -- These proofs are tedious, so we postulate them.
+    postulate T₂⊢assoc∧ : Tbool₂ ⊢ eq↝ assocAnd
+    postulate T₂⊢comm∧ : Tbool₂ ⊢ eq↝ commAnd
+    postulate T₂⊢dist∧∨ : Tbool₂ ⊢ eq↝ distAndOr
+    postulate T₂⊢dist∨∧ : Tbool₂ ⊢ eq↝ distOrAnd
+
     T₂⇒T₁ : Tbool₂ ⇒T~ Tbool₁
     T₂⇒T₁ axAssoc∧ = T₂⊢assoc∧
-    T₂⇒T₁ axComm∧ = {!!}
-    T₂⇒T₁ axAssoc∨₁ = {!!}
-    T₂⇒T₁ axComm∨₁ = {!!}
+    T₂⇒T₁ axComm∧ = T₂⊢comm∧
+    T₂⇒T₁ axAssoc∨₁ = T₂⊢assoc∨₁
+    T₂⇒T₁ axComm∨₁ = T₂⊢comm∨₁
     T₂⇒T₁ axIdem∧ = T₂⊢idem∧
     T₂⇒T₁ axIdem∨₁ = T₂⊢idem∨
-    T₂⇒T₁ axDist∧∨ = {!!}
-    T₂⇒T₁ axDist∨∧ = {!!}
-    T₂⇒T₁ axAbs₁ = {!!}
+    T₂⇒T₁ axDist∧∨ = T₂⊢dist∧∨
+    T₂⇒T₁ axDist∨∧ = T₂⊢dist∨∧
+    T₂⇒T₁ axAbs₁ = T₂⊢abs₁
     T₂⇒T₁ axAbs₂ = T₂⊢abs₂
     T₂⇒T₁ axDefF = T₂⊢defF
     T₂⇒T₁ ax3excl = T₂⊢3excl

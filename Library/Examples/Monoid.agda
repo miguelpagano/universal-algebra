@@ -1,3 +1,7 @@
+{- Definition of the theory of Monoids. Examples of monoids and a
+   homomorphism between them. 
+   Bijection between the standard library definition of monoids
+   and the universal algebra approach. -}
 module Examples.Monoid where
 
 open import UnivAlgebra

@@ -109,7 +109,7 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
   _≈*_ : {ar : Arity Σ} → _
   _≈*_ {ar} = _≈_ (std ✳ ar)
 
-  -- these two proofs should be abstracted.
+
   ≈₁ : ∀ {ar} {vs vs' : ∥ std ✳ ar ∥} 
       → vs ≈* vs' → _≈_ (_⟦_⟧ₛ A ✳ ar) (map (λ _ → proj₁) vs) (map (λ _ → proj₁) vs')
   ≈₁ {[]} ∼⟨⟩ = ∼⟨⟩

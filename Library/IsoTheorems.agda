@@ -35,7 +35,7 @@ module FirstIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
   where homo₁ : Homo (A / Kernel h) B
         homo₁ = record { ′_′ = λ s → record { _⟨$⟩_ = λ a → ′ h ′ s ⟨$⟩ a
                                             ; cong = F.id }
-                       ; cond = λ { {ar , s} f as → cond h f as }
+                       ; cond = λ { f as → cond h f as }
                        }
         surj₁ : (s : sorts Σ) → Surjective (′ homo₁ ′ s)
         surj₁ s = record { from = record { _⟨$⟩_ = λ b → Surjective.from
@@ -83,8 +83,8 @@ module SecondIsoTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
         where
               act : (A / Φ) ⟿ ((A / Ψ) / theo₁)
               act s = record { _⟨$⟩_ = F.id ; cong = λ x → x }
-              condₕ : ∀ {ty} (f : ops Σ ty) →  homCond (A / Φ) ((A / Ψ) / theo₁) act f
-              condₕ {ar , s} f as = subst ((rel Φ s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
+              condₕ : homCond (A / Φ) ((A / Ψ) / theo₁) act
+              condₕ {ar} {s} f as = subst ((rel Φ s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
                                     (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) mapid≡)
                                     (IsEquivalence.refl (cequiv Φ s))
                 where open IsEquivalence
@@ -192,8 +192,7 @@ module ThirdIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                                      }
             mutual 
 
-              cond⇉ : {ty : _} (f : ops Σ ty) →
-                    homCond (SubAlgebra theo₂) (SubAlgebra B / theo₁) ⇉ f
+              cond⇉ : homCond (SubAlgebra theo₂) (SubAlgebra B / theo₁) ⇉
               cond⇉  f as = csubst Φ f  (cond⇉* as)
               cond⇉* : ∀ {ar} as →  map (λ _ → proj₁) (bs ar (map (λ _ → proj₁) as)
                                                          (⇨₂ as))

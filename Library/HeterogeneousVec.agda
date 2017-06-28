@@ -29,6 +29,7 @@ data _∈_ {l} {I} {A : I → Set l} : {i : I} {is : List I} → A i →
                    (v∈vs : v ∈ vs) → v ∈ w ▹ vs
 
 
+
 -- Operations
 
 {- List indexing. -}
@@ -136,6 +137,7 @@ data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} 
            R i t₁ t₂ → _∼v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ∼v (t₂ ▹ ts₂)
 
 pattern ∼⟨⟨_,_⟩⟩∼ a b = ∼▹ a (∼▹ b ∼⟨⟩)
+
 
 _* : ∀ {l₀ l₁ I} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁)
 R * = _∼v_ {R = R}

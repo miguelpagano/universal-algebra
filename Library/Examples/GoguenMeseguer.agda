@@ -240,9 +240,11 @@ module EqBool1 where
             sat noax 
 
 
-    -- We could use soundness to prove this absurd. But we should
-    -- give an environment from a non-empty set of variables to
-    -- an empty carrier set.
+    {- We could use soundness to prove this absurd. But we should
+       give an environment from a non-empty set of variables to
+       an empty carrier set. -}
+    -- You can uncomment the next function and try to fill the hole.
+{-
     abs : true ≡ false
     abs = soundness t≈f model ismodel env ∼⟨⟩
       where open Proof
@@ -250,5 +252,5 @@ module EqBool1 where
             env {bool} v = true
             -- We cannot give an element of ⊥
             env {a} v = {!!}
-
+-}
 

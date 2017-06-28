@@ -1,3 +1,4 @@
+{- Definition of the theory of Groups, extending theory of Monoids. -}
 module Examples.Group where
 
 open import UnivAlgebra

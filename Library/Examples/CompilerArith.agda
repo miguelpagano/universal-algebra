@@ -1,6 +1,5 @@
 {- A compiler of an arithmetic language to a stack-based
    machine, proved correct via Universal Algebra -}
-
 module Examples.CompilerArith where
 
 open import UnivAlgebra

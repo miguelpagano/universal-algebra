@@ -22,8 +22,6 @@ and \textit{operations} (or \textit{function symbols}) respectively;
 each operation is a triple $(f,[s_1,\ldots,s_n],s)$ consisting of a
 \textit{name}, its \textit{arity}, and the \textit{target sort} (we
 also use the notation $f \colon [s_1,...,s_n] \Rightarrow s$).
-Semantically, the sorts will be interpreted as sets and the
-function symbols as operations.
 
 In Agda we use dependent records to represent signatures; in dependent
 records the type of some field may depend on the value of a previous
@@ -41,11 +39,12 @@ record Signature : Set₁ where
 \end{spec}
 \noindent In order to declare a concrete signature one first declares
 the set of sorts and the set of operations, which are then bundled
-together in a record.  The mono-sorted signature of monoids has an
+together in a record.  For example, the mono-sorted signature of monoids has an
 unique sort, so we use the unit type |⊤| with its sole constructor
 |tt|. We define a family indexed on |List ⊤ x ⊤|, with two constructors,
-corresponding with the operations (note that constructors can
-start with a lower-case letter or any symbol).\vspace{-6pt}
+corresponding with the operations: a 0-ary operation |e|, and a binary
+operation |∙| (note that constructors can
+start with a lower-case letter or any symbol):\vspace{-6pt}
 \begin{spec}
 data monoid-op : List ⊤ × ⊤ → Set where
    e : monoid-op ([ ] , tt)
@@ -119,14 +118,15 @@ record Setoid : Set₁ where
 \noindent The relation is given as a family of types indexed over a pair
 of elements of the carrier (|a b : Carrier| are related if the type |a
 ≈ b| is inhabited); |IsEquivalence _≈_| is again a record whose fields
-correspond to the proofs of reflexivity, symmetry, and transitivity. A
-proof of reflexivity of |_≈_| is given by a function with type |(a :
-Carrier) → a ≈ a|; \ie a method that for each |a : Carrier| produces a
-proof for |a ≈ a|. The finest equivalence relation over any set is given
+correspond to the proofs of reflexivity, symmetry, and transitivity.
+
+The finest equivalence relation over any set is given
 by the \emph{propositional equality} which only equates each element with
-itself, thus we can endow any set with a setoid structure; vice versa, there
+itself, thus we can endow any set with a setoid structure with the function
+|setoid : Set → Setoid| of standard library; vice versa, there
 is a forgetful functor | ∥_∥ : Setoid → Set | which returns the carrier.
-Setoid morphisms are functions which preserve the equality.\vspace{-6pt}
+
+Setoid morphisms are functions which preserve the equality:\vspace{-6pt}
 \begin{spec}
 record _⟶_ (A B : Setoid) : Set where
   field
@@ -153,7 +153,9 @@ record Algebra (Σ : Signature) : Set₁  where
     _⟦_⟧ₛ    : sorts Σ → Setoid
     _⟦_⟧ₒ    : ∀  {ar s} → ops Σ (ar , s) → _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 \end{spec}
-\noindent We invite the interested reader to browse the examples to
+\noindent If |A| is an algebra for the signature |monoid-sig|, then
+|A ⟦ tt ⟧ₛ| is the carrier, |A ⟦ e ⟧ₒ| and |A ⟦ ∙ ⟧ₒ| are the interpretations
+of the operations. We invite the interested reader to browse the examples to
 see algebras for the signatures we shown, which cannot be given here
 for lack of space.
 
@@ -194,8 +196,7 @@ record Homo {Σ} (A B : Algebra Σ) : Set where
     ′_′ : A ⟿ B
     cond : homCond ′_′
 \end{spec}
-\noindent 
-As expected, we have the identity homomorphism |Idₕ A : Homo A A| and
+\noindent As expected, we have the identity homomorphism |Idₕ A : Homo A A| and
 the composition |G ∘ₕ F : Homo A C| of homomorphisms |F : Homo A B|
 and |G : Homo B C|. It is also expected that |F ∘ₕ Idₕ A| and |F| are
 equal in some sense. Since Agda is based on an
@@ -237,14 +238,14 @@ $ f : [s_1, \ldots,s_n] \Rightarrow s$ the following condition holds
 \noindent As shown by Salvesen and Smith \cite{salvesen-subsets},
 subsets cannot be added as a construction in intensional type theory
 because they lack desirable properties. If |A : Set| and |P : A → Set|
-is a predicate over |A|, then one can represent the subset |{ a ∈ A :
-  P a}| as the dependent sum |Σ[ a ∈ A ] P| whose inhabitants are
+is a predicate over |A|, then one can represent the subset containing the
+elements on |A| that satisfy |P| as the dependent sum |Σ[ a ∈ A ] P| whose inhabitants are
 pairs |(a , p)| where |a : A| and |p : P a|.\comment{This is not so
   pleasant as there can be several proofs of |P a|.} Let us consider a
 setoid |A| and a predicate on its carrier |P : ∥ A ∥ → Set|; first
-notice that we can lift the subset construction to setoids by taking
-the equivalence relation as the relation on the first
-components. Moreover, we might assume that |P| is \emph{well-defined},
+notice that we can lift the subset construction to setoids, defining
+the equivalence relation |(a , q) ≈ (a' , q')| iff |a ≈ a'|.
+Moreover, we might assume that |P| is \emph{well-defined},
 which means that |a ≈A a'| and |P a| imply
 |P a'|.
 \begin{spec}
@@ -259,7 +260,10 @@ but we still need to formalize the condition \eqref{eq:opclosed}.  Let
     opClosed P = ∀ {ar s} (f : ops Σ (ar , s)) → (P * ⟨→⟩ P s) (A ⟦ f ⟧ₒ ⟨$⟩_)
 \end{spec}
 \noindent |(Q ⟨→⟩ R) f| can be read as the pre-condition |Q| implies
-post-condition |R| after applying |f|. In summary, given an algebra
+post-condition |R| after applying |f|; so |opClosed f| asserts that if a vector |a*|
+satisfies the predicate |P|, then the application of the interpretation A ⟦ f ⟧ₒ
+to |a*| satisfies |P|, according with equation \eqref{eq:opclosed}.
+In summary, given an algebra
 |A| for the signature |Σ| and family |P| of predicates, such that |P
 s| is well-defined for every sort |s| and |P| is |opClosed| we can
 define the |SubAlgebra A P| \vspace{-6pt}

@@ -3,7 +3,7 @@
 \label{sec:univ-alg}
 
 In this section we present our formalization in Agda of the core
-concepts of heterogenouos universal algebra; in the next two sections
+concepts of heterogeneous universal algebra; in the next two sections
 we focus respectively on equational logic and signature morphisms.
 
 Meinke' and Tucker's chapter \cite{meinke-tucker-1992} is our
@@ -41,7 +41,7 @@ record Signature : Set₁ where
 \end{spec}
 \noindent In order to declare a concrete signature one first declares
 the set of sorts and the set of operations, which are then bundled
-toghether in a record.  The mono-sorted signature of monoids has an
+together in a record.  The mono-sorted signature of monoids has an
 unique sort, so we use the unit type |⊤| with its sole constructor
 |tt|. We define a family indexed on |List ⊤ x ⊤|, with two constructors,
 corresponding with the operations (note that constructors can
@@ -124,7 +124,7 @@ proof of reflexivity of |_≈_| is given by a function with type |(a :
 Carrier) → a ≈ a|; \ie a method that for each |a : Carrier| produces a
 proof for |a ≈ a|. The finest equivalence relation over any set is given
 by the \emph{propositional equality} which only equates each element with
-itself, thus we can endow any set with a setoid structure; viceversa, there
+itself, thus we can endow any set with a setoid structure; vice versa, there
 is a forgetful functor | ∥_∥ : Setoid → Set | which returns the carrier.
 Setoid morphisms are functions which preserve the equality.\vspace{-6pt}
 \begin{spec}
@@ -133,7 +133,7 @@ record _⟶_ (A B : Setoid) : Set where
   _⟨$⟩_ : ∥ A ∥ → ∥ B ∥
   cong : ∀ {a a'} → _≈_ A a a' → _≈_ B (_⟨$⟩ a) (_⟨$⟩ a')
 \end{spec}
-\noindent Notice that |_⟶_| is a record parameterised on two setoids.
+\noindent Notice that |_⟶_| is a record parameterized on two setoids.
 The first field is the function, by declaring it mixfix one can
 write |f ⟨$⟩ a| when |f : A ⟶ B| and |a : ∥ A ∥ |; the second field is
 given by a function mapping equivalence proofs on the source setoid to
@@ -146,7 +146,7 @@ point-wise extension of |P| over heterogeneous vectors. We also use
 the point-wise extension to define the setoid of heterogeneous vectors
 given a family of setoids |A : I → Setoid| and write |A ✳ is| for the
 setoid of heterogeneous vectors with index |is|. Algebras are
-formalized as records parameterised on the signature.\vspace{-6pt}
+formalized as records parameterized on the signature.\vspace{-6pt}
 \begin{spec}
 record Algebra (Σ : Signature) : Set₁  where
   field
@@ -172,7 +172,7 @@ functions.
 In order to formalize homomorphisms we first introduce a
 notation for families of setoid morphisms indexed over sorts:\vspace{-6pt}
 \begin{spec}
-_⟿_ : ∀ Σ → Algebra Σ → Algebra Σ → Set
+_⟿_ : ∀ {Σ} → Algebra Σ → Algebra Σ → Set
 _⟿_ {Σ} A B = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
 \end{spec}
 \noindent We make explicit the implicit parameter |Σ| because
@@ -187,7 +187,7 @@ homCond {Σ} {A} {B} h = ∀ {ar s} (f : ops Σ (ar , s)) (as : ∥ A ⟦_⟧ₛ
 \end{spec}
 \noindent where |_≈ₛ_| is the equivalence relation of the setoid
 |B ⟦ s ⟧ₛ| and |map h| is the obvious extension of |h| over vectors.
-A homomorphism is a record parameterised by the source and target algebras\vspace{-6pt}
+A homomorphism is a record parameterized by the source and target algebras\vspace{-6pt}
 \begin{spec}
 record Homo {Σ} (A B : Algebra Σ) : Set where
   field
@@ -266,7 +266,7 @@ define the |SubAlgebra A P| \vspace{-6pt}
 \begin{spec}
 SubAlgebra : ∀ {Σ} A P → WellDef P → opClosed P → Algebra Σ
 \end{spec}
-\noindent In the subalgebra, an operation |f| ie interpreted by
+\noindent In the subalgebra, an operation |f| is interpreted by
 applying the interpretation of |f| in |A| to the first components of
 the argument (and use the fact that |P| is op-closed to show that
 the resulting value satisfies the predicate of the target sort).

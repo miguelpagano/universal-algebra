@@ -4,32 +4,32 @@ The propositional calculus of Dijkstra and Scholten \cite{dijkstra-scholten} is 
 boolean theory whose only non-constants operation are equivalence and
 disjunction. 
 \begin{spec}
-data Σops' : List ⊤ × ⊤ → Set where
-  f' t'    : Σops' ([] ↦ tt)
-  iff' or' : Σops' (([ tt , tt ]) ↦ tt)
+data bool-ops' : List ⊤ × ⊤ → Set where
+  f' t'    : bool-ops' ([] ↦ tt)
+  equiv' or' : bool-ops' (([ tt , tt ]) ↦ tt)
 
-Σbool' : Signature
-Σbool' = ⟨ ⊤ , Σops' ⟩
+bool-sig' : Signature
+bool-sig' = record { sorts = ⊤ , ops = bool-ops' }
 \end{spec}
 It is clear that one can translate recursively any term over
-|Σbool| to a term in |Σbool'| preserving its
+|bool-sig| to a term in |bool-sig'| preserving its
 semantics. % Tiene sentido decir cómo?
 An alternative and more general way is to specify how to translate
-each operation in |Σbool| using operations in |Σbool'|. In this way,
-any |Σbool'|-algebra can be seen as a |Σbool|-algebra: a
-|Σbool|-operation |f| is interpreted as the semantics of the
+each operation in |bool-sig| using operations in |bool-sig'|. In this way,
+any |bool-sig'|-algebra can be seen as a |bool-sig|-algebra: a
+|bool-sig|-operation |f| is interpreted as the semantics of the
 translation of |f|. In particular, the translation of formulas is
-recovered as the initial homomorphism between |∣T∣ Σbool| and the
-transformation of |∣T∣ Σbool'|. In this section we formalize the
+recovered as the initial homomorphism between |∣T∣ bool-sig| and the
+transformation of |∣T∣ bool-sig'|. In this section we formalize the
 concepts of \emph{derived signature morphism} and \emph{reduct
   algebra} as introduced, for example, by Sanella et al.~\cite{sannella2012foundations}.
 
 \subsection{Derived signature morphism}
 
-Although the disjunction from |Σbool| can be directly mapped to its
-namesake in |Σbool'|, there is no unary operation in |Σbool'| to
+Although the disjunction from |bool-sig| can be directly mapped to its
+namesake in |bool-sig'|, there is no unary operation in |bool-sig'| to
 translate the negation. In fact, we should be able to translate an
-operation as a combination of operations in |Σbool'| and
+operation as a combination of operations in |bool-sig'| and
 also refer to the arguments of the original operation.
 \newcommand{\sdash}[1]{\Vdash\!\!\!\!^{#1}}
 
@@ -69,7 +69,7 @@ A formal term specifies how to interpret an operation from the source
 signature in the target signature. The arity |ar'| specifies the sort
 of each argument of the original operation. For example, since the
 operation |neg| is unary, we can use one identifier when defining its
-translation. Notice that |Σbool| and |Σbool'| share the sorts; in
+translation. Notice that |bool-sig| and |bool-sig'| share the sorts; in
 general, one also consider a mapping between sorts.
 
 A \emph{derived signature morphism} consists of a mapping between sorts
@@ -82,7 +82,7 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
 \end{spec}
 \noindent We show the action of the morphism on the operations |neg| and |and|
 \begin{spec}
-  ops↝ : ∀  {ar s} → (f : Σops (ar ↦ s)) → map id ar ⊩ s
+  ops↝ : ∀  {ar s} → (f : bool-ops (ar ↦ s)) → map id ar ⊩ s
   ops↝ neg  = equiv' ∣$∣ ⟨⟨ # zero , f' ∣$∣ ⟨⟩ ⟩⟩
   ops↝ and  = equiv' ∣$∣ ⟨⟨ equiv' ∣$∣ ⟨⟨ p , q ⟩⟩ , or' ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
     where  p = # zero

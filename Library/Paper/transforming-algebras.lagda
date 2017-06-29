@@ -2,7 +2,7 @@
 \label{sec:trans}
 The propositional calculus of Dijkstra and Scholten \cite{dijkstra-scholten} is an alternative
 boolean theory whose only non-constants operation are equivalence and
-disjunction. 
+disjunction. \vspace{-6pt}
 \begin{spec}
 data bool-ops' : List ⊤ × ⊤ → Set where
   f' t'    : bool-ops' ([] ↦ tt)
@@ -59,7 +59,7 @@ sorts, and identifiers are pointers (like de Bruijn indices).
 \label{fig:formalterms}
 \end{figure}
 It can be formalized as an inductive family
-parameterized by arities and indexed by sorts. 
+parameterized by arities and indexed by sorts. \vspace{-6pt}
 \begin{spec}
  data _⊩_  (ar' : Arity Σ) : (sorts Σ) → Set where
    #_     : (n : Fin (length ar')) → ar' ⊩ (ar' ‼ n)
@@ -73,21 +73,20 @@ translation. Notice that |bool-sig| and |bool-sig'| share the sorts; in
 general, one also consider a mapping between sorts.
 
 A \emph{derived signature morphism} consists of a mapping between sorts
-and a mapping from operations to formal terms:
+and a mapping from operations to formal terms:\vspace{-6pt}
 \begin{spec}
 record _↝_ (Σₛ Σₜ : Signature) : Set where
   field
     ↝ₛ : sorts Σₛ → sorts Σₜ
     ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → (map ↝ₛ ar) ⊩ (↝ₛ s)
 \end{spec}
-\noindent We show the action of the morphism on the operations |neg| and |and|
+\noindent We show the action of the morphism on the operations |neg| and |and|\vspace{-6pt}
 \begin{spec}
   ops↝ : ∀  {ar s} → (f : bool-ops (ar ↦ s)) → map id ar ⊩ s
-  ops↝ neg  = equiv' ∣$∣ ⟨⟨ # zero , f' ∣$∣ ⟨⟩ ⟩⟩
   ops↝ and  = equiv' ∣$∣ ⟨⟨ equiv' ∣$∣ ⟨⟨ p , q ⟩⟩ , or' ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
-    where  p = # zero
-           q = # (suc zero)
 \end{spec}
+\noindent where |p = # zero| and |q = # (suc zero)|.
+
 \subsection{Transformation of Algebras}
 \newcommand{\intSign}[2]{#1 \hookrightarrow #2}
 \newcommand{\intTheo}[1]{\widetilde{\theory{#1}}}
@@ -107,7 +106,7 @@ the functor on algebras: the interpretation of a $\Sigma_s$-sort $s$ is given by
   $\algTrans{A}_s = \mathcal{A}_{(\mapSort{m}{s})}$ and 
 for interpreting an operation $f$ in the reduct algebra
 $\algTrans A$ we use the interpretation of the formal term $m f$, which
-is recursively defined by
+is recursively defined by\vspace{-6pt}
 \begin{spec}
   ⟦_⟧ₜ : ∀ {ar s} → ar ⊩ s → ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ A ⟦ s ⟧ₛ ∥
   ⟦ # n ⟧ₜ      as =  as ‼v n
@@ -122,7 +121,7 @@ We can formalize the reduct algebra in a direct way,
 however the interpretation of operations is a little more complicated,
 since we need to convince Agda that any vector |vs : VecH' (A ⟦_⟧ₛ ∘
 ↝ₛ) is| has also the type |VecH' A (map ↝ₛ is)|, which is accomplished
-by |reindex|-ing the vector.
+by |reindex|-ing the vector.\vspace{-6pt}
 \begin{spec}
 module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   ⟨_⟩ₛ :  → (s : sorts Σₛ) → Setoid
@@ -134,12 +133,8 @@ module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   _〈_〉 : Algebra Σₛ
   _〈_〉 = record { _⟦_⟧ₛ = ⟨_⟩ₛ , _⟦_⟧ₒ = ⟨_⟩ₒ }
 \end{spec}
-The action of the functor on homomorphism is also straightforward:
-\begin{spec}
-module ReductHomo {m : Σₛ ↝ Σₜ} {A A'} (H : Homo {Σₜ} A A')  where
-   〈_〉ₕ : Homo (m 〈 A 〉) (m 〈 A' 〉)
-   〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ m ; cond = ... }
-\end{spec}
+The action of the functor on homomorphisms is also straightforward,
+we do not it show for lack of space.
 
 \newcommand{\theory}[1]{\ensuremath{\mathit{E}_{#1}}}
 
@@ -155,8 +150,7 @@ $\langle \mathcal{A}_t \rangle \models \theory{s}$. Even better, if
 $\theory{t}$ is a stronger theory than the translated theory
 $\intTheo{s}$ and if $\mathcal{A}_t$ is a model for $\theory{t}$, we
 would like that the reduct algebra models $\theory{s}$. In Agda such a
-result would be realized as a function |⊨↝| with the following type
-(|↝* Eₛ| is the translation of |Eₛ|):
+result would be realized as a function |⊨↝| with the following type:\vspace{-6pt}
 \begin{spec}
  ⊨↝ : ∀ Aₜ Eₜ Eₛ → Aₜ ⊨ₘ Eₜ → (Eₜ ⊢T ↝* Eₛ ) → 〈 Aₜ 〉 ⊨ₘ Eₛ
 \end{spec}

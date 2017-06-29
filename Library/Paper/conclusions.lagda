@@ -4,36 +4,43 @@
 As far as we know, heterogeneous universal algebra has not attracted a
 great interest in the academic community of type theory. In this
 paper, we have developed in Agda a library with the main concepts of
-heterogeneous universal algebra, up to the proof of the three isomorphisms
-theorems and the freeness of the term algebra over a set of
-variables. In order to define the term algebra we have introduced
-heterogeneous vectors, which later turned out to be very useful in other
-parts of the library, for example as the set of axioms of finite
-theories and as premises of deduction rules.
+heterogeneous universal algebra, up to the proof of the three
+isomorphisms theorems and the freeness of the term algebra over a set
+of variables. In order to define the term algebra we have introduced
+heterogeneous vectors, which later turned out to be very useful in
+other parts of the library, for example as the set of axioms of finite
+theories and as premises of deduction rules. We further introduced a
+formal systems for conditional equational logic and proved its
+soundness and completeness. Finally, we defined a novel
+representation for (derived) signature morphisms and its associated
+contra-variant functor on algebras. We also show that, under some
+restrictions, this functor also preserves models.
 
-We further introduced a formal systems for conditional equational
-logic and prove its soundness and completeness with respect to Goguen
-and Meseguer satisfaction of multi-sorted equations. As a minimal
-example, we used this system to prove some theorems of (some)
-axiomatization of boolean algebras.
+\textit{Related Work.} Let us contrast our work with other
+formalizations covering some aspects of universal algebra. As far as
+we know, since Capretta's \cite{capretta-99} first mechanization of
+universal algebra and its further extension to equational logic in his
+thesis, the closest new works are Kahl's \cite{kahl-2011}'s
+formalization of allegories and the development of the algebraic
+hierarchy lead by Spitters \cite{spitters-algebraic-11}. Capretta
+considered only finitary signatures and his work does not encompass
+signature morphisms. Spitters and his co-workers developed some very
+preliminar definitions of universal algebra, because their goal is to
+use the notion of variety to define the algebraic hierarchy up to the
+construction of the reals; in particular they use Coq's typeclasses to
+have a cleaner representation of algebraic structures.
 
-Finally, we defined a novel representation for (derived) signature
-morphisms and its associated contra-variant functor on algebras. We
-also show that, under some restrictions, this functor also preserves
-models.
 
-We think that this development opened the path to several further
-work, in particular:
+\textit{Future Work.} We think that this development opened the path
+to several further work, in particular:
 \begin{enumerate*}[label=(\roman*),itemjoin={}]
-\item a natural step is to allow several deduction systems (leading to
-  a formalization of institutions);
+\item a natural step is to formalize institutions;
 \item consider algebras of binding structures as proposed by \cite{fiore-2010};
 \item introduce multi-sorted rewriting;
 \item formalize more of the mathematical theory behind universal algebra, for
-  example Birkhoff's (quasi)-variety characterization; 
+  example Birkhoff's (quasi)-variety characterization; and
 \item explore the idea of using completeness and soundness for
-  automating the proof of identities in algebraic structures; %braibant phd
-\item put the library at work by specifying abstract data types.
+  automating the proof of identities in algebraic structures. %braibant phd
 \end{enumerate*}
 
 

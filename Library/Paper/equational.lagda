@@ -1,7 +1,6 @@
 \section{Equational Logic}
 \label{sec:eqlog}
 
-
 In this section we introduce the notion of (conditional) equational
 theories and the corresponding notion of satisfiability of theories
 by algebras. Moreover we formalize (conditional) equational logic as
@@ -190,15 +189,11 @@ is stronger than $E'$, then any equation that can be deduced from $E'$
 can also be deduced from $E$ and any model of $E$ is also a model of
 $E'$
 
-
 \subsection{A theory for Boolean Algebras }
-In this section we show how to encode an axiomatization of Boolean
-Algebras. This example, taken from \cite{DBLP:conf/RelMiCS/RochaM08},
-shows that it is easy to specify equational theories in our framework.
-The full example is available in the ``Examples'' folder of the
-formalization.
-The signature is mono-sorted, so we use the unit type as its only
-sort.\vspace{-6pt}
+As an example we show a fragment (the full code is available in the
+cited URL) of the formalization of a Boolean Theory discussed in
+\cite{DBLP:conf/RelMiCS/RochaM08}.  The signature is mono-sorted, so
+we use the unit type as its only sort.\vspace{-6pt}
 \begin{spec}
 data bool-ops : List ⊤ × ⊤ → Set where
   f t    : bool-ops ([] ↦ tt)

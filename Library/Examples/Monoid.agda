@@ -39,8 +39,10 @@ module ∨-Monoid where
   ∨-Monₛ : ⊤ → _
   ∨-Monₛ tt = setoid Bool
 
+
   ∨-Monₒ : ∀ {ar s } → ops Σ-mon (ar , s) → (∨-Monₛ ✳ ar) ⟶ ∨-Monₛ s
-  ∨-Monₒ e = record { _⟨$⟩_ = λ { ⟨⟩  → false }; cong = λ { ∼⟨⟩ → refl }}
+  ∨-Monₒ e _⟨$⟩_ = λ {⟨⟩  → false }
+  ∨-Monₒ e cong = λ { ∼⟨⟩ → refl }
   ∨-Monₒ op = record { _⟨$⟩_ = ∨-fun ; cong = ∨-cong }
          where ∨-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
                ∨-fun (b ▹ b' ▹ ⟨⟩) = b ∨ b'

@@ -195,7 +195,7 @@ $E'$
 In this section we show how to encode an axiomatization of Boolean
 Algebras. This example, taken from \cite{DBLP:conf/RelMiCS/RochaM08},
 shows that it is easy to specify equational theories in our framework.
-The full example is available on the ``Examples'' folder of the
+The full example is available in the ``Examples'' folder of the
 formalization.
 The signature is mono-sorted, so we use the unit type as its only
 sort.\vspace{-6pt}

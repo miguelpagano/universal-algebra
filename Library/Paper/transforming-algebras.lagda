@@ -129,16 +129,16 @@ module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   ⟨ s ⟩ₛ = A ⟦ ↝ₛ m s ⟧ₛ
 
   ⟨_⟩ₒ :  ∀ {ar s} → ops Σₛ (ar ⇒ s) → (⟨_⟩ₛ) ✳ ar ⟶  ⟨ s ⟩ₛ
-  ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ m f ⟧ₜ ∘ reindex (↝ₛ m) ;  cong =  ?  }
+  ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ m f ⟧ₜ ∘ reindex (↝ₛ m) ;  cong = ...  }
 
   _〈_〉 : Algebra Σₛ
   _〈_〉 = record { _⟦_⟧ₛ = ⟨_⟩ₛ , _⟦_⟧ₒ = ⟨_⟩ₒ }
 \end{spec}
-The action of the functor on homomorphism is also straightforward: 
+The action of the functor on homomorphism is also straightforward:
 \begin{spec}
 module ReductHomo {m : Σₛ ↝ Σₜ} {A A'} (H : Homo {Σₜ} A A')  where
    〈_〉ₕ : Homo (m 〈 A 〉) (m 〈 A' 〉)
-   〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ m ; cond = ? }
+   〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ m ; cond = ... }
 \end{spec}
 
 \newcommand{\theory}[1]{\ensuremath{\mathit{E}_{#1}}}

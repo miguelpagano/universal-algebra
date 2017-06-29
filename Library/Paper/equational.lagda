@@ -15,7 +15,7 @@ sorts Σ → Set| a family of variables, we define a new signature
 extending |Σ| with |X| by taking the variables as new constants
 (i.e. , operations with arity []).
 \begin{spec}
-  _〔_〕 : (Σ : Signature) → (sorts Σ → Set) → Signature
+  _〔_〕 : (Σ : Signature) → (X : sorts Σ → Set) → Signature
   Σ 〔 X 〕 = record  { sorts = sorts Σ ; ops =  ops' }
      where   ops' ([] , s)   = ops Σ ([] , s) ⊎ X s
              ops' (ar , s)   = ops Σ (ar , s)
@@ -27,7 +27,7 @@ and target sort.
 It is easy to turn the term algebra of the extended signature
 into an algebra for the original signature:
 \begin{spec}
-∣T∣_〔_〕 : (Σ : Signature) → (sorts Σ → Set) → Algebra Σ
+∣T∣_〔_〕 : (Σ : Signature) → (X : sorts Σ → Set) → Algebra Σ
 ∣T∣ Σ 〔 X 〕  = record { _⟦_⟧ₛ = |T| (Σ 〔 X 〕) ⟦_⟧ₛ , _⟦_⟧ₒ = io }
   where  io {[]}  f  = |T| (Σ 〔 X 〕) ⟦ inj₁ f ⟧ₒ
          io {ar}  f  = |T| (Σ 〔 X 〕) ⟦ f ⟧ₒ
@@ -70,7 +70,7 @@ record Equation (Σ : Signature) (X : sorts Σ → Set) (s : sorts Σ) : Set whe
 \noindent A \emph{theory} over the signature $\Sigma$ is given by a
 vector of conditional equations.
 \begin{spec}
-Theory : (Σ : Signature) → (sorts Σ → Set) → (ar : List (sorts Σ)) → Set
+Theory : (Σ : Signature) → (X : sorts Σ → Set) → (ar : List (sorts Σ)) → Set
 Theory Σ X ar = HVec (Equation Σ X) ar
 \end{spec}
 Notice that in our formalization all the equations of a theory share

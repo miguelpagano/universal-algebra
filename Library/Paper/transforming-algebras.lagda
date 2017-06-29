@@ -132,7 +132,7 @@ module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ m f ⟧ₜ ∘ reindex (↝ₛ m) ;  cong =  ?  }
 
   _〈_〉 : Algebra Σₛ
-  _〈_〉 = 〈 ⟨_⟩ₛ , ⟨_⟩ₒ 〉
+  _〈_〉 = record { _⟦_⟧ₛ = ⟨_⟩ₛ , _⟦_⟧ₒ = ⟨_⟩ₒ }
 \end{spec}
 The action of the functor on homomorphism is also straightforward: 
 \begin{spec}

@@ -6,7 +6,7 @@ disjunction.
 \begin{spec}
 data bool-ops' : List ⊤ × ⊤ → Set where
   f' t'    : bool-ops' ([] ↦ tt)
-  equiv' or' : bool-ops' (([ tt , tt ]) ↦ tt)
+  equiv' or' : bool-ops' ([ tt , tt ] ↦ tt)
 
 bool-sig' : Signature
 bool-sig' = record { sorts = ⊤ , ops = bool-ops' }

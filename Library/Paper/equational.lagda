@@ -28,7 +28,7 @@ It is easy to turn the term algebra of the extended signature
 into an algebra for the original signature:
 \begin{spec}
 ∣T∣_〔_〕 : (Σ : Signature) → (sorts Σ → Set) → Algebra Σ
-∣T∣ Σ 〔 X 〕  = |T| (Σ 〔 X 〕) ⟦_⟧ₛ) ∥ io
+∣T∣ Σ 〔 X 〕  = record { _⟦_⟧ₛ = |T| (Σ 〔 X 〕) ⟦_⟧ₛ , _⟦_⟧ₒ = io }
   where  io {[]}  f  = |T| (Σ 〔 X 〕) ⟦ inj₁ f ⟧ₒ
          io {ar}  f  = |T| (Σ 〔 X 〕) ⟦ f ⟧ₒ
 \end{spec}
@@ -100,14 +100,14 @@ A ⊨ (⋀ eq if (_ , eqs)) = ∀ θ → ((θ ⊨ₑ_)* eqs) → θ ⊨ₑ eq
 \end{spec}
 
 \noindent We say that $\mathcal{A}$ is a \emph{model} of the theory
-$T$ if it satisfies each equation in $T$. As usual an equation is a
+$E$ if it satisfies each equation in $E$. As usual an equation is a
 logical consequence of a theory, if every model of the theory
 satisfies the equation.
 \begin{spec}
 _⊨ₘ_ : ∀ {Σ X ar} → (A : Algebra Σ) → (E : Theory Σ X ar) → Set
 A ⊨ₘ E = (A ,_⊨_)* E
 
-_⊨Σ_ : ∀ {Σ X ar s} → (Theory Σ X ar) → (Equation Σ X s) → Set
+_⊨Σ_ : ∀ {Σ X ar s} → (E : Theory Σ X ar) → (e : Equation Σ X s) → Set
 _⊨Σ_ {Σ} E e = (A : Algebra Σ) → A ⊨ₘ E → A ⊨ e
 \end{spec}%
 \comment{\noindent  We notice that we choose to formalize the notion of
@@ -195,6 +195,8 @@ $E'$
 In this section we show how to encode an axiomatization of Boolean
 Algebras. This example, taken from \cite{DBLP:conf/RelMiCS/RochaM08},
 shows that it is easy to specify equational theories in our framework.
+The full example is available on the ``Examples'' folder of the
+formalization.
 The signature is mono-sorted, so we use the unit type as its only
 sort.\vspace{-6pt}
 \begin{spec}

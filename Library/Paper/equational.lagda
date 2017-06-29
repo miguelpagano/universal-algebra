@@ -117,8 +117,8 @@ satisfability defined by \citet{huet-oppen}.}%
 multi-sorted equality logic is more subtle than expected. We formalize
 the system presented in \cite{goguen2005specifying}, shown in
 Fig.~\ref{fig:deduction}. The first three rules are reflexivity,
-symmetry and transitivity; the fourth rule allows to use an axiom
-provided one has proofs for every condition; finally, the last rule
+symmetry and transitivity; the fourth rule allows to use an axiom where
+is applied a substitution |σ|, provided one has proofs for every condition; finally, the last rule
 internalizes Leibniz rule, for replacing equals by equals in subterms.
 Notice that we can only prove identities and not quasiidentities.
 %Notice the absence of a rule for deducing

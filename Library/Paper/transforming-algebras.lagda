@@ -157,7 +157,7 @@ $\intTheo{s}$ and if $\mathcal{A}_t$ is a model for $\theory{t}$, we
 would like that the reduct algebra models $\theory{s}$. In Agda such a
 result would be realized as a function |⊨↝| with the following type:
 \begin{spec}
- ⊨↝ : ∀ Aₜ Thₜ Thₛ → Aₜ ⊨ₘ Thₜ → (Thₜ ⊢ ↝* Thₛ ) → 〈 Aₜ 〉 ⊨ₘ Thₛ
+ ⊨↝ : ∀ Aₜ Eₜ Eₛ → Aₜ ⊨ₘ Eₜ → (Eₜ ⊢ ↝* Eₛ ) → 〈 Aₜ 〉 ⊨ₘ Eₛ
 \end{spec}
 
 With the morphism $m : \intSign{\Sigma_s}{\Sigma_t}$, one can define

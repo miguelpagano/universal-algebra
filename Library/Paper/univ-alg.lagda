@@ -384,8 +384,8 @@ operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the vector
 the proof of |cong|, which is too long and tedious to be
 shown.\vspace{-6pt}
 \begin{spec}
-  T : (Σ : Signature) → Algebra Σ
-  T Σ = record  { _⟦_⟧ₛ = setoid ∘ (HU {Σ}) ; _⟦_⟧ₒ  = ∣_|ₒ }
+  ∣T∣ : (Σ : Signature) → Algebra Σ
+  ∣T∣ Σ = record  { _⟦_⟧ₛ = setoid ∘ (HU {Σ}) ; _⟦_⟧ₒ  = ∣_|ₒ }
     where | f ∣ₒ = record { _⟨$⟩_ = term f ; cong = ... }
 \end{spec}
 \noindent Terms can be interpreted in any algebra

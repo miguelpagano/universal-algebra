@@ -49,7 +49,6 @@
 %format _≈B_ = "\ensuremath{≈_{B}}"
 %format ≈A = "\ensuremath{≈_{A}}"
 %format ≈B = "\ensuremath{≈_{B}}"
-%format |T| = T
 %format |Tc| = "T_m"
 %format ∣h∣→A = |h|
 %format ∣h*∣→A = |h*|

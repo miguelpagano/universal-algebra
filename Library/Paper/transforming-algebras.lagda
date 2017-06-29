@@ -70,7 +70,7 @@ signature in the target signature. The arity |ar'| specifies the sort
 of each argument of the original operation. For example, since the
 operation |neg| is unary, we can use one identifier when defining its
 translation. Notice that |bool-sig| and |bool-sig'| share the sorts; in
-general, one also consider a mapping between sorts.
+general, one also considers a mapping between sorts.
 
 A \emph{derived signature morphism} consists of a mapping between sorts
 and a mapping from operations to formal terms:\vspace{-6pt}
@@ -83,6 +83,7 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
 \noindent We show the action of the morphism on the operations |neg| and |and|\vspace{-6pt}
 \begin{spec}
   ops↝ : ∀  {ar s} → (f : bool-ops (ar ↦ s)) → map id ar ⊩ s
+  ops↝ neg  = equiv' ∣$∣ ⟨⟨ p , f' ⟩⟩
   ops↝ and  = equiv' ∣$∣ ⟨⟨ equiv' ∣$∣ ⟨⟨ p , q ⟩⟩ , or' ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
 \end{spec}
 \noindent where |p = # zero| and |q = # (suc zero)|.

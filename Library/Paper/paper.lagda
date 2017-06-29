@@ -28,13 +28,14 @@
 \usepackage{bussproofs}
 \usepackage{ upgreek }
 \usepackage[inline]{enumitem}
-%format VecH' = Vec
-%format HVec  = Vec
+\newcommand{\setoidMor}{{\xrightarrow{\,\thickapprox\,}}}
+%format VecH' = HVec
 %format 〉 = ")"
 %format 〈 = "("
 %format ⟨⟨ = "\langle\!"
 %format ⟩⟩ = "\!\rangle"
-
+%format ⟶ = "\ensuremath{\setoidMor}"
+%format _⟶_ = "\ensuremath{\_\setoidMor\_}"
 %format _≈→_ = "\ensuremath{\_\mathop{≈_{\mathit{ext}}}\_}"
 %format ≈→ = "\ensuremath{≈_{\mathit{ext}}}"
 %format Equiv≈→ = "\ensuremath{\mathsf{Equiv}≈_{\mathit{ext}}}"
@@ -48,8 +49,8 @@
 %format _≈B_ = "\ensuremath{≈_{B}}"
 %format ≈A = "\ensuremath{≈_{A}}"
 %format ≈B = "\ensuremath{≈_{B}}"
-%format |T| = "\ensuremath{\mathcal{T}}"
-%format |Tc| = "\ensuremath{\mathcal{T}_m}"
+%format |T| = T
+%format |Tc| = "T_m"
 %format ∣h∣→A = |h|
 %format ∣h*∣→A = |h*|
 %format map|h|→A = map|h|

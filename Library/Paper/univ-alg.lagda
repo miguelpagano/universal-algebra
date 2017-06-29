@@ -48,7 +48,7 @@ start with a lower-case letter or any symbol):\vspace{-6pt}
 \begin{spec}
 data monoid-op : List ⊤ × ⊤ → Set where
    e : monoid-op ([ ] , tt)
-   ∙ : monoid-op ( tt ∷ [ tt ] , tt)
+   ∙ : monoid-op ( [ tt , tt ] , tt)
 monoid-sig : Signature
 monoid-sig = record { sorts = ⊤ ; ops = monoid-op }
 \end{spec}
@@ -56,11 +56,13 @@ monoid-sig = record { sorts = ⊤ ; ops = monoid-op }
 monoid and the other for the set on which the monoid acts (we declare
 both constructors in the same line).\vspace{-6pt}
 \begin{spec}
-data actMonₛ : Set where mon set : actMonₛ
+data actMonₛ : Set where
+  mon : actMonₛ
+  set : actMonₛ
 data actMonₒ : List actMonₛ × actMonₛ → Set where
   e  : actMonₒ ([ ] , mon)
-  *  : actMonₒ (mon ∷ [ mon ] , mon)
-  ∙  : actMonₒ (mon ∷ [ set ] , set)
+  *  : actMonₒ ([ mon , mon ] , mon)
+  ∙  : actMonₒ ([ mon , set ] , set)
 actMon-sig : Signature
 actMon-sig = record { sorts = actMonₛ ; ops = actMonₒ }
 \end{spec}
@@ -373,20 +375,17 @@ from the function symbols.  Sometimes this universe is called the
   data HU {Σ : Signature} : (s : sorts Σ) → Set where
     term : ∀  {ar s} → (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
 \end{spec}
-
-\noindent We use propositional equality to turn each
-$\mathcal{T}_s$ into a
-setoid, thus completing the interpretation of sorts. To interpret
-an operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the
-tuple $⟨t_1,\ldots,t_n⟩$ to the term
-$f(t_1,\ldots,t_n)$ in $\mathcal{T}_s$; we omit the proof
-of |cong|, which is too long and tedious to be shown.\vspace{-6pt}
+\noindent We use propositional equality to turn each |HUₛ| into a
+setoid, thus completing the interpretation of sorts. To interpret an
+operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the vector
+|⟨t₁,…,tₙ⟩ : HVec HU [s₁,…,sₙ]| to |term f ⟨t₁,…,tₙ⟩|; we omit
+the proof of |cong|, which is too long and tedious to be
+shown.\vspace{-6pt}
 \begin{spec}
-  T : (Σ : Signature) Algebra Σ
+  T : (Σ : Signature) → Algebra Σ
   T Σ = record  { _⟦_⟧ₛ = setoid ∘ (HU {Σ}) ; _⟦_⟧ₒ  = ∣_|ₒ }
     where | f ∣ₒ = record { _⟨$⟩_ = term f ; cong = ? }
 \end{spec}
-
 \noindent Terms can be interpreted in any algebra
 $\mathcal{A}$, yielding an homomorphism $h_A \colon \mathcal{T}
 \to \mathcal{A}$
@@ -395,15 +394,14 @@ $\mathcal{A}$, yielding an homomorphism $h_A \colon \mathcal{T}
 \] 
 \noindent We cannot translate this definition directly in Agda, instead
 we have to mutually define | ∣h∣→A | and its extension over vectors
-| ∣h*∣→A A {ar} : Vec HU ar → A ⟦ ar ⟧ₛ*|\vspace{-6pt}
+| ∣h*∣→A| \vspace{-6pt}
 \begin{spec}
-  ∣h∣→A : (A : Algebra Σ) → {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
+  ∣h∣→A : ∀ {Σ} → (A : Algebra Σ) → {s : sorts Σ} → HU s → ∥ A ⟦ s ⟧ₛ ∥
   ∣h∣→A A (term f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (∣h*∣→A ts)
 \end{spec}
 \noindent It is straightforward to prove that |∣h∣→A| preserves
 propositional equality and satisfies the homomorphism condition by
-construction; thus we know that there is a homomorphism | ∣h∣A : (A :
-Algebra Σ) → Homo (T Σ) A|; to finish the proof that | T Σ | is
-initial, we prove, by recursion on the structure of terms,that any
-pair of homomorphism are equal.
+construction. To finish the proof that | T Σ | is initial, we prove,
+by recursion on the structure of terms, that any pair of homomorphism
+are extensionally equal.
 

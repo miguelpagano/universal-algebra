@@ -253,19 +253,19 @@ Moreover, we might assume that |P| is \emph{well-defined},
 which means that |a ≈A a'| and |P a| imply
 |P a'|.
 \begin{spec}
-  WellDef : (A : Setoid) → Pred (∥ A ∥) → Set
+  WellDef : (A : Setoid) → (P : ∥ A ∥ → Set) → Set
   WellDef A P = ∀ {a a'} → a ≈A a' → P a → P a'
 \end{spec}
 \noindent A family of well-defined predicates will induce a subalgebra;
 but we still need to formalize the condition \eqref{eq:opclosed}.  Let
 |Σ| be a signature and |A| be an algebra for |Σ|.\vspace{-6pt}
 \begin{spec}
-    opClosed : ((s : sorts Σ) → ∥ A ⟦ s ⟧ₛ∥ → Set) → Set
+    opClosed : (P : (s : sorts Σ) → ∥ A ⟦ s ⟧ₛ∥ → Set) → Set
     opClosed P = ∀ {ar s} (f : ops Σ (ar , s)) → (P * ⟨→⟩ P s) (A ⟦ f ⟧ₒ ⟨$⟩_)
 \end{spec}
 \noindent |(Q ⟨→⟩ R) f| can be read as the pre-condition |Q| implies
-post-condition |R| after applying |f|; so |opClosed f| asserts that if a vector |a*|
-satisfies the predicate |P|, then the application of the interpretation A ⟦ f ⟧ₒ
+post-condition |R| after applying |f|; so |opClosed P f| asserts that if a vector |a*|
+satisfies the predicate |P|, then the application of the interpretation |A ⟦ f ⟧ₒ|
 to |a*| satisfies |P|, according with equation \eqref{eq:opclosed}.
 In summary, given an algebra
 |A| for the signature |Σ| and family |P| of predicates, such that |P
@@ -386,7 +386,7 @@ shown.\vspace{-6pt}
 \begin{spec}
   T : (Σ : Signature) → Algebra Σ
   T Σ = record  { _⟦_⟧ₛ = setoid ∘ (HU {Σ}) ; _⟦_⟧ₒ  = ∣_|ₒ }
-    where | f ∣ₒ = record { _⟨$⟩_ = term f ; cong = ? }
+    where | f ∣ₒ = record { _⟨$⟩_ = term f ; cong = ... }
 \end{spec}
 \noindent Terms can be interpreted in any algebra
 $\mathcal{A}$, yielding an homomorphism $h_A \colon \mathcal{T}

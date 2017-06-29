@@ -103,7 +103,7 @@ $\algTrans{A}$ the corresponding
 $\Sigma_s$-algebra, which is known as the \emph{reduct algebra with
   respect to the morphism} $m$. Let us sketch the construction of
 the functor on algebras: the interpretetion of a $\Sigma_s$-sort $s$ is given by
-$\algTrans{A}_s = \mathcal{A}_{\mapSort{m}{s}}$ and 
+  $\algTrans{A}_s = \mathcal{A}_{(\mapSort{m}{s})}$ and 
 for interpreting an operation $f$ in the reduct algebra
 $\algTrans A$ we use the interpretation of the formal term $m f$, which
 is recursively defined by
@@ -174,7 +174,7 @@ Under this restriction, we can prove the satisfaction property
 and furthermore the preservation of models between a theory $\theory{t}$
 and any weaker theory $\theory{s}$:
 \begin{spec}
- ⊨↝ : ∀ Aₜ Thₜ Thₛ → Aₜ ⊨T Thₜ → (Thₜ ⊢ ↝* Thₛ ) → 〈 Aₜ 〉 ⊨T Thₛ
+ ⊨↝ : ∀ Aₜ Thₜ Thₛ → Aₜ ⊨ₘ Thₜ → (Thₜ ⊢ ↝* Thₛ ) → 〈 Aₜ 〉 ⊨ₘ Thₛ
 \end{spec}
 We notice that this is somewhat inconvenient to use in practice for
 proving that from a model of the target theory one can obtain a model

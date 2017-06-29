@@ -90,7 +90,8 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
 \end{spec}
 \subsection{Transformation of Algebras}
 \newcommand{\intSign}[2]{#1 \hookrightarrow #2}
-\newcommand{\algTrans}[1]{\widetilde{\mathcal{#1}}}
+\newcommand{\intTheo}[1]{\widetilde{\theory{#1}}}
+\newcommand{\algTrans}[1]{\langle \mathcal{#1} \rangle}
 \newcommand{\mapSort}[2]{#1\,#2}
 \newcommand{\mapOp}[2]{#1\,#2}
 
@@ -140,47 +141,41 @@ module ReductHomo {m : Σₛ ↝ Σₜ} {A A'} (H : Homo {Σₜ} A A')  where
    〈 h 〉ₕ = record  { ′_′ = ′ h ′ ∘ ↝ₛ m ; cond = ? }
 \end{spec}
 
-\newcommand{\theory}[1]{\ensuremath{\mathit{Th}_{#1}}}
+\newcommand{\theory}[1]{\ensuremath{\mathit{E}_{#1}}}
 
-\subsection{Translation of theories} From a signature morphism $m :
-\intSign{\Sigma_s}{\Sigma_t}$ one gets the translation of ground |Σₛ|
-terms as the initial homomorphism from |T Σₛ| to |⟨ T Σₜ ⟩|; one may
-expect that, with an appropiate extension to variables, this
-translation applied to a theory $\theory{s}$ over $\Sigma_s$ yields a
-theory $\theory{t}$ over $\Sigma_t$. Moreover for
-$\mathcal{A}_t\models\theory{t}$, one would think that the reduct
-$\langle \mathcal{A}_t \rangle$ is a model of the original theory, \ie
-$\langle \mathcal{A}_t \rangle \models \theory{s}$. More generally, we
-allow that $\theory{t}$ be stronger than the translation of
-$\theory{s}$, meaning that the translation of every equation of
-$\theory{s}$ can be deduced from $\theory{t}$.
-
-Having a morphism $m : \intSign{\Sigma_s}{\Sigma_t}$, the translation
-of open terms (terms with variables) from |T Σₛ 〔 Xₛ 〕| to
-|T Σₜ 〔 Xₜ 〕| can be defined using initiality if we have a renaming
-function |↝ᵥ : {s : sorts Σₛ} → Xₛ s → Xₜ (m ↝ₛ s)|.\comment{, which
-  is used to define an environment |θ : Xₛ → T Σₜ 〔 Xₜ 〕| . Let us
-  remark that |Xₜ (m ↝ₛ s)| should be inhabited when |Xₛ s| is also
-  inhabited. This condition, however, is not enough to prove the
-  preservation of models.}  In general, however, we cannot prove the
-\emph{satisfaction property}:
-if a $\Sigma_t$-algebra models the translation of an equation, then its
-reduct models the original equation. The technical issue is the
-impossibility of defining a $\Sigma_t$-environment from a
-$\Sigma_s$-environment. There is a well-known solution which consists
-on restricting the set of variable of the target signature by letting
-$X_t = \bigcup_{s \in \Sigma_s , t = m \hookrightarrow s} X_s$.
-Under this restriction, we can prove the satisfaction property
-and furthermore the preservation of models between a theory $\theory{t}$
-and any weaker theory $\theory{s}$:
+\subsection{Translation of theories} From a signature morphism
+$m : \intSign{\Sigma_s}{\Sigma_t}$ one gets the translation of ground
+|Σₛ| terms as the initial homomorphism from |T Σₛ| to |⟨ T Σₜ ⟩|. With
+an appropiate extension to variables, this translation applied to a
+theory $\theory{s}$ over $\Sigma_s$ yields the theory $\intTheo{s}$
+over $\Sigma_t$. Moreover if $\mathcal{A}_t\models\intTheo{s}$, one
+would think that the reduct $\langle \mathcal{A}_t \rangle$ is a model
+of the original theory, \ie
+$\langle \mathcal{A}_t \rangle \models \theory{s}$. Even better, if
+$\theory{t}$ is a stronger theory than the translated theory
+$\intTheo{s}$ and if $\mathcal{A}_t$ is a model for $\theory{t}$, we
+would like that the reduct algebra models $\theory{s}$. In Agda such a
+result would be realized as a function |⊨↝| with the following type:
 \begin{spec}
  ⊨↝ : ∀ Aₜ Thₜ Thₛ → Aₜ ⊨ₘ Thₜ → (Thₜ ⊢ ↝* Thₛ ) → 〈 Aₜ 〉 ⊨ₘ Thₛ
 \end{spec}
-We notice that this is somewhat inconvenient to use in practice for
-proving that from a model of the target theory one can obtain a model
-of the original theory, but we think that this restriction can be 
-alleviated if the original variables of $\theory{t}$ are included
-in the calculated set of variables.
+
+With the morphism $m : \intSign{\Sigma_s}{\Sigma_t}$, one can define
+the translation of open terms from |T Σₛ 〔 Xₛ 〕| to |T Σₜ 〔 Xₜ 〕|
+using initiality if we also have a renaming function |↝ᵥ : {s : sorts
+  Σₛ} → Xₛ s → Xₜ (m ↝ₛ s)|. In general, however, we cannot prove the
+\emph{satisfaction property}: if a $\Sigma_t$-algebra models the
+translation of an equation, then its reduct models the original
+equation. The technical issue is the impossibility of defining a
+$\Sigma_t$-environment from a $\Sigma_s$-environment. There is a
+well-known solution which consists on restricting the set of variable
+of the target signature by letting
+$X_t = \bigcup_{s \in \Sigma_s , t = m \hookrightarrow s} X_s$.  Under
+this restriction, we can prove the satisfaction property and
+furthermore define the function |⊨↝|. We feel that such a restriction
+over the set of variables is somewhat inconvenient to use in practice,
+but it can be alleviated if the original variables of $\theory{t}$ are
+included in the calculated set of variables.
 
 % \paragraph{Implication of translated theories.}
 % From a signature translation $t : \intSign{\Sigma_s}{\Sigma_t}$, we

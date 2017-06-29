@@ -15,7 +15,7 @@ variables. Given a signature |Σ| and |X : sorts Σ → Set| a families of
 variables, we define a new signature extending |Σ| by taking the
 variables as new constants (i.e. , operations with arity []).
 \begin{spec}
-  _〔_〕 : (Σ : Signature) → (X : Vars Σ) → Signature
+  _〔_〕 : (Σ : Signature) → (sorts Σ → Set) → Signature
   Σ 〔 X 〕 = record  { sorts = sorts Σ ; ops =  ops' }
      where   ops' ([] , s)   = ops Σ ([] , s) ⊎ X s
              ops' (ar , s)   = ops Σ (ar , s)
@@ -29,7 +29,7 @@ $\Sigma \subseteq \Sigma'$ induces a contra-variant inclusion of
 algebras. In the particular case of enlarging a signature with
 variables we can make explicit the inclusion of the term algebras:
 \begin{spec}
-∣T∣_〔_〕 : (Σ : Signature) → (X : Vars Σ) → Algebra Σ
+∣T∣_〔_〕 : (Σ : Signature) → (sorts Σ → Set) → Algebra Σ
 ∣T∣ Σ 〔 X 〕  = |T| (Σ 〔 X 〕) ⟦_⟧ₛ) ∥ io
   where  io {[]}  f  = |T| (Σ 〔 X 〕) ⟦ inj₁ f ⟧ₒ
          io {ar}  f  = |T| (Σ 〔 X 〕) ⟦ f ⟧ₒ
@@ -63,16 +63,16 @@ heterogeneous vector of sorted identities . We declare a constructor
 to use the lighter notation |⋀ eq if (ar , eqs)| instead of |record {
   eq = e ; cond = (ar , eqs )}|. \vspace{-6pt}
 \begin{spec}
-record Equation (Σ : Signature) (X : sort Σ → Set) (s : sorts Σ) : Set where
+record Equation (Σ : Signature) (X : sorts Σ → Set) (s : sorts Σ) : Set where
   constructor ⋀_if_
   field
     eq     :   Eq Σ X s
-    cond   : Σ[ ar ∈ List (sorts Σ) ] (HVec (Eq Σ X) ar)
+    cond   :   Σ[ ar ∈ List (sorts Σ) ] (HVec (Eq Σ X) ar)
 \end{spec}
 \noindent A \emph{theory} over the signature $\Sigma$ is given by a
 vector of conditional equations.
 \begin{spec}
-Theory : (Σ : Signature) → (X : sorts Σ → Set) → (ar : Arity Σ) → Set
+Theory : (Σ : Signature) → (sorts Σ → Set) → (ar : List (sorts Σ)) → Set
 Theory Σ X ar = HVec (Equation Σ X) ar
 \end{spec}
 Notice that in our formalization all the equations of a theory share
@@ -97,7 +97,7 @@ _⊨ₑ_ θ {s} (t , t') = _≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧ θ) (⟦ t' ⟧ θ)
 \noindent Using the point-wise extension of this relation we can write
 directly the notion of satisfiability.
 \begin{spec} 
-_⊨_ : ∀ {Σ X} (A : Algebra Σ) → {s : sort Σ} → Equation Σ X s → Set
+_⊨_ : ∀ {Σ X} (A : Algebra Σ) → {s : sorts Σ} → Equation Σ X s → Set
 A ⊨ (⋀ eq if (_ , eqs)) = ∀ θ → ((θ ⊨ₑ_)* eqs) → θ ⊨ₑ eq
 \end{spec}
 

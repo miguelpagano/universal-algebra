@@ -155,9 +155,10 @@ $\langle \mathcal{A}_t \rangle \models \theory{s}$. Even better, if
 $\theory{t}$ is a stronger theory than the translated theory
 $\intTheo{s}$ and if $\mathcal{A}_t$ is a model for $\theory{t}$, we
 would like that the reduct algebra models $\theory{s}$. In Agda such a
-result would be realized as a function |⊨↝| with the following type:
+result would be realized as a function |⊨↝| with the following type
+(|↝* Eₛ| is the translation of |Eₛ|):
 \begin{spec}
- ⊨↝ : ∀ Aₜ Eₜ Eₛ → Aₜ ⊨ₘ Eₜ → (Eₜ ⊢ ↝* Eₛ ) → 〈 Aₜ 〉 ⊨ₘ Eₛ
+ ⊨↝ : ∀ Aₜ Eₜ Eₛ → Aₜ ⊨ₘ Eₜ → (Eₜ ⊢T ↝* Eₛ ) → 〈 Aₜ 〉 ⊨ₘ Eₛ
 \end{spec}
 
 With the morphism $m : \intSign{\Sigma_s}{\Sigma_t}$, one can define

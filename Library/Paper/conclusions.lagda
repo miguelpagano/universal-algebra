@@ -4,16 +4,16 @@
 As far as we know, heterogeneous universal algebra has not attracted a
 great interest in the academic community of type theory. In this
 paper, we have developed in Agda a library with the main concepts of
-heterogeneous universal algebra, up to the proof of three isomorphisms
-theorems and the freenes of the term algebra over a set of
+heterogeneous universal algebra, up to the proof of the three isomorphisms
+theorems and the freeness of the term algebra over a set of
 variables. In order to define the term algebra we have introduced
-heteregeneous vectors, which later turned out to be very useful in other
+heterogeneous vectors, which later turned out to be very useful in other
 parts of the library, for example as the set of axioms of finite
 theories and as premises of deduction rules.
 
 We further introduced a formal systems for conditional equational
 logic and prove its soundness and completeness with respect to Goguen
-and Messeguer satisfaction of multi-sorted equations. As a minimal
+and Meseguer satisfaction of multi-sorted equations. As a minimal
 example, we used this system to prove some theorems of (some)
 axiomatization of boolean algebras.
 

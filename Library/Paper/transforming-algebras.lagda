@@ -103,7 +103,7 @@ $\mathcal{A}$, we denote with
 $\algTrans{A}$ the corresponding
 $\Sigma_s$-algebra, which is known as the \emph{reduct algebra with
   respect to the morphism} $m$. Let us sketch the construction of
-the functor on algebras: the interpretetion of a $\Sigma_s$-sort $s$ is given by
+the functor on algebras: the interpretation of a $\Sigma_s$-sort $s$ is given by
   $\algTrans{A}_s = \mathcal{A}_{(\mapSort{m}{s})}$ and 
 for interpreting an operation $f$ in the reduct algebra
 $\algTrans A$ we use the interpretation of the formal term $m f$, which
@@ -146,7 +146,7 @@ module ReductHomo {m : Σₛ ↝ Σₜ} {A A'} (H : Homo {Σₜ} A A')  where
 \subsection{Translation of theories} From a signature morphism
 $m : \intSign{\Sigma_s}{\Sigma_t}$ one gets the translation of ground
 |Σₛ| terms as the initial homomorphism from |T Σₛ| to |⟨ T Σₜ ⟩|. With
-an appropiate extension to variables, this translation applied to a
+an appropriate extension to variables, this translation applied to a
 theory $\theory{s}$ over $\Sigma_s$ yields the theory $\intTheo{s}$
 over $\Sigma_t$. Moreover if $\mathcal{A}_t\models\intTheo{s}$, one
 would think that the reduct $\langle \mathcal{A}_t \rangle$ is a model
@@ -180,7 +180,7 @@ included in the calculated set of variables.
 % \paragraph{Implication of translated theories.}
 % From a signature translation $t : \intSign{\Sigma_s}{\Sigma_t}$, we
 % can think how to relate theories $Th_s$ and $Th_t$ of each signature
-% respectivelly.
+% respectively.
 
 % A first interesting definition is the translation of a
 % $\Sigma_s$-theory. It means, to translate each $\Sigma_s$-equation, and

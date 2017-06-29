@@ -13,7 +13,7 @@ induction, which is based on conceiving the language as an initial
 algebra.  The ADJ group promoted multi-sorted algebras as a key
 theoretical tool for specifying data
 types\cite{adj-abstract-data-types}, semantics \cite{goguen-77}, and
-compilers. More recent connections of universal
+compilers \cite{thatcher1981more}. More recent connections of universal
 algebra with computer science can be found in institutions as the
 foundation of methodologies and frameworks for software specification
 and development \cite{sannella2012foundations}.

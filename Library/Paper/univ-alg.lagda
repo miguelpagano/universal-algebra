@@ -243,7 +243,9 @@ $ f : [s_1, \ldots,s_n] \Rightarrow s$ the following condition holds
 subsets cannot be added as a construction in intensional type theory
 because they lack desirable properties. If |A : Set| and |P : A → Set|
 is a predicate over |A|, then one can represent the subset containing the
-elements on |A| that satisfy |P| as the dependent sum |Σ[ a ∈ A ] P| whose inhabitants are
+elements on |A| that satisfy |P| as the dependent sum\footnote{Do not confuse
+the syntax |Σ[_∈_]_| of dependent sum, with a variable |Σ : Signature|}
+|Σ[ a ∈ A ] P| whose inhabitants are
 pairs |(a , p)| where |a : A| and |p : P a|.\comment{This is not so
   pleasant as there can be several proofs of |P a|.} Let us consider a
 setoid |A| and a predicate on its carrier |P : ∥ A ∥ → Set|; first

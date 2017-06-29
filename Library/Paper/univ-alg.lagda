@@ -270,8 +270,8 @@ post-condition |R| after applying |f|; so |opClosed P f| asserts that if a vecto
 satisfies the predicate |P|, then the application of the interpretation |A ⟦ f ⟧ₒ|
 to |a*| satisfies |P|, according with equation \eqref{eq:opclosed}.
 In summary, given an algebra
-|A| for the signature |Σ| and family |P| of predicates, such that |P
-s| is well-defined for every sort |s| and |P| is |opClosed| we can
+|A| for the signature |Σ| and a family |P| of predicates, such that |P
+s| is well-defined for every sort |s| and |P| is |opClosed|, we can
 define the |SubAlgebra A P| \vspace{-6pt}
 \begin{spec}
 SubAlgebra : ∀ {Σ} A P → WellDef P → opClosed P → Algebra Σ
@@ -405,7 +405,7 @@ we have to mutually define | ∣h∣→A | and its extension over vectors
 \end{spec}
 \noindent It is straightforward to prove that |∣h∣→A| preserves
 propositional equality and satisfies the homomorphism condition by
-construction. To finish the proof that | T Σ | is initial, we prove,
+construction. To finish the proof that | ∣T∣ Σ | is initial, we prove,
 by recursion on the structure of terms, that any pair of homomorphism
 are extensionally equal.
 

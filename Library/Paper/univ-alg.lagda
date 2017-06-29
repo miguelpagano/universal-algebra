@@ -26,18 +26,20 @@ also use the notation $f \colon [s_1,...,s_n] \Rightarrow s$).
 In Agda we use dependent records to represent signatures; in dependent
 records the type of some field may depend on the value of a previous
 one or parameters of the record. Type-theoretically one can take
-operations as a family of sets indexed by the arity and target sort
+operations (of a signature) as a family of sets indexed by the arity and target sort
 (an indexed family of sets can also be thought as predicates over the
 index set, an index satisfies the predicate if its family is
-inhabited), |A × B| corresponds to the non-dependent cartesian product
-of |A| and |B|.\vspace{-6pt}
+inhabited):\vspace{-6pt}
 \begin{spec}
 record Signature : Set₁ where
   field
     sorts  :   Set
     ops    :   List sorts × sorts → Set 
 \end{spec}
-\noindent In order to declare a concrete signature one first declares
+\noindent |A × B| corresponds to the non-dependent cartesian product
+of |A| and |B|.
+
+In order to declare a concrete signature one first declares
 the set of sorts and the set of operations, which are then bundled
 together in a record.  For example, the mono-sorted signature of monoids has an
 unique sort, so we use the unit type |⊤| with its sole constructor
@@ -87,15 +89,15 @@ $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
 \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. 
 We formalize the product $\mathcal{A}_{s_1} \times ... \times
 \mathcal{A}_{s_n}$ as \emph{heterogeneous vectors}. The
-type of heterogeneous vectors is parameterized by a set of codes
-(sorts) and a family of sets indexed by those codes and indexed over a
-list of codes:\vspace{-6pt}
+type of heterogeneous vectors is parameterized by a set |I|
+and a family of sets indexed by |I|; and is indexed over a
+list of |I|:\vspace{-6pt}
 \begin{spec}
 data HVec {I : Set}  (A : I → Set) : List I → Set where
   ⟨⟩    :  HVec A []
   _▹_   :  ∀  {i is} → A i → HVec A is → HVec A (i ∷ is)
 \end{spec}
-\noindent The first parameter |I| is implicit, which means that Agda
+\noindent The first parameter |I| is implicit (written in braces), which means that Agda
 will infer it by unification; notices that the constructor |_▹_| also
 takes two implicit arguments (we use the notation |∀| to skip their
 types). Let |Σ| be a signature and |A : sorts Σ → Set|, then the

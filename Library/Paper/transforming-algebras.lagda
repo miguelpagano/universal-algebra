@@ -122,7 +122,7 @@ We can formalize the reduct algebra in a direct way,
 however the interpretation of operations is a little more complicated,
 since we need to convince Agda that any vector |vs : VecH' (A ⟦_⟧ₛ ∘
 ↝ₛ) is| has also the type |VecH' A (map ↝ₛ is)|, which is accomplished
-by |reindex|-ing the vector.\vspace{-6pt}
+by |reindex|-ing the vector (we omit the proof of |cong|):\vspace{-6pt}
 \begin{spec}
 module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   ⟨_⟩ₛ :  → (s : sorts Σₛ) → Setoid
@@ -141,7 +141,7 @@ we do not it show for lack of space.
 
 \subsection{Translation of theories} From a signature morphism
 $m : \intSign{\Sigma_s}{\Sigma_t}$ one gets the translation of ground
-|Σₛ| terms as the initial homomorphism from |T Σₛ| to |⟨ T Σₜ ⟩|. With
+|Σₛ| terms as the initial homomorphism from |∣T∣ Σₛ| to |⟨ ∣T∣ Σₜ ⟩|. With
 an appropriate extension to variables, this translation applied to a
 theory $\theory{s}$ over $\Sigma_s$ yields the theory $\intTheo{s}$
 over $\Sigma_t$. Moreover if $\mathcal{A}_t\models\intTheo{s}$, one
@@ -151,13 +151,14 @@ $\langle \mathcal{A}_t \rangle \models \theory{s}$. Even better, if
 $\theory{t}$ is a stronger theory than the translated theory
 $\intTheo{s}$ and if $\mathcal{A}_t$ is a model for $\theory{t}$, we
 would like that the reduct algebra models $\theory{s}$. In Agda such a
-result would be realized as a function |⊨↝| with the following type:\vspace{-6pt}
+result would be realized as a function |⊨↝| with the following type
+(where |↝* Eₛ| is the translation of |Eₛ|):\vspace{-6pt}
 \begin{spec}
  ⊨↝ : ∀ Aₜ Eₜ Eₛ → Aₜ ⊨ₘ Eₜ → (Eₜ ⊢T ↝* Eₛ ) → 〈 Aₜ 〉 ⊨ₘ Eₛ
 \end{spec}
 
 With the morphism $m : \intSign{\Sigma_s}{\Sigma_t}$, one can define
-the translation of open terms from |T Σₛ 〔 Xₛ 〕| to |T Σₜ 〔 Xₜ 〕|
+the translation of open terms from |∣T∣ Σₛ 〔 Xₛ 〕| to |∣T∣ Σₜ 〔 Xₜ 〕|
 using initiality if we also have a renaming function |↝ᵥ : {s : sorts
   Σₛ} → Xₛ s → Xₜ (m ↝ₛ s)|. In general, however, we cannot prove the
 \emph{satisfaction property}: if a $\Sigma_t$-algebra models the

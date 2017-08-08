@@ -25,7 +25,7 @@ formalization of allegories and the development of the algebraic
 hierarchy lead by Spitters \cite{spitters-algebraic-11}. Capretta
 considered only finitary signatures and his work does not encompass
 signature morphisms. Spitters and his co-workers developed some very
-preliminar definitions of universal algebra, because their goal is to
+preliminary definitions of universal algebra, because their goal is to
 use the notion of variety to define the algebraic hierarchy up to the
 construction of the reals; in particular they use Coq's typeclasses to
 have a cleaner representation of algebraic structures.

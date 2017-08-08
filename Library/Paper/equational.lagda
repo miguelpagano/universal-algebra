@@ -75,9 +75,9 @@ Theory Σ X ar = HVec (Equation Σ X) ar
 Notice that in our formalization all the equations of a theory share
 the same set of variables, in contrast with Goguen' and Meseguer's
 calculus where each equation has its own set of quantified variables.
-\comment{\noindent Notice that we follow Goguen and Messeguer in that equations
+\comment{\noindent Notice that we follow Goguen and Meseguer in that equations
 are given explicitly over a set of variables. This, in turn, leads us
-to define satisfability as proposed by Huet and Oppen.}
+to define satisfiability as proposed by Huet and Oppen.}
 
 \paragraph{Satisfiability} Let $\Sigma$ be a signature and
 $\mathcal{A}$ be an algebra for $\Sigma$. We say that a conditional equation
@@ -110,7 +110,7 @@ _⊨Σ_ : ∀ {Σ X ar s} → (E : Theory Σ X ar) → (e : Equation Σ X s) →
 _⊨Σ_ {Σ} E e = (A : Algebra Σ) → A ⊨ₘ E → A ⊨ e
 \end{spec}%
 \comment{\noindent  We notice that we choose to formalize the notion of
-satisfability defined by \citet{huet-oppen}.}%
+satisfiability defined by \citet{huet-oppen}.}%
 %
 \paragraph{Provability} As noticed by Huet and Oppen
 \cite{huet-rewrite}, the definition of a sound deduction system for
@@ -121,7 +121,7 @@ symmetry and transitivity; the fourth rule, called substitution, allows to insta
 axiom with a substitution |σ|, provided one has proofs for every
 condition of the axiom; finally, the last rule internalizes Leibniz rule, for
 replacing equals by equals in subterms.  Notice that we can only prove
-identities and not quasiidentities.
+identities and not quasi-identities.
 %Notice the absence of a rule for deducing
 %axioms as they are, in general, conditional equations.
 \begin{figure}[t]
@@ -256,7 +256,7 @@ p| and | σ₁ q = p|.
 % resulting of the negation of that variable, i. e., |¬ p|. And mapping
 % the second variable (whose term we called |q|) to the first one (|p|).
 % For the rest, we can define the identity substitution.
-% Once we proved the first step, the conclussion is exactly the left side
+% Once we proved the first step, the conclusion is exactly the left side
 % of the second axiom, so we can use |psubst| rule with the identity
 % substitution.
 

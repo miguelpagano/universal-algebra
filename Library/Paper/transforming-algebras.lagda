@@ -1,7 +1,7 @@
 \section{Morphisms between signatures}
 \label{sec:trans}
 The propositional calculus of Dijkstra and Scholten \cite{dijkstra-scholten} is an alternative
-boolean theory whose only non-constants operation are equivalence and
+boolean theory whose only non-constant operations are equivalence and
 disjunction. \vspace{-6pt}
 \begin{spec}
 data bool-ops' : List ⊤ × ⊤ → Set where
@@ -169,9 +169,9 @@ well-known solution which consists on restricting the set of variable
 of the target signature by letting
 $X_t = \bigcup_{s \in \Sigma_s , t = m \hookrightarrow s} X_s$.  Under
 this restriction, we can prove the satisfaction property and
-furthermore define the function |⊨↝|. We feel that such a restriction
-over the set of variables is somewhat inconvenient to use in practice,
-but it can be alleviated if the original variables of $\theory{t}$ are
+furthermore define the function |⊨↝|. Such a restriction
+over the set of variables seems to us as an impediment,
+which can be alleviated if the original variables of $\theory{t}$ are
 included in the calculated set of variables.
 
 % \paragraph{Implication of translated theories.}

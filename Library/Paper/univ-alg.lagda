@@ -5,8 +5,7 @@
 In this section we present our formalization in Agda of the core
 concepts of heterogeneous universal algebra; in the next two sections
 we focus respectively on equational logic and signature morphisms.
-
-Meinke' and Tucker's chapter \cite{meinke-tucker-1992} is our
+Meinke' and Tucker's chapter~\cite{meinke-tucker-1992} is our
 reference for heterogeneous universal algebra; we will recall some
 definitions and state all the results we formalized. Bove et
 al.~\cite{agda-intro} offer a gentle introduction to Agda; we expect
@@ -35,7 +34,7 @@ record Signature : Set₁ where
   field
     sorts  :   Set
     ops    :   List sorts × sorts → Set 
-\end{spec}
+\end{spec}\vspace{-6pt}
 \noindent |A × B| corresponds to the non-dependent cartesian product
 of |A| and |B|.
 
@@ -76,7 +75,7 @@ them. Notice also that infinitary signatures can be represented in our
 setting; in fact, all the results are valid for any signature, be it
 finite or infinite.
 
-\paragraph{Algebra.}
+\paragraph{Algebra}
 
 An \emph{algebra} $\mathcal{A}$ for the signature $\Sigma$ consists of
 a family of sets indexed by the sorts of $\Sigma$ and a family of
@@ -104,14 +103,15 @@ types). Let |Σ| be a signature and |A : sorts Σ → Set|, then the
 product $\mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n}$ is
 formalized as |HVec A [s₁,…,sₙ]|.
 
-We need one more ingredient to give the formal notion of
-algebras: the mathematical definition of carriers assumes an
-underlying notion of equality.  In type theory one makes it apparent
-by using setoids (\ie sets paired with an equivalence relation),
-which were thoroughly studied by Barthe et
-al.~\cite{barthe-setoids-2003}. Setoids are defined in the the
-standard library \cite{danielsson-agdalib} of Agda, which we
-conveniently use as far as possible, as a record with three fields.\vspace{-6pt}
+We need one more ingredient to give the formal notion of algebras: the
+mathematical definition of carriers assumes an underlying notion of
+equality.  In type theory one makes it apparent by using setoids (\ie
+sets paired with an equivalence relation), which were thoroughly
+studied by Barthe et al.~\cite{barthe-setoids-2003}. Setoids are
+defined in the the standard library \cite{danielsson-agdalib} of
+Agda\footnote{Our formalization is based on several concepts defined
+  in the standard library.} as a record with three
+fields.\vspace{-6pt}
 \begin{spec}
 record Setoid : Set₁ where
   field
@@ -160,7 +160,7 @@ record Algebra (Σ : Signature) : Set₁  where
 \noindent If |A| is an algebra for the signature |monoid-sig|, then
 |A ⟦ tt ⟧ₛ| is the carrier, |A ⟦ e ⟧ₒ| and |A ⟦ ∙ ⟧ₒ| are the interpretations
 of the operations. We invite the interested reader to browse the examples to
-see algebras for the signatures we shown, which cannot be given here
+see algebras for the signatures we have shown, which cannot be given here
 for lack of space.
 
 \paragraph{Homomorphism}
@@ -268,7 +268,7 @@ but we still need to formalize the condition \eqref{eq:opclosed}.  Let
 \noindent |(Q ⟨→⟩ R) f| can be read as the pre-condition |Q| implies
 post-condition |R| after applying |f|; so |opClosed P f| asserts that if a vector |a*|
 satisfies the predicate |P|, then the application of the interpretation |A ⟦ f ⟧ₒ|
-to |a*| satisfies |P|, according with equation \eqref{eq:opclosed}.
+to |a*| satisfies |P|, according to Eq.~\eqref{eq:opclosed}.
 In summary, given an algebra
 |A| for the signature |Σ| and a family |P| of predicates, such that |P
 s| is well-defined for every sort |s| and |P| is |opClosed|, we can
@@ -325,26 +325,26 @@ is given by |csubst Q|.
 \paragraph{Isomorphism Theorems} The definitions of subalgebras,
 quotients, and epimorphisms (surjective homomorphisms) are related by
 the three isomorphims theorems. Although there is some small overhead
-by the coding of subalgebras, the proofs are almost the same as in
-informal mathematics. For proving these results we also defined the
+by the coding of subalgebras, the proofs follow very close what one would
+do in paper. For proving these results we also defined the
 \emph{kernel} and the \emph{homomorphic} image of homomorphisms.
 
 \begin{theorem}[First isomorphism theorem] If $h : \alg{A} \rightarrow \alg{B}$
-is an epimorphism, then $\alg{A} / \mathop{ker} h \simeq \alg{B}$.
+is an epimorphism, then $\alg{A} /\! \mathop{ker} h \simeq \alg{B}$.
 \end{theorem}
 
-\begin{theorem}[Second isomorphism theorem] Let $\phi,\psi$ be congruences over $\alg A$,
+\begin{theorem}[Second isomorphism theorem] If $\phi,\psi$ are congruences over $\alg A$,
 such that $\psi \subseteq \phi$, then $(\alg A / \phi) \simeq (\alg A / \psi)/(\phi / \psi)$. 
 \end{theorem}
 
-\begin{theorem}[Third isomorphism theorem] Let $\alg B$ is a
-subalgebra of $\alg A$ and $\phi$ is a congruence over $\alg A$. Let
+\begin{theorem}[Third isomorphism theorem] Let $\alg B$ be a
+subalgebra of $\alg A$ and $\phi$ be a congruence over $\alg A$. Let
 $[\alg B]^{\phi}=\{K \in A / \phi : K \cap B \not= \emptyset\}$ and
 let $\phi_B$ be the restriction of $\phi$ to $\alg B$, then
-\begin{enumerate*}[label=(\roman*),itemjoin={}]
-\item $\phi_B$ is a congruence over $\alg B$;
-\item $[\alg B]^{\phi}$ is a subalgebra of $\alg A$; and
-\item $[\alg B]^{\phi} \simeq \alg B / \phi_B$.
+\begin{enumerate*}[label= (\roman*),itemjoin={}]
+\item$\phi_B$ is a congruence over $\alg B$;
+\item$[\alg B]^{\phi}$ is a subalgebra of~$\alg A$; and,
+\item$[\alg B]^{\phi} \simeq \alg B / \phi_B$.
 \end{enumerate*}
 \end{theorem}
 

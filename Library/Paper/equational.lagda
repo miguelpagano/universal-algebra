@@ -36,13 +36,13 @@ we inject constants from |Σ| to distinguish them from variables. In
 order to interpret terms with variables we need \emph{environments} to
 give meaning to variables.
 
-We let |Env X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥ | be the set of
+Let |Env X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥ | be the set of
 environments from |X| to |A|.  The free algebra | ∣T∣ Σ 〔 X 〕| has the
 universal \emph{freeness} property: given |A : Algebra Σ| and an
 environment |θ : Env X A|, there exists an unique homomorphism |⟦_⟧θ :
 Homo (∣T∣ Σ 〔 X 〕) A| such that |⟦ x ⟧θ = θ(x)| for |x ∈ X|.
 
-\subsection{Equations, satisfiability, and provability}
+\subsection{Satisfiability and provability}
 
 \paragraph{Equations} In the mono-sorted setting an equation is a pair
 of terms where all the variables are assumed to be universally

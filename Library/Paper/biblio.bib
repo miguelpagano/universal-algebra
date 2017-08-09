@@ -1,3 +1,14 @@
+@article{thatcher1981more,
+  title={More on advice on structuring compilers and proving them correct},
+  author={Thatcher, James W and Wagner, Eric G and Wright, Jesse B},
+  journal={Theoretical Computer Science},
+  volume={15},
+  number={3},
+  pages={223--249},
+  year={1981},
+  publisher={Elsevier}
+}
+
 @article{spitters-algebraic-11,
   author    = {Bas Spitters and
                Eelis van der Weegen},
@@ -8,7 +19,6 @@
   pages     = {795--825},
   year      = {2011},
 }
-
 
 
 @book{dijkstra-scholten,
@@ -41,6 +51,7 @@ bookTitle="Logic, Rewriting, and Concurrency: Essays Dedicated to Jos{\'e} Meseg
 year="2015",
 publisher="Springer International Publishing",
 isbn="978-3-319-23165-5",
+doi="10.1007/978-3-319-23165-5_27",
 }
 
 @article{tarlecki-nuances,
@@ -54,12 +65,19 @@ isbn="978-3-319-23165-5",
 }
 
 
-@article{adj-abstract-data-types,
-  title={Abstract data types as initial algebras and the correctness of data representations},
-  author={Goguen, Joseph A and Thatcher, James W and Wagner, Eric G and Wright, Jesse B and others},
-  journal={Computer Graphics, Pattern Recognition and Data Structure},
-  pages={89--93},
-  year={1975}
+@inproceedings{adj-abstract-data-types,
+  author    = {Goguen, Joseph A and Thatcher, James W and Wagner, Eric G and Wright, Jesse B},
+  title     = {Abstract data types as initial algebras and the correctness of data representations},
+  booktitle = {Conference on Computer Graphics, Pattern Recognition, \& Data Structure, UCLA},
+  pages     = {89--93},
+  year      = {1975},
+  crossref  = {compgraph-1975},
+}
+
+@proceedings{compgraph-1975,
+  title     = {Conference on Computer Graphics, Pattern Recognition, \& Data Structure, UCLA},
+  publisher = {{IEEE} Computer Society},
+  year      = {1975},
 }
 
 
@@ -72,13 +90,34 @@ isbn="978-3-319-23165-5",
   month = 	 {January},
 }
 
-@INPROCEEDINGS{salvesen-subsets,
-    author = {Anne Salvesen and Jan M. Smith},
-    title = {The Strength of the Subset Type in Martin-Löf's Type Theory},
-    booktitle = {In Third Annual Symposium on Logic in Computer Science},
-    year = {1988},
-    pages = {384--391},
-    publisher = {IEEE}
+
+
+@inproceedings{salvesen-subsets,
+  author    = {Anne Salvesen and
+               Jan M. Smith},
+  title     = {The Strength of the Subset Type in Martin-L{\"{o}}f's Type Theory},
+  booktitle = {Proceedings of the Third Annual Symposium on Logic in Computer Science
+               {(LICS} '88), Edinburgh, Scotland, UK, July 5-8, 1988},
+  pages     = {384--391},
+  year      = {1988},
+  crossref  = {DBLP:conf/lics/1988},
+  url       = {https://doi.org/10.1109/LICS.1988.5135},
+  doi       = {10.1109/LICS.1988.5135},
+  timestamp = {Thu, 25 May 2017 00:42:40 +0200},
+  biburl    = {http://dblp.dagstuhl.de/rec/bib/conf/lics/SalvesenS88},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+
+@proceedings{DBLP:conf/lics/1988,
+  title     = {Proceedings of the Third Annual Symposium on Logic in Computer Science
+               {(LICS} '88), Edinburgh, Scotland, UK, July 5-8, 1988},
+  publisher = {{IEEE} Computer Society},
+  year      = {1988},
+  url       = {http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=203},
+  isbn      = {0-8186-0853-6},
+  timestamp = {Fri, 21 Nov 2014 14:08:55 +0100},
+  biburl    = {http://dblp.dagstuhl.de/rec/bib/conf/lics/1988},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
 }
 
 @incollection{huet-cct,
@@ -102,8 +141,8 @@ isbn="978-3-319-23165-5",
  year = {1992},
  isbn = {0-19-853735-2},
  pages = {189--368},
- publisher = {Oxford Univ. Press},
- address = {New York},
+ publisher = {Oxford University Press, Inc.},
+ address = {New York, NY, USA},
 } 
 
 @book{abramsky-handbook,
@@ -129,7 +168,7 @@ isbn="978-3-319-23165-5",
 @article{bahr-16,
         author = "Patrick Bahr and Graham Hutton",
         title = "{Calculating Correct Compilers}",
-        journal = "Journal of Functional Programming",
+        journal = "J. Funct. Program.",
         publisher = "Cambridge University Press",
         volume = 25,
         month = sep,
@@ -190,7 +229,6 @@ isbn="978-3-319-23165-5",
 
 @article{fujiwara-1959,
 author = "Fujiwara, Tsuyoshi",
-fjournal = "Osaka Mathematical Journal",
 journal = "Osaka Math. J.",
 number = "2",
 pages = "153--172",
@@ -218,38 +256,59 @@ year = "1959"
 
 @Misc{danielsson-agdalib,
   key   = {The Agda Team},
-  author = 	 {N. A. Danielsson and The Agda Team.},
+  author = 	 {N. A. Danielsson and {\relax The Agda Team}},
   title = 	 {The Agda standard library, version 0.12},
   howpublished = {\url{https://github.com/agda/agda-stdlib}},
   year = 	 {2015},
 }
 
 @article{barthe-setoids-2003,
-place={Cambridge, UK},
-title={Setoids in type theory},
-volume={13},
-DOI={10.1017/S0956796802004501a},
-number={2},
-journal={J. of Funct. Programming},
-publisher={Cambridge University Press},
-author={Barthe, Gilles and Capretta, Venanzio and Pons, Olivier},
-pages={261–293}
+  author    = {Gilles Barthe and
+               Venanzio Capretta and
+               Olivier Pons},
+  title     = {Setoids in type theory},
+  journal   = {J. Funct. Program.},
+  volume    = {13},
+  number    = {2},
+  pages     = {261--293},
+  year      = {2003},
 }
 
 
+
 @inproceedings{kahl-2011,
- author = {Kahl, Wolfram},
- title = {Dependently-typed Formalisation of Relation-algebraic Abstractions},
- booktitle = {RAMICS'11},
- year = {2011},
- isbn = {978-3-642-21069-3},
- location = {Rotterdam, The Netherlands},
- pages = {230--247},
- numpages = {18},
- acmid = {2018303},
- publisher = {Springer-Verlag},
- address = {Berlin, Heidelberg},
-} 
+  author    = {Wolfram Kahl},
+  title     = {Dependently-Typed Formalisation of Relation-Algebraic Abstractions},
+  booktitle = {Relational and Algebraic Methods in Computer Science - 12th International
+               Conference, {RAMICS} 2011, Rotterdam, The Netherlands, May 30 - June
+               3, 2011. Proceedings},
+  pages     = {230--247},
+  year      = {2011},
+  crossref  = {DBLP:conf/RelMiCS/2011},
+  url       = {https://doi.org/10.1007/978-3-642-21070-9_18},
+  doi       = {10.1007/978-3-642-21070-9_18},
+  timestamp = {Fri, 26 May 2017 00:49:45 +0200},
+  biburl    = {http://dblp.uni-trier.de/rec/bib/conf/RelMiCS/Kahl11},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+
+@proceedings{DBLP:conf/RelMiCS/2011,
+  editor    = {Harrie C. M. de Swart},
+  title     = {Relational and Algebraic Methods in Computer Science - 12th International
+               Conference, {RAMICS} 2011, Rotterdam, The Netherlands, May 30 - June
+               3, 2011. Proceedings},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {6663},
+  publisher = {Springer},
+  year      = {2011},
+  url       = {https://doi.org/10.1007/978-3-642-21070-9},
+  doi       = {10.1007/978-3-642-21070-9},
+  isbn      = {978-3-642-21069-3},
+  timestamp = {Fri, 26 May 2017 00:49:45 +0200},
+  biburl    = {http://dblp.uni-trier.de/rec/bib/conf/RelMiCS/2011},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+
 
 @article{burstall69,
     author = {Burstall, R. M.},
@@ -285,7 +344,7 @@ pages={261–293}
  doi = {10.1145/147508.147524},
  acmid = {147524},
  publisher = {ACM},
- address = {New York},
+ address = {New York, NY, USA},
 } 
 
 
@@ -351,7 +410,7 @@ pages={261–293}
 @article{birkhoff-70,
   title={Heterogeneous algebras},
   author={Birkhoff, Garrett and Lipson, John D},
-  journal={Journal of Combinatorial Theory},
+  journal={J. of Combinatorial Theory},
   volume={8},
   number={1},
   pages={115--133},
@@ -373,7 +432,7 @@ pages={261–293}
 @article{goguen-77,
   title={Initial algebra semantics and continuous algebras},
   author={Goguen, Joseph A and Thatcher, James W and Wagner, Eric G and Wright, Jesse B},
-  journal={Journal of the ACM (JACM)},
+  journal={J. ACM},
   volume={24},
   number={1},
   pages={68--95},
@@ -396,7 +455,7 @@ pages={261–293}
 @inproceedings{capretta-99,
   title={Universal algebra in type theory},
   author={Capretta, Venanzio},
-  booktitle={TPHOL},
+  booktitle={International Conference on Theorem Proving in Higher Order Logics},
   pages={131--148},
   year={1999},
   organization={Springer}
@@ -410,14 +469,81 @@ pages={261–293}
   year = 	 {2000},
 }
 
-@inproceedings{agda-intro,
-  title={A brief overview of Agda--a functional language with dependent types},
-  author={Bove, Ana and Dybjer, Peter and Norell, Ulf},
-  booktitle={TPHOL},
-  pages={73--78},
-  year={2009},
-  organization={Springer}
+  author    = {Ana Bove and
+               Peter Dybjer and
+               Ulf Norell},
+  title     = {A Brief Overview of Agda - {A} Functional Language with Dependent
+               Types},
+  booktitle = {Theorem Proving in Higher Order Logics, 22nd International Conference,
+               TPHOLs 2009, Munich, Germany, August 17-20, 2009. Proceedings},
+  pages     = {73--78},
+  year      = {2009},
+  crossref  = {DBLP:conf/tphol/2009},
+  url       = {https://doi.org/10.1007/978-3-642-03359-9_6},
+  doi       = {10.1007/978-3-642-03359-9_6},
+  timestamp = {Tue, 23 May 2017 01:12:08 +0200},
+  biburl    = {http://dblp.dagstuhl.de/rec/bib/conf/tphol/BoveDN09},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
 }
+
+@proceedings{DBLP:conf/tphol/2009,
+  editor    = {Stefan Berghofer and
+               Tobias Nipkow and
+               Christian Urban and
+               Makarius Wenzel},
+  title     = {Theorem Proving in Higher Order Logics, 22nd International Conference,
+               TPHOLs 2009, Munich, Germany, August 17-20, 2009. Proceedings},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {5674},
+  publisher = {Springer},
+  year      = {2009},
+  url       = {https://doi.org/10.1007/978-3-642-03359-9},
+  doi       = {10.1007/978-3-642-03359-9},
+  isbn      = {978-3-642-03358-2},
+  timestamp = {Tue, 23 May 2017 01:12:08 +0200},
+  biburl    = {http://dblp.dagstuhl.de/rec/bib/conf/tphol/2009},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+
+
+
+@inproceedings{agda-intro,
+  author    = {Ana Bove and
+               Peter Dybjer and
+               Ulf Norell},
+  title     = {A Brief Overview of Agda - {A} Functional Language with Dependent
+               Types},
+  booktitle = {Theorem Proving in Higher Order Logics, 22nd International Conference,
+               TPHOLs 2009, Munich, Germany, August 17-20, 2009. Proceedings},
+  pages     = {73--78},
+  year      = {2009},
+  crossref  = {DBLP:conf/tphol/2009},
+  url       = {https://doi.org/10.1007/978-3-642-03359-9_6},
+  doi       = {10.1007/978-3-642-03359-9_6},
+  timestamp = {Tue, 23 May 2017 01:12:08 +0200},
+  biburl    = {http://dblp.dagstuhl.de/rec/bib/conf/tphol/BoveDN09},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+
+@proceedings{DBLP:conf/tphol/2009,
+  editor    = {Stefan Berghofer and
+               Tobias Nipkow and
+               Christian Urban and
+               Makarius Wenzel},
+  title     = {Theorem Proving in Higher Order Logics, 22nd International Conference,
+               TPHOLs 2009, Munich, Germany, August 17-20, 2009. Proceedings},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {5674},
+  publisher = {Springer},
+  year      = {2009},
+  url       = {https://doi.org/10.1007/978-3-642-03359-9},
+  doi       = {10.1007/978-3-642-03359-9},
+  isbn      = {978-3-642-03358-2},
+  timestamp = {Tue, 23 May 2017 01:12:08 +0200},
+  biburl    = {http://dblp.dagstuhl.de/rec/bib/conf/tphol/2009},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+
 
 
 
@@ -439,8 +565,8 @@ pages={261–293}
  pages = {90--109},
  numpages = {20},
  acmid = {2947413},
- publisher = {Springer-Verlag},
- address = {New York, USA},
+ publisher = {Springer-Verlag New York, Inc.},
+ address = {New York, NY, USA},
 }
 
 @book{sannella2012foundations,
@@ -538,20 +664,12 @@ pages={261–293}
   author    = {Camilo Rocha and
                Jos{\'{e}} Meseguer},
   title     = {Theorem Proving Modulo Based on Boolean Equational Procedures},
-  booktitle = {RelMiCS/AKA 2008, Frauenw{\"{o}}rth,
-               Germany, April 7-11, 2008.},
+  booktitle = {Relations and Kleene Algebra in Computer Science, 10th International
+               Conference on Relational Methods in Computer Science, and 5th International
+               Conference on Applications of Kleene Algebra, RelMiCS/AKA 2008, Frauenw{\"{o}}rth,
+               Germany, April 7-11, 2008. Proceedings},
   pages     = {337--351},
   year      = {2008},
-}
-
-
-@article{thatcher1981more,
-  title={More on advice on structuring compilers and proving them correct},
-  author={Thatcher, James W and Wagner, Eric G and Wright, Jesse B},
-  journal={Theoretical Computer Science},
-  volume={15},
-  number={3},
-  pages={223--249},
-  year={1981},
-  publisher={Elsevier}
+  url       = {http://dx.doi.org/10.1007/978-3-540-78913-0_25},
+  doi       = {10.1007/978-3-540-78913-0_25},
 }

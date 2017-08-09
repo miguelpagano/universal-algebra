@@ -1,5 +1,5 @@
 \documentclass{entcs} \usepackage{entcsmacro}
-\input pdfcolor.tex 
+
 \sloppy
 % The following is enclosed to allow easy detection of differences in
 % ascii coding.
@@ -18,10 +18,6 @@
 % Grave accent  `           Left brace   {          Vertical bar  |
 % Right brace   }           Tilde        ~
 
-% A couple of exemplary definitions:
-
-\newcommand{\Nat}{{\mathbb N}}
-\newcommand{\Real}{{\mathbb R}}
 \def\lastname{Gunther, Gadea, and Pagano}
 
 \usepackage{amsmath}
@@ -102,7 +98,7 @@ universal algebra in Agda. We show that heterogeneous signatures can
 be elegantly modelled in type-theory using sets indexed by arities to
 represent operations. We prove elementary results of heterogeneous
 algebras, including the proof that the term algebra is initial and the
-three isomorphism theorems. We further formalize equational theory and
+proofs of the three isomorphism theorems. We further formalize equational theory and
 prove soundness and completeness. At the end, we define (derived)
 signature morphisms, from which we get the contra-variant functor
 between algebras; moreover, we also proved that, under some

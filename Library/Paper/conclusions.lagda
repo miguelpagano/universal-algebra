@@ -11,10 +11,13 @@ heterogeneous vectors, which later turned out to be very useful in
 other parts of the library, for example as the set of axioms of finite
 theories and as premises of deduction rules. We further introduced a
 formal system for conditional equational logic and proved its
-soundness and completeness. Finally, we defined a novel
-representation for (derived) signature morphisms and its associated
-contra-variant functor on algebras. We also showed that, under some
-restrictions, this functor also preserves models.
+soundness and completeness with respect to Goguen and Meseguer
+semantics (we refer the reader to \cite{vidal-06} for a deeper
+explanation of this result recasting it on a categorical
+setting). Finally, we defined a novel representation for (derived)
+signature morphisms and its associated contra-variant functor on
+algebras. We also showed that, under some restrictions, this functor
+also preserves models.
 
 \textit{Related Work.} Let us contrast our work with other
 formalizations covering some aspects of universal algebra. As far as

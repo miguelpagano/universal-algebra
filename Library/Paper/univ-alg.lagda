@@ -21,7 +21,8 @@ and \textit{operations} (or \textit{function symbols}) respectively;
 each operation is a triple $(f,[s_1,\ldots,s_n],s)$ consisting of a
 \textit{name}, its \textit{arity}, and the \textit{target sort} (we
 also use the notation $f \colon [s_1,...,s_n] \Rightarrow s$).
-
+\setlength{\abovedisplayskip}{\abdisplay}
+\setlength{\belowdisplayskip}{\bldisplay}
 In Agda we use dependent records to represent signatures; in dependent
 records the type of some field may depend on the value of a previous
 one or parameters of the record. Type-theoretically one can take

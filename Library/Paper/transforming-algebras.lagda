@@ -134,7 +134,8 @@ module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   _〈_〉 : Algebra Σₛ
   _〈_〉 = record { _⟦_⟧ₛ = ⟨_⟩ₛ , _⟦_⟧ₒ = ⟨_⟩ₒ }
 \end{spec}
-The action of the functor on homomorphisms is also straightforward,
+
+\noindent The action of the functor on homomorphisms is also straightforward,
 we do not it show for lack of space.
 
 \newcommand{\theory}[1]{\ensuremath{\mathit{E}_{#1}}}
@@ -155,7 +156,7 @@ result would be realized as a function |⊨↝| with the following type
 (where |↝* Eₛ| is the translation of |Eₛ|):\vspace{-6pt}
 \begin{spec}
  ⊨↝ : ∀ Aₜ Eₜ Eₛ → Aₜ ⊨ₘ Eₜ → (Eₜ ⊢T ↝* Eₛ ) → 〈 Aₜ 〉 ⊨ₘ Eₛ
-\end{spec}
+\end{spec}\vspace{-6pt}
 
 With the morphism $m : \intSign{\Sigma_s}{\Sigma_t}$, one can define
 the translation of open terms from |∣T∣ Σₛ 〔 Xₛ 〕| to |∣T∣ Σₜ 〔 Xₜ 〕|

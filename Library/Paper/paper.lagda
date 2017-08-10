@@ -24,6 +24,7 @@
 \usepackage{bussproofs}
 \usepackage{ upgreek }
 \usepackage[inline]{enumitem}
+\usepackage{calc}
 \newcommand{\setoidMor}{{\xrightarrow{\,\thickapprox\,}}}
 %format VecH' = HVec
 %format 〉 = ")"
@@ -72,7 +73,8 @@
 \renewcommand{\alg}[1]{\mathcal{#1}}
 \newcommand{\iso}{\equiv}
 \newcommand{\comment}[1]{}
-
+\newlength{\abdisplay}
+\newlength{\bldisplay}
 
 % Uncomment the publication rights you want to use.
 %\publicationrights{transferred}
@@ -110,6 +112,8 @@ universal algebra, formalization of mathematics, equational logic
 \end{keyword}
 \end{frontmatter}
 
+\setlength{\abdisplay}{\abovedisplayskip - 1pt}
+\setlength{\bldisplay}{\belowdisplayskip - 1pt}
 
 %include introduction.lagda
 %include univ-alg.lagda

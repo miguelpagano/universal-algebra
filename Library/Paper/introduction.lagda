@@ -10,7 +10,7 @@ seminal paper of Birkhoff~\cite{birkhoff-70} features regular
 languages as a prominent example; shortly before,
 Burstall~\cite{burstall69} had proved properties of programs using
 structural induction, by conceiving the language as an
-initial algebra. The ADJ group promoted multi-sorted algebras as a
+initial algebra. The ADJ~\cite{goguen-adj} group promoted multi-sorted algebras as a
 key theoretical tool for specifying data
 types~\cite{adj-abstract-data-types}, semantics~\cite{goguen-77}, and
 compilers~\cite{thatcher1981more}.  More recently,

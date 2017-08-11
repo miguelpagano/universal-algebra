@@ -35,7 +35,7 @@ record Signature : Set₁ where
   field
     sorts  :   Set
     ops    :   List sorts × sorts → Set 
-\end{spec}\vspace{-6pt}
+\end{spec}
 \noindent |A × B| corresponds to the non-dependent cartesian product
 of |A| and |B|.
 

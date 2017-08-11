@@ -73,8 +73,11 @@ Theory : (Σ : Signature) → (X : sorts Σ → Set) → (ar : List (sorts Σ)) 
 Theory Σ X ar = HVec (Equation Σ X) ar
 \end{spec}
 Notice that in our formalization all the equations of a theory share
-the same set of variables, in contrast with Goguen' and Meseguer's
+the same set of variables, in contrast with Goguen' and Lin's
 calculus where each equation has its own set of quantified variables.
+We have this difference for reasons of simplicity in the implementation, but
+we could prove that is equivalent, because one can take the union of variables
+of all equations.
 \comment{\noindent Notice that we follow Goguen and Meseguer in that equations
 are given explicitly over a set of variables. This, in turn, leads us
 to define satisfiability as proposed by Huet and Oppen.}
@@ -104,7 +107,7 @@ logical consequence of a theory, if every model of the theory
 satisfies the equation.
 \begin{spec}
 _⊨ₘ_ : ∀ {Σ X ar} → (A : Algebra Σ) → (E : Theory Σ X ar) → Set
-A ⊨ₘ E = (A ,_⊨_)* E
+A ⊨ₘ E = (A ⊨_)* E
 
 _⊨Σ_ : ∀ {Σ X ar s} → (E : Theory Σ X ar) → (e : Equation Σ X s) → Set
 _⊨Σ_ {Σ} E e = (A : Algebra Σ) → A ⊨ₘ E → A ⊨ e

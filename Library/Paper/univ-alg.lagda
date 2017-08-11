@@ -55,8 +55,7 @@ monoid-sig : Signature
 monoid-sig = record { sorts = ⊤ ; ops = monoid-op }
 \end{spec}
 \noindent The signature of monoid actions has two sorts, one for the
-monoid and the other for the set on which the monoid acts (we declare
-both constructors in the same line).\vspace{-6pt}
+monoid and the other for the set on which the monoid acts.\vspace{-6pt}
 \begin{spec}
 data actMonₛ : Set where
   mon : actMonₛ
@@ -156,7 +155,7 @@ formalized as records parameterized on the signature.\vspace{-6pt}
 record Algebra (Σ : Signature) : Set₁  where
   field
     _⟦_⟧ₛ    : sorts Σ → Setoid
-    _⟦_⟧ₒ    : ∀  {ar s} → ops Σ (ar , s) → _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
+    _⟦_⟧ₒ    : ∀  {ar s} → (f : ops Σ (ar , s)) → _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 \end{spec}
 \noindent If |A| is an algebra for the signature |monoid-sig|, then
 |A ⟦ tt ⟧ₛ| is the carrier, |A ⟦ e ⟧ₒ| and |A ⟦ ∙ ⟧ₒ| are the interpretations
@@ -180,7 +179,7 @@ In order to formalize homomorphisms we first introduce a
 notation for families of setoid morphisms indexed over sorts:\vspace{-6pt}
 \begin{spec}
 _⟿_ : ∀ {Σ} → Algebra Σ → Algebra Σ → Set
-_⟿_ {Σ} A B = (s : sorts Σ) → (A ⟦ s ⟧ₛ) ⟶ (B ⟦ s ⟧ₛ)
+_⟿_ {Σ} A B = (s : sorts Σ) → A ⟦ s ⟧ₛ ⟶ B ⟦ s ⟧ₛ
 \end{spec}
 \noindent We make explicit the implicit parameter |Σ| because
 otherwise |sorts Σ| does not make sense.\footnote{In the library we
@@ -378,7 +377,7 @@ from the function symbols.  Sometimes this universe is called the
 \noindent This inductive definition can be written directly in Agda:\vspace{-6pt}
 \begin{spec}
   data HU {Σ : Signature} : (s : sorts Σ) → Set where
-    term : ∀  {ar s} → (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
+    term : ∀  {ar s} → (f : ops Σ (ar ↦ s)) → HVec HU ar → HU s
 \end{spec}
 \noindent We use propositional equality to turn each |HUₛ| into a
 setoid, thus completing the interpretation of sorts. To interpret an
@@ -407,6 +406,14 @@ we have to mutually define | ∣h∣→A | and its extension over vectors
 \noindent It is straightforward to prove that |∣h∣→A| preserves
 propositional equality and satisfies the homomorphism condition by
 construction. To finish the proof that | ∣T∣ Σ | is initial, we prove,
-by recursion on the structure of terms, that any pair of homomorphism
+by recursion on the structure of terms, that any pair of homomorphisms
 are extensionally equal.
 
+
+%%  LocalWords:  Agda equational morphisms Haskell homomorphism arity
+%%  LocalWords:  cartesian monoids monoid tt sig actMon mon arities
+%%  LocalWords:  datatypes infinitary parameterized HVec setoids et
+%%  LocalWords:  Barthe al Setoid isEquivalence IsEquivalence setoid
+%%  LocalWords:  reflexivity versa functor cong mixfix ar homcond
+%%  LocalWords:  homomorphisms homCond cond intensional definitional
+%%  LocalWords:  extensionally associativity

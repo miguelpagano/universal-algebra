@@ -2,7 +2,7 @@
 \label{sec:trans}
 The propositional calculus of Dijkstra and Scholten \cite{dijkstra-scholten} is an alternative
 boolean theory whose only non-constant operations are equivalence and
-disjunction. \vspace{-6pt}
+disjunction. 
 \begin{spec}
 data bool-ops' : List ⊤ × ⊤ → Set where
   f' t'    : bool-ops' ([] ↦ tt)
@@ -59,7 +59,7 @@ sorts, and identifiers are pointers (like de Bruijn indices).
 \label{fig:formalterms}
 \end{figure}
 It can be formalized as an inductive family
-parameterized by arities and indexed by sorts. \vspace{-6pt}
+parameterized by arities and indexed by sorts. 
 \begin{spec}
  data _⊩_  (ar' : Arity Σ) : (sorts Σ) → Set where
    #_     : (n : Fin (length ar')) → ar' ⊩ (ar' ‼ n)
@@ -73,14 +73,14 @@ translation. Notice that |bool-sig| and |bool-sig'| share the sorts; in
 general, one also considers a mapping between sorts.
 
 A \emph{derived signature morphism} consists of a mapping between sorts
-and a mapping from operations to formal terms:\vspace{-6pt}
+and a mapping from operations to formal terms:
 \begin{spec}
 record _↝_ (Σₛ Σₜ : Signature) : Set where
   field
     ↝ₛ : sorts Σₛ → sorts Σₜ
     ↝ₒ : ∀ {ar s} → ops Σₛ (ar , s) → (map ↝ₛ ar) ⊩ (↝ₛ s)
 \end{spec}
-\noindent We show the action of the morphism on the operations |neg| and |and|\vspace{-6pt}
+\noindent We show the action of the morphism on the operations |neg| and |and|
 \begin{spec}
   ops↝ : ∀  {ar s} → (f : bool-ops (ar ↦ s)) → map id ar ⊩ s
   ops↝ neg  = equiv' ∣$∣ ⟨⟨ p , f' ⟩⟩
@@ -107,7 +107,7 @@ the functor on algebras: the interpretation of a $\Sigma_s$-sort $s$ is given by
   $\algTrans{A}_s = \mathcal{A}_{(\mapSort{m}{s})}$ and 
 for interpreting an operation $f$ in the reduct algebra
 $\algTrans A$ we use the interpretation of the formal term $m f$, which
-is recursively defined by\vspace{-6pt}
+is recursively defined by
 \begin{spec}
   ⟦_⟧ₜ : ∀ {ar s} → ar ⊩ s → ∥ A ⟦ ar ⟧ₛ* ∥ → ∥ A ⟦ s ⟧ₛ ∥
   ⟦ # n ⟧ₜ      as =  as ‼v n
@@ -122,7 +122,7 @@ We can formalize the reduct algebra in a direct way,
 however the interpretation of operations is a little more complicated,
 since we need to convince Agda that any vector |vs : VecH' (A ⟦_⟧ₛ ∘
 ↝ₛ) is| has also the type |VecH' A (map ↝ₛ is)|, which is accomplished
-by |reindex|-ing the vector (we omit the proof of |cong|):\vspace{-6pt}
+by |reindex|-ing the vector (we omit the proof of |cong|):
 \begin{spec}
 module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   ⟨_⟩ₛ :  → (s : sorts Σₛ) → Setoid
@@ -153,10 +153,10 @@ $\theory{t}$ is a stronger theory than the translated theory
 $\intTheo{s}$ and if $\mathcal{A}_t$ is a model for $\theory{t}$, we
 would like that the reduct algebra models $\theory{s}$. In Agda such a
 result would be realized as a function |⊨↝| with the following type
-(where |↝* Eₛ| is the translation of |Eₛ|):\vspace{-6pt}
+(where |↝* Eₛ| is the translation of |Eₛ|):
 \begin{spec}
  ⊨↝ : ∀ Aₜ Eₜ Eₛ → Aₜ ⊨ₘ Eₜ → (Eₜ ⊢T ↝* Eₛ ) → 〈 Aₜ 〉 ⊨ₘ Eₛ
-\end{spec}\vspace{-6pt}
+\end{spec}
 
 With the morphism $m : \intSign{\Sigma_s}{\Sigma_t}$, one can define
 the translation of open terms from |∣T∣ Σₛ 〔 Xₛ 〕| to |∣T∣ Σₜ 〔 Xₜ 〕|

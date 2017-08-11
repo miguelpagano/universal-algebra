@@ -77,7 +77,7 @@ the same set of variables, in contrast with Goguen' and Lin's
 calculus where each equation has its own set of quantified variables.
 We have this difference for reasons of simplicity in the implementation, but
 we could prove that is equivalent, because one can take the union of variables
-of all equations.
+of all equations. 
 \comment{\noindent Notice that we follow Goguen and Meseguer in that equations
 are given explicitly over a set of variables. This, in turn, leads us
 to define satisfiability as proposed by Huet and Oppen.}

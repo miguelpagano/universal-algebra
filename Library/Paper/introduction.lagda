@@ -45,7 +45,7 @@ universal algebra. The main contributions of this paper are:
 We formalized the proof that the term algebra is initial and also the
 proofs of the three isomorphism theorems; moreover we also define a
 deduction system for conditional equational logic and prove its
-soundness and completeness with respect to Goguen and Meseguer semantics.
+soundness and completeness with respect to Goguen and Meseguer semantics~\cite{GoguenM82}.
 We also showed that the translations of
 theories arising from derived signature morphisms induces a
 contra-variant functor between models.  In the complete development,

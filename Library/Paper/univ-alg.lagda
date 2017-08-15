@@ -331,10 +331,24 @@ do in paper. For proving these results we also defined the
 \begin{theorem}[First isomorphism theorem] If $h : \alg{A} \rightarrow \alg{B}$
 is an epimorphism, then $\alg{A} /\! \mathop{ker} h \simeq \alg{B}$.
 \end{theorem}
+\noindent Remember that the quotient $\alg A /\! \mathop{ker} h$ has
+the same carrier as $\alg A$, so $h$ counts as the underlying function
+and it respects the equivalence relation $\mathop{ker} h$ by
+definition. Clearly $h$ is surjective and its injectivity is obvious.
 
 \begin{theorem}[Second isomorphism theorem] If $\phi,\psi$ are congruences over $\alg A$,
 such that $\psi \subseteq \phi$, then $(\alg A / \phi) \simeq (\alg A / \psi)/(\phi / \psi)$. 
 \end{theorem}
+
+\noindent In order to prove this theorem, we first prove that
+$\phi / \psi$ is a congruence over $\alg A / \psi$: it suffices to
+prove the well-definedness of $\phi / \psi$, \ie that
+$(a,c) \in \psi$, $(b,d) \in \psi$, and $(a,b) \in \phi$ imply
+$(c,d) \in \phi$; an obvious consequence of $\psi \subseteq
+\phi$. Notice that the underlying carriers are the same in both cases:
+those of $\alg A$, so the identity function is the mediating
+isomorphism and the proof that it satisfies the homomorphism condition
+is trivial.
 
 \begin{theorem}[Third isomorphism theorem] Let $\alg B$ be a
 subalgebra of $\alg A$ and $\phi$ be a congruence over $\alg A$. Let
@@ -346,7 +360,27 @@ let $\phi_B$ be the restriction of $\phi$ to $\alg B$, then
 \item$[\alg B]^{\phi} \simeq \alg B / \phi_B$.
 \end{enumerate*}
 \end{theorem}
-
+\noindent First we define the \emph{trace} of the congruence $\phi$ on
+the subalgebra $\alg B$ as the restriction of $\phi$ on $\alg B$;
+proving that it is a congruence over $\alg B$ involves some
+bureaucracy (remember that an element of a subalgebra is a pair
+$(a, p)$ such that $a \in A$ and $p$ is the proof that $a$ satisfies
+the predicate defining $B$). For the second item, we model
+$[\alg B]^{\phi}$ as a predicate over $\alg A$; it is satisfied by
+$a \in A$ if there is some $b \in B$ such that $(a,b) \in \phi$. The
+well-definedness of this predicate is easy (assuming $(a,a') \in \phi$
+and $b\in B$ with $(a,b) \in \phi$, one can easily prove that
+$(a',b) \in \phi$, thus $b$ is also the witness for proving that $a'$
+satisfies the predicate). To prove that the predicate is closed we
+take a vector of triples $(as,bs,ps)$ consisting of a vector of
+elements in $A$, a vector of elements in $B$, and the proofs $ps$
+proving that $(as_i,bs_i)\in\phi$, since $B$ is op-closed we know
+$f(b_1,\ldots,b_n)\in B$ and because $\phi$ is also op-closed we
+deduce $(f(a_1,\ldots,a_n),f(b_1,\ldots,b_n)\in\phi$. Finally, the
+underlying function witnessing the isomorphism
+$[\alg B]^{\phi} \simeq \alg B / \phi_B$ is given by composing the
+second projection with the first projection, thus getting an element
+in $B$.
 
 \subsection{Term algebra is initial}
 

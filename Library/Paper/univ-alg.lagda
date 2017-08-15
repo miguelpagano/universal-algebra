@@ -371,12 +371,13 @@ $a \in A$ if there is some $b \in B$ such that $(a,b) \in \phi$. The
 well-definedness of this predicate is easy (assuming $(a,a') \in \phi$
 and $b\in B$ with $(a,b) \in \phi$, one can easily prove that
 $(a',b) \in \phi$, thus $b$ is also the witness for proving that $a'$
-satisfies the predicate). To prove that the predicate is closed we
-take a vector of triples $(as,bs,ps)$ consisting of a vector of
-elements in $A$, a vector of elements in $B$, and the proofs $ps$
-proving that $(as_i,bs_i)\in\phi$, since $B$ is op-closed we know
-$f(b_1,\ldots,b_n)\in B$ and because $\phi$ is also op-closed we
-deduce $(f(a_1,\ldots,a_n),f(b_1,\ldots,b_n)\in\phi$. Finally, the
+satisfies the predicate). To prove that the predicate is closed under
+the operations we take a vector of triples $(as,bs,ps)$ consisting of
+a vector of elements in $A$, a vector of elements in $B$, and the
+proofs $ps$ proving that $(as_i,bs_i)\in\phi$. Let $f$ be an
+operation, since $B$ is closed we know $f(b_1,\ldots,b_n)\in B$ and
+because $\phi$ is also closed we deduce
+$(f(a_1,\ldots,a_n),f(b_1,\ldots,b_n))\in\phi$. Finally, the
 underlying function witnessing the isomorphism
 $[\alg B]^{\phi} \simeq \alg B / \phi_B$ is given by composing the
 second projection with the first projection, thus getting an element

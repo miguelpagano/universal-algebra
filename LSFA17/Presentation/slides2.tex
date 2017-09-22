@@ -1,0 +1,471 @@
+\documentclass[11pt]{beamer}
+%\documentclass[11pt,trans]{beamer}
+\usetheme{Darmstadt}
+\newcommand{\beginbackup}{
+   \newcounter{framenumbervorappendix}
+   \setcounter{framenumbervorappendix}{\value{framenumber}}
+}
+\newcommand{\backupend}{
+   \addtocounter{framenumbervorappendix}{-\value{framenumber}}
+   \addtocounter{framenumber}{\value{framenumbervorappendix}} 
+}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{ 
+  \hbox{%
+  \begin{beamercolorbox}[wd=.50\paperwidth,ht=2.25ex,dp=1ex,center]{white}%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.20\paperwidth,ht=2.25ex,dp=1ex,center]{white}%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.30\paperwidth,ht=2.25ex,dp=1ex,left]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\hspace{1em}\textbf{\insertsection} \hspace*{2em}
+    \textbf{\insertframenumber{} / \inserttotalframenumber}\hspace*{0.5em}
+  \end{beamercolorbox}
+  }%
+  \vskip0pt%
+}
+\setbeamertemplate{footline}{}
+\setbeamertemplate{headline}{
+\hbox{
+  \begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,right]{white}%
+    \color{black}\textbf{\insertframenumber{} /\inserttotalframenumber}\hspace*{2em}
+  \end{beamercolorbox}}
+  \vspace{-.4cm}
+}
+
+\setbeamertemplate{section in toc}{\leftskip=2ex%
+    \usebeamerfont*{section number projected}%
+    \usebeamercolor{section number projected}%
+    \begin{pgfpicture}{-1ex}{2pt}{1ex}{2.2ex}
+      \color{bg}
+      \pgfpathcircle{\pgfpoint{0pt}{1.5ex}}{1.8ex}
+      \pgfusepath{fill}
+      \pgftext[bottom,y=3pt]{\color{fg}\inserttocsectionnumber}
+    \end{pgfpicture}\kern1em%
+  \inserttocsection\par}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathpartir}
+\usepackage{minted}
+\usepackage{bussproofs}
+
+
+\usepackage{fontspec}
+\setmonofont{DejaVu Sans Mono}
+
+\let\emph\relax
+\DeclareTextFontCommand{\emph}{\bfseries\em}
+
+\title{Formalization of Universal Algebra in Agda}
+\author{\underline{Emmanuel Gunther}, Alejandro Gadea and Miguel Pagano}
+\institute{FAMAF, Universidad Nacional de Cordoba, Cordoba, Argentina}
+\date{}
+\newcommand{\titlePoint}[1]{#1}
+\newcommand{\point}[1]{\textcolor{gray}{#1}}
+
+\begin{document}
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\section{Why this work?}
+
+\begin{frame}{Why this work?}
+  \begin{itemize}[<+->]
+  \item \titlePoint{What is Universal Algebra?}
+    \point{A common and abstract theory for different algebraic structures.}
+
+  \item Importance of Universal Algebra in Computer Science.
+    \point{Specification of datatypes, semantics and compilers. To conceive
+      a language as an initial algebra of a signature.}
+
+  \item Our first motivation in Universal Algebra: To develop an algebraic correct
+    compiler certified in Type Theory.
+    \point{It involves the notions of \emph{derived signature morphisms} and
+      \emph{reduct algebras}.}
+
+  \item Available formalizations were not suitable.
+  \end{itemize}
+\end{frame}
+
+\section{What we did?} 
+
+\begin{frame}{Formalization of Universal Algebra in Type Theory}
+  
+  \begin{block}{Previous Works}
+      Out-dated or restricted to some particular algebras.
+    \point{
+      \begin{itemize}
+      \item Capretta: Formalization in Coq (1999). 
+      \item Kahl: Formalization of allegories (too broad).  
+      \item Spitters: Development of the algebraic hierarchy.
+    \end{itemize}
+    }
+   \end{block}
+
+   \pause
+  \begin{block}{Our paper}
+  \begin{itemize}
+     \item Main definitions of Heterogeneous Universal Algebra in Agda.
+     \item Some basic results: for example, the three isomorphism theorems.
+     \item Conditional equational calculus, soundness and completeness.
+     \item First formalization of derived signature morphism and
+          reduct algebras.
+  \end{itemize}
+\end{block}
+\end{frame}
+
+
+\section{Heterogeneous Algebras}
+
+\begin{frame}{Heterogeneous Signature}
+  \begin{itemize}[<+->]
+    \setlength\itemsep{1em}
+  \item An heterogeneous signature consists of a set of \emph{sorts} and a
+    set of \emph{operations symbols} $(f,[s_1,...,s_n],s)$
+
+  \item Operation symbols are formalized as a family indexed on sorts.
+
+  \item This allows to define predicates and functions over operations
+    in a type-theoretical way.
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Heterogeneous Signature, example}
+  \begin{block}{}
+    \begin{minted}{agda}
+record Signature : Set where 
+  field
+    sorts  : Set
+    ops    : (List sorts) × sorts → Set
+    \end{minted}
+  \end{block}
+  \pause
+
+  \begin{block}{Multi-sorted Signature}
+    \begin{minted}[fontsize=\footnotesize]{agda}
+data ESorts : Set where
+  N : ESorts
+  B : ESorts
+  
+data EOps : List ESorts × ESorts → Set where
+  consN  : (n : ℕ) → EOps ([] , N)
+  plus   : EOps (N ∷ N ∷ [] , N)
+  eqN    : EOps (N ∷ N ∷ [] , B)
+
+ExprSig : Signature
+ExprSig = record  { sorts  = ESorts
+                  ; ops    = EOps }
+    \end{minted}
+
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Heterogeneous Signature}
+  \begin{block}{}
+\begin{minted}{agda}
+record Signature : Set where 
+  field
+    sorts  : Set
+    ops    : (List sorts) × sorts → Set
+    \end{minted}
+  \end{block}
+
+
+  \begin{block}{A Monosorted Signature}
+    \begin{minted}{agda}
+data op-mon : List ⊤ × ⊤ → Set where
+  e    : op-mon ([] , tt)
+  op   : op-mon ([ tt , tt ] , tt)
+
+Σ-mon : Signature
+Σ-mon = record { sorts = ⊤ ; ops = op-mon }
+    \end{minted}
+
+  \end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]{Heterogeneous Algebra}
+  \begin{itemize}[<+->]
+    \setlength\itemsep{1em}
+  \item An heterogeneous algebra consists of the interpretation of sorts (called carriers) and operations of
+    a signature.
+
+  \item Constructively, one does not deal with sets for representing carriers, but with setoids.
+    \point{Setoids make explicit the equality of its underlying set.
+      Quotient sets are easily defined.}
+    
+  \item Each operation is interpreted as a function from
+    the product of the interpretation of its arity to the
+    interpretation of its target.
+    
+  \item We formalized the product of carriers with
+    \emph{heterogeneous vectors}: collections of elements indexed by lists
+    of sorts.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Heterogeneous Algebra}
+  \begin{block}{Setoids, from Agda's stdlib}
+    \begin{minted}{agda}
+record Setoid : Set where
+  field
+    Carrier       : Set 
+    _≈_           : Carrier → Carrier → Set
+    isEquivalence : IsEquivalence _≈_
+      \end{minted}
+  \end{block}
+  \pause
+  \begin{block}{Heterogeneous Vectors}
+    \begin{minted}[fontsize=\footnotesize]{agda}
+data HVec {I : Set} (A : I -> Set) : List I → Set where
+  ⟨⟩  : HVec A []
+  _▹_ : ∀ {i is} → A i → HVec A is → HVec A (i ∷ is)
+       \end{minted}
+     \end{block}
+     Heterogeneous vectors turned to be useful in other contexts of
+     our development (theories, deduction rules).
+\end{frame}
+
+\begin{frame}[fragile]{Basic Constructions and Some Results}
+  \begin{itemize}[<+->]
+  \setlength\itemsep{1em}
+\item Important algebraic concepts:
+\emph{Subalgebras}, \emph{Homomorphism}, \emph{Congruences}.
+      
+\item Congruences give rise to \emph{Quotient algebras}.
+  
+\item Quotient are easily defined thanks to setoids:
+keep the carriers and use the congruence as the new equality.
+
+\item These constructions are related by the three \emph{isomorphism
+    theorems}.
+
+\item We also defined the \emph{term algebra} and proved it \emph{initial}.
+\end{itemize}
+\end{frame}
+
+
+\section{Equational Logic}
+
+\begin{frame}[fragile]{Conditional Equational Logic}
+
+\begin{itemize}[<+->]
+\item The meta-theory of multisorted equational logic presents some
+  differences with respect to the single-sorted case.
+
+\item We formalized the deductive system for multisorted conditional
+  equational logic as presented in the work of Goguen and Lin.
+
+\item We proved soundness and completeness of this calculus.
+
+% \begin{figure}[t]
+%   \centering
+%   \bottomAlignProof
+%   \AxiomC{}
+%   \UnaryInfC{$ {\scriptstyle E \vdash \forall X,\, t = t } $}
+%   \DisplayProof\hspace{2ex}
+% %
+%   \bottomAlignProof
+%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_1 } $}
+%   \UnaryInfC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t_0 } $}
+%   \DisplayProof \hspace{2ex}
+% % 
+%  \bottomAlignProof
+%  \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_1 }$}
+%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t_2} $}
+%   \BinaryInfC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_2} $}
+%   \DisplayProof
+% \\[6pt]
+%   \AxiomC{$ {\scriptstyle \forall X,\,t = t' \ \mathsf{if}\
+%       t_1=t'_1,\ldots, t_n=t'_n \in E} $}
+%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\,\sigma(t_i) = \sigma(t'_i)} $}
+%   \RightLabel{$ {\scriptstyle \sigma \colon X \rightarrow E_\Sigma(X)} $}
+%   \BinaryInfC{$ {\scriptstyle E \vdash \forall X,\, \sigma(t) = \sigma(t')} $}
+%   \DisplayProof
+% \\[6pt]
+%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t'_1} $}
+%   \AxiomC{$ {\scriptstyle \cdots} $}
+%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_n = t'_n} $}
+%   \RightLabel{$ {\scriptstyle f : [s_1,...,s_{n}] \Rightarrow_{\Sigma} s} $}
+%   \TrinaryInfC{$ {\scriptstyle E \vdash \forall X,\, f\,(t_1,\ldots,t_n) = f\,(t'_1,\ldots,t'_n)} $}
+%   \DisplayProof
+%   \label{fig:deduction}
+% \end{figure}
+\end{itemize}
+  
+\end{frame}
+
+\begin{frame}[fragile]{Conditional Equational Logic: an Example}
+
+  \begin{block}{Propositional Logic}
+    \begin{minted}[fontsize=\scriptsize]{agda}
+data Σops : List ⊤ × ⊤ → Set where
+  t        : Σops₁ ([] ↦ tt)
+  f        : Σops₁ ([] ↦ tt)
+  neg      : Σops₁ ([ tt ] ↦ tt)
+  and , or : Σops₁ ((tt ∷ [ tt ]) ↦ tt)
+
+Σbool : Signature
+Σbool = record { sorts = ⊤ ; ops = Σops }
+\end{minted}
+%
+\pause
+%    
+\begin{minted}[fontsize=\scriptsize]{agda}
+_∧_ , _∨_ : BTerm → BTerm → BTerm   -- and, or operators
+φ ∧ ψ = term and ⟨⟨ φ , ψ ⟩⟩
+  
+¬ : BTerm → BTerm                   -- neg operator
+¬ φ = term neg₁ ⟪ φ ⟫   
+
+p , q : BTerm                        -- variables
+\end{minted}
+\pause
+\begin{minted}[fontsize=\scriptsize]{agda}
+axAbs₁ , ax3excl, axAssoc∧ , ... : EqBool
+axAbs₁ = ⋀ p ∧ (p ∨ q) ≈ p
+
+Tbool : Theory ΣBool X (tt ∷ tt ∷ ... ∷ [ tt ])
+Tbool = axAbs₁ ▹ (ax3excl ▹ axAssoc∧ ▹ ... ▹ ⟨⟩)
+\end{minted}
+    
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Conditional Equational Logic: Example}
+
+\begin{block}{Neutral element of conjunction}
+\begin{minted}[fontsize=\footnotesize]{agda}
+Neu∧ : Tbool ⊢ ⋀ p ∧ true ≈ p
+Neu∧ =
+begin
+  p ∧ true
+
+≈⟨ preemp ∼⟨⟨ prefl , psym (ax3excl ∣ idSubst) ⟩⟩∼ ⟩
+
+  p ∧ (p ∨ (¬ p))
+
+≈⟨ axAbs₁ ∣ (λ q ⟶ ¬ p) ) ⟩
+
+  p
+
+∎
+\end{minted}
+\end{block}
+\end{frame}
+
+
+
+\section{Derived Signature Morphisms}
+
+\begin{frame}{Derived Signature Morphisms}
+  \begin{itemize}[<+->]
+  \item When we wanted to define a correct compiler via universal
+    algebra we rediscovered the concept of \emph{derived signature
+      morphism}.
+
+  \item Derived signature morphisms allows to define translations in a
+    generic way.
+
+     \begin{block}{Example}
+       $\Sigma_{BOOL} = \{ T,F,\neg,\wedge,\vee \}$ $\;\;\;\;\Sigma_{DS} = \{ T,F,\vee,\equiv \}$
+
+       \medskip
+       $\Sigma_{BOOL} \leadsto \Sigma_{DS}$
+
+       $\;\;\;T \;\;\;\;\;\;\;\;\leadsto T$
+
+       $\;\;\;F \;\;\;\;\;\;\;\;\leadsto F$
+       
+       $\;\;\;\neg x \;\;\;\;\;\;\leadsto x \equiv F$
+       
+       $\;\;\;(x \wedge y) \leadsto (x \equiv y) \equiv (x \vee y)$
+     \end{block}
+  
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Translations}
+  \begin{itemize}[<+->]
+  \item A derived signature morphism maps sorts and operations from
+    one signature to another. Each operation is mapped to a
+    combination of operations preserving arities.
+
+
+  \item From a derived signature morphism from $\Sigma_1$ to
+    $\Sigma_2$, it is possible to define a $\Sigma_2$-algebra from a
+    $\Sigma_1$-algebra. This concept is known as \emph{reduct
+      algebra}.
+
+    
+  \item Translation of operations are formalized by defining
+    meta-terms over signatures.
+    \point{Having the operations defined
+      as indexed families makes the preservation of arities trivial.}
+
+  \item This is the first formalization in Type Theory of derived
+    signature morphisms and reduct algebras.
+
+  \end{itemize}
+\end{frame}
+
+\section{Conclusion and future work}
+
+\begin{frame}{Conclusions}
+  \begin{itemize}[<+->]
+    
+  \item Universal Algebra plays an important role in Computer Science
+    and there is not much work done in Type Theory.
+    
+  \item We have developed in Agda a library with the main concepts of
+    Heterogeneous Universal Algebra and some basic results.
+
+  \item We presented a novel representation of heterogeneous signatures
+    and an independent library of heterogeneous vectors.  
+
+  \item We formalized a deduction system for conditional equational
+    logic and proved its soundness and completeness.
+
+  \item Finally we defined the first representation of derived
+    signature morphisms and reduct algebras in Type Theory.
+        
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Future work}
+  % From this formalization we can continue in several directions.
+
+  \begin{itemize}[<+->]
+    \setlength\itemsep{1em}
+  \item Formalize more results of Heterogeneous Universal Algebra, like Birkhoff's
+    (quasy)-variety characterization.
+    
+  \item Formalize different logics and the translation between them: Institutions.
+    
+  \item Formalize Rewriting Systems Modulo axioms and Decision procedures.
+
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Thank you}
+
+  Questions?
+  
+\end{frame}
+
+
+
+\end{document}
+
+
+
+

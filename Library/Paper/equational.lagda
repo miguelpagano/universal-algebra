@@ -58,7 +58,7 @@ terms with sort |s|. A conditional equation is modelled as record with
 fields for the conclusion and the conditions, modelled as an
 heterogeneous vector of sorted identities . We declare a constructor
 to use the lighter notation |⋀ eq if (ar , eqs)| instead of |record {
-  eq = e ; cond = (ar , eqs )}|. \vspace{-6pt}
+  eq = e ; cond = (ar , eqs )}|. 
 \begin{spec}
 record Equation (Σ : Signature) (X : sorts Σ → Set) (s : sorts Σ) : Set where
   constructor ⋀_if_
@@ -72,12 +72,21 @@ vector of conditional equations.
 Theory : (Σ : Signature) → (X : sorts Σ → Set) → (ar : List (sorts Σ)) → Set
 Theory Σ X ar = HVec (Equation Σ X) ar
 \end{spec}
-Notice that in our formalization all the equations of a theory share
-the same set of variables, in contrast with Goguen' and Lin's
-calculus where each equation has its own set of quantified variables.
-We have this difference for reasons of simplicity in the implementation, but
-we could prove that is equivalent, because one can take the union of variables
-of all equations. 
+We deviate from Goguen's and Lin's in that we assume that all the
+equations of a theory share the same set of variables, while they
+assume that each equation has its own set of quantified
+variables. Clearly, this simplification is harmless; if we have a
+theory where each equation has its own set of variables, we can take
+the union of those sets as the common set. As stressed by Goguen and
+Meseguer \cite{goguen-remarks-87}, quantifying equations is essential:
+\begin{quote}
+  [\ldots] the naive unsorted rules of deduction for equational logic
+  (namely, reflexivity, symmetry, transitivity and substitutivity) are
+  not sound when extended to the many-sorted case in the obvious way;
+  [\ldots] adding variable declarations to these rules
+  yields a rule set that is sound.
+\end{quote}
+
 \comment{\noindent Notice that we follow Goguen and Meseguer in that equations
 are given explicitly over a set of variables. This, in turn, leads us
 to define satisfiability as proposed by Huet and Oppen.}
@@ -112,21 +121,20 @@ A ⊨ₘ E = (A ⊨_)* E
 _⊨Σ_ : ∀ {Σ X ar s} → (E : Theory Σ X ar) → (e : Equation Σ X s) → Set
 _⊨Σ_ {Σ} E e = (A : Algebra Σ) → A ⊨ₘ E → A ⊨ e
 \end{spec}%
-\comment{\noindent  We notice that we choose to formalize the notion of
-satisfiability defined by \citet{huet-oppen}.}%
-%
+
 \paragraph{Provability} As noticed by Huet and Oppen
 \cite{huet-rewrite}, the definition of a sound deduction system for
 multi-sorted equality logic is more subtle than expected. We formalize
 the system presented in \cite{goguen2005specifying}, shown in
 Fig.~\ref{fig:deduction}. The first three rules are reflexivity,
-symmetry and transitivity; the fourth rule, called substitution, allows to instantiate an
-axiom with a substitution |σ|, provided one has proofs for every
-condition of the axiom; finally, the last rule internalizes Leibniz rule, for
-replacing equals by equals in subterms.  Notice that we can only prove
-identities and not quasi-identities.
-%Notice the absence of a rule for deducing
-%axioms as they are, in general, conditional equations.
+symmetry and transitivity; the fourth rule, called substitution,
+allows to instantiate an axiom with a substitution |σ|, provided one
+has proofs for every condition of the axiom;\footnote{In our
+  formalization this rule is slightly less general because we assume
+  all the equations are quantified over the same set of variables.}
+finally, the last rule internalizes Leibniz rule, for replacing equals
+by equals in subterms.  Notice that we can only prove identities and
+not quasi-identities.
 \begin{figure}[t]
   \centering
   \bottomAlignProof
@@ -145,10 +153,10 @@ identities and not quasi-identities.
   \BinaryInfC{$E \vdash \forall X,\, t_0 = t_2$}
   \DisplayProof
 \\[6pt]
-  \AxiomC{$\forall X,\,t = t' \ \mathsf{if}\
+  \AxiomC{$\forall Y,\,t = t' \ \mathsf{if}\
       t_1=t'_1,\ldots, t_n=t'_n \in E$}
   \AxiomC{$E \vdash \forall X,\,\sigma(t_i) = \sigma(t'_i)$}
-  \RightLabel{$\sigma \colon X \rightarrow E_\Sigma(X)$}
+  \RightLabel{$\sigma \colon Y \rightarrow T_\Sigma(X)$}
   \BinaryInfC{$E \vdash \forall X,\, \sigma(t) = \sigma(t')$}
   \DisplayProof
 \\[6pt]
@@ -185,19 +193,24 @@ term algebra by provable equality is a model.
 \begin{theorem}[Soundness and Completeness]
   $E \vdash t ≈ t'$ iff $E \models_{\Sigma} t ≈ t'$.
 \end{theorem}
+\noindent Let us remark that completeness does not imply that there is a
+decidability algorithm for every theory; \ie this result gives no decision
+procedure at all.
 
 Let $E$ and $E'$ be two theories over the signature $\Sigma$. We say
 that $E$ is \emph{stronger} than $E'$ if every axiom $e \in E'$ can be
-deduced from $E$, written $E \vdash\!\!\text{\textmd{T}} E'$.  Obviously if $E$
+deduced from $E$, written $E \vdash\!\!\text{\textup{T}}\, E'$.  Obviously if $E$
 is stronger than $E'$, then any equation that can be deduced from $E'$
 can also be deduced from $E$ and any model of $E$ is also a model of
-$E'$
+$E'$. 
 
 \subsection{A theory for Boolean Algebras }
-As an example we show a fragment (the full code is available in the
-cited URL) of the formalization of a Boolean Theory discussed in
-\cite{DBLP:conf/RelMiCS/RochaM08}.  The signature is mono-sorted, so
-we use the unit type as its only sort.\vspace{-6pt}
+As an example we show a fragment of the formalization of a Boolean
+Theory discussed in \cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The
+  full code is available at 
+  \url{https://cs.famaf.unc.edu.ar/~mpagano/universal-algebra/html/Examples.EqBool.html}.}
+The signature is mono-sorted, so we use the unit type as its only
+sort.
 \begin{spec}
 data bool-ops : List ⊤ × ⊤ → Set where
   f t    : bool-ops ([] ↦ tt)
@@ -209,7 +222,7 @@ bool-sig = record { sorts = ⊤ ; ops = bool-ops }
 \end{spec}
 We let |X tt = ℕ| be the set of variables, and let |Form|
 stand for terms over |bool-sig 〔 Vars 〕| with the
-following smart-constructors:\vspace{-6pt}
+following smart-constructors:
 \begin{spec}
 true false : Form
 true = term (inj₁ t) ⟨⟩
@@ -225,7 +238,7 @@ _∧_ : Form → Form → Form
 ¬ : Form → Form
 ¬ φ = term neg ⟨⟨ φ ⟩⟩
 \end{spec}
-\noindent We show only two of the twelve axioms of the theory |E-Bool|:\vspace{-6pt}
+\noindent We show only two of the twelve axioms of the theory |E-Bool|:
 \begin{spec}
 commAnd leastDef : Equation bool-sig Vars tt
 commAnd = ⋀ (p ∧ q) ≈ (q ∧ p) if ([] , ⟨⟩)
@@ -238,7 +251,7 @@ E-bool = ⟨ commAnd , leastDef , … ⟩
 facility for equational reasoning provided by the standard library of
 Agda. In the justification steps we use the substitution rule (called
 |psubst|) and the pattern-synonyms |commAndAx,leastDefAx| as short-hands for
-|commAnd ∈ E-bool| and |leastDef ∈ E-bool|, respectively.\vspace{-6pt}
+|commAnd ∈ E-bool| and |leastDef ∈ E-bool|, respectively.
 \begin{spec}
   p₁ : E-bool ⊢ (⋀ ¬ p ∧ p ≈ false)
   p₁ = begin

@@ -254,6 +254,33 @@ keep the carriers and use the congruence as the new equality.
 \end{frame}
 
 
+\begin{frame}[fragile]{Basic Constructions and Some Results}
+\begin{block}{Implementation of basic constructions and results}
+  \begin{minted}[fontsize=\scriptsize]{agda}
+record Homo (A B : Algebra Σ) : Set where
+    ....
+
+record Isomorphism (A B : Algebra Σ) : Set  where
+  field
+    hom : Homo A B
+    bij : (s : sorts Σ) → HomoBijective hom
+
+
+record Congruence (A : Algebra Σ) : Set where
+    ....
+
+_/_ : (A : Algebra Σ) → (C : Congruence A) → Algebra Σ
+A / C = ...
+
+firstIsoTheo : (h : Homo A B) → HomoSurjective h →
+                               Isomorphism (A / Kernel h) B
+firstIsoTheo = ...
+  \end{minted}
+\end{block}
+\end{frame}
+
+
+
 \section{Equational Logic}
 
 \begin{frame}[fragile]{Conditional Equational Logic}
@@ -265,43 +292,89 @@ keep the carriers and use the congruence as the new equality.
 \item We formalized the deductive system for multisorted conditional
   equational logic as presented in the work of Goguen and Lin.
 
-\item We proved soundness and completeness of this calculus.
+\begin{figure}[t]
+  \centering
+  \bottomAlignProof
+  \AxiomC{}
+  \UnaryInfC{$ {\scriptstyle E \vdash \forall X,\, t = t } $}
+  \DisplayProof\hspace{2ex}
+%
+  \bottomAlignProof
+  \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_1 } $}
+  \UnaryInfC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t_0 } $}
+  \DisplayProof \hspace{2ex}
+% 
+ \bottomAlignProof
+ \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_1 }$}
+  \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t_2} $}
+  \BinaryInfC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_2} $}
+  \DisplayProof
+\\[6pt]
+  \AxiomC{$ {\scriptstyle \forall X,\,t = t' \ \mathsf{if}\
+      t_1=t'_1,\ldots, t_n=t'_n \in E} $}
+  \AxiomC{$ {\scriptstyle E \vdash \forall X,\,\sigma(t_i) = \sigma(t'_i)} $}
+  \RightLabel{$ {\scriptstyle \sigma \colon X \rightarrow E_\Sigma(X)} $}
+  \BinaryInfC{$ {\scriptstyle E \vdash \forall X,\, \sigma(t) = \sigma(t')} $}
+  \DisplayProof
+\\[6pt]
+  \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t'_1} $}
+  \AxiomC{$ {\scriptstyle \cdots} $}
+  \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_n = t'_n} $}
+  \RightLabel{$ {\scriptstyle f : [s_1,...,s_{n}] \Rightarrow_{\Sigma} s} $}
+  \TrinaryInfC{$ {\scriptstyle E \vdash \forall X,\, f\,(t_1,\ldots,t_n) = f\,(t'_1,\ldots,t'_n)} $}
+  \DisplayProof
+  \label{fig:deduction}
+\end{figure}
 
-% \begin{figure}[t]
-%   \centering
-%   \bottomAlignProof
-%   \AxiomC{}
-%   \UnaryInfC{$ {\scriptstyle E \vdash \forall X,\, t = t } $}
-%   \DisplayProof\hspace{2ex}
-% %
-%   \bottomAlignProof
-%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_1 } $}
-%   \UnaryInfC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t_0 } $}
-%   \DisplayProof \hspace{2ex}
-% % 
-%  \bottomAlignProof
-%  \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_1 }$}
-%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t_2} $}
-%   \BinaryInfC{$ {\scriptstyle E \vdash \forall X,\, t_0 = t_2} $}
-%   \DisplayProof
-% \\[6pt]
-%   \AxiomC{$ {\scriptstyle \forall X,\,t = t' \ \mathsf{if}\
-%       t_1=t'_1,\ldots, t_n=t'_n \in E} $}
-%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\,\sigma(t_i) = \sigma(t'_i)} $}
-%   \RightLabel{$ {\scriptstyle \sigma \colon X \rightarrow E_\Sigma(X)} $}
-%   \BinaryInfC{$ {\scriptstyle E \vdash \forall X,\, \sigma(t) = \sigma(t')} $}
-%   \DisplayProof
-% \\[6pt]
-%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_1 = t'_1} $}
-%   \AxiomC{$ {\scriptstyle \cdots} $}
-%   \AxiomC{$ {\scriptstyle E \vdash \forall X,\, t_n = t'_n} $}
-%   \RightLabel{$ {\scriptstyle f : [s_1,...,s_{n}] \Rightarrow_{\Sigma} s} $}
-%   \TrinaryInfC{$ {\scriptstyle E \vdash \forall X,\, f\,(t_1,\ldots,t_n) = f\,(t'_1,\ldots,t'_n)} $}
-%   \DisplayProof
-%   \label{fig:deduction}
-% \end{figure}
+
+\item We proved soundness and completeness of this calculus.
 \end{itemize}
   
+\end{frame}
+
+
+\begin{frame}[fragile]{Conditional Equational Logic}
+  
+\begin{block}{Definition of Quasy Identities}
+  \begin{minted}[fontsize=\tiny]{agda}
+record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
+  constructor _≈_
+  field
+    left  : | T Σ ( X ) ⟦ s ⟧ₛ |
+    right : | T Σ ( X ) ⟦ s ⟧ₛ |
+
+record CondEq (Σ : Signature) (X : Vars Σ) (arty : Arity Σ) (s : sorts Σ) : Set where
+  constructor _if_
+    field
+      eq   : Equation Σ X s
+      cond : HVec (Equation Σ X) arty
+  \end{minted}
+\end{block}
+\pause
+
+\begin{block}{Provability and satisfaction}
+\begin{minted}[fontsize=\tiny]{agda}
+data _⊢_ ∀ {Σ X ar} (E : Theory Σ X ar) :
+          ∀ {s} → CondEq Σ X s → Set where
+  prefl, psym, ptrans, psubst, prepl : ...
+
+_⊨_ : ∀ {Σ X s} → (A : Algebra Σ) → Equation Σ X s → Set
+...
+
+\end{minted}
+\end{block}
+\pause
+
+\begin{block}{Soundness and completeness}
+\begin{minted}[fontsize=\tiny]{agda}
+soundness : ∀ {Σ X ar s} → (E : Theory Σ X ar) → (e : Equation Σ X s) → E ⊢ e →
+                            (A : Algebra Σ) → A ⊨T E → A ⊨ e
+
+completeness : ∀ {Σ X ar s} (E : Theory Σ X ar) → (e : Equation Σ X s) → 
+               ((A : Algebra Σ) → A ⊨T E → A ⊨ e) → E ⊢ e
+\end{minted}
+\end{block}
+
 \end{frame}
 
 \begin{frame}[fragile]{Conditional Equational Logic: an Example}
@@ -354,7 +427,7 @@ begin
 
   p ∧ (p ∨ (¬ p))
 
-≈⟨ psubst axAbs₁ [ q ⟶ ¬ p] ⟩
+≈⟨ psubst axAbs₁ [ q ↦ ¬ p] ⟩
 
   p
 

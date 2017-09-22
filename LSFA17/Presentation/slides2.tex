@@ -59,7 +59,7 @@
 
 \title{Formalization of Universal Algebra in Agda}
 \author{\underline{Emmanuel Gunther}, Alejandro Gadea and Miguel Pagano}
-\institute{FAMAF, Universidad Nacional de Cordoba, Cordoba, Argentina}
+\institute{\textbf{FAMAF}, Universidad Nacional de Cordoba, Cordoba and \textbf{CONICET}, Argentina}
 \date{}
 \newcommand{\titlePoint}[1]{#1}
 \newcommand{\point}[1]{\textcolor{gray}{#1}}
@@ -77,6 +77,7 @@
 
 \begin{frame}{Why this work?}
   \begin{itemize}[<+->]
+        \setlength\itemsep{1em}
   \item \titlePoint{What is Universal Algebra?}
     \point{A common and abstract theory for different algebraic structures.}
 
@@ -140,7 +141,7 @@
 \begin{frame}[fragile]{Heterogeneous Signature, example}
   \begin{block}{}
     \begin{minted}{agda}
-record Signature : Set where 
+record Signature : Set₁ where 
   field
     sorts  : Set
     ops    : (List sorts) × sorts → Set
@@ -156,8 +157,8 @@ data ESorts : Set where
   
 data EOps : List ESorts × ESorts → Set where
   consN  : (n : ℕ) → EOps ([] , N)
-  plus   : EOps (N ∷ N ∷ [] , N)
-  eqN    : EOps (N ∷ N ∷ [] , B)
+  plus   : EOps ([ N , N ] , N)
+  eqN    : EOps ([N , N ] , B)
 
 ExprSig : Signature
 ExprSig = record  { sorts  = ESorts
@@ -170,7 +171,7 @@ ExprSig = record  { sorts  = ESorts
 \begin{frame}[fragile]{Heterogeneous Signature}
   \begin{block}{}
 \begin{minted}{agda}
-record Signature : Set where 
+record Signature : Set₁ where 
   field
     sorts  : Set
     ops    : (List sorts) × sorts → Set
@@ -308,10 +309,10 @@ keep the carriers and use the congruence as the new equality.
   \begin{block}{Propositional Logic}
     \begin{minted}[fontsize=\scriptsize]{agda}
 data Σops : List ⊤ × ⊤ → Set where
-  t        : Σops₁ ([] ↦ tt)
-  f        : Σops₁ ([] ↦ tt)
-  neg      : Σops₁ ([ tt ] ↦ tt)
-  and , or : Σops₁ ((tt ∷ [ tt ]) ↦ tt)
+  t        : Σops₁ ([] , tt)
+  f        : Σops₁ ([] , tt)
+  neg      : Σops₁ ([ tt ] , tt)
+  and , or : Σops₁ ([tt , tt ]) , tt)
 
 Σbool : Signature
 Σbool = record { sorts = ⊤ ; ops = Σops }

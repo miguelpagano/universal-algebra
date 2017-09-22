@@ -331,11 +331,11 @@ p , q : BTerm                        -- variables
 \end{minted}
 \pause
 \begin{minted}[fontsize=\scriptsize]{agda}
-axAbs₁ , ax3excl, axAssoc∧ , ... : EqBool
+axAbs₁ , axEM, axAssocAnd , ... : EqBool
 axAbs₁ = p ∧ (p ∨ q) ≈ p
 
 Tbool : Theory ΣBool X [ tt , tt , ... , tt ]
-Tbool = [ axAbs₁ , axEM , ... , axAssAnd ]
+Tbool = [ axAbs₁ , axEM , ... , axAssocAnd ]
 \end{minted}
     
 \end{block}

@@ -38,7 +38,9 @@ have a cleaner representation of algebraic structures.
 to several further work, in particular:
 \begin{enumerate*}[label=(\roman*),itemjoin={}]
 \item a natural step is to formalize institutions;
-\item consider algebras of binding structures as proposed by \cite{fiore-2010};
+\item consider algebras of binding structures as proposed by Fiore
+\cite{fiore-2010}, Capretta's and Felty's formalization \cite{capretta/felty:2009}
+of higher-order algebras might be an interesting starting point;
 \item introduce multi-sorted rewriting;
 \item formalize more of the mathematical theory behind universal algebra, for
   example Birkhoff's (quasi)-variety characterization; and

@@ -68,26 +68,66 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
   ↝ₛ : sorts Σₛ → sorts Σₜ
   ↝ₒ : ∀ {ar s}  → ops Σₛ (ar , s) → lmap ↝ₛ ar ⊩ ↝ₛ s
 
--- module SigMorCat where
 
---   module Id-mor (Σ : Signature) where
---     open FormalTerm Σ
---     id-π : (ar : Arity Σ) → HVec (λ _ → Fin (length ar)) ar
---     id-π [] = ⟨⟩
---     id-π (_ ∷ ar) = zero ▹ (map (λ _ x → suc x) (id-π ar))
 
---     id-mor : Σ ↝ Σ
---     id-mor = record { ↝ₛ = id
---                     ; ↝ₒ = λ {ar} {s} f → f ∣$∣ {!!} -- (map (λ i x → {!# x!}) (id-π ar))
---                     }
-          
---   module ∘-mor (Σ₁ Σ₂ Σ₃ : Signature) where
---     open FormalTerm
---     open _↝_
---     _∘↝_ : (m : Σ₁ ↝ Σ₂) (m' : Σ₂ ↝ Σ₃) → Σ₁ ↝ Σ₃
---     m ∘↝ m' = record { ↝ₛ = λ s → ↝ₛ m' (↝ₛ m s)
---                      ; ↝ₒ = {!!}
---                      }
+
+module SigMorCat where
+
+
+
+  module Id-mor (Σ : Signature) where
+    open FormalTerm Σ
+
+    mutual 
+      ⊩suc# : (ar : Arity Σ) → (s' s : sorts Σ) → ar ⊩ s → (s' ∷ ar) ⊩ s
+      ⊩suc# ar s' .(ar ‼ n) (# n) = # (suc n)
+      ⊩suc# ar s' s (_∣$∣_ {ar'} f v) = f ∣$∣ ⊩suc#vec ar ar' s' v
+
+      ⊩suc#vec : (ar ar' : Arity Σ) → (s' : sorts Σ) → HVec (_⊩_ ar) ar' → HVec (_⊩_ (s' ∷ ar)) ar'
+      ⊩suc#vec ar [] s' v = ⟨⟩
+      ⊩suc#vec ar (s₀ ∷ ar') s' (v ▹ vs) = (⊩suc# ar s' s₀ v) ▹ ⊩suc#vec ar ar' s' vs
+
+    idvecTerm : (ar : Arity Σ) → HVec (_⊩_ ar) ar
+    idvecTerm [] = ⟨⟩
+    idvecTerm (s ∷ ar) = (# zero) ▹ ⊩suc#vec ar ar s (idvecTerm ar)
+
+    mapid≡ : {A : Set} → (ls : List A) → ls ≡ lmap id ls
+    mapid≡ [] = refl
+    mapid≡ (x ∷ ls) = PE.cong (x ∷_) (mapid≡ ls)
+
+    id-mor : Σ ↝ Σ
+    id-mor = record { ↝ₛ = id
+                    ; ↝ₒ = λ {ar} {s} f → f ∣$∣ subst (λ ar' → HVec (_⊩_ ar') ar) (mapid≡ ar)
+                                                      (idvecTerm ar)
+                    }
+
+
+  module translate⊩ (Σ Σ' : Signature) where
+    open FormalTerm Σ
+    open FormalTerm Σ' renaming (_⊩_ to _⊩'_ ; # to #' ; _∣$∣_ to _∣$∣'_)
+    open _↝_
+
+    -- translate a formal term applying a sig morphism
+    ↝⊩ : (m : Σ ↝ Σ') → (ar : Arity Σ) → (s : sorts Σ) →
+              ar ⊩ s → lmap (↝ₛ m) ar ⊩' (↝ₛ m) s
+    ↝⊩ m ar .(ar ‼ n) (# n) = {!#' n!}
+    ↝⊩ m ar s (f ∣$∣ ts) = {!!}
+
+  module ∘-mor (Σ₁ Σ₂ Σ₃ : Signature) where
+    open FormalTerm Σ₃
+    open _↝_
+
+    lmap∘ : {A B C : Set} → (ls : List A) → (f : A → B) → (g : B → C) → 
+            lmap g (lmap f ls) ≡ lmap (g ∘ f) ls
+    lmap∘ [] f g = refl
+    lmap∘ (x ∷ ls) f g = PE.cong (g (f x) ∷_) (lmap∘ ls f g)
+
+    _∘↝_ : (m : Σ₁ ↝ Σ₂) (m' : Σ₂ ↝ Σ₃) → Σ₁ ↝ Σ₃
+    m ∘↝ m' = record { ↝ₛ = λ s → ↝ₛ m' (↝ₛ m s)
+                     ; ↝ₒ = λ {ar} {s} f → subst (λ ar' → ar' ⊩ ↝ₛ m' (↝ₛ m s)) (lmap∘ ar (↝ₛ m) (↝ₛ m'))
+                                                   (↝⊩ m' (lmap (↝ₛ m) ar) (↝ₛ m s) (↝ₒ m f))
+                     }
+       where open translate⊩ Σ₂ Σ₃
 
 {- Reduct algebras -}
 module ReductAlgebra {Σₛ Σₜ} (t : Σₛ ↝ Σₜ) where

@@ -40,7 +40,7 @@ of |A| and |B|.
 
 In order to declare a concrete signature one first declares
 the set of sorts and the set of operations, which are then bundled
-together in a record.  For example, the mono-sorted signature of monoids has an
+together in a record.  For example, the mono-sorted signature of monoids has a
 unique sort, so we use the unit type |⊤| with its sole constructor
 |tt|. We define a family indexed on |List ⊤ x ⊤|, with two constructors,
 corresponding with the operations: a 0-ary operation |e|, and a binary
@@ -107,7 +107,7 @@ mathematical definition of carriers assumes an underlying notion of
 equality.  In type theory one makes it apparent by using setoids (\ie
 sets paired with an equivalence relation), which were thoroughly
 studied by Barthe et al.~\cite{barthe-setoids-2003}. Setoids are
-defined in the the standard library \cite{danielsson-agdalib} of
+defined in the standard library \cite{danielsson-agdalib} of
 Agda\footnote{Our formalization is based on several concepts defined
   in the standard library.} as a record with three
 fields.
@@ -126,7 +126,7 @@ correspond to the proofs of reflexivity, symmetry, and transitivity.
 The finest equivalence relation over any set is given
 by the \emph{propositional equality} which only equates each element with
 itself, thus we can endow any set with a setoid structure with the function
-|setoid : Set → Setoid| of standard library; vice versa, there
+|setoid : Set → Setoid| of the standard library; vice versa, there
 is a forgetful functor | ∥_∥ : Setoid → Set | which returns the carrier.
 
 Setoid morphisms are functions which preserve the equality:
@@ -323,7 +323,7 @@ is given by |csubst Q|.
 
 \paragraph{Isomorphism Theorems} The definitions of subalgebras,
 quotients, and epimorphisms (surjective homomorphisms) are related by
-the three isomorphims theorems. Although there is some small overhead
+the three isomorphism theorems. Although there is some small overhead
 by the coding of subalgebras, the proofs follow very close what one would
 do in paper. For proving these results we also defined the
 \emph{kernel} and the \emph{homomorphic} image of homomorphisms.
@@ -383,12 +383,12 @@ $[\alg B]^{\phi} \simeq \alg B / \phi_B$ is given by composing the
 second projection with the first projection, thus getting an element
 in $B$.
 
-\subsection{Term algebra is initial}
+\subsection{The Term Algebra is initial}
 
 A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for any
 $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
 from $\mathcal{A}$ to $\mathcal{B}$. We give an abstract definition of
-this universal property, existence of an unique element, for any set
+this universal property, existence of a unique element, for any set
 |A| and any relation |R|
 \begin{spec}
 hasUnique {A} _≈_ = A × (∀ a a' → a ≈ a')

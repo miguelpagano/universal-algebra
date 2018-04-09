@@ -56,7 +56,7 @@ Let |Σ| be a signature and |X : sorts Σ → Set| be a family of
 variables for |Σ|. An identity |e : Eq Σ X s| is a pair of (open)
 terms with sort |s|. A conditional equation is modelled as record with
 fields for the conclusion and the conditions, modelled as an
-heterogeneous vector of sorted identities . We declare a constructor
+heterogeneous vector of sorted identities. We declare a constructor
 to use the lighter notation |⋀ eq if (ar , eqs)| instead of |record {
   eq = e ; cond = (ar , eqs )}|. 
 \begin{spec}
@@ -186,9 +186,9 @@ also use the facility provided by the standard library to write
 proofs with several transitive steps more nicely, as can be seen
 in the next example.
 
-The proofs of soundness and completeness are proved as in the
+Soundness and completeness are proved as in the
 mono-sorted case. For soundness one proceeds by induction on the
-derivations; completeness is a consequence that the quotient of the
+derivations; completeness is a consequence of the fact that the quotient of the
 term algebra by provable equality is a model.
 \begin{theorem}[Soundness and Completeness]
   $E \vdash t ≈ t'$ iff $E \models_{\Sigma} t ≈ t'$.
@@ -199,7 +199,7 @@ procedure at all.
 
 Let $E$ and $E'$ be two theories over the signature $\Sigma$. We say
 that $E$ is \emph{stronger} than $E'$ if every axiom $e \in E'$ can be
-deduced from $E$, written $E \vdash\!\!\text{\textup{T}}\, E'$.  Obviously if $E$
+deduced from $E$, written $E \vdash_{T}\, E'$.  Obviously if $E$
 is stronger than $E'$, then any equation that can be deduced from $E'$
 can also be deduced from $E$ and any model of $E$ is also a model of
 $E'$. 

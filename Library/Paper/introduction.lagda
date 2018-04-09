@@ -5,8 +5,8 @@ of algebraic structures at an abstract level, thus revealing common
 results which are valid for all of them and also allowing for a
 unified definition of constructions (for example, products,
 sub-algebra, congruences). Universal algebra has played a relevant
-role in computer science since its earliest days, in particular the
-seminal paper of Birkhoff~\cite{birkhoff-70} features regular
+role in computer science since its earliest days, in particular Birkhoff's
+seminal paper~\cite{birkhoff-70} features regular
 languages as a prominent example; shortly before,
 Burstall~\cite{burstall69} had proved properties of programs using
 structural induction, by conceiving the language as an
@@ -15,7 +15,7 @@ key theoretical tool for specifying data
 types~\cite{adj-abstract-data-types}, semantics~\cite{goguen-77}, and
 compilers~\cite{thatcher1981more}.  More recently,
 institutions~\cite{goguen-92}, a generalization of universal algebra,
-has been used as a foundation of methodologies and frameworks for
+have been used as a foundation of methodologies and frameworks for
 software specification and development~\cite{sannella2012foundations}.
 
 In spite of the rich mathematical theory of heterogeneous algebras
@@ -45,7 +45,7 @@ universal algebra. The main contributions of this paper are:
 We formalized the proof that the term algebra is initial and also the
 proofs of the three isomorphism theorems; moreover we also define a
 deduction system for conditional equational logic and prove its
-soundness and completeness with respect to Goguen and Meseguer semantics~\cite{GoguenM82}.
+soundness and completeness with respect to Goguen and Meseguer's semantics~\cite{GoguenM82}.
 We also showed that the translations of
 theories arising from derived signature morphisms induces a
 contra-variant functor between models.  In the complete development,
@@ -87,7 +87,7 @@ congruences, quotients and subalgebras, the proofs of three
 isomorphisms theorems, and the proof of the initiality of the term
 algebra.  In Sec.~\ref{sec:eqlog} we define an equational calculus, introducing
 concepts of equations, theories, satisfiability and provability,
-ending with the Birkhoff proofs of soundness and completeness.  In
+ending with Birkhoff's proofs of soundness and completeness.  In
 Sec.~\ref{sec:trans} we introduce a new representation of (derived) signature
 morphisms and reduct algebras (and homomorphisms), and we explore
 translation and implication of theories.

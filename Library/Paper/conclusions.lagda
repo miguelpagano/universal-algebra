@@ -23,7 +23,7 @@ also preserves models.
 formalizations covering some aspects of universal algebra. As far as
 we know, since Capretta's \cite{capretta-99} first mechanization of
 universal algebra and its further extension to equational logic in his
-thesis, the closest new works are Kahl's \cite{kahl-2011}'s
+thesis, the closest new works are Kahl's \cite{kahl-2011}
 formalization of allegories and the development of the algebraic
 hierarchy lead by Spitters \cite{spitters-algebraic-11}. Capretta
 considered only finitary signatures and his work does not encompass

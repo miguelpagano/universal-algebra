@@ -72,7 +72,19 @@ examples, the names of operations are constructors of a family of
 datatypes and so it is possible to perform pattern matching on
 them. Notice also that infinitary signatures can be represented in our
 setting; in fact, all the results are valid for any signature, be it
-finite or infinite.
+finite or infinite. As an example of a signature with infinite operations, consider
+a language of arithmetic expressions: We have a constant operation for each natural
+number and an operation representing the addition of two expressions.
+\newpage
+
+\begin{spec}
+data Sortsₑ : Set where E : Sortsₑ
+
+data Opsₑ : List Sortsₑ × Sortsₑ → Set where
+  val   : (n : ℕ)   → Opsₑ ([] , E)
+  plus  : Opsₑ ( E ∷ [ E ] , E )
+\end{spec}
+
 
 \paragraph{Algebra}
 

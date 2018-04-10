@@ -50,7 +50,7 @@ We also showed that the translations of
 theories arising from derived signature morphisms induces a
 contra-variant functor between models.  In the complete development,
 which is available at
-\url{https://cs.famaf.unc.edu.ar/~mpagano/universal-algebra/}, we
+\url{https://github.com/manugunther/agda-universal-algebra.git}, we
 include several examples featuring both the use of equational
 reasoning and the preservation of models by signature morphisms.
 

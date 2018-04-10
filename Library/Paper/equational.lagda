@@ -207,10 +207,16 @@ $E'$.
 \subsection{A theory for Boolean Algebras }
 As an example we show a fragment of the formalization of a Boolean
 Theory discussed in \cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The
-  full code is available at 
-  \url{https://cs.famaf.unc.edu.ar/~mpagano/universal-algebra/html/Examples.EqBool.html}.}
-The signature is mono-sorted, so we use the unit type as its only
-sort.
+  full code is available at ``Examples/EqBool.agda'', at repository}
+The process of defining an equational theory in our library consists of the following steps:
+
+\begin{itemize}
+\item Define the signature describing the language, and a set of variables.
+
+
+\noindent In this case we have a mono-sorted signature, so we use the unit type
+as its only sort:
+
 \begin{spec}
 data bool-ops : List ⊤ × ⊤ → Set where
   f t    : bool-ops ([] ↦ tt)
@@ -220,9 +226,12 @@ data bool-ops : List ⊤ × ⊤ → Set where
 bool-sig : Signature
 bool-sig = record { sorts = ⊤ ; ops = bool-ops }
 \end{spec}
-We let |X tt = ℕ| be the set of variables, and let |Form|
-stand for terms over |bool-sig 〔 Vars 〕| with the
-following smart-constructors:
+
+We let |X tt = ℕ| be the set of variables.
+
+\item Define smart-constructors for terms of the extended signature with variables: One for each
+  operation and one for each variable that we want to use in the definition of axioms and theorems.
+
 \begin{spec}
 true false : Form
 true = term (inj₁ t) ⟨⟩
@@ -238,20 +247,26 @@ _∧_ : Form → Form → Form
 ¬ : Form → Form
 ¬ φ = term neg ⟨⟨ φ ⟩⟩
 \end{spec}
-\noindent We show only two of the twelve axioms of the theory |E-Bool|:
+
+\noindent where |Form| are the terms over |bool-sig 〔 X 〕|.
+
+\item Define the equations for each axiom of the theory.
+
 \begin{spec}
-commAnd leastDef : Equation bool-sig Vars tt
+commAnd leastDef : Equation bool-sig X tt
 commAnd = ⋀ (p ∧ q) ≈ (q ∧ p) if ([] , ⟨⟩)
 leastDef = ⋀ (p ∧ (¬ p)) ≈ false  if ([] , ⟨⟩)
 
-E-bool : Theory bool-sig Vars [ tt , tt , … ]
+E-bool : Theory bool-sig X [ tt , tt , … ]
 E-bool = ⟨ commAnd , leastDef , … ⟩
 \end{spec}
-\noindent The following example shows an equational proof using the
-facility for equational reasoning provided by the standard library of
-Agda. In the justification steps we use the substitution rule (called
-|psubst|) and the pattern-synonyms |commAndAx,leastDefAx| as short-hands for
-|commAnd ∈ E-bool| and |leastDef ∈ E-bool|, respectively.
+
+\noindent We show only two of the twelve axioms of the theory |E-Bool|.
+
+\item With all previous definitions, it's possible to define equational
+  proofs in an easy way, thanks to the equational reasoning provided by
+  the standard library of Agda:
+
 \begin{spec}
   p₁ : E-bool ⊢ (⋀ ¬ p ∧ p ≈ false)
   p₁ = begin
@@ -262,8 +277,71 @@ Agda. In the justification steps we use the substitution rule (called
          false
        ∎
 \end{spec}
-\noindent The relevant actions of the substitution |σ₁| are |σ₁ p = ¬
+
+\noindent In the justification steps of this proof we use the substitution rule (called
+|psubst|) and the pattern-synonyms |commAndAx,leastDefAx| as short-hands for
+|commAnd ∈ E-bool| and |leastDef ∈ E-bool|, respectively.
+The relevant actions of the substitution |σ₁| are |σ₁ p = ¬
 p| and | σ₁ q = p|. 
+
+\end{itemize}
+
+
+%% The signature is mono-sorted, so we use the unit type as its only
+%% sort.
+%% \begin{spec}
+%% data bool-ops : List ⊤ × ⊤ → Set where
+%%   f t    : bool-ops ([] ↦ tt)
+%%   neg  : bool-ops ([ tt ] ↦ tt)
+%%   and or  : bool-ops (([ tt , tt ]) ↦ tt)
+
+%% bool-sig : Signature
+%% bool-sig = record { sorts = ⊤ ; ops = bool-ops }
+%% \end{spec}
+%% We let |X tt = ℕ| be the set of variables, and let |Form|
+%% stand for terms over |bool-sig 〔 Vars 〕| with the
+%% following smart-constructors:
+%% \begin{spec}
+%% true false : Form
+%% true = term (inj₁ t) ⟨⟩
+%% false = term (inj₁ f) ⟨⟩
+
+%% p q  : Form
+%% p = term (inj₂ 0) ⟨⟩
+%% q = term (inj₂ 1) ⟨⟩
+
+%% _∧_ : Form → Form → Form
+%% φ ∧ ψ = term and ⟨⟨ φ , ψ ⟩⟩
+
+%% ¬ : Form → Form
+%% ¬ φ = term neg ⟨⟨ φ ⟩⟩
+%% \end{spec}
+%% \noindent We show only two of the twelve axioms of the theory |E-Bool|:
+%% \begin{spec}
+%% commAnd leastDef : Equation bool-sig Vars tt
+%% commAnd = ⋀ (p ∧ q) ≈ (q ∧ p) if ([] , ⟨⟩)
+%% leastDef = ⋀ (p ∧ (¬ p)) ≈ false  if ([] , ⟨⟩)
+
+%% E-bool : Theory bool-sig Vars [ tt , tt , … ]
+%% E-bool = ⟨ commAnd , leastDef , … ⟩
+%% \end{spec}
+%% \noindent The following example shows an equational proof using the
+%% facility for equational reasoning provided by the standard library of
+%% Agda. In the justification steps we use the substitution rule (called
+%% |psubst|) and the pattern-synonyms |commAndAx,leastDefAx| as short-hands for
+%% |commAnd ∈ E-bool| and |leastDef ∈ E-bool|, respectively.
+%% \begin{spec}
+%%   p₁ : E-bool ⊢ (⋀ ¬ p ∧ p ≈ false)
+%%   p₁ = begin
+%%          ¬ p ∧ p
+%%          ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩
+%%          p ∧ ¬ p
+%%          ≈⟨ psubst leastDefAx idSubst ∼⟨⟩ ⟩
+%%          false
+%%        ∎
+%% \end{spec}
+%% \noindent The relevant actions of the substitution |σ₁| are |σ₁ p = ¬
+%% p| and | σ₁ q = p|. 
 
 % The first step is performed by the |psubst| rule, with the
 % first axiom of theory |Tbool₁|, the commutativity of conjunction.

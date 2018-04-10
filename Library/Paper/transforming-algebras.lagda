@@ -138,6 +138,17 @@ module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
 \noindent The action of the functor on homomorphisms is also straightforward,
 we do not it show for lack of space.
 
+An interesting example of application of signature morphisms and reduct algebras
+is the definition of a correct compiler as presented in \cite{thatcher1981more}. The source
+and target language are the term algebras of corresponding signatures. In order
+to define the compiler, instead of giving a function translating terms, it's defined
+a signature morphism from source to target signature, and the compiler is obtained
+via the unique homomorphism from source term algebra to the reduct algebra of
+the target term algebra. We define a complete example of a compiler of an arithmetic
+expressions language to a satck-based machine language. It is available on
+"Examples/CompilerArith.agda", in the repository.
+
+
 \newcommand{\theory}[1]{\ensuremath{\mathit{E}_{#1}}}
 
 \subsection{Translation of theories} From a signature morphism
@@ -174,6 +185,8 @@ furthermore define the function |⊨↝|. Such a restriction
 over the set of variables seems to us as an impediment,
 which can be alleviated if the original variables of $\theory{t}$ are
 included in the calculated set of variables.
+
+
 
 % \paragraph{Implication of translated theories.}
 % From a signature translation $t : \intSign{\Sigma_s}{\Sigma_t}$, we

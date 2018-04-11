@@ -204,19 +204,19 @@ is stronger than $E'$, then any equation that can be deduced from $E'$
 can also be deduced from $E$ and any model of $E$ is also a model of
 $E'$. 
 
-\subsection{A theory for Boolean Algebras }
-As an example we show a fragment of the formalization of a Boolean
-Theory discussed in \cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The
-  full code is available at ``Examples/EqBool.agda'', at repository}
-The process of defining an equational theory in our library consists of the following steps:
+\subsection{A theory for Boolean Algebras } In this section we outline
+how to formalize an equational theory and illustrate each step by
+showing snippets of the formalization of a Boolean Theory presented
+by Rocha and Meseguer~\cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The full code is
+available at ``Examples/EqBool.agda'', at repository} 
 
-\begin{itemize}
-\item Define the signature describing the language, and a set of variables.
+\begin{description}[%
+  before={\setcounter{descriptcount}{0}},%
+  ,font=\it \stepcounter{descriptcount}\thedescriptcount.~]
 
-
-\noindent In this case we have a mono-sorted signature, so we use the unit type
-as its only sort:
-
+\item[Define the signature] describing the language, and choose a
+  family of sets for the variables. It helps if one also introduce an
+  abbreviation for terms over the signature extended with variables.
 \begin{spec}
 data bool-ops : List ⊤ × ⊤ → Set where
   f t    : bool-ops ([] ↦ tt)
@@ -225,13 +225,17 @@ data bool-ops : List ⊤ × ⊤ → Set where
 
 bool-sig : Signature
 bool-sig = record { sorts = ⊤ ; ops = bool-ops }
+vars : sorts bool-sig → Set
+vars tt = ℕ
+
+Form : Set
+Form = HU bool-sig 〔 vars 〕
 \end{spec}
 
-We let |X tt = ℕ| be the set of variables.
-
-\item Define smart-constructors for terms of the extended signature with variables: One for each
-  operation and one for each variable that we want to use in the definition of axioms and theorems.
-
+\item[Introduce smart-constructors] for terms of the extended
+  signature with variables to ease writing the axioms and proving
+  theorems. Usually one has a smart-constructor for each operation and
+  one per variable that is used in the axioms or the theorems.
 \begin{spec}
 true false : Form
 true = term (inj₁ t) ⟨⟩
@@ -248,27 +252,29 @@ _∧_ : Form → Form → Form
 ¬ φ = term neg ⟨⟨ φ ⟩⟩
 \end{spec}
 
-\noindent where |Form| are the terms over |bool-sig 〔 X 〕|.
-
-\item Define the equations for each axiom of the theory.
-
+\item[Define the Equational Theory] by specifying one equation for
+  each axiom and collect them in a theory; here one can appreciate the
+  convenience of the smart-constructors. Here we only show two of the
+  twelve axioms of the theory |bool-theory|. If one will prove theorems
+  of the theory, then it is also convenient to define pattern-synonyms
+  for the proofs that each axiom is in the theory.
 \begin{spec}
 commAnd leastDef : Equation bool-sig X tt
 commAnd = ⋀ (p ∧ q) ≈ (q ∧ p) if ([] , ⟨⟩)
 leastDef = ⋀ (p ∧ (¬ p)) ≈ false  if ([] , ⟨⟩)
 
-E-bool : Theory bool-sig X [ tt , tt , … ]
-E-bool = ⟨ commAnd , leastDef , … ⟩
+bool-theory : Theory bool-sig X [ tt , tt , … ]
+bool-theory = ⟨ commAnd , leastDef , … ⟩
+
+pattern commAndAx = here
+pattern leastDefAx = there here
 \end{spec}
 
-\noindent We show only two of the twelve axioms of the theory |E-Bool|.
-
-\item With all previous definitions, it's possible to define equational
-  proofs in an easy way, thanks to the equational reasoning provided by
-  the standard library of Agda:
-
+\item [Prove Theorems] using the axioms of the theory just defined.
+  If a proof uses transitivity, one can use the equational reasoning
+  idiom provided by the standard library of Agda:
 \begin{spec}
-  p₁ : E-bool ⊢ (⋀ ¬ p ∧ p ≈ false)
+  p₁ : bool-theory ⊢ (⋀ ¬ p ∧ p ≈ false)
   p₁ = begin
          ¬ p ∧ p
          ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩
@@ -277,14 +283,11 @@ E-bool = ⟨ commAnd , leastDef , … ⟩
          false
        ∎
 \end{spec}
+\noindent In the justification steps of this proof we use the
+substitution rule. The relevant actions of the substitution |σ₁| are
+|σ₁ p = ¬ p| and |σ₁ q = p|.
 
-\noindent In the justification steps of this proof we use the substitution rule (called
-|psubst|) and the pattern-synonyms |commAndAx,leastDefAx| as short-hands for
-|commAnd ∈ E-bool| and |leastDef ∈ E-bool|, respectively.
-The relevant actions of the substitution |σ₁| are |σ₁ p = ¬
-p| and | σ₁ q = p|. 
-
-\end{itemize}
+\end{description}
 
 
 %% The signature is mono-sorted, so we use the unit type as its only

@@ -25,6 +25,8 @@
 \usepackage{ upgreek }
 \usepackage[inline]{enumitem}
 \usepackage{calc}
+\newcounter{descriptcount}
+\renewcommand*\thedescriptcount{\arabic{descriptcount}}
 \newcommand{\setoidMor}{{\xrightarrow{\,\thickapprox\,}}}
 %format VecH' = HVec
 %format 〉 = ")"

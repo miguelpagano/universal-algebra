@@ -66,28 +66,39 @@ data actMonₒ : List actMonₛ × actMonₛ → Set where
 actMon-sig : Signature
 actMon-sig = record { sorts = actMonₛ ; ops = actMonₒ }
 \end{spec}
-\noindent Defining operations as a family indexed by arities and target sorts
-carries some benefits in the use of the library: as in the above
-examples, the names of operations are constructors of a family of
-datatypes and so it is possible to perform pattern matching on
-them. Notice also that infinitary signatures can be represented in our
-setting; in fact, all the results are valid for any signature, be it
-finite or infinite. As an example of a signature with infinite operations, consider
-a language of arithmetic expressions: We have a constant operation for each natural
-number and an operation representing the addition of two expressions.
-\newpage
 
+\noindent Defining operations as a family indexed by arities and
+target sorts carries some benefits in the use of the library: as in
+the above examples, the names of operations are constructors of a
+family of datatypes and so it is possible to perform pattern matching
+on them. Notice also that infinitary signatures can be represented in
+our setting; in fact, all the results are valid for any signature, be
+it finite or infinite.
+
+We show two examples of signatures with infinite operations, the first
+might be more appealing to computer scientists and the second is more
+mathematical. The abstract syntax of a language for arithmetic expressions
+may have one sort, a constant operation for each natural number and a
+binary operation representing the addition of two expressions.
 \begin{spec}
 data Sortsₑ : Set where E : Sortsₑ
-
 data Opsₑ : List Sortsₑ × Sortsₑ → Set where
   val   : (n : ℕ)   → Opsₑ ([] , E)
   plus  : Opsₑ ( E ∷ [ E ] , E )
 \end{spec}
 
+\noindent Vector spaces over a field can be seen as a heterogeneous signature
+with two sorts~\cite{birkhoff-70} or as homogeneous signature
+over the field \cite[p. 132]{birkhoff-40}; this latter approach can be
+easily specified in our library, even if the field is infinite:
+\begin{spec}
+data Sorts-v (F : Set) : Set where V : Sorts-v
+data Ops-v (F : Set) : Set where
+  _+_ : Ops-v ( V ∷ [ V ] , V )
+  nu  : (f : F) → Ops-v ( [ V ] , V)
+\end{spec}
 
 \paragraph{Algebra}
-
 An \emph{algebra} $\mathcal{A}$ for the signature $\Sigma$ consists of
 a family of sets indexed by the sorts of $\Sigma$ and a family of
 functions indexed by the operations of $\Sigma$. We use

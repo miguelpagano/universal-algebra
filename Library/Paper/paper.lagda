@@ -1,4 +1,4 @@
-\documentclass{entcs} \usepackage{entcsmacro}
+\documentclass{entcs} \usepackage{prentcsmacro}
 
 \sloppy
 % The following is enclosed to allow easy detection of differences in

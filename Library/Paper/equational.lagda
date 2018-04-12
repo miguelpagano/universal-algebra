@@ -206,9 +206,10 @@ $E'$.
 
 \subsection{A theory for Boolean Algebras } In this section we outline
 how to formalize an equational theory and illustrate each step by
-showing snippets of the formalization of a Boolean Theory presented
-by Rocha and Meseguer~\cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The full code is
-available at ``Examples/EqBool.agda'', at repository} 
+showing snippets of the formalization of a Boolean Theory presented by
+Rocha and Meseguer~\cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The
+  full code is available in the file \nolinkurl{Examples/EqBool.agda}
+  of the repository.}
 
 \begin{description}[%
   before={\setcounter{descriptcount}{0}},%
@@ -252,7 +253,7 @@ _∧_ : Form → Form → Form
 ¬ φ = term neg ⟨⟨ φ ⟩⟩
 \end{spec}
 
-\item[Define the Equational Theory] by specifying one equation for
+\item[Define the equational theory] by specifying one equation for
   each axiom and collect them in a theory; here one can appreciate the
   convenience of the smart-constructors. Here we only show two of the
   twelve axioms of the theory |bool-theory|. If one will prove theorems
@@ -270,7 +271,7 @@ pattern commAndAx = here
 pattern leastDefAx = there here
 \end{spec}
 
-\item [Prove Theorems] using the axioms of the theory just defined.
+\item [Prove theorems] using the axioms of the theory just defined.
   If a proof uses transitivity, one can use the equational reasoning
   idiom provided by the standard library of Agda:
 \begin{spec}
@@ -286,74 +287,4 @@ pattern leastDefAx = there here
 \noindent In the justification steps of this proof we use the
 substitution rule. The relevant actions of the substitution |σ₁| are
 |σ₁ p = ¬ p| and |σ₁ q = p|.
-
 \end{description}
-
-
-%% The signature is mono-sorted, so we use the unit type as its only
-%% sort.
-%% \begin{spec}
-%% data bool-ops : List ⊤ × ⊤ → Set where
-%%   f t    : bool-ops ([] ↦ tt)
-%%   neg  : bool-ops ([ tt ] ↦ tt)
-%%   and or  : bool-ops (([ tt , tt ]) ↦ tt)
-
-%% bool-sig : Signature
-%% bool-sig = record { sorts = ⊤ ; ops = bool-ops }
-%% \end{spec}
-%% We let |X tt = ℕ| be the set of variables, and let |Form|
-%% stand for terms over |bool-sig 〔 Vars 〕| with the
-%% following smart-constructors:
-%% \begin{spec}
-%% true false : Form
-%% true = term (inj₁ t) ⟨⟩
-%% false = term (inj₁ f) ⟨⟩
-
-%% p q  : Form
-%% p = term (inj₂ 0) ⟨⟩
-%% q = term (inj₂ 1) ⟨⟩
-
-%% _∧_ : Form → Form → Form
-%% φ ∧ ψ = term and ⟨⟨ φ , ψ ⟩⟩
-
-%% ¬ : Form → Form
-%% ¬ φ = term neg ⟨⟨ φ ⟩⟩
-%% \end{spec}
-%% \noindent We show only two of the twelve axioms of the theory |E-Bool|:
-%% \begin{spec}
-%% commAnd leastDef : Equation bool-sig Vars tt
-%% commAnd = ⋀ (p ∧ q) ≈ (q ∧ p) if ([] , ⟨⟩)
-%% leastDef = ⋀ (p ∧ (¬ p)) ≈ false  if ([] , ⟨⟩)
-
-%% E-bool : Theory bool-sig Vars [ tt , tt , … ]
-%% E-bool = ⟨ commAnd , leastDef , … ⟩
-%% \end{spec}
-%% \noindent The following example shows an equational proof using the
-%% facility for equational reasoning provided by the standard library of
-%% Agda. In the justification steps we use the substitution rule (called
-%% |psubst|) and the pattern-synonyms |commAndAx,leastDefAx| as short-hands for
-%% |commAnd ∈ E-bool| and |leastDef ∈ E-bool|, respectively.
-%% \begin{spec}
-%%   p₁ : E-bool ⊢ (⋀ ¬ p ∧ p ≈ false)
-%%   p₁ = begin
-%%          ¬ p ∧ p
-%%          ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩
-%%          p ∧ ¬ p
-%%          ≈⟨ psubst leastDefAx idSubst ∼⟨⟩ ⟩
-%%          false
-%%        ∎
-%% \end{spec}
-%% \noindent The relevant actions of the substitution |σ₁| are |σ₁ p = ¬
-%% p| and | σ₁ q = p|. 
-
-% The first step is performed by the |psubst| rule, with the
-% first axiom of theory |Tbool₁|, the commutativity of conjunction.
-% The substitution used consists of mapping the first variable
-% (whose term we called |p|) to the term
-% resulting of the negation of that variable, i. e., |¬ p|. And mapping
-% the second variable (whose term we called |q|) to the first one (|p|).
-% For the rest, we can define the identity substitution.
-% Once we proved the first step, the conclusion is exactly the left side
-% of the second axiom, so we can use |psubst| rule with the identity
-% substitution.
-

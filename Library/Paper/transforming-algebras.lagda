@@ -7,7 +7,7 @@ some related works, we motivate the usefulness of this notion by
 showing a relatively simple example: how to interpret the Boolean
 theory of the previous section in the propositional calculus of
 Dijkstra and Scholten.\footnote{Rocha and Meseguer~\cite{rocha-2007}
-  study more thoroughly of Boolean theories and their morphisms.}
+  study more thoroughly Boolean theories and their morphisms.}
 
 The concept of morphism between signatures is related with the
 interpretability of similarity types in universal algebra

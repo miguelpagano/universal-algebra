@@ -92,10 +92,12 @@ with two sorts~\cite{birkhoff-70} or as homogeneous signature
 over the field \cite[p. 132]{birkhoff-40}; this latter approach can be
 easily specified in our library, even if the field is infinite:
 \begin{spec}
-data Sorts-v (F : Set) : Set where V : Sorts-v
+data Sorts-v Set where V : Sorts-v
 data Ops-v (F : Set) : Set where
-  _+_ : Ops-v ( V ∷ [ V ] , V )
-  nu  : (f : F) → Ops-v ( [ V ] , V)
+  _+_ : Ops-v ( V ∷ [ V ] , V )      -- vector addition
+  ν  : (f : F) → Ops-v ( [ V ] , V)  -- scalar multiplication
+vspace-sig : (F : Set) → Signature
+vspace-sig F = record {sorts = Sorts-v ; ops = Ops-v F}
 \end{spec}
 
 \paragraph{Algebra}
@@ -182,8 +184,7 @@ record Algebra (Σ : Signature) : Set₁  where
 \noindent If |A| is an algebra for the signature |monoid-sig|, then
 |A ⟦ tt ⟧ₛ| is the carrier, |A ⟦ e ⟧ₒ| and |A ⟦ ∙ ⟧ₒ| are the interpretations
 of the operations. We invite the interested reader to browse the examples to
-see algebras for the signatures we have shown, which cannot be given here
-for lack of space.
+see algebras for the signatures we have shown.
 
 \paragraph{Homomorphism}
 Let $\Sigma$ be a signature and let $\mathcal{A}$ and $\mathcal{B}$ be

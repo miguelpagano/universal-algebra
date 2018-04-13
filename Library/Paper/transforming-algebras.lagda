@@ -15,8 +15,8 @@ interpretability of similarity types in universal algebra
 Fujiwara~\cite{fujiwara-1959} introduced this notion as
 \textit{mappings between algebraic systems},
 Janssen~\cite{janssen-98}, following the ADJ group, called it a
-\textit{polynomial derivor} and Mossakowski \cite{mossakowski-15}
-refer to it as a \textit{derived signature morphism}, a generalization
+\textit{polynomial derivor} and Mossakowski et al.~\cite{mossakowski-15}
+referred to it as a \textit{derived signature morphism}, a generalization
 of the more restricted \textit{signature morphisms} in the theory of
 institutions \cite{goguen-92}.
 
@@ -168,7 +168,7 @@ target signature: indeed the compiler is obtained as the unique
 homomorphism from the source algebra to the reduct algebra of the
 target algebra. Moreover, one can obtain a correct compiler by
 providing semantics of each language as algebras and a morphism
-between the source semantics and the retract of the target
+between the source semantics and the reduct of the target
 semantics.\footnote{We explored this idea by defining a correct
   compiler for an arithmetic language targeting a stack-based
   language; it can be found at the repository in

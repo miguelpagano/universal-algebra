@@ -260,11 +260,11 @@ _∧_ : Form → Form → Form
   of the theory, then it is also convenient to define pattern-synonyms
   for the proofs that each axiom is in the theory.
 \begin{spec}
-commAnd leastDef : Equation bool-sig X tt
+commAnd leastDef : Equation bool-sig vars tt
 commAnd = ⋀ (p ∧ q) ≈ (q ∧ p) if ([] , ⟨⟩)
 leastDef = ⋀ (p ∧ (¬ p)) ≈ false  if ([] , ⟨⟩)
 
-bool-theory : Theory bool-sig X [ tt , tt , … ]
+bool-theory : Theory bool-sig vars [ tt , tt , … ]
 bool-theory = ⟨ commAnd , leastDef , … ⟩
 
 pattern commAndAx = here

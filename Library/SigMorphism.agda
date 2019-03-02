@@ -33,6 +33,27 @@ module FormalTerm (Σ : Signature) where
    _∣$∣_ : ∀ {ar s} → ops Σ (ar , s) → 
                HVec (ar' ⊩_) ar → ar' ⊩ s
 
+ {- Lifting of indices -}
+ mutual
+   ↑ : ∀ {s} → (ar : Arity Σ) → (s' : sorts Σ) → ar ⊩ s → (s' ∷ ar) ⊩ s
+   ↑ {.(ar ‼ n)} ar  s' (# n) = # (suc n)
+   ↑ ar s' (x ∣$∣ x₁) = x ∣$∣ ↑* ar s' x₁
+
+   ↑* : ∀ {ar'} → (ar : Arity Σ) → (s' : sorts Σ) → HVec (ar ⊩_) ar' → HVec ((s' ∷ ar) ⊩_) ar'
+   ↑* ar s' ⟨⟩ = ⟨⟩
+   ↑* ar s' (v ▹ vs) = (↑ ar s' v) ▹ (↑* ar s' vs)
+
+
+ {- Substitution on formal terms -}
+ mutual
+   ⊩_/_ : {ar ar' : Arity Σ}  {s : sorts Σ} → ar ⊩ s → HVec (ar' ⊩_) ar → ar' ⊩ s
+   ⊩_/_ {ar} {s = .(ar ‼ n)} (# n) ts' = ts' ‼v n
+   ⊩ f ∣$∣ ts / ts' = f ∣$∣ (⊩* ts / ts')
+
+   
+   ⊩*_/_ : {ar ar' ar'' : Arity Σ} → HVec (ar ⊩_) ar'' → HVec (ar' ⊩_) ar → HVec (ar' ⊩_) ar''
+   ⊩* ⟨⟩ / ts' = ⟨⟩
+   ⊩* t ▹ ts / ts' = (⊩ t / ts') ▹ (⊩* ts / ts')
 
 module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) where
   open FormalTerm Σ
@@ -68,66 +89,57 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
   ↝ₛ : sorts Σₛ → sorts Σₜ
   ↝ₒ : ∀ {ar s}  → ops Σₛ (ar , s) → lmap ↝ₛ ar ⊩ ↝ₛ s
 
+{- Extension of signature morfisms to formal terms -}
+module SigMorTerms {Σ₁ Σ₂ : Signature} where
+    open FormalTerm
+    open _↝_
+    _⊩₁_ : Arity Σ₁ → sorts Σ₁ → Set
+    _⊩₁_ = _⊩_ Σ₁
+    _⊩₂_ : Arity Σ₂ → sorts Σ₂ → Set
+    _⊩₂_ = _⊩_ Σ₂
+    ⊩₂_/_ : _
+    ⊩₂_/_ = ⊩_/_ Σ₂
+    mutual
+      _↝f_ : ∀ {ar : Arity Σ₁} {s} → (m : Σ₁ ↝ Σ₂) → ar ⊩₁ s →  lmap (↝ₛ m) ar ⊩₂ ↝ₛ m s
+      _↝f_ {[]} m (# ())
+      _↝f_ {_ ∷ _} m (# zero) = # zero
+      _↝f_ {s ∷ ar} m (# (suc n)) = ↑ Σ₂  (lmap (↝ₛ m) ar) (↝ₛ m s) (m ↝f (# n))
+      m ↝f (f ∣$∣ xs) = ⊩₂ (↝ₒ m f) / (m ↝f* xs)
 
-
+      _↝f*_ : ∀ {ar ar' : Arity Σ₁} → (m : Σ₁ ↝ Σ₂) → HVec (ar ⊩₁_) ar' → HVec (lmap (↝ₛ m) ar ⊩₂_) (lmap (↝ₛ m) ar')
+      m ↝f* ⟨⟩ = ⟨⟩
+      m ↝f* (v ▹ vs) = m ↝f v ▹ (m ↝f* vs)
+ 
 
 module SigMorCat where
-
-
-
+  open import Data.List.Properties 
   module Id-mor (Σ : Signature) where
     open FormalTerm Σ
-
-    mutual 
-      ⊩suc# : (ar : Arity Σ) → (s' s : sorts Σ) → ar ⊩ s → (s' ∷ ar) ⊩ s
-      ⊩suc# ar s' .(ar ‼ n) (# n) = # (suc n)
-      ⊩suc# ar s' s (_∣$∣_ {ar'} f v) = f ∣$∣ ⊩suc#vec ar ar' s' v
-
-      ⊩suc#vec : (ar ar' : Arity Σ) → (s' : sorts Σ) → HVec (_⊩_ ar) ar' → HVec (_⊩_ (s' ∷ ar)) ar'
-      ⊩suc#vec ar [] s' v = ⟨⟩
-      ⊩suc#vec ar (s₀ ∷ ar') s' (v ▹ vs) = (⊩suc# ar s' s₀ v) ▹ ⊩suc#vec ar ar' s' vs
-
-    idvecTerm : (ar : Arity Σ) → HVec (_⊩_ ar) ar
-    idvecTerm [] = ⟨⟩
-    idvecTerm (s ∷ ar) = (# zero) ▹ ⊩suc#vec ar ar s (idvecTerm ar)
-
-    mapid≡ : {A : Set} → (ls : List A) → ls ≡ lmap id ls
-    mapid≡ [] = refl
-    mapid≡ (x ∷ ls) = PE.cong (x ∷_) (mapid≡ ls)
+    
+    id-π : (ar : Arity Σ) → HVec (ar ⊩_) ar
+    id-π [] = ⟨⟩
+    id-π (s ∷ ar) = (# Fin.zero) ▹ ↑* ar s (id-π ar) 
 
     id-mor : Σ ↝ Σ
     id-mor = record { ↝ₛ = id
-                    ; ↝ₒ = λ {ar} {s} f → f ∣$∣ subst (λ ar' → HVec (_⊩_ ar') ar) (mapid≡ ar)
-                                                      (idvecTerm ar)
+                    ; ↝ₒ = λ {ar} {s} f → f ∣$∣ subst (λ ar' → HVec (ar' ⊩_) ar ) (sym (map-id ar)) (id-π ar)
                     }
-
-
-  module translate⊩ (Σ Σ' : Signature) where
-    open FormalTerm Σ
-    open FormalTerm Σ' renaming (_⊩_ to _⊩'_ ; # to #' ; _∣$∣_ to _∣$∣'_)
-    open _↝_
-
-    -- translate a formal term applying a sig morphism
-    ↝⊩ : (m : Σ ↝ Σ') → (ar : Arity Σ) → (s : sorts Σ) →
-              ar ⊩ s → lmap (↝ₛ m) ar ⊩' (↝ₛ m) s
-    ↝⊩ m ar .(ar ‼ n) (# n) = {!#' n!}
-    ↝⊩ m ar s (f ∣$∣ ts) = {!!}
-
+                
   module ∘-mor (Σ₁ Σ₂ Σ₃ : Signature) where
-    open FormalTerm Σ₃
+    open FormalTerm
     open _↝_
-
-    lmap∘ : {A B C : Set} → (ls : List A) → (f : A → B) → (g : B → C) → 
-            lmap g (lmap f ls) ≡ lmap (g ∘ f) ls
-    lmap∘ [] f g = refl
-    lmap∘ (x ∷ ls) f g = PE.cong (g (f x) ∷_) (lmap∘ ls f g)
+    open SigMorTerms {Σ₂} {Σ₃} hiding (_⊩₂_)
+    _⊩₂_ : Arity Σ₂ → sorts Σ₂ → Set
+    _⊩₂_ = _⊩_ Σ₂
+    _⊩₃_ : Arity Σ₃ → sorts Σ₃ → Set
+    _⊩₃_ = _⊩_ Σ₃
+    ∘↝∘  : ∀ {ar} {s} (m : Σ₁ ↝ Σ₂)  (m' : Σ₂ ↝ Σ₃)  → (lmap (↝ₛ m) ar) ⊩₂ (↝ₛ m s) → (lmap (↝ₛ m' ∘ ↝ₛ m) ar) ⊩₃ (↝ₛ m' (↝ₛ m s))
+    ∘↝∘ {ar} {s} m m' ft = subst (_⊩₃ (↝ₛ m' (↝ₛ m s))) (sym (map-compose {g = ↝ₛ m'} {↝ₛ m} ar)) (m' ↝f ft)
 
     _∘↝_ : (m : Σ₁ ↝ Σ₂) (m' : Σ₂ ↝ Σ₃) → Σ₁ ↝ Σ₃
-    m ∘↝ m' = record { ↝ₛ = λ s → ↝ₛ m' (↝ₛ m s)
-                     ; ↝ₒ = λ {ar} {s} f → subst (λ ar' → ar' ⊩ ↝ₛ m' (↝ₛ m s)) (lmap∘ ar (↝ₛ m) (↝ₛ m'))
-                                                   (↝⊩ m' (lmap (↝ₛ m) ar) (↝ₛ m s) (↝ₒ m f))
+    m ∘↝ m' = record { ↝ₛ = λ s → (↝ₛ m' ∘ ↝ₛ m) s
+                     ; ↝ₒ = λ {ar} {s} f → ∘↝∘ m m' (↝ₒ m f)
                      }
-       where open translate⊩ Σ₂ Σ₃
 
 {- Reduct algebras -}
 module ReductAlgebra {Σₛ Σₜ} (t : Σₛ ↝ Σₜ) where

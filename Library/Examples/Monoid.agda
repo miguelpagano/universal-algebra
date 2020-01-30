@@ -41,8 +41,10 @@ module ∨-Monoid where
 
 
   ∨-Monₒ : ∀ {ar s } → ops Σ-mon (ar , s) → (∨-Monₛ ✳ ar) ⟶ ∨-Monₛ s
-  ∨-Monₒ e _⟨$⟩_ = λ {⟨⟩  → false }
-  ∨-Monₒ e cong = λ { ∼⟨⟩ → refl }
+  ∨-Monₒ e = record {
+         _⟨$⟩_ = λ { ⟨⟩ → false };
+         cong = λ { ∼⟨⟩ → refl }
+         }
   ∨-Monₒ op = record { _⟨$⟩_ = ∨-fun ; cong = ∨-cong }
          where ∨-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
                ∨-fun (b ▹ b' ▹ ⟨⟩) = b ∨ b'
@@ -130,7 +132,7 @@ module Theory where
   module Monoids where
     open import Algebra.Structures
     open import Data.Bool
-    open import Relation.Binary.Core as BC
+    open import Relation.Binary as BC
     
     MkMonoid : ∀ {a l A _≈_ _∘_} {e : A} → (m : IsMonoid {a} {l} _≈_ _∘_ e) → Algebra {a} {l} Σ-mon 
     MkMonoid {A = A} {_≈_} {_∘_} {eA} isMon = (λ _ → record { Carrier = A ; _≈_ = _≈_
@@ -153,7 +155,6 @@ module Theory where
       where open IsMonoid
     MonoidModel m (there (there (there ()))) θ x₂
 
-
     open Algebra
     open import Relation.Binary hiding (Total)
     open Setoid
@@ -163,17 +164,18 @@ module Theory where
     fromModel : ∀ {ℓ a} {A : Algebra {ℓ} {a} Σ-mon} → A ⊨T MonTheory → IsMonoid (_≈_ (A ⟦ tt ⟧ₛ))
                                                                                 (λ x y → A ⟦ op ⟧ₒ ⟨$⟩ ⟨⟨ x , y ⟩⟩ )
                                                                                 (A ⟦ e ⟧ₒ ⟨$⟩ ⟨⟩)
-    fromModel {A = A} mod = record { isSemigroup = record { isEquivalence = isEquivalence (A ⟦ tt ⟧ₛ)
-                                                          ; assoc = λ x₁ y₁ z₁ → mod here (η x₁ y₁ z₁) ∼⟨⟩
-                                                          ; ∙-cong = λ x₁ x₂ → cong (_⟦_⟧ₒ A op) (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) }
-                                   ; identity = (λ x₁ → mod (there here) (λ x₂ → x₁) ∼⟨⟩)
-                                              , (λ x₁ → mod (there (there here)) (λ _ → x₁) ∼⟨⟩)
-                                   }
+    fromModel {A = A} mod = record {
+                 isSemigroup = record {
+                   isMagma = record {
+                     isEquivalence = isEquivalence (A ⟦ tt ⟧ₛ)
+                                  ; ∙-cong = λ x₁ x₂ → cong (_⟦_⟧ₒ A op) (∼▹ x₁ (∼▹ x₂ ∼⟨⟩))
+                     }
+                     ; assoc = λ x₁ y₁ z₁ → mod here (η x₁ y₁ z₁) ∼⟨⟩
+                   }
+                   ; identity = (λ x₁ → mod (there here) (λ x₂ → x₁) ∼⟨⟩)
+                                , (λ x₁ → mod (there (there here)) (λ _ → x₁) ∼⟨⟩)
+                 }
       where η : ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → Env X A
             η a b c zero = a
             η a b c (suc zero) = b
             η a b c (suc (suc x₁)) = c
-
-
-
-    

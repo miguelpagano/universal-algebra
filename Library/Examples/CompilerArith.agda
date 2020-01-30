@@ -8,7 +8,7 @@ open import Morphisms
 import TermAlgebra
 open import SigMorphism
 open import Data.List renaming (map to lmap)
-open import Data.String
+open import Data.String hiding (_≈_)
 open import Data.Product
 open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_ ; cong to Πcong)
@@ -19,7 +19,7 @@ open import HeterogeneousVec
 open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Data.Maybe hiding (map)
 open import Category.Monad
-open import Category.Monad.Identity 
+-- open import Category.Monad.Identity 
 
 {- An example of use of signature morphisms:
    A correct compiler for arithmetic expressions -}
@@ -114,7 +114,7 @@ iopsₘ (loadₘ v) ⟨⟩ (s , σ) = just (σ v ∷ s)
 iopsₘ addₘ ⟨⟩ (m ∷ n ∷ s , σ) = just (m + n ∷ s)
 iopsₘ addₘ ⟨⟩ (s , σ) = nothing
 iopsₘ seqₘ ⟨⟨ f , g ⟩⟩ (s , σ) =  f (s , σ) >>= (λ s' → g (s' , σ))
-  where open RawMonad Data.Maybe.monad
+  where open Data.Maybe
 
 icongₘ : ∀ {ar} {s} → (f : ops Σₘ (ar , s)) →
            {vs vs' : ∥ ⟦_⟧ₘ ✳ ar ∥ } →
@@ -131,7 +131,7 @@ icongₘ seqₘ {⟨⟨ t₁ , t₃ ⟩⟩} {⟨⟨ t₂ , t₄ ⟩⟩}
                                              ≡⟨ congSeq ⟩
                                              ((t₂ (s , σ)) >>= (λ s' → t₄ (s' , σ)))
                                              ∎
-    where open RawMonad Data.Maybe.monad
+    where open Data.Maybe
           import Relation.Binary.PropositionalEquality
           open ≡-Reasoning
           congSeq : (t₂ (s , σ) >>= (λ s' → t₃ (s' , σ)))

@@ -54,7 +54,7 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
 
 open Algebra
 
-open import Relation.Binary.Product.Pointwise using (_×-setoid_)
+open import Data.Product.Relation.Pointwise.NonDependent using (×-setoid)
 
 
 {- Subalgebras -}
@@ -105,7 +105,7 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
        (B : Algebra {ℓ₃} {ℓ₄} Σ) where
 
   std : (s : sorts Σ) → Setoid _ _
-  std s = (A ⟦ s ⟧ₛ) ×-setoid (B ⟦ s ⟧ₛ)
+  std s = ×-setoid (A ⟦ s ⟧ₛ) (B ⟦ s ⟧ₛ)
   _≈*_ : {ar : Arity Σ} → _
   _≈*_ {ar} = _≈_ (std ✳ ar)
 
@@ -122,7 +122,7 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
   {- Product of algebras -}
   _×-alg_ : Algebra {ℓ₃ ⊔ ℓ₁} {ℓ₄ ⊔ ℓ₂} Σ
   _×-alg_ = record {
-            _⟦_⟧ₛ = λ s → (A ⟦ s ⟧ₛ) ×-setoid (B ⟦ s ⟧ₛ)
+            _⟦_⟧ₛ = λ s → ×-setoid (A ⟦ s ⟧ₛ) (B ⟦ s ⟧ₛ)
           ; _⟦_⟧ₒ = λ {ar} {s} f → record { _⟨$⟩_ = if f ; cong = cng f}
           }
     where if : ∀ {ar s} (f : ops Σ (ar , s)) → _ → _

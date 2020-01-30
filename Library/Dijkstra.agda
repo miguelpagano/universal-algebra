@@ -8,7 +8,7 @@ open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Data.List renaming (map to lmap) hiding (and ; or)
 open import Relation.Binary.PropositionalEquality as PE hiding (_≢_)
-open import Data.Fin
+open import Data.Fin hiding (_≟_)
 open import Data.Vec
 open import Data.Nat
 open import Relation.Nullary hiding (¬_)
@@ -81,24 +81,28 @@ Axioms φ ψ τ = assoc≡ φ ψ τ ∷ comm≡ φ ψ ∷ neu≡ φ ∷ assoc∨
                comm∨ φ ψ ∷ neu∨ φ ∷ idemp∨ φ ∷ dist∨ φ ψ τ ∷ defFalse φ ∷
                def/≡ φ ψ ∷ goldenR φ ψ ∷ def⇒ φ ψ ∷ def⇐ φ ψ ∷ []
 
+import Data.Vec.Membership.Propositional
+open Data.Vec.Membership.Propositional
+
+open import Data.Vec.Relation.Unary.Any
 -- patterns para los axiomas
-pattern ax₁ = here
-pattern ax₂ = there here
-pattern ax₃ = there (there here)
-pattern ax₄ = there (there (there here))
-pattern ax₅ = there (there (there (there here)))
-pattern ax₆ = there (there (there (there (there here))))
-pattern ax₇ = there (there (there (there (there (there here)))))
-pattern ax₈ = there (there (there (there (there (there (there here))))))
-pattern ax₉ = there (there (there (there (there (there (there (there here)))))))
+pattern ax₁ = here refl
+pattern ax₂ = there (here refl)
+pattern ax₃ = there (there (here refl))
+pattern ax₄ = there (there (there (here refl)))
+pattern ax₅ = there (there (there (there (here refl))))
+pattern ax₆ = there (there (there (there (there (here refl)))))
+pattern ax₇ = there (there (there (there (there (there (here refl))))))
+pattern ax₈ = there (there (there (there (there (there (there (here refl)))))))
+pattern ax₉ = there (there (there (there (there (there (there (there (here refl))))))))
 pattern ax₁₀ = there (there (there (there (there (there (there
-                                                      (there (there here))))))))
+                                                      (there (there (here refl)))))))))
 pattern ax₁₁ = there (there (there (there (there (there (there (there (there
-                                                            (there here)))))))))
+                                                            (there (here refl))))))))))
 pattern ax₁₂ = there (there (there (there (there (there (there (there (there
-                                                    (there (there here))))))))))
+                                                    (there (there (here refl)))))))))))
 pattern ax₁₃ = there (there (there (there (there (there (there (there (there
-                                            (there (there (there here)))))))))))
+                                            (there (there (there (here refl))))))))))))
 pattern noax = there (there (there (there (there (there (there (there (there
                             (there (there (there (there ()))))))))))))
 
@@ -120,7 +124,7 @@ var q [ p := ψ ] | no _ = var q
 
 
 data ⊢_ : Formula → Set where
-  ax    : ∀ {φ φ' ψ τ} → φ ∈ Axioms φ' ψ τ → ⊢ φ
+  ax    : ∀ {φ φ' ψ τ} → φ ∈ (Axioms φ' ψ τ) → ⊢ φ
   equan : ∀ {φ ψ} → ⊢ ψ → ⊢ (ψ ≡' φ) → ⊢ φ
   leib  : ∀ {φ ψ τ p} → ⊢ (ψ ≡' τ) → ⊢ ((φ [ p := ψ ]) ≡' (φ [ p := τ ]))
 
@@ -129,10 +133,10 @@ data ⊢_ : Formula → Set where
 module Example1 where
 
   1∙ : ⊢ (((true ≡' true) ≡' true) ≡' (true ≡' true))
-  1∙ = ax {ψ = true} {τ = true} ax₃
+  1∙ = ax {ψ = true} {τ = true} (there (there (here refl)))
 
   2∙ : ⊢ ((true ≡' true) ≡' true)
-  2∙ = ax {ψ = true} {τ = true} ax₃
+  2∙ = ax {ψ = true} {τ = true} ((there (there (here refl))))
 
   3∙ : ⊢ (true ≡' true)
   3∙ = equan 2∙ 1∙
@@ -146,9 +150,9 @@ module ToEquational where
   open import PLogic ℕ 0 1 2 renaming (¬ to ¬ₚ ; _⇒_ to _⇒ₚ_ ; _⇐_ to _⇐ₚ_)
   open import UnivAlgebra
   open import Equational
-  open import HeterogenuousVec renaming (_∈_ to _∈ₕ_)
+  open import HeterogeneousVec renaming (_∈_ to _∈ₕ_)
   open import Data.Sum
-
+  import TermAlgebra
   open TermAlgebra (Σₚ 〔 (λ _ → ℕ) 〕)
 
   ⟦_⟧ : Formula → Formₚ
@@ -172,11 +176,10 @@ module ToEquational where
      subsₐ φ' ψ' y τ formaliza eso -}
 
   subsₐ : (φ' ψ' τ : Formula) → Subst
-  subsₐ φ' ψ' τ _ 0 = ⟦ φ' ⟧
-  subsₐ φ' ψ' τ _ 1 = ⟦ ψ' ⟧
-  subsₐ φ' ψ' τ _ 2 = ⟦ τ ⟧
-  subsₐ φ' ψ' τ _ n = term (inj₂ n) ⟨⟩ 
-
+  subsₐ φ' ψ' τ  0 = ⟦ φ' ⟧
+  subsₐ φ' ψ' τ  1 = ⟦ ψ' ⟧
+  subsₐ φ' ψ' τ  2 = ⟦ τ ⟧
+  subsₐ φ' ψ' τ  n = term (inj₂ n) ⟨⟩ 
 
   ⟦_⟧ₐ : ∀ {φ' ψ' τ φ ψ} → (φ ≡' ψ) ∈ Axioms φ' ψ' τ → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
   ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁ = psubst axₚ₁ (subsₐ φ' ψ' τ) ∼⟨⟩
@@ -204,14 +207,13 @@ module ToEquational where
   pequan₁ φ ψ ⋀ψ≈t ⋀ψ≈φ = psym (ptrans (psym ⋀ψ≈t) ⋀ψ≈φ)
   pequan₂ : (φ ψ ψ₁ ψ₂ : Formula) → Tₚ ⊢ (⋀ ⟦ ψ₁ ⟧ ≈ ⟦ ψ₂ ⟧) → ψ ≡ ψ₁ ≡' ψ₂ →
             Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)
-  pequan₂ φ ψ ψ₁ ψ₂ ⋀ψ₁≈ψ₂ ψ=ψ₁≡ψ₂ ⋀ψ≈φ =
-            ptrans (psym (ptrans (psym (preemp (∼▹ ⋀ψ₁≈ψ₂ (∼▹ prefl ∼⟨⟩)) equiv))
-                                 (subst (λ ψ₀ → Tₚ ⊢ (⋀ ⟦ ψ₀ ⟧ ≈ ⟦ φ ⟧))
-                                        ψ=ψ₁≡ψ₂ ⋀ψ≈φ)))
+  pequan₂ φ ψ ψ₁ ψ₂ ⋀ψ₁≈ψ₂ ψ=ψ₁≡ψ₂ ⋀ψ≈φ = ptrans (psym (ptrans
+              (psym (preemp (∼▹ ⋀ψ₁≈ψ₂ (∼▹ prefl ∼⟨⟩))))
+              (subst (λ ψ₀ → Tₚ ⊢ (⋀ ⟦ ψ₀ ⟧ ≈ ⟦ φ ⟧)) ψ=ψ₁≡ψ₂ ⋀ψ≈φ)))
                    reflψ₂
     where subs₀ : Subst
-          subs₀ _ 0 = ⟦ ψ₂ ⟧
-          subs₀ _ n = term (inj₂ n) ⟨⟩
+          subs₀ 0 = ⟦ ψ₂ ⟧
+          subs₀ n = term (inj₂ n) ⟨⟩
           reflψ₂ : Tₚ ⊢ (⋀ ⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧ ≈ true∼)
           reflψ₂ = psubst axrefl≡ subs₀ ∼⟨⟩
 
@@ -222,7 +224,7 @@ module ToEquational where
               Tₚ ⊢ (⋀ ⟦ φ₂ [ p := ψ ] ⟧ ≈ ⟦ φ₂ [ p := τ ] ⟧) →
               Tₚ ⊢ (⋀ term σ (⟦ φ₁ [ p := ψ ] ⟧ ▹ ⟦ φ₂ [ p := ψ ] ⟧ ▹ ⟨⟩) ≈
                       term σ (⟦ φ₁ [ p := τ ] ⟧ ▹ ⟦ φ₂ [ p := τ ] ⟧ ▹ ⟨⟩))
-  pleibin σ p₁ p₂ = preemp (∼▹ p₁ (∼▹ p₂ ∼⟨⟩)) σ
+  pleibin σ p₁ p₂ = preemp (∼▹ p₁ (∼▹ p₂ ∼⟨⟩))
 
   pleib : ∀ {ψ τ φ p} → Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ τ ⟧) → Tₚ ⊢ (⋀ ⟦ φ [ p := ψ ] ⟧ ≈ ⟦ φ [ p := τ ] ⟧)
   pleib {φ = true} eqpru = prefl
@@ -230,7 +232,7 @@ module ToEquational where
   pleib {ψ} {τ} {var q} {p} eqpru with p ≟ q
   ... | yes p₁ = eqpru
   ... | no ¬p = prefl
-  pleib {ψ} {τ} {¬ φ} {p} eqpru = preemp (∼▹ (pleib {φ = φ} eqpru) ∼⟨⟩) neg
+  pleib {ψ} {τ} {¬ φ} {p} eqpru = preemp (∼▹ (pleib {φ = φ} eqpru) ∼⟨⟩)
   pleib {ψ} {τ} {φ₁ ≡' φ₂} {p} eqpru = pleibin {φ₁ = φ₁} {φ₂}
                                                equiv (pleib {φ = φ₁} eqpru)
                                                      (pleib {φ = φ₂} eqpru)
@@ -260,10 +262,9 @@ module ToEquational where
   p≡to≈ : ∀ {φ ψ} → Tₚ ⊢ (⋀ ⟦ φ ≡' ψ ⟧ ≈ true∼) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
   p≡to≈ {φ} {ψ} pru = psubst ax≡≈ subs₀ (∼▹ pru ∼⟨⟩)
     where subs₀ : Subst
-          subs₀ s 0 = ⟦ φ ⟧
-          subs₀ s 1 = ⟦ ψ ⟧
-          subs₀ _ n = term (inj₂ n) ⟨⟩
-
+          subs₀ 0 = ⟦ φ ⟧
+          subs₀ 1 = ⟦ ψ ⟧
+          subs₀ n = term (inj₂ n) ⟨⟩
 
 
   ⊢↝Eq : ∀ {φ} → (pru : ⊢ φ) → (Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)) ⊎
@@ -325,7 +326,7 @@ module Examples where
   open import Data.String
   open import UnivAlgebra
   open import Equational
-  open import HeterogenuousVec renaming (_∈_ to _∈ₕ_)
+  open import HeterogeneousVec renaming (_∈_ to _∈ₕ_)
   open import Data.Sum
 
   ex₁ : (Tₚ ⊢ (⋀ ⟦ true ⟧ ≈ true∼)) ⊎
@@ -341,10 +342,12 @@ module Examples where
   toproof {φ} (inj₁ x) = φ , true , x
   toproof (inj₂ (φ' , ψ , pr , _)) = φ' , (ψ , pr)
 
+{-
   showex₁ : String
-  showex₁ = pp (printF shown) proof
-    where proof : _
-          proof = proj₂ (proj₂ (toproof ex₁))
+  showex₁ = printF shown prf
+    where prf : _
+          prf = proj₂ (proj₂ (toproof ex₁))
 
+-}
 
 open Examples

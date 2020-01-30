@@ -9,7 +9,7 @@ open import HeterogeneousVec
 open import Relation.Binary hiding (Total)
 open import Relation.Binary.PropositionalEquality as PE
 open import Relation.Unary
-open import Function as F
+open import Function as F hiding (Bijective; Surjective; Bijection; Surjection)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Setoids
 open import Data.Product hiding (map)
@@ -142,7 +142,7 @@ HomId {A = A} = record { ′_′ = λ s → FE.id
 
 
 {- Isomorphism -}
-open import Function.Bijection renaming (_∘_ to _∘b_) 
+open import Function.Bijection renaming (_∘_ to _∘b_)
 open import Function.Surjection hiding (_∘_)
 
 open Bijective
@@ -402,7 +402,7 @@ Kernel {Σ} {ℓ₄ = ℓ₄} {A = A} {B} h =
                 p {i ∷ is} (∼▹ x eq₁) = ∼▹ x (p eq₁)
 
 open Congruence
-open import Relation.Binary.Product.Pointwise using (_×-setoid_)
+open import Data.Product.Relation.Pointwise.NonDependent using (×-setoid)
 
 QuotHom : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
                         (Q : Congruence {ℓ₃} A) → Homo A (A / Q)

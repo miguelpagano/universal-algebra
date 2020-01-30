@@ -18,7 +18,7 @@ open import Data.Bool hiding (T)
 open import Data.List renaming (map to lmap)
 open import Relation.Binary.PropositionalEquality as PE
 open import Induction.WellFounded
-open import Data.String
+open import Data.String hiding (length; _≈_)
 open import Data.Fin hiding (#_)
 open import HeterogeneousVec 
 import TermAlgebra

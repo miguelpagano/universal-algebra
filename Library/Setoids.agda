@@ -65,8 +65,8 @@ WellDef S P = ∀ {x y : Carrier S } → _≈_ S x y → P x → P y
 open import Data.Product
 WellDefRel : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Rel (Carrier S) ℓ₃ → Set _
 WellDefRel S R = WellDef S² (λ {(a , b) → R a b})
-  where open import Relation.Binary.Product.Pointwise
-        S² = S ×-setoid S
+  where open import Data.Product.Relation.Pointwise.NonDependent
+        S² = ×-setoid S S
 
 {- A pre-congruene is a well-defined equivalence relation -}
 PreCong : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Rel (Carrier S) ℓ₃ → Set _

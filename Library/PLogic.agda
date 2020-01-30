@@ -2,7 +2,7 @@ module PLogic (V : Set) (vp vq vr : V) where
 
 open import UnivAlgebra
 open import Equational
-open import HeterogenuousVec
+open import HeterogeneousVec
 open import Data.Unit
 open import Data.List hiding (and ; or)
 open import Data.Nat
@@ -12,7 +12,7 @@ open import Relation.Binary hiding (_⇒_)
 open import Data.Bool
 open import Relation.Binary.PropositionalEquality as PE hiding ([_] ; _≢_)
 open import Function.Equality
-
+import TermAlgebra
 -- Lógica proposicional ecuacional
 
 data Opsₚ : List ⊤ × ⊤ → Set where

@@ -140,6 +140,48 @@ HomId {A = A} = record { ′_′ = λ s → FE.id
             open Homo
             open Algebra
 
+{- Homomorphism composition properties -}
+module HomCompProp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈}
+                   {Σ : Signature}
+                   {A₀ : Algebra {ℓ₁} {ℓ₂} Σ}
+                   {A₁ : Algebra {ℓ₃} {ℓ₄} Σ}
+                   {A₂ : Algebra {ℓ₅} {ℓ₆} Σ}
+                   {A₃ : Algebra {ℓ₇} {ℓ₈} Σ}
+                   {H₀ : Hom.Homo A₀ A₁}
+                   {H₁ : Hom.Homo A₁ A₂}
+                   {H₂ : Hom.Homo A₂ A₃} where
+  open Algebra
+
+  open Hom
+  open Homo
+  open HomComp
+
+  open module H₀ = Hom A₀ A₁ renaming (_≈ₕ_ to _≈ₕ₀_)
+  open module HComp = Hom A₀ A₃ renaming (_≈ₕ_ to _≈ₕ₃_)
+
+  idR_prop : (H₀ ∘ₕ HomId) ≈ₕ₀ H₀
+  idR_prop s a = begin
+                 (′ H₀ ∘ₕ HomId ′ s ⟨$⟩ a)
+                 ≈⟨ Setoid.refl (A₁ ⟦ s ⟧ₛ) ⟩
+                 (′ H₀ ′ s ⟨$⟩ a)
+                 ∎
+     where open EqR (A₁ ⟦ s ⟧ₛ)
+
+  idL_prop : (HomId ∘ₕ H₀) ≈ₕ₀ H₀
+  idL_prop s a = begin
+                 (′ HomId ∘ₕ H₀ ′ s ⟨$⟩ a)
+                 ≈⟨ Setoid.refl (A₁ ⟦ s ⟧ₛ) ⟩
+                 (′ H₀ ′ s ⟨$⟩ a)
+                 ∎
+     where open EqR (A₁ ⟦ s ⟧ₛ)
+
+  assoc_prop : ((H₂ ∘ₕ H₁) ∘ₕ H₀) ≈ₕ₃ (H₂ ∘ₕ (H₁ ∘ₕ H₀))
+  assoc_prop s a = begin
+                   (′ (H₂ ∘ₕ H₁) ∘ₕ H₀ ′ s ⟨$⟩ a)
+                   ≈⟨ Setoid.refl (A₃ ⟦ s ⟧ₛ) ⟩
+                   (′ H₂ ∘ₕ (H₁ ∘ₕ H₀) ′ s ⟨$⟩ a)
+                   ∎
+     where open EqR (A₃ ⟦ s ⟧ₛ)
 
 {- Isomorphism -}
 open import Function.Bijection renaming (_∘_ to _∘b_)

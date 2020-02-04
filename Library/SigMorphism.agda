@@ -137,7 +137,7 @@ module SigMorCat where
     ∘↝∘ {ar} {s} m m' ft = subst (_⊩₃ (↝ₛ m' (↝ₛ m s))) (sym (map-compose {g = ↝ₛ m'} {↝ₛ m} ar)) (m' ↝f ft)
 
     _∘↝_ : (m : Σ₁ ↝ Σ₂) (m' : Σ₂ ↝ Σ₃) → Σ₁ ↝ Σ₃
-    m ∘↝ m' = record { ↝ₛ = λ s → (↝ₛ m' ∘ ↝ₛ m) s
+    m ∘↝ m' = record { ↝ₛ = ↝ₛ m' ∘ ↝ₛ m
                      ; ↝ₒ = λ {ar} {s} f → ∘↝∘ m m' (↝ₒ m f)
                      }
 

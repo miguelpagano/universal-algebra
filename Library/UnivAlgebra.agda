@@ -54,9 +54,6 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
 
 open Algebra
 
-open import Data.Product.Relation.Pointwise.NonDependent using (×-setoid)
-
-
 {- Subalgebras -}
 open SetoidPredicate
 
@@ -97,41 +94,6 @@ SubAlgebra {Σ} {A = A} S = is ∥ if
                                          , opClosed f (⇨₂ v)
                                   ; cong = λ { {v₁} {v₂} eq → Π.cong (A ⟦ f ⟧ₒ) (pcong eq) }
                                   }
-
-{- Product algebra -}
-module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
-        {Σ : Signature}
-       (A : Algebra {ℓ₁} {ℓ₂} Σ) 
-       (B : Algebra {ℓ₃} {ℓ₄} Σ) where
-
-  std : (s : sorts Σ) → Setoid _ _
-  std s = ×-setoid (A ⟦ s ⟧ₛ) (B ⟦ s ⟧ₛ)
-  _≈*_ : {ar : Arity Σ} → _
-  _≈*_ {ar} = _≈_ (std ✳ ar)
-
-
-  ≈₁ : ∀ {ar} {vs vs' : ∥ std ✳ ar ∥} 
-      → vs ≈* vs' → _≈_ (_⟦_⟧ₛ A ✳ ar) (map (λ _ → proj₁) vs) (map (λ _ → proj₁) vs')
-  ≈₁ {[]} ∼⟨⟩ = ∼⟨⟩
-  ≈₁ {i ∷ is} (∼▹ (eq , _) equ) = ∼▹ eq (≈₁ equ)
-  ≈₂ : ∀ {ar} {vs vs' : ∥ std ✳ ar ∥} 
-      → vs ≈* vs' → _≈_ (_⟦_⟧ₛ B ✳ ar) (map (λ _ → proj₂) vs) (map (λ _ → proj₂) vs')
-  ≈₂ {[]} ∼⟨⟩ = ∼⟨⟩
-  ≈₂ {i ∷ is} (∼▹ (_ , eq) equ) = ∼▹ eq (≈₂ equ)
-
-  {- Product of algebras -}
-  _×-alg_ : Algebra {ℓ₃ ⊔ ℓ₁} {ℓ₄ ⊔ ℓ₂} Σ
-  _×-alg_ = record {
-            _⟦_⟧ₛ = λ s → ×-setoid (A ⟦ s ⟧ₛ) (B ⟦ s ⟧ₛ)
-          ; _⟦_⟧ₒ = λ {ar} {s} f → record { _⟨$⟩_ = if f ; cong = cng f}
-          }
-    where if : ∀ {ar s} (f : ops Σ (ar , s)) → _ → _
-          if {ar} {s} f vs =  A ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) vs
-                            , B ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₂) vs
-          cng : ∀ {ar s} (f : ops Σ (ar , s)) → {vs vs' : ∥ std ✳ ar ∥} 
-              → vs ≈* vs' → _≈_ (std s) (if f vs) (if f vs')
-          cng {ar} f equ = (Π.cong (_⟦_⟧ₒ A f) (≈₁ equ)) ,
-                           ((Π.cong (_⟦_⟧ₒ B f) (≈₂ equ)))
 
 {- Congruence -}
 record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}

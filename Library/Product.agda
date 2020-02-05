@@ -18,7 +18,7 @@ import Relation.Binary.EqReasoning as EqR
 open import Data.Product.Relation.Binary.Pointwise.NonDependent using (×-setoid)
 
 open import HeterogeneousVec
-open import UnivAlgebra
+open import UnivAlgebra hiding (_↦_)
 
 
 module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
@@ -71,7 +71,18 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
   π₂ : Homo _×-alg_ B
   π₂ = record { ′_′ = λ _ → proj₂ₛ ; cond = λ {_} {s} f as → Setoid.refl (B ⟦ s ⟧ₛ) }
 
---  ⟨_,_⟩ : ∀ {ℓ} {ℓ'} {C : Algebra {ℓ} {ℓ'} Σ} → (f : Homo C A) → (g : Homo C B) → Homo C _×-alg_
---  ⟨ f , g ⟩ = record { ′_′ = λ s → < ′ f ′ s , ′ g ′ s >ₛ 
---                     ; cond = λ {_} {s} ft as → {!!}
---                     }
+  module PairMor {ℓ} {ℓ'} (C : Algebra {ℓ} {ℓ'} Σ)  where
+    ⟨_,_⟩ : (f : Homo C A) → (g : Homo C B) → Homo C _×-alg_
+    ⟨ f , g ⟩ = record { ′_′ = λ s → < ′ f ′ s , ′ g ′ s >ₛ 
+                     ; cond = λ {_} {s} ft as → hom-cond ft as
+                     }
+      where _≈×_ : ∀ {s : sorts Σ} → _
+            _≈×_ {s} = _≈_ (_×-alg_ ⟦ s ⟧ₛ)
+            fg : _
+            fg x = < _⟨$⟩_ (′ f ′ x) , _⟨$⟩_ (′ g ′ x) >
+            hom-cond : ∀ {s} {ar} (ft : ops Σ (ar , s)) (as : HVec _ ar) →
+                     (< ′ f ′ s , ′ g ′ s >ₛ ⟨$⟩ ((C ⟦ ft ⟧ₒ) ⟨$⟩ as)) ≈× 
+                                  (_×-alg_ ⟦ ft ⟧ₒ ⟨$⟩ (map (λ x → < _⟨$⟩_ (′ f ′ x) , _⟨$⟩_ (′ g ′ x) >) as))
+            hom-cond {s} ft as rewrite propMapV∘ as fg (λ _ → proj₁)
+                                     | propMapV∘ as fg (λ _ → proj₂) = cond f ft as , cond g ft as
+

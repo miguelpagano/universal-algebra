@@ -304,3 +304,16 @@ HVecSet I A is = record { Carrier = HVec (Carrier ∘ A) is
 _✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) →
                                  List I → Setoid _ _
 _✳_ {I = I} = HVecSet I
+
+open import Function.Equality
+mapₛ : ∀ {l₁ l₂ l₃ l₄ : Level} {I : Set}
+         {A : I → Setoid l₁ l₂}
+         {B : I → Setoid l₃ l₄} {is : List I} →
+         (f : {i : I} → A i ⟶ B i) → (HVecSet I A is) ⟶ (HVecSet I B is)
+mapₛ {A} {is = is} f = record { _⟨$⟩_ = map (λ i → f {i} ⟨$⟩_)
+                             ; cong = acong
+                   }
+     where acong : ∀ {js} → {as as' : HVec _ js} → as ∼v as' →
+                   map (λ i → f ⟨$⟩_) as ∼v map (λ i → f ⟨$⟩_) as'
+           acong ∼⟨⟩ = ∼⟨⟩
+           acong (∼▹ x x₁) = ∼▹ (Π.cong f x) (acong x₁)

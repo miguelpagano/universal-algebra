@@ -35,24 +35,6 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
   _≈*_ : {ar : Arity Σ} → _
   _≈*_ {ar} = _≈_ (std ✳ ar)
 
-  ≈₁ : ∀ {s} {a a' : ∥ std s ∥} → Setoid._≈_ (std s) a a' → _≈_ (A ⟦ s ⟧ₛ) (proj₁ a) (proj₁ a')
-  ≈₁ (eq , _ ) = eq
-  ≈₂ : ∀ {s} {a a' : ∥ std s ∥} → Setoid._≈_ (std s) a a' → _≈_ (B ⟦ s ⟧ₛ) (proj₂ a) (proj₂ a')
-  ≈₂ (_ , eq ) = eq
-
-  ≈ᵢ : ∀ {s} {a a' : ∥ std s ∥} → _≈_ (A ⟦ s ⟧ₛ) (proj₁ a) (proj₁ a') → _≈_ (B ⟦ s ⟧ₛ) (proj₂ a) (proj₂ a') →
-    Setoid._≈_ (std s) a a'
-  ≈ᵢ eq eq' = eq , eq'
-
-  ≈×₁ : ∀ {ar} {vs vs' : ∥ std ✳ ar ∥} 
-      → vs ≈* vs' → _≈_ (_⟦_⟧ₛ A ✳ ar) (map (λ _ → proj₁) vs) (map (λ _ → proj₁) vs')
-  ≈×₁ {[]} ∼⟨⟩ = ∼⟨⟩
-  ≈×₁ {i ∷ is} (∼▹ (eq , _) equ) = ∼▹ eq (≈×₁ equ)
-  ≈×₂ : ∀ {ar} {vs vs' : ∥ std ✳ ar ∥} 
-      → vs ≈* vs' → _≈_ (_⟦_⟧ₛ B ✳ ar) (map (λ _ → proj₂) vs) (map (λ _ → proj₂) vs')
-  ≈×₂ {[]} ∼⟨⟩ = ∼⟨⟩
-  ≈×₂ {i ∷ is} (∼▹ (_ , eq) equ) = ∼▹ eq (≈×₂ equ)
-
   {- Product of algebras -}
   _×-alg_ : Algebra {ℓ₃ ⊔ ℓ₁} {ℓ₄ ⊔ ℓ₂} Σ
   _×-alg_ = record {
@@ -64,8 +46,8 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
                             , B ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₂) vs
           cng : ∀ {ar s} (f : ops Σ (ar , s)) → {vs vs' : ∥ std ✳ ar ∥} 
               → vs ≈* vs' → _≈_ (std s) (if f vs) (if f vs')
-          cng {ar} f equ = (Π.cong (_⟦_⟧ₒ A f) (≈×₁ equ)) ,
-                           ((Π.cong (_⟦_⟧ₒ B f) (≈×₂ equ)))
+          cng {ar} f equ = Π.cong (_⟦_⟧ₒ A f) (fmap∼v proj₁ equ) ,
+                           Π.cong (_⟦_⟧ₒ B f) (fmap∼v proj₂ equ) 
 
   {- Projection homomorphisms -}
   open import Morphisms
@@ -207,15 +189,7 @@ module ProdModel
                                , eqB {s} {left e} {right e} (B⊨E e∈E θb eqsB)
               where open Aux θ
                     open Equation
-                    eqsA : _∼v_ {_} {_} {sorts Σ} {HU}
-                            {λ sᵢ uᵢ uᵢ' → ((A ⟦ sᵢ ⟧ₛ) Setoid.≈
-                            (θa ↪A) uᵢ)
-                            ((θa ↪A) uᵢ')}
-                            {carty e} (proj₁ (cond e)) (proj₂ (cond e))
+                    eqsA : _
                     eqsA = map∼v (λ { {s'} {t} {t'} (eq , _) → eqA' {s'} {t} {t'} eq}) eqs
-                    eqsB : _∼v_ {_} {_} {sorts Σ} {HU}
-                            {λ sᵢ uᵢ uᵢ' → ((B ⟦ sᵢ ⟧ₛ) Setoid.≈
-                            (θb ↪B) uᵢ)
-                            ((θb ↪B) uᵢ')}
-                            {carty e} (proj₁ (cond e)) (proj₂ (cond e))
+                    eqsB : _
                     eqsB = map∼v (λ { {s'} {t} {t'} (_ , eq) → eqB' {s'} {t} {t'} eq}) eqs

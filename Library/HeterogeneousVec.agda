@@ -167,6 +167,16 @@ map∼v : ∀ {l₀ l₁ l₂ I} {A : I → Set l₀}
 map∼v f ∼⟨⟩ = ∼⟨⟩
 map∼v f (∼▹ vRv' vs≈Rvs') = ∼▹ (f vRv') (map∼v f vs≈Rvs')
 
+fmap∼v : ∀ {l₀ l₁ l₂ l₃ I} {A : I → Set l₀} {B : I → Set l₃}
+        {R : (i : I) → Rel (A i) l₁} {R' : (i : I) → Rel (B i) l₂}
+        {f : {i : I} → A i → B i} →
+        {is : List I} {vs vs' : HVec A is} →
+        (F : {i : I} {a a' : A i} → R i a a' → R' i (f a) (f a')) →
+        _∼v_ {R = R} vs vs' → _∼v_ {R = R'} (map (λ i → f {i}) vs) (map (λ i → f {i}) vs')
+fmap∼v F ∼⟨⟩ = ∼⟨⟩
+fmap∼v F (∼▹ vRv' vs≈Rvs') = ∼▹ (F vRv') (fmap∼v F vs≈Rvs')
+
+
 
 ~v-pointwise : ∀ {l₀} {l₁} {I : Set} {is : List I}
                {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} →

@@ -321,9 +321,5 @@ mapₛ : ∀ {l₁ l₂ l₃ l₄ : Level} {I : Set}
          {B : I → Setoid l₃ l₄} {is : List I} →
          (f : {i : I} → A i ⟶ B i) → (HVecSet I A is) ⟶ (HVecSet I B is)
 mapₛ {A} {is = is} f = record { _⟨$⟩_ = map (λ i → f {i} ⟨$⟩_)
-                             ; cong = acong
+                             ; cong = fmap∼v (Π.cong f)
                    }
-     where acong : ∀ {js} → {as as' : HVec _ js} → as ∼v as' →
-                   map (λ i → f ⟨$⟩_) as ∼v map (λ i → f ⟨$⟩_) as'
-           acong ∼⟨⟩ = ∼⟨⟩
-           acong (∼▹ x x₁) = ∼▹ (Π.cong f x) (acong x₁)

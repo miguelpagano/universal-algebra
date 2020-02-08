@@ -219,28 +219,28 @@ module BoolModel where
   B = Bsort ∥ Bops
 
   open Equation
-{-
+
   Bsat₁ : B ⊨ Ax₁
-  Bsat₁ θ ∼⟨⟩ with θ _ vp | θ _ vq | θ _ vr
+  Bsat₁ θ ∼⟨⟩ with θ vp | θ vq | θ vr
   Bsat₁ θ ∼⟨⟩ | false | false | false = refl
   Bsat₁ θ ∼⟨⟩ | false | false | true = refl
   Bsat₁ θ ∼⟨⟩ | false | true | c = refl
   Bsat₁ θ ∼⟨⟩ | true | b | c = refl
 
   Bsat₂ : B ⊨ Ax₂
-  Bsat₂ θ ∼⟨⟩ with θ _ vp | θ _ vq
+  Bsat₂ θ ∼⟨⟩ with θ vp | θ vq
   Bsat₂ θ ∼⟨⟩ | false | false = refl
   Bsat₂ θ ∼⟨⟩ | false | true = refl
   Bsat₂ θ ∼⟨⟩ | true | false = refl
   Bsat₂ θ ∼⟨⟩ | true | true = refl
 
   Bsat₃ : B ⊨ Ax₃
-  Bsat₃ θ _ with θ _ vp
+  Bsat₃ θ x with θ vp
   Bsat₃ θ x | false = refl
   Bsat₃ θ x | true = refl
 
   Bsat₄ : B ⊨ Ax₄
-  Bsat₄ θ _ with θ _ vp | θ _ vq | θ _ vr
+  Bsat₄ θ x with θ vp | θ vq | θ vr
   Bsat₄ θ x | false | false | false = refl
   Bsat₄ θ x | false | false | true = refl
   Bsat₄ θ x | false | true | false = refl
@@ -251,40 +251,40 @@ module BoolModel where
   Bsat₄ θ x | true | true | true = refl
 
   Bsat₅ : B ⊨ Ax₅
-  Bsat₅ θ _ with θ _ vp | θ _ vq
+  Bsat₅ θ _ with θ vp | θ vq
   Bsat₅ θ x | false | false = refl
   Bsat₅ θ x | true | false = refl
   Bsat₅ θ x | false | true = refl
   Bsat₅ θ x | true | true = refl
 
   Bsat₆ : B ⊨ Ax₆
-  Bsat₆ θ _ with θ _ vp
+  Bsat₆ θ _ with θ vp
   Bsat₆ θ x | false = refl
   Bsat₆ θ x | true = refl
 
   Bsat₇ : B ⊨ Ax₇
-  Bsat₇ θ _ with θ _ vp
+  Bsat₇ θ _ with θ vp
   Bsat₇ θ x | false = refl
   Bsat₇ θ x | true = refl
 
   Bsat₈ : B ⊨ Ax₈
-  Bsat₈ θ _ with θ _ vp | θ _ vq | θ _ vr
+  Bsat₈ θ _ with θ vp | θ vq | θ vr
   Bsat₈ θ x | false | b | c = refl
   Bsat₈ θ x | true | b | c = refl
 
   Bsat₉ : B ⊨ Ax₉
-  Bsat₉ θ _ with θ _ vp
+  Bsat₉ θ _ with θ vp
   Bsat₉ θ x | false = refl
   Bsat₉ θ x | true = refl
 
   Bsat₁₀ : B ⊨ Ax₁₀
-  Bsat₁₀ θ _ with θ _ vp | θ _ vq
+  Bsat₁₀ θ _ with θ vp | θ vq
   Bsat₁₀ θ x | false | false = refl
   Bsat₁₀ θ x | false | true = refl
   Bsat₁₀ θ x | true | b = refl
 
   Bsat₁₁ : B ⊨ Ax₁₁
-  Bsat₁₁ θ _ with θ _ vp | θ _ vq
+  Bsat₁₁ θ _ with θ vp | θ vq
   Bsat₁₁ θ x | false | false = refl
   Bsat₁₁ θ x | false | true = refl
   Bsat₁₁ θ x | true | false = refl
@@ -295,15 +295,15 @@ module BoolModel where
 
   Bsat₁₃ : B ⊨ Ax₁₃
   Bsat₁₃ θ _ = refl
--}
+
 
   open import Data.Empty
 
   boolabsurd : true ≡ false → ⊥
   boolabsurd ()
-{-
+
   Bsat≡≈ : B ⊨ Ax≡≈
-  Bsat≡≈ θ satcond with θ _ vp | θ _ vq | inspect (θ _) vp | inspect (θ _) vq
+  Bsat≡≈ θ satcond with θ vp | θ vq | inspect (θ) vp | inspect (θ) vq
   ... | true | true | c | d = refl
   ... | false | false | c | d = refl
   Bsat≡≈ θ (∼▹ x ∼⟨⟩) | true | false | Reveal_·_is_.[ eqp ] | Reveal_·_is_.[ eqq ] =
@@ -312,12 +312,12 @@ module BoolModel where
          ⊥-elim (boolabsurd (sym (subst₂ (λ b₁ b₂ → b₁ =b b₂ ≡ true) eqp eqq x)))
 
   BsatRefl≡ : B ⊨ AxRefl≡
-  BsatRefl≡ θ _ with θ _ vp
-  BsatRefl≡ θ _ | false = refl
-  BsatRefl≡ θ _ | true = refl
+  BsatRefl≡ θ _ with θ vp
+  BsatRefl≡ θ x | false = refl
+  BsatRefl≡ θ x | true = refl
 
-  Bsat : ⊨T Tₚ B
-  Bsat = record { satAll = sall }
+  Bsat : _⊨T_ B Tₚ
+  Bsat = sall
     where sall : ∀ {s : ⊤} {e} → e ∈ Tₚ → B ⊨ e
           sall axₚ₁  = Bsat₁
           sall axₚ₂ = Bsat₂
@@ -335,7 +335,7 @@ module BoolModel where
           sall ax≡≈ = Bsat≡≈
           sall axrefl≡ = BsatRefl≡
           sall noaxₚ
--}
+
 
 open import Data.String renaming (_++_ to _++s_)
 

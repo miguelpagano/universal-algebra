@@ -436,19 +436,6 @@ complete {Σ} {X} {ar} {s} {E} {t} {t'} A⊨E = begin t
    open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
    open ⊢QuotSubst E   
 
-
-module ProvSetoid {Σ : Signature} {X : Vars Σ}
-                  {ar : Arity Σ} 
-                  (Th : Theory Σ X ar) where
-
-
-  ProvSetoid : (s : sorts Σ) → Setoid _ _
-  ProvSetoid s = record { Carrier = ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
-                        ; _≈_ = λ t t' → Th ⊢ (⋀ t ≈ t')
-                        ; isEquivalence = record { refl = prefl
-                                                 ; sym = psym
-                                                 ; trans = ptrans } }
-
   
 {- Theory implication -}
 _⇒T_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set

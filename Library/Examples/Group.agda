@@ -88,8 +88,7 @@ module GrpTheory where
     
 
     module Proofs₁ where
-        open ProvSetoid {Σ-grp} {X} 
-        open import Relation.Binary.EqReasoning (ProvSetoid GrpTheory tt)
+        open import Relation.Binary.EqReasoning (⊢RSetoid GrpTheory tt)
         open Subst {Σ-grp} {X}
         u' : _
         u' = toGrpF u

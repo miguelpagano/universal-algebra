@@ -310,8 +310,7 @@ module Theory₂ where
   module Tbool₂⇒Tbool₁ where
     open Theory₁
     open TheoryTrans Σtrans Vars₁
-    open ProvSetoid
-    open import Relation.Binary.EqReasoning (ProvSetoid Tbool₂ tt)
+    open import Relation.Binary.EqReasoning (⊢RSetoid Tbool₂ tt)
 
   
     {- We have to prove each axiom of

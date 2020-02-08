@@ -128,9 +128,8 @@ module EqBool1 where
     pattern noax = there (there (there (there (there (there (there ()))))))
 
   module Proof where
-    open ProvSetoid
     open Theory
-    open import Relation.Binary.EqReasoning (ProvSetoid Th bool)
+    open import Relation.Binary.EqReasoning (⊢RSetoid Th bool)
     open Subst {Σ∼} {Vars∼}
     open Equation
     open Smartcons

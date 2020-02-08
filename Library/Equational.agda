@@ -62,12 +62,13 @@ module EnvExt {ℓ₁ ℓ₂ : Level} {Σ} (X : Vars Σ)
     (a ↪) (term {[]} (inj₁ k) ⟨⟩) = A ⟦ k ⟧ₒ ⟨$⟩ ⟨⟩
     (a ↪) (term {[]} (inj₂ x) ⟨⟩) = a x
     (a ↪) (term {s₀ ∷ ar'} f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (map↪ a ts)
+
     
     map↪ : ∀ {ar} → (a : Env X A) → ∣T∣ ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
     map↪ a ⟨⟩ = ⟨⟩
     map↪ {s₀ ∷ ar'} a (t ▹ ts) = ((a ↪) t) ▹ map↪ a ts
 
-
+  
 module Subst {Σ} {X : Vars Σ} where
 
   Subst : Set
@@ -81,9 +82,6 @@ module Subst {Σ} {X : Vars Σ} where
 
   open EnvExt X (T Σ 〔 X 〕)
 
-  _↪s : Subst → {s : sorts Σ} → ∥ ∣T∣ ⟦ s ⟧ₛ ∥ → ∥ ∣T∣ ⟦ s ⟧ₛ ∥
-  _↪s θ {s} t = (θ ↪) t
-
   _/s_ : {s : sorts Σ} → ∥ ∣T∣ ⟦ s ⟧ₛ ∥ → Subst → ∥ ∣T∣ ⟦ s ⟧ₛ ∥
   _/s_ {s} t θ = (θ ↪) t
 
@@ -95,12 +93,10 @@ module Subst {Σ} {X : Vars Σ} where
     idSubst≡ (term {[]} (inj₂ x) ⟨⟩) = _≡_.refl
     idSubst≡ (term {s₀ ∷ ar'} f ts) = PE.cong (term f) (map↪id ts)
 
-    map↪id : ∀ {ar'} → (ts : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar') → (map↪ idSubst ts) ≡ ts
+    map↪id : ∀ {ar'} → (ts : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar') →
+             map↪ idSubst ts ≡ ts
     map↪id ⟨⟩ = _≡_.refl
     map↪id (t ▹ ts) = cong₂ (_▹_) (idSubst≡ t) (map↪id ts)
-
-  _∘ₛ_ : Subst → Subst → Subst
-  (δ ∘ₛ σ) x = (δ ↪) (σ x)
 
 open Hom 
 open Setoid
@@ -120,19 +116,19 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
   conga↪ : ∀ {s} {t₁ t₂ : ∥ ∣T∣x ⟦ s ⟧ₛ ∥} →
                    t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) ((a ↪) t₁) ((a ↪) t₂)
   conga↪ {s} {t₁} eq = ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong (a ↪) eq)
-
-  map↪≡map : ∀ {ar} {ts : ∣T∣x ⟦ ar ⟧ₛ*} → 
-                   map↪ a ts ≡ mapV (λ s → (a ↪) {s}) ts
+  map↪≡map : ∀ {ar} {ts : ∣T∣x ⟦ ar ⟧ₛ*} →
+         map↪ a ts ≡ mapV (λ s → (a ↪) {s}) ts
   map↪≡map {ar = []} {⟨⟩} = PE.refl
   map↪≡map {ar = s ∷ ar} {t ▹ ts} = PE.cong ((a ↪) t ▹_) map↪≡map
-
+ 
   TΣX⇝A : T Σ 〔 X 〕 ⟿ A
   TΣX⇝A s = record { _⟨$⟩_ = (a ↪)
-                    ; cong = conga↪
-                    }
-
+                   ; cong = conga↪
+                   }
+ 
   ⟦_⟧ : ∀ {s} → ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥ → ∥ A ⟦ s ⟧ₛ ∥
   ⟦_⟧ {s} = TΣX⇝A s ⟨$⟩_ 
+
 
   {- Homomorphism condition of TΣX⇝A -}
   TΣXcond : homCond (T Σ 〔 X 〕) A TΣX⇝A
@@ -142,13 +138,8 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
   TΣXHom : Homo (T Σ 〔 X 〕) A
   TΣXHom = record { ′_′ = TΣX⇝A ; cond = TΣXcond }
 
-
-  ↪eq : ∀ {s} t → _≈_ (A ⟦ s ⟧ₛ) ((a ↪) t) (′ TΣXHom ′ s ⟨$⟩ t)
-  ↪eq {s} t = Setoid.refl (A ⟦ s ⟧ₛ)
-
   HomEnv : Homo (T Σ 〔 X 〕) A → Set _
   HomEnv h = (s : sorts Σ) → (x : X s) → _≈_ (A ⟦ s ⟧ₛ) ( ′ h ′ s ⟨$⟩ term (inj₂ x) ⟨⟩ ) (a x)
-
 
  
   tot : (H H' : Homo (T Σ 〔 X 〕) A) → HomEnv H → HomEnv H' → _≈ₕ_ (T Σ 〔 X 〕) A H  H'
@@ -195,8 +186,8 @@ module SubstitutionTheorem {ℓ₁ ℓ₂ : Level}
                 (σ : Subst {Σ} {X})
                 where
        module IA = InitHomoExt A η renaming (⟦_⟧ to ⟦_⟧η) 
-       module IT =  InitHomoExt (T Σ 〔 X 〕)  σ renaming (⟦_⟧ to ⟦_⟧σ)
        open IA using (⟦_⟧η) public
+       module IT = InitHomoExt (T Σ 〔 X 〕)  σ renaming (⟦_⟧ to ⟦_⟧σ)
        open IT using (⟦_⟧σ) public
        _∘ₑ_ : Env X A
        _∘ₑ_ x = ⟦ σ x ⟧η
@@ -204,13 +195,13 @@ module SubstitutionTheorem {ℓ₁ ℓ₂ : Level}
        open InitHomoExt A _∘ₑ_ renaming (⟦_⟧ to ⟦_⟧ησ) public
        open TermAlgebra
        open EnvExt
-       theo : ∀ s t → _≈_ (A ⟦ s ⟧ₛ) (⟦ ⟦ t ⟧σ ⟧η)  (⟦ t ⟧ησ)
-       theo* : ∀ {ar} ts → _≈_ (_⟦_⟧ₛ A ✳ ar) (map↪ X A η (map↪ X ((T Σ 〔 X 〕) ) σ ts)) (map↪ X A _∘ₑ_ ts)
-       theo* {[]} ⟨⟩ = ∼⟨⟩
-       theo* {s ∷ ar} (t ▹ ts) = ∼▹ (theo s t) (theo* ts)
-       theo s (term {[]} (inj₁ k) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
-       theo s (term {[]} (inj₂ x) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
-       theo s (term {s' ∷ ar} {.s} f ts) = Π.cong (A ⟦ f ⟧ₒ) (theo* ts)
+       subst-theo : ∀ s t → _≈_ (A ⟦ s ⟧ₛ) (⟦ ⟦ t ⟧σ ⟧η)  (⟦ t ⟧ησ)
+       subst-theo* : ∀ {ar} ts → _≈_ (_⟦_⟧ₛ A ✳ ar) (map↪ X A η (map↪ X ((T Σ 〔 X 〕) ) σ ts)) (map↪ X A _∘ₑ_ ts)
+       subst-theo* {[]} ⟨⟩ = ∼⟨⟩
+       subst-theo* {s ∷ ar} (t ▹ ts) = ∼▹ (subst-theo s t) (subst-theo* ts)
+       subst-theo s (term {[]} (inj₁ k) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
+       subst-theo s (term {[]} (inj₂ x) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
+       subst-theo s (term {s' ∷ ar} {.s} f ts) = Π.cong (A ⟦ f ⟧ₒ) (subst-theo* ts)
 
 open TermAlgebra
 
@@ -258,7 +249,6 @@ A ⊨T E = ∀ {s e} → _∈_ {i = s} e E → A ⊨ e
 ⊨All {ℓ₁} {ℓ₂} {Σ} E e = (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T E → A ⊨ e
 
 
-open Subst
 
 {- Provability -}
 data _⊢_ {Σ X}
@@ -288,79 +278,51 @@ _∣_ : ∀ {Σ X} {ar : Arity Σ} {E : Theory Σ X ar} {s}
 ax ∣ σ = psubst ax σ ∼⟨⟩
 
 
-module EnvSubst {Σ ℓ₁ ℓ₂ X} {A : Algebra {ℓ₁} {ℓ₂} Σ}
-                (σ : Subst {Σ} {X}) (θ : Env X A) where
-
-  open EnvExt X A
-  open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
-
-  EnvSubst : Env X A
-  EnvSubst x = (θ ↪)(σ x)
-  
-
-  mutual
-    ∘subst : ∀ {s} → (t₀ : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) →
-             _≈_ (A ⟦ s ⟧ₛ) ((EnvSubst ↪) t₀) ((θ ↪) (t₀ /s σ))
-    ∘subst (term {[]} {s} (inj₁ k) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
-    ∘subst (term {[]} {s} (inj₂ x) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
-    ∘subst (term {s₀ ∷ ar} {s} f (t₀ ▹ ts)) =
-                                 Π.cong (A ⟦ f ⟧ₒ) (∼▹ (∘subst t₀)
-                                                  (map∘subst ts))
-
-    map∘subst : ∀ {ar} → (ts : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar) →
-                _∼v_ {R = _≈_ ∘ _⟦_⟧ₛ A} (map↪ EnvSubst ts)
-                                        (map↪ θ (map↪ₜ σ ts))
-    map∘subst ⟨⟩ = ∼⟨⟩
-    map∘subst (t ▹ ts) = ∼▹ (∘subst t) (map∘subst ts)
-
-
 {- Birkhoff soundness and completeness -}
 soundness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
                 {e : Equation Σ X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E e
-soundness {X = X} {ar} {s} prefl A _ _ _ = Setoid.refl (A ⟦ s ⟧ₛ)
-soundness {X = X} {ar} {s} {E} (psym pe) A A⊨E θ ∼⟨⟩ =
-             Setoid.sym (A ⟦ s ⟧ₛ) (soundness pe A A⊨E θ ∼⟨⟩)
-soundness {X = X} {ar} {s} {E} (ptrans pe₀ pe₁) A x θ ∼⟨⟩ =
+soundness {s = s} prefl A _ _ _ = Setoid.refl (A ⟦ s ⟧ₛ)
+soundness {s = s} {E} (psym t₁≈t₀) A A⊨E θ ∼⟨⟩ = 
+             Setoid.sym (A ⟦ s ⟧ₛ) (soundness t₁≈t₀ A A⊨E θ ∼⟨⟩)
+soundness {X = X} {ar} {s} {E} (ptrans t₀≈t₁ t₁≈t₂) A x θ ∼⟨⟩ =
              Setoid.trans (A ⟦ s ⟧ₛ)
-               (soundness pe₀ A x θ ∼⟨⟩)
-               (soundness pe₁ A x θ ∼⟨⟩) 
+               (soundness t₀≈t₁ A x θ ∼⟨⟩)
+               (soundness t₁≈t₂ A x θ ∼⟨⟩) 
 soundness {Σ = Σ} {X} {ar} {s} {E}
-            (psubst {us = us} {us'} {t} {t'} econd σ ⊢us≈us') A A⊨E θ ∼⟨⟩ = A⊨econd
-  where open EnvSubst {A = A} σ θ
+            (psubst {t = t} {t'} e∈E σ ⊢us≈us') A A⊨E θ ∼⟨⟩ = begin
+                 ⟦ ⟦ t ⟧σ ⟧θ
+              ≈⟨ subst-theo s t ⟩
+                 ⟦ t ⟧θσ
+              ≈⟨ A⊨E e∈E θ∘σ (
+                 map∼v (λ {s₀} {uᵢ} {uᵢ'} eq → A-trans (A-sym (subst-theo s₀ uᵢ))
+                                             (A-trans eq (subst-theo s₀ uᵢ')) ) (IHus θ ⊢us≈us')) ⟩ 
+                 ⟦ t' ⟧θσ
+              ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (subst-theo s t') ⟩
+                 ⟦ ⟦ t' ⟧σ ⟧θ
+              ∎
+  where open EqR (A ⟦ s ⟧ₛ)
+        A-sym : ∀ {s} {i j} → _ → _ 
+        A-sym {s} {i} {j} eq = Setoid.sym (A ⟦ s ⟧ₛ) {i} {j} eq
+        A-trans : ∀ {s} {i j k} → _ → _ → _
+        A-trans {s} {i} {j} {k} eq eq' = Setoid.trans (A ⟦ s ⟧ₛ) {i} {j} {k} eq eq'
+        open SubstitutionTheorem {A = A} θ σ renaming (⟦_⟧ησ to ⟦_⟧θσ;⟦_⟧η to ⟦_⟧θ;_∘ₑ_ to θ∘σ)
         open EnvExt X A 
-        θσ : Env X A
-        θσ = EnvSubst
-        iHus : ∀ {ar₀} {us₀ us₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
+        IHus : ∀ {ar₀} {us₀ us₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
                (θ' : Env X A) → 
-               _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ (σ ↪s) uᵢ ≈ (σ ↪s) uᵢ')} us₀ us₀' →
-               _∼v_ {R = λ sᵢ uᵢ uᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ' ↪) ((σ ↪s) uᵢ))
-                                                 ((θ' ↪) ((σ ↪s) uᵢ'))} us₀ us₀'
-        iHus θ' ∼⟨⟩ = ∼⟨⟩
-        iHus θ' (∼▹ {s₀} {ar₀} {u₁} {u₂} ⊢u₁≈u₂ p) = ∼▹ (soundness ⊢u₁≈u₂ A A⊨E θ' ∼⟨⟩)
-                                                       (iHus θ' p)
-        A⊨econd : ((A ⟦ s ⟧ₛ) ≈ (θ ↪) ((σ ↪s) t))
-                               ((θ ↪) ((σ ↪s) t'))
-        A⊨econd = begin
-                   (θ ↪) ((σ ↪s) t)
-                     ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (∘subst t)⟩
-                   (θσ ↪) t
-                     ≈⟨ A⊨E econd θσ (map∼v (λ {s₀} {uᵢ} {uᵢ'} x →
-                                             Setoid.trans (A ⟦ s₀ ⟧ₛ) (∘subst uᵢ)
-                                             (Setoid.trans (A ⟦ s₀ ⟧ₛ) x (Setoid.sym (A ⟦ s₀ ⟧ₛ) (∘subst uᵢ'))))
-                                             (iHus θ ⊢us≈us')) ⟩
-                   (θσ ↪) t'
-                     ≈⟨ ∘subst t' ⟩
-                   (θ ↪) ((σ ↪s) t')
-                   ∎
-          where open EqR (A ⟦ s ⟧ₛ)
-soundness {s = s} {E} (preemp {[]} ∼⟨⟩ {f}) = λ { A x θ ∼⟨⟩ → Setoid.refl (A ⟦ s ⟧ₛ) }
+               _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ uᵢ /s σ ≈  uᵢ' /s σ )} us₀ us₀' →
+               _∼v_ {R = λ sᵢ uᵢ uᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ' ↪) (uᵢ /s σ))
+                                                 ((θ' ↪) (uᵢ' /s σ))} us₀ us₀'
+        IHus θ' ∼⟨⟩ = ∼⟨⟩
+        IHus θ' (∼▹ ⊢u₁≈u₂ ⊢us₁≈us₂) = ∼▹ (soundness ⊢u₁≈u₂ A A⊨E θ' ∼⟨⟩) (IHus θ' ⊢us₁≈us₂)
+
+soundness {s = s} {E} (preemp {[]} ∼⟨⟩ {f}) A A⊨E θ ∼⟨⟩ = Setoid.refl (A ⟦ s ⟧ₛ)
 soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
             (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' {f}) A A⊨E θ ∼⟨⟩ =
                 begin
                    (θ ↪) (term f ts)
                  ≈⟨ TΣXcond f ts ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts
-                 ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (iHts ⊢ts≈ts')) ⟩
+                 ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (IHts ⊢ts≈ts')) ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts'
                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
                    (θ ↪) (term f ts')
@@ -369,13 +331,13 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
   where open EqR (A ⟦ s ⟧ₛ)
         open InitHomoExt A θ
         open EnvExt X A 
-        iHts : ∀ {ar₀} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
+        IHts : ∀ {ar₀} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
                _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts₀ ts₀' →
                _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ ↪) tᵢ)
                                                  ((θ ↪) tᵢ')} ts₀ ts₀'
-        iHts {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
-        iHts {s₀ ∷ ar₀} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ ⊢t₀≈t₀' ⊢ts₀≈ts₀') =
-                                    ∼▹ (ih ⊢t₀≈t₀' A A⊨E θ ∼⟨⟩) (iHts ⊢ts₀≈ts₀')
+        IHts {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
+        IHts {s₀ ∷ ar₀} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ ⊢t₀≈t₀' ⊢ts₀≈ts₀') =
+                                    ∼▹ (ih ⊢t₀≈t₀' A A⊨E θ ∼⟨⟩) (IHts ⊢ts₀≈ts₀')
           where ih : ∀ {s' : sorts Σ} {tᵢ tᵢ' : ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥} →
                        E ⊢ (⋀ tᵢ ≈ tᵢ') → ⊨All E (⋀ tᵢ ≈ tᵢ')
                 ih {s'} {tᵢ} {tᵢ'} peq = soundness peq
@@ -505,68 +467,11 @@ module InitialityModel {Σ X ar ℓ₁ ℓ₂} (E : Theory Σ X ar)
   import Morphisms
   open Hom
   open Homo
-  open EnvExt X A renaming (_↪ to _↪A;map↪ to map↪A)
-  open EnvExt X (T Σ 〔 X 〕) renaming (_↪ to _↪X;map↪ to map↪X)
-  module ST = SubstitutionTheorem {X = X} {A = A} using (_∘ₑ_)
-  open ST renaming (_∘ₑ_ to ∘e)
 
-  init-cong : (θ : Env X A) → (s  : sorts Σ) → {i j  : HU (Σ 〔 X 〕) s} →
-    (x : E ⊢ (⋀ i ≈ j)) → _≈_ (A ⟦ s ⟧ₛ) ((θ ↪A) i) ((θ ↪A) j)
-  init-cong* : (θ : Env X A) → (ar  : List (sorts Σ)) → {ts ts' : HVec (HU (Σ 〔 X 〕)) ar} →
-             _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' → 
-              ((_⟦_⟧ₛ A ✳ ar) ≈ (map↪A θ) ts) ((map↪A θ) ts')
-  init-cong'* : (θ : Env X A) → (σ : Subst) →
-                (ar  : List (sorts Σ)) → {ts ts' : HVec (HU (Σ 〔 X 〕)) ar} →
-                ( _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ (σ ↪X) uᵢ ≈ (σ ↪X) uᵢ')}) ts ts' →
-                _∼v_ {R = λ sᵢ uᵢ uᵢ' →  _≈_ (A ⟦ sᵢ ⟧ₛ) (((∘e θ σ) ↪A) uᵢ) (((∘e θ σ) ↪A) uᵢ')} ts ts'
-  init-cong'* θ σ [] ∼⟨⟩ = ∼⟨⟩
-  init-cong'* θ σ (s ∷ ar) (∼▹ {t₁ = t₁} {t₂ = t₂} eq eqs) = ∼▹ t₁≈t₂ (init-cong'* θ σ ar eqs)
-    where t₁≈t₂ : ((A ⟦ s ⟧ₛ) ≈ (∘e θ σ ↪A) t₁) ((∘e θ σ ↪A) t₂)
-          t₁≈t₂ = begin ⟦ t₁ ⟧ησ
-                      ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (theo s t₁) ⟩
-                      ⟦ ⟦ t₁ ⟧σ ⟧η
-                      ≈⟨ init-cong θ s eq ⟩
-                      ⟦ ⟦ t₂ ⟧σ ⟧η
-                      ≈⟨ theo s t₂ ⟩
-                      ⟦ t₂ ⟧ησ
-                      ∎
-                where open EqR (A ⟦ s ⟧ₛ)
-                      open SubstitutionTheorem {X = X} {A = A} θ σ using (_∘ₑ_;theo;⟦_⟧ησ;⟦_⟧η;⟦_⟧σ;theo*)
-
-  init-cong θ s {i} {.i} prefl = Setoid.refl (A ⟦ s ⟧ₛ)
-  init-cong θ s {i} {j} (psym x) = Setoid.sym (A ⟦ s ⟧ₛ) (init-cong θ s x)
-  init-cong θ s (ptrans x x₁) = Setoid.trans (A ⟦ s ⟧ₛ) (init-cong θ s x) (init-cong θ s x₁)
-  init-cong θ s (psubst {s} {ar'} {t = t} {t'} econd σ ⊢us≈us') = begin
-            ⟦ ⟦ t ⟧σ ⟧η
-            ≈⟨ theo s t ⟩
-            ⟦ t ⟧ησ
-            ≈⟨ M econd (_∘ₑ_) (init-cong'* θ σ ar' ⊢us≈us') ⟩
-            ⟦ t' ⟧ησ
-            ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (theo s t') ⟩
-            ⟦ ⟦ t' ⟧σ ⟧η
-            ∎
-    where open EqR (A ⟦ s ⟧ₛ)
-          open Homo
-          open SubstitutionTheorem {X = X} {A = A} θ σ using (_∘ₑ_;theo;⟦_⟧ησ;⟦_⟧η;⟦_⟧σ;theo*)
-  init-cong θ s {term {[]} {_} f ⟨⟩} {term .f ⟨⟩} (preemp ∼⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
-  init-cong θ _ {term {s ∷ ar} {_} f ts} {term .f ts'} (preemp eqs) = Π.cong (A ⟦ f ⟧ₒ) (init-cong* θ (s ∷ ar) eqs)
-
-  init-cong* θ [] ∼⟨⟩ = ∼⟨⟩
-  init-cong* θ (s ∷ ar) (∼▹ eq eqs) = ∼▹ (init-cong θ s eq) (init-cong* θ ar eqs)
-    
-
-  
   init : (θ : Env X A) → Hom.Homo (⊢Quot E) A
   init θ = record { ′_′ = λ s → record { _⟨$⟩_ = _⟨$⟩_ ( ′ TΣXHom ′ s)
-                                     ; cong = λ {j} {i} x → init-cong θ s x
+                                     ; cong = λ {j} {i} E⊢e → soundness E⊢e A M θ ∼⟨⟩
                                      }
                 ; cond = λ f as → TΣXcond f as
                 }
        where open InitHomoExt A θ
-
-
-{- Alternative proof of soundness -}
-soundness' : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
-                {e : Equation Σ X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E e
-soundness' {E = E} {⋀ left ≈ right if「 [] 」 (⟨⟩ ↦ ⟨⟩)} E⊢e A A⊨E θ ∼⟨⟩ = init-cong θ _ E⊢e
-  where open InitialityModel E A A⊨E

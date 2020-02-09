@@ -76,120 +76,150 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
                                      | propMapV∘ as fg (λ _ → proj₂) = cond f ft as , cond g ft as
 
 
+
+module IndexedProduct {ℓ₁ ℓ₂ ℓ₃}
+        {Σ : Signature} {I : Set ℓ₁}
+        (A : I → Algebra {ℓ₂} {ℓ₃} Σ) where
+      
+  open Signature
+  open Algebra
+  open Setoid
+  open import Setoids
+  
+  std : (s : sorts Σ) → Setoid (ℓ₁ ⊔ ℓ₂) (ℓ₁ ⊔ ℓ₃)
+  std s = record { Carrier = (i : I) → carrier i
+                           ; _≈_ = ≈ᵢ
+                           ; isEquivalence = isEquiv
+                           }
+   where carrier : I → Set ℓ₂
+         carrier i = Setoid.Carrier (A i ⟦ s ⟧ₛ)
+         A-std : _ → _
+         A-std i = A i ⟦ s ⟧ₛ
+         ≈ᵢ : Rel ((i : I) → (carrier i)) (ℓ₁ ⊔ ℓ₃)
+         ≈ᵢ f g = ∀ i → Setoid._≈_ (A-std i) (f i) (g i)
+         isEquiv : IsEquivalence ≈ᵢ
+         isEquiv = record { refl = λ i → Setoid.refl (A-std i)
+                          ; sym = λ x i → Setoid.sym (A-std i) (x i)
+                          ; trans = λ x x₁ i → Setoid.trans (A-std i) (x i) (x₁ i)
+                          }
+  
+
+  _≈*_ : {ar : Arity Σ} → _
+  _≈*_ {ar} = _≈_ (std ✳ ar)
+
+  {- Product of algebras -}
+  Πalg : Algebra {ℓ₁ ⊔ ℓ₂} {ℓ₁ ⊔ ℓ₃} Σ
+  Πalg = record {
+            _⟦_⟧ₛ = λ s → std s
+          ; _⟦_⟧ₒ = λ {ar} {s} f → record { _⟨$⟩_ = if f ; cong = cng f}
+          }
+    where if : ∀ {ar s} (f : ops Σ (ar , s)) → _ → _
+          if {ar} {s} f vs i = A i ⟦ f ⟧ₒ ⟨$⟩ map (λ s' x → x i) vs
+          cng : ∀ {ar s} (f : ops Σ (ar , s)) → {vs vs' : ∥ std ✳ ar ∥} 
+              → vs ≈* vs' → _≈_ (std s) (if f vs) (if f vs')
+          cng {ar} f equ i = Π.cong (A i ⟦ f ⟧ₒ) (fmap∼v (_$ i) equ)
+
+  
+  {- Projection homomorphisms -}
+  open import Morphisms
+  open import Data.Product.Function.NonDependent.Setoid
+  open Hom
+  open Homo
+  π : (i : I) → Homo Πalg (A i)
+  π i = record { ′_′ = λ _ → record { _⟨$⟩_ = _$ i ; cong = _$ i } ;
+               cond = λ {_} {s} f as → Setoid.refl (A i ⟦ s ⟧ₛ)
+               }
+
+  module PairMor {ℓ} {ℓ'} (C : Algebra {ℓ} {ℓ'} Σ)  where
+    ⟨_⟩ : (f : (i : I) → Homo C (A i)) → Homo C Πalg
+    ⟨ f ⟩ = record { ′_′ = λ s → record { _⟨$⟩_ = λ c i →  ′ f i ′ s ⟨$⟩ c
+                                       ; cong = λ c i → Π.cong (′ f i ′ s) c
+                                       } 
+                   ; cond = hom-cond
+                   }
+      where _≈Ai_ : ∀ {s : sorts Σ} {i} → _
+            _≈Ai_ {s} {i} = _≈_ (A i ⟦ s ⟧ₛ)
+            <f> : (s : sorts Σ) → Setoid.Carrier (C ⟦ s ⟧ₛ) → (i : I) → Setoid.Carrier (A i ⟦ s ⟧ₛ) 
+            <f> s c j = ′ f j ′ s ⟨$⟩ c
+            hom-cond : ∀ {s} {ar} (ft : ops Σ (ar , s)) (cs : HVec _ ar) i →
+                      (′ f i ′ s ⟨$⟩ ((C ⟦ ft ⟧ₒ) ⟨$⟩ cs)) ≈Ai
+                      (((A i ⟦ ft ⟧ₒ) ⟨$⟩ map (λ _ x → x i) (map <f> cs)))
+            hom-cond {s} ft cs i rewrite (propMapV∘ cs <f> (λ s' x → x i)) = cond (f i) ft cs
+
 open import Equational
-module ProdModel 
+module IndexedProductModel 
         {Σ : Signature}
         {X : Vars Σ}
         {ar : _}
         {E : Theory Σ X ar}
-        {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
-        {A : Algebra {ℓ₁} {ℓ₂} Σ}
-        {B : Algebra {ℓ₃} {ℓ₄} Σ}
-        (A⊨E : A ⊨T E)
-        (B⊨E : B ⊨T E) where
+        {ℓ₁ ℓ₂ ℓ₃}
+        {I : Set ℓ₁}
+        {A : I → Algebra {ℓ₂} {ℓ₃} Σ}
+        (Ai⊨E : (i : I) → A i ⊨T E)
+        where
 
        open Algebra
        open Signature
-       open ProdAlg A B renaming (_×-alg_ to A×B)
+       open IndexedProduct {I = I} A 
        import Setoids using (∥_∥)
        open import TermAlgebra (Σ 〔 X 〕)
        open HU
-       open import Data.Sum hiding (map)
 
-       module Aux (θ : Env X A×B) where
-           open EnvExt X A×B renaming (_↪ to _↪×;map↪ to map↪×)
-           θa : Env X A
-           θa x = proj₁ (θ x)
-           θb : Env X B
-           θb x = proj₂ (θ x)
+       module Aux (θ : Env X Πalg) where
+           open EnvExt X Πalg renaming (_↪ to _↪×;map↪ to map↪×)
+           θi : (i : I) → Env X (A i)
+           θi i x = (θ x) i
            open import Morphisms
-           open module EA = EnvExt X A renaming (_↪ to _↪A) public
-           open module EB = EnvExt X B renaming (_↪ to _↪B) hiding (map↪) public
-           open module HA = Hom T Σ 〔 X 〕 A
-           open module HB = Hom T Σ 〔 X 〕 B
-           open module IA = InitHomoExt A θa renaming (TΣXHom to TΣXHomA)
-           open module IB = InitHomoExt B θb renaming (TΣXHom to TΣXHomB)
+           module E i = EnvExt X (A i) renaming (_↪ to _↪A) hiding (map↪)
+           module HA i = Hom T Σ 〔 X 〕 (A i)
+           module IA i = InitHomoExt (A i) (θi i) renaming (TΣXHom to TΣXHomAi)
+           open IA 
+           open E public
+           open HA
            open InitHomoExt
            open HomComp
            
-           HA : HA.Homo
-           HA = π₁ ∘ₕ TΣXHom A×B θ
-
-           HB : HB.Homo
-           HB = π₂ ∘ₕ TΣXHom A×B θ
+           HA : (i : I) → HA.Homo i
+           HA i = π i ∘ₕ TΣXHom Πalg θ
            
-           _,_≈a_ : (s : sorts Σ) → _
-           _,_≈a_ s = Setoid._≈_ (A ⟦ s ⟧ₛ)
-           _,_≈b_ : (s : sorts Σ) → _
-           _,_≈b_ s = Setoid._≈_ (B ⟦ s ⟧ₛ)
+           _,_≈a_ : {i : I} → (s : sorts Σ) → _
+           _,_≈a_ {i} s = Setoid._≈_ (A i ⟦ s ⟧ₛ)
            
-           HA≈I : ∀ {s} → (t : HU s) → s , (θa ↪A) t ≈a (λ i → proj₁ ((θ ↪×) i)) t
-           HA≈I {s} t = IA.tot IA.TΣXHom HA prop prop s t
-             where prop : (s : sorts Σ) → (x : X s) → ((A ⟦ s ⟧ₛ) Setoid.≈ proj₁ (θ x)) (proj₁ (θ x))
-                   prop s x = Setoid.refl (A ⟦ s ⟧ₛ)
+           HA≈I : ∀ {s} → (i : I) → (t : HU s)  →  s , _↪A i (θi i) t ≈a ((_$ i) ∘ (θ ↪×)) t
+           HA≈I {s} i t = IA.tot i (IA.TΣXHomAi i) (HA i) prop prop s t
+             where prop : (s : sorts Σ) → (x : X s) → s , θ x i ≈a θ x i  -- s , proj₁ (θ x) ≈ (proj₁ (θ x))
+                   prop s x = Setoid.refl (A i ⟦ s ⟧ₛ)
 
-           HB≈I : ∀ {s} → (t : HU s) → s , (θb ↪B) t ≈b (λ i → proj₂ ((θ ↪×) i)) t
-           HB≈I {s} t = IB.tot IB.TΣXHom HB prop prop s t
-             where prop : (s : sorts Σ) → (x : X s) → ((B ⟦ s ⟧ₛ) Setoid.≈ proj₂ (θ x)) (proj₂ (θ x))
-                   prop s x = Setoid.refl (B ⟦ s ⟧ₛ)
-
-           eqA : ∀ {s} {t t' : HU s} → s , (θa ↪A) t ≈a  (θa ↪A) t' → s , (proj₁ ∘ (θ ↪×)) t ≈a (proj₁ ∘ (θ ↪×)) t'
-           eqA {s} {t} {t'} eq = begin
-                                (proj₁ ∘ (θ ↪×)) t
-                                ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (HA≈I t) ⟩
-                                (θa ↪A) t
+           eqA : ∀ {s} {t t' : HU s} i → s , _↪A i (θi i) t ≈a (_↪A i) (θi i) t' → s , ((_$ i) ∘ (θ ↪×)) t ≈a ((_$ i) ∘ (θ ↪×)) t'
+           eqA {s} {t} {t'} i eq = begin
+                                ((_$ i) ∘ (θ ↪×)) t
+                                ≈⟨ Setoid.sym (A i ⟦ s ⟧ₛ) (HA≈I i t) ⟩
+                                (_↪A i) (θi i) t
                                 ≈⟨ eq ⟩
-                                (θa ↪A) t'
-                                ≈⟨  HA≈I t' ⟩
-                                (proj₁ ∘ (θ ↪×)) t'
+                                (_↪A i) (θi i) t'
+                                ≈⟨  HA≈I i t' ⟩
+                                ((_$ i) ∘ (θ ↪×)) t'
                                 ∎
-                where open EqR (A ⟦ s ⟧ₛ)
+                where open EqR (A i ⟦ s ⟧ₛ)
 
-           eqA' : ∀ {s} {t t' : HU s} → s , (proj₁ ∘ (θ ↪×)) t ≈a (proj₁ ∘ (θ ↪×)) t' → s , (θa ↪A) t ≈a  (θa ↪A) t'
-           eqA' {s} {t} {t'} eq = begin
-                                (θa ↪A) t
-                                ≈⟨ HA≈I t ⟩
-                                (proj₁ ∘ (θ ↪×)) t
+           eqA' : ∀ {s} {t t' : HU s} i → s , ((_$ i) ∘ (θ ↪×)) t ≈a ((_$ i) ∘ (θ ↪×)) t' → s , (_↪A i) (θi i) t ≈a  (_↪A i) (θi i) t'
+           eqA' {s} {t} {t'} i eq = begin
+                                (_↪A i) (θi i) t
+                                ≈⟨ HA≈I i t ⟩
+                                ((_$ i) ∘ (θ ↪×)) t
                                 ≈⟨ eq ⟩
-                                (proj₁ ∘ (θ ↪×)) t'
-                                ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (HA≈I t') ⟩
-                                (θa ↪A) t'
+                                ((_$ i) ∘ (θ ↪×)) t'
+                                ≈⟨ Setoid.sym (A i ⟦ s ⟧ₛ) (HA≈I i t') ⟩
+                                (_↪A i) (θi i) t'
                                 ∎
-                where open EqR (A ⟦ s ⟧ₛ)
-
-
-           eqB : ∀ {s} {t t' : HU s} → s , (θb ↪B) t ≈b  (θb ↪B) t' → s , (proj₂ ∘ (θ ↪×)) t ≈b (proj₂ ∘ (θ ↪×)) t'
-           eqB {s} {t} {t'} eq = begin
-                                (proj₂ ∘ (θ ↪×)) t
-                                ≈⟨ Setoid.sym (B ⟦ s ⟧ₛ) (HB≈I t) ⟩
-                                (θb ↪B) t
-                                ≈⟨ eq ⟩
-                                (θb ↪B) t'
-                                ≈⟨  HB≈I t' ⟩
-                                (proj₂ ∘ (θ ↪×)) t'
-                                ∎
-                where open EqR (B ⟦ s ⟧ₛ)
-
-           eqB' : ∀ {s} {t t' : HU s} → s , (proj₂ ∘ (θ ↪×)) t ≈b (proj₂ ∘ (θ ↪×)) t' → s , (θb ↪B) t ≈b  (θb ↪B) t'
-           eqB' {s} {t} {t'} eq = begin
-                                (θb ↪B) t
-                                ≈⟨ HB≈I t ⟩
-                                (proj₂ ∘ (θ ↪×)) t
-                                ≈⟨ eq ⟩
-                                (proj₂ ∘ (θ ↪×)) t'
-                                ≈⟨ Setoid.sym (B ⟦ s ⟧ₛ) (HB≈I t') ⟩
-                                (θb ↪B) t'
-                                ∎
-                where open EqR (B ⟦ s ⟧ₛ)
+                where open EqR (A i ⟦ s ⟧ₛ)
 
 
 
-       A×B⊨E : A×B ⊨T E 
-       A×B⊨E {s} {e} e∈E θ eqs = eqA {s} {left e} {right e} (A⊨E e∈E θa eqsA)
-                               , eqB {s} {left e} {right e} (B⊨E e∈E θb eqsB)
+       Πalg⊨E : Πalg ⊨T E 
+       Πalg⊨E {s} {e} e∈E θ eqs i = eqA {s} {left e} {right e} i (Ai⊨E i e∈E (θi i) eqsA)
               where open Aux θ
                     open Equation
                     eqsA : _
-                    eqsA = map∼v (λ { {s'} {t} {t'} (eq , _) → eqA' {s'} {t} {t'} eq}) eqs
-                    eqsB : _
-                    eqsB = map∼v (λ { {s'} {t} {t'} (_ , eq) → eqB' {s'} {t} {t'} eq}) eqs
+                    eqsA = map∼v (λ {s'} {t} {t'} eq → eqA' {s'} {t} {t'} i (eq i)) eqs
+

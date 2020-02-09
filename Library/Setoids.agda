@@ -1,9 +1,9 @@
 {- Definitions and properties about Setoids -}
 module Setoids where
 
-open import Relation.Binary hiding (Total)
+open import Relation.Binary
 open import Level renaming (suc to lsuc ; zero to lzero)
-open import Relation.Binary.PropositionalEquality as PE hiding ( Reveal_·_is_;[_])
+open import Relation.Binary.PropositionalEquality as PE
 open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 
@@ -116,5 +116,22 @@ private
   W'↔W S R wd {a} {b} {c} {d} eq  eq' pa = wd (eq , eq') pa
   
 
-
-
+-- Indexed Setoids
+module IndexedSetoid {ℓ₁ ℓ₂ ℓ₃ }
+       {I : Set ℓ₁}
+        (A : I → Setoid ℓ₂ ℓ₃ ) where
+  
+  Π-setoid : Setoid (ℓ₁ ⊔ ℓ₂) (ℓ₁ ⊔ ℓ₃)
+  Π-setoid = record { Carrier = (i : I) → carrier i
+                           ; _≈_ = ≈ᵢ
+                           ; isEquivalence = isEquiv
+                           }
+    where carrier : I → Set ℓ₂
+          carrier i = Setoid.Carrier (A i)
+          ≈ᵢ : Rel ((i : I) → (carrier i)) (ℓ₁ ⊔ ℓ₃)
+          ≈ᵢ f g = ∀ i → Setoid._≈_ (A i) (f i) (g i)
+          isEquiv : IsEquivalence ≈ᵢ
+          isEquiv = record { refl = λ i → Setoid.refl (A i)
+                          ; sym = λ x i → Setoid.sym (A i) (x i)
+                          ; trans = λ x x₁ i → Setoid.trans (A i) (x i) (x₁ i)
+                          }

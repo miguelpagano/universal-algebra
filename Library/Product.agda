@@ -1,17 +1,11 @@
 {- Product algebra -}
 module Product where
-open import Relation.Binary hiding (Total)
+open import Relation.Binary
 open import Level renaming (suc to lsuc ; zero to lzero)
-open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
 open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
-open import Data.Bool renaming (_≟_ to _≟b_)
-open import Data.List renaming (map to lmap)
 open import Relation.Binary.PropositionalEquality as PE hiding ( Reveal_·_is_;[_];isEquivalence)
-open import Relation.Unary hiding (_⊆_;_⇒_)
-
-open import Data.Fin hiding (_+_)
 
 import Relation.Binary.Reasoning.Setoid as EqR
 open import Data.Product.Relation.Binary.Pointwise.NonDependent using (×-setoid)
@@ -80,43 +74,30 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
 module IndexedProduct {ℓ₁ ℓ₂ ℓ₃}
         {Σ : Signature} {I : Set ℓ₁}
         (A : I → Algebra {ℓ₂} {ℓ₃} Σ) where
-      
+  
   open Signature
   open Algebra
   open Setoid
   open import Setoids
-  
-  std : (s : sorts Σ) → Setoid (ℓ₁ ⊔ ℓ₂) (ℓ₁ ⊔ ℓ₃)
-  std s = record { Carrier = (i : I) → carrier i
-                           ; _≈_ = ≈ᵢ
-                           ; isEquivalence = isEquiv
-                           }
-   where carrier : I → Set ℓ₂
-         carrier i = Setoid.Carrier (A i ⟦ s ⟧ₛ)
-         A-std : _ → _
-         A-std i = A i ⟦ s ⟧ₛ
-         ≈ᵢ : Rel ((i : I) → (carrier i)) (ℓ₁ ⊔ ℓ₃)
-         ≈ᵢ f g = ∀ i → Setoid._≈_ (A-std i) (f i) (g i)
-         isEquiv : IsEquivalence ≈ᵢ
-         isEquiv = record { refl = λ i → Setoid.refl (A-std i)
-                          ; sym = λ x i → Setoid.sym (A-std i) (x i)
-                          ; trans = λ x x₁ i → Setoid.trans (A-std i) (x i) (x₁ i)
-                          }
-  
 
-  _≈*_ : {ar : Arity Σ} → _
-  _≈*_ {ar} = _≈_ (std ✳ ar)
+  Π-std : (s : sorts Σ) → _
+  Π-std s = Π-setoid
+    where open IndexedSetoid {I = I} (λ i → A i ⟦ s ⟧ₛ)
+
+  private
+    _≈*_ : {ar : Arity Σ} → _
+    _≈*_ {ar} = _≈_ (Π-std ✳ ar)
 
   {- Product of algebras -}
   Πalg : Algebra {ℓ₁ ⊔ ℓ₂} {ℓ₁ ⊔ ℓ₃} Σ
   Πalg = record {
-            _⟦_⟧ₛ = λ s → std s
+            _⟦_⟧ₛ = Π-std
           ; _⟦_⟧ₒ = λ {ar} {s} f → record { _⟨$⟩_ = if f ; cong = cng f}
           }
     where if : ∀ {ar s} (f : ops Σ (ar , s)) → _ → _
           if {ar} {s} f vs i = A i ⟦ f ⟧ₒ ⟨$⟩ map (λ s' x → x i) vs
-          cng : ∀ {ar s} (f : ops Σ (ar , s)) → {vs vs' : ∥ std ✳ ar ∥} 
-              → vs ≈* vs' → _≈_ (std s) (if f vs) (if f vs')
+          cng : ∀ {ar s} (f : ops Σ (ar , s)) → {vs vs' : ∥ Π-std ✳ ar ∥} 
+              → vs ≈* vs' → _≈_ (Π-std s) (if f vs) (if f vs')
           cng {ar} f equ i = Π.cong (A i ⟦ f ⟧ₒ) (fmap∼v (_$ i) equ)
 
   
@@ -223,3 +204,59 @@ module IndexedProductModel
                     eqsA : _
                     eqsA = map∼v (λ {s'} {t} {t'} eq → eqA' {s'} {t} {t'} i (eq i)) eqs
 
+module BinaryProduct {ℓ₁ ℓ₂}
+        {Σ : Signature}
+       (A : Algebra {ℓ₁} {ℓ₂} Σ) 
+       (B : Algebra {ℓ₁} {ℓ₂} Σ) where
+
+       open import Data.Bool
+       open ProdAlg {Σ = Σ} A B renaming (_×-alg_ to A×B)
+       Ai : Bool → Algebra {ℓ₁} {ℓ₂} Σ
+       Ai false = B
+       Ai true = A
+       open IndexedProduct {Σ = Σ} {Bool} Ai
+       open import Morphisms
+       open Isomorphism
+       open Algebra
+       open import Function.Injection
+       iso×-2→ : Isomorphism A×B Πalg
+       iso×-2→ = record { hom = H
+                        ; bij = λ s → record {
+                            injective = λ x → x true , x false
+                          ; surjective = record {
+                              from = h⁻¹ s
+                            ; right-inverse-of = inv s
+                            }
+                          }
+                        }
+               where _$h_ : ∀ {s} → (x : Setoid.Carrier (A×B ⟦ s ⟧ₛ)) → (i : Bool) →
+                                    Setoid.Carrier (Ai i ⟦ s ⟧ₛ)
+                     p $h false = proj₂ p
+                     p $h true = proj₁ p
+                     congh : ∀ {s} → {p q : Setoid.Carrier (A×B ⟦ s ⟧ₛ)} →
+                            (Setoid._≈_ (A×B ⟦ s ⟧ₛ) p q) → 
+                           (i : Bool) → Setoid._≈_ (Ai i ⟦ s ⟧ₛ)  (p $h i) (q $h i)
+                     congh eq false = proj₂ eq
+                     congh eq true = proj₁ eq
+                     condh : Hom.homCond A×B Πalg (λ s → record { _⟨$⟩_ = _$h_ ; cong = λ {i} {j} → congh })
+                     condh {ar = ar} f as false
+                       rewrite propMapV∘ as (λ x → _$h_)  (λ _ x → x false) = Π.cong (B ⟦ f ⟧ₒ) (Setoid.refl (_⟦_⟧ₛ B ✳ ar))
+                     condh {ar = ar} f as true 
+                       rewrite propMapV∘ as (λ x → _$h_)  (λ _ x → x true) = Π.cong (A ⟦ f ⟧ₒ) (Setoid.refl (_⟦_⟧ₛ A ✳ ar))
+
+                     H : Hom.Homo A×B Πalg
+                     H = record { ′_′ = λ s → record { _⟨$⟩_ = _$h_ {s}
+                                                     ; cong = congh {s}
+                                                     }
+                                ; cond = condh
+                                }
+                     h⁻¹ : ∀ s → (Πalg ⟦ s ⟧ₛ) ⟶ (A×B ⟦ s ⟧ₛ)
+                     h⁻¹ s = record { _⟨$⟩_ = λ t → t true , t false
+                                    ; cong = λ x → x true , x false
+                                    }
+                     open Signature
+                     
+                     inv : ∀ s → (x : (i : Bool) → Setoid.Carrier (Ai i ⟦ s ⟧ₛ)) →
+                          (i : Bool) → Setoid._≈_ (Ai i ⟦ s ⟧ₛ)  ((x true , x false) $h i) (x i)
+                     inv s f false = Setoid.refl (B ⟦ s ⟧ₛ)
+                     inv s f true = Setoid.refl (A ⟦ s ⟧ₛ)

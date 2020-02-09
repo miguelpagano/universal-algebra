@@ -114,20 +114,6 @@ private
 
   W'↔W : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → (R : Rel (Carrier S) ℓ₃) → WellDefRel S R → WellDefRel' S R
   W'↔W S R wd {a} {b} {c} {d} eq  eq' pa = wd (eq , eq') pa
-
-
-{- Indexed setoids are different from the standard library because
-   the relation are homogeneous over the index -}
-IRel : ∀ {i a} {I : Set i} →
-         (I → Set a) → (ℓ : Level) → Set _
-IRel A ℓ = ∀ {i} → A i → A i → Set ℓ
-
-record ISetoid {i} (I : Set i) c ℓ : Set (lsuc (i ⊔ c ⊔ ℓ)) where
-  infix 4 _I≈_
-  field
-    ICarrier       : I → Set c
-    _I≈_           : IRel ICarrier c
-    isIEquivalence : (i : I) → IsEquivalence (_I≈_ {i = i})
   
 
 

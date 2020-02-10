@@ -7,7 +7,6 @@ module Equational where
 open import UnivAlgebra
 open import Morphisms
 open import Data.List
-open import Data.Nat
 open import Data.Product
 open import Data.Sum
 open import Level renaming (zero to lzero ; suc to lsuc)

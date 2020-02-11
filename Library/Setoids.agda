@@ -62,12 +62,28 @@ open import Relation.Unary
 WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Pred (Carrier S) ℓ₃ → Set _
 WellDef S P = ∀ {x y : Carrier S } → _≈_ S x y → P x → P y
 
+open import Data.Sum
+open import Data.Product
+{- The union of two well-defined relations is well-defined -}
+∪-WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} → {S : Setoid ℓ₁ ℓ₂} →
+          {P : Pred (Carrier S) ℓ₃} → {Q : Pred (Carrier S) ℓ₄} →
+          WellDef S P → WellDef S Q → WellDef S (P ∪ Q)
+∪-WellDef P-wd Q-wd a≈b (inj₁ p-a) = inj₁ (P-wd a≈b p-a)
+∪-WellDef P-wd Q-wd a≈b (inj₂ q-a) = inj₂ (Q-wd a≈b q-a)
+
+{- The intersection of two well-defined relations is well-defined -}
+∩-WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} → {S : Setoid ℓ₁ ℓ₂} →
+          {P : Pred (Carrier S) ℓ₃} → {Q : Pred (Carrier S) ℓ₄} →
+          WellDef S P → WellDef S Q → WellDef S (P ∩ Q)
+∩-WellDef P-wd Q-wd a≈b (pa , qa) = P-wd a≈b pa , Q-wd a≈b qa
+
 {- A binary relation over a setoid should be even with respect to the equality -}
 open import Data.Product
 WellDefRel : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Rel (Carrier S) ℓ₃ → Set _
 WellDefRel S R = WellDef S² (λ {(a , b) → R a b})
   where open import Data.Product.Relation.Binary.Pointwise.NonDependent
         S² = ×-setoid S S
+
 
 {- A pre-congruene is a well-defined equivalence relation -}
 PreCong : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Rel (Carrier S) ℓ₃ → Set _
@@ -88,6 +104,22 @@ record SetoidPredicate {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) :
     predWellDef : WellDef S predicate
 
 open SetoidPredicate
+∪-SetoidPred : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {S : Setoid ℓ₁ ℓ₂} →
+               SetoidPredicate {ℓ₃ = ℓ₃} S → SetoidPredicate {ℓ₃ = ℓ₄} S  →
+               SetoidPredicate {ℓ₃ = ℓ₃ ⊔ ℓ₄} S
+∪-SetoidPred {S = S} P Q = record {
+                             predicate = predicate P ∪ predicate Q
+                           ; predWellDef = ∪-WellDef {S = S} (predWellDef P)  (predWellDef Q)
+                           }
+
+∩-SetoidPred : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {S : Setoid ℓ₁ ℓ₂} →
+               SetoidPredicate {ℓ₃ = ℓ₃} S → SetoidPredicate {ℓ₃ = ℓ₄} S  →
+               SetoidPredicate {ℓ₃ = ℓ₃ ⊔ ℓ₄} S
+∩-SetoidPred {S = S} P Q = record {
+                             predicate = predicate P ∩ predicate Q
+                           ; predWellDef = ∩-WellDef {S = S} (predWellDef P)  (predWellDef Q)
+                           }
+
 open import Relation.Unary hiding (_⊆_)
 Subset : ∀ {ℓ₁ ℓ₂} → (A : Set ℓ₁) → (Pred A ℓ₂) → Set _
 Subset A P = Σ[ a ∈ A ] (P a)

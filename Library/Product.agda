@@ -162,36 +162,43 @@ module IndexedProductModel
            
            HA : (i : I) → HA.Homo i
            HA i = π i ∘ₕ TΣXHom Πalg θ
+           open Setoid
+           open Homo
+
+           π_⟦_⟧Π : (i : I) → ∀ {s} → _ → _
+           π_⟦_⟧Π i {s} t = ′ π i ∘ₕ TΣXHom Πalg θ ′ s ⟨$⟩ t
+           ⟦_⟧Ai : ∀ {i : I} {s} → (t : HU s) → _
+           ⟦_⟧Ai {i} {s} t = _↪A i (θi i) t
            
            _,_≈a_ : {i : I} → (s : sorts Σ) → _
            _,_≈a_ {i} s = Setoid._≈_ (A i ⟦ s ⟧ₛ)
            
-           HA≈I : ∀ {s} → (i : I) → (t : HU s)  →  s , _↪A i (θi i) t ≈a ((_$ i) ∘ (θ ↪×)) t
+           HA≈I : ∀ {s} → (i : I) → (t : HU s)  →  s , ⟦ t ⟧Ai ≈a (π i ⟦ t ⟧Π)
            HA≈I {s} i t = IA.tot i (IA.TΣXHomAi i) (HA i) prop prop s t
-             where prop : (s : sorts Σ) → (x : X s) → s , θ x i ≈a θ x i  -- s , proj₁ (θ x) ≈ (proj₁ (θ x))
+             where prop : (s : sorts Σ) → (x : X s) → s , θ x i ≈a θ x i
                    prop s x = Setoid.refl (A i ⟦ s ⟧ₛ)
 
-           eqA : ∀ {s} {t t' : HU s} i → s , _↪A i (θi i) t ≈a (_↪A i) (θi i) t' → s , ((_$ i) ∘ (θ ↪×)) t ≈a ((_$ i) ∘ (θ ↪×)) t'
+           eqA : ∀ {s} {t t' : HU s} i → s , ⟦ t ⟧Ai ≈a ⟦ t' ⟧Ai → s , (π i ⟦ t ⟧Π) ≈a (π i ⟦ t' ⟧Π)
            eqA {s} {t} {t'} i eq = begin
-                                ((_$ i) ∘ (θ ↪×)) t
+                                π i ⟦ t ⟧Π
                                 ≈⟨ Setoid.sym (A i ⟦ s ⟧ₛ) (HA≈I i t) ⟩
-                                (_↪A i) (θi i) t
+                                ⟦ t ⟧Ai
                                 ≈⟨ eq ⟩
-                                (_↪A i) (θi i) t'
+                                ⟦ t' ⟧Ai
                                 ≈⟨  HA≈I i t' ⟩
-                                ((_$ i) ∘ (θ ↪×)) t'
+                                π i ⟦ t' ⟧Π
                                 ∎
                 where open EqR (A i ⟦ s ⟧ₛ)
 
-           eqA' : ∀ {s} {t t' : HU s} i → s , ((_$ i) ∘ (θ ↪×)) t ≈a ((_$ i) ∘ (θ ↪×)) t' → s , (_↪A i) (θi i) t ≈a  (_↪A i) (θi i) t'
+           eqA' : ∀ {s} {t t' : HU s} i → s , (π i ⟦ t ⟧Π) ≈a (π i ⟦ t' ⟧Π) → s , ⟦ t ⟧Ai ≈a ⟦ t' ⟧Ai
            eqA' {s} {t} {t'} i eq = begin
-                                (_↪A i) (θi i) t
+                                ⟦ t ⟧Ai
                                 ≈⟨ HA≈I i t ⟩
-                                ((_$ i) ∘ (θ ↪×)) t
+                                π i ⟦ t ⟧Π
                                 ≈⟨ eq ⟩
-                                ((_$ i) ∘ (θ ↪×)) t'
+                                π i ⟦ t' ⟧Π
                                 ≈⟨ Setoid.sym (A i ⟦ s ⟧ₛ) (HA≈I i t') ⟩
-                                (_↪A i) (θi i) t'
+                                ⟦ t' ⟧Ai
                                 ∎
                 where open EqR (A i ⟦ s ⟧ₛ)
 

@@ -7,12 +7,13 @@ open import Relation.Binary
 open import Relation.Unary renaming (_⊆_ to _⊆r_) hiding (_⇒_)
 open import Data.Product hiding (map)
 open import Function as F hiding (Bijective; Surjective; Bijection; Surjection)
-open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
+open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid;_⇨_)
 open import Equational
 open import Product
 open import Morphisms
 open import Setoids
 open import HeterogeneousVec renaming (map to mapV)
+open import Data.List
 open Signature
 open ProdAlg
 open Hom
@@ -24,6 +25,9 @@ Predicate ℓ₃ = (s : sorts Σ₁) → SetoidPredicate {ℓ₃ = ℓ₃} (A �
 
 _⊆ₚ_ : ∀ {ℓ₃ ℓ₄} → Predicate ℓ₃ → Predicate ℓ₄ → Set (ℓ₁ ⊔ ℓ₃ ⊔ ℓ₄)
 P ⊆ₚ Q = (s : sorts Σ₁) → predicate (P s) ⊆r predicate (Q s)
+
+_⊆ₚ*_ : ∀ {ℓ₃ ℓ₄} → Predicate ℓ₃ → Predicate ℓ₄ → Set (ℓ₁ ⊔ ℓ₃ ⊔ ℓ₄)
+P ⊆ₚ* Q = ∀ ar → ((predicate ∘ P) ⇨v ) {is = ar} ⊆r ((predicate ∘ Q) ⇨v ) {is = ar}
 
 IxPredicate : (ℓ₃ ℓ₄ : Level) → Set _
 IxPredicate ℓ₃ ℓ₄ = Pred (Predicate  ℓ₃) ℓ₄
@@ -68,7 +72,7 @@ open SubAlg
 
 data E {ℓ₃} (X : Predicate ℓ₃) (s : sorts Σ₁) : Setoid.Carrier (A ⟦ s ⟧ₛ) → Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃) where
   inX : ∀ {a} → predicate (X s) a → E X s a
-  img : ∀ {a} {ar} {f : ops Σ₁ (ar , s)} → (ts : HVec (λ x → ∃ (E X x)) ar) →
+  img : ∀ {a} {ar} {f : ops Σ₁ (ar , s)} (ts : HVec (λ x → ∃ (λ a' → E X x a')) ar) →
           Setoid._≈_ (A ⟦ s ⟧ₛ) ((A ⟦ f ⟧ₒ ⟨$⟩ mapV (λ _ → proj₁) ts)) a →
               E X s a
 
@@ -101,8 +105,20 @@ E⊆⋂-Sub : ∀ {ℓ₃} → (X : Predicate ℓ₃) →
         pr (⋂-SubAlg' {ℓ₃ = ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ } (λ Q → X ⊆ₚ pr Q)) ⊆ₚ E-Pred X
 E⊆⋂-Sub X s a = a (E-SubAlg X) (X⊆E X)
 
--- ⋂-Sub⊆E : ∀ {ℓ₃} → (X : Predicate ℓ₃) →
---         E-Pred X ⊆ₚ
---         pr (⋂-SubAlg' {ℓ₃ = ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ } (λ Q → X ⊆ₚ pr Q))
--- ⋂-Sub⊆E X s (inX x) Q X⊆Q = X⊆Q s x
--- ⋂-Sub⊆E X s (img ts x) X⊆Q = {!!}
+⋂-Sub⊆E : ∀ {ℓ₃} → (X : Predicate ℓ₃) →
+        E-Pred X ⊆ₚ
+        pr (⋂-SubAlg' {ℓ₃ = ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ } (λ Q → X ⊆ₚ pr Q))
+⋂-Sub⊆E* : ∀ {ℓ₃} → (X : Predicate ℓ₃) → ∀ Q → X ⊆ₚ pr Q →
+         ∀ {ar}
+        (ts : HVec (λ x → ∃ (λ a' → E X x a')) ar) →
+        (predicate ∘ pr Q) ⇨v mapV (λ _ → proj₁) ts
+
+⋂-Sub⊆E X s (inX x) Q X⊆Q = X⊆Q s x
+⋂-Sub⊆E X s (img {a} {ar} {f} tsE x) Q X⊆Q = predWellDef (pr Q s) x f-tsQ
+  where f-tsQ : predicate (pr Q s) ((A ⟦ f ⟧ₒ) ⟨$⟩ mapV (λ _ → proj₁) tsE)
+        f-tsQ = opClosed Q f (⋂-Sub⊆E* X Q X⊆Q tsE )
+
+⋂-Sub⊆E* X Q X⊆Q ⟨⟩ = ⇨v⟨⟩
+⋂-Sub⊆E* X Q X⊆Q {s ∷ _} (v ▹ ts) = ⇨v▹ (⋂-Sub⊆E X s (proj₂ v) Q X⊆Q)
+                                            (⋂-Sub⊆E* X Q X⊆Q ts)
+

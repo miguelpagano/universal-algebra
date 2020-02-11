@@ -10,9 +10,6 @@ open Signature
 open ProdAlg
 open Hom
 
-AlgClass : ∀ {ℓ₀ ℓ₁} Σ → Set (lsuc (ℓ₀ ⊔ ℓ₁))
-AlgClass {ℓ₀} {ℓ₁} Σ = Algebra {ℓ₀} {ℓ₁} Σ → Set (ℓ₀ ⊔ ℓ₁)
-
 _∈_ : ∀ {ℓ₀ ℓ₁ Σ} → Algebra {ℓ₀} {ℓ₁} Σ → AlgClass {ℓ₀} {ℓ₁} Σ → Set _
 A ∈ C = C A
 

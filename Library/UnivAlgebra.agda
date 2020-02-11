@@ -53,6 +53,9 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
   _⟦_⟧ₛ* ar = ∥ _⟦_⟧ₛ ✳ ar ∥
 
 open Algebra
+{- A class of algebras is a predicate over algebras -}
+AlgClass : ∀ {ℓ₀ ℓ₁} Σ → Set (lsuc (ℓ₀ ⊔ ℓ₁))
+AlgClass {ℓ₀} {ℓ₁} Σ = Algebra {ℓ₀} {ℓ₁} Σ → Set (ℓ₀ ⊔ ℓ₁)
 
 {- Subalgebras -}
 open SetoidPredicate

@@ -64,60 +64,45 @@ open SubAlg
          SubAlg {ℓ₃ = _} A
 <_>_ {ℓ₃ = ℓ₃} {ℓ₄} X P = ⋂-SubAlg' λ Q → P Q × (X ⊆ₚ pr Q)
 
-open import Data.List
 -- Inductive definition.
-Ops : ∀ Σ₁ → Set _
-Ops Σ₁ = Σ[ ar ∈ List (sorts Σ₁) ] (Σ[ s ∈ sorts Σ₁ ] ops Σ₁ (ar ↦ s) )
 
-Ops-on : ∀ Σ₁ → sorts Σ₁ → Set _
-Ops-on Σ₁ s = Σ[ ar ∈ List (sorts Σ₁) ] (ops Σ₁ (ar ↦ s))
+data E {ℓ₃} (X : Predicate ℓ₃) (s : sorts Σ₁) : Setoid.Carrier (A ⟦ s ⟧ₛ) → Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃) where
+  inX : ∀ {a} → predicate (X s) a → E X s a
+  img : ∀ {a} {ar} {f : ops Σ₁ (ar , s)} → (ts : HVec (λ x → ∃ (E X x)) ar) →
+          Setoid._≈_ (A ⟦ s ⟧ₛ) ((A ⟦ f ⟧ₒ ⟨$⟩ mapV (λ _ → proj₁) ts)) a →
+              E X s a
 
-↾_,_ : ∀ {ℓ₃} → (X : Predicate ℓ₃) → (s : sorts Σ₁) → Set (ℓ₁ ⊔ ℓ₃)
-↾ X , s = Σ[ a ∈ Setoid.Carrier (A ⟦ s ⟧ₛ) ] (predicate (X s) a)
 
-Img : ∀ {ℓ₃} → (X : Predicate ℓ₃) → (s : sorts Σ₁) →
-        Pred (Setoid.Carrier (A ⟦ s ⟧ₛ)) (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃)
-Img X s a = ∃ {A = Ops-on Σ₁ s} λ { (ar , f) →
-                        Σ[ ts ∈ HVec (λ s' → ↾ X , s') ar ]
-                          (a ≈ (A ⟦ f ⟧ₒ ⟨$⟩ mapV (λ _ → proj₁) ts)) } 
-  where _≈_ : _
-        _≈_ = Setoid._≈_ (A ⟦ s ⟧ₛ)
-
-Img-WellDefined : ∀ {ℓ₃}→ (X : Predicate ℓ₃) → (s : sorts Σ₁) →
-                  WellDef (A ⟦ s ⟧ₛ) (Img X s)
-Img-WellDefined X s a≈b ((ar , f) , (ts , a≈f-ts)) = (ar , f) , (ts , trans (sym a≈b) a≈f-ts)
+E-WellDefined : ∀ {ℓ₃}→ (X : Predicate ℓ₃) → (s : sorts Σ₁) → WellDef (A ⟦ s ⟧ₛ) (E X s)
+E-WellDefined X s {y = y} a≈b (inX x) = inX (predWellDef (X s) a≈b x)
+E-WellDefined X s {y = y} a≈b (img ts a≈f-ts) = img ts (trans a≈f-ts a≈b)
   where open Setoid (A ⟦ s ⟧ₛ)
 
-Img-Pred : ∀ {ℓ₃} → (Predicate ℓ₃) → Predicate _
-Img-Pred X s = record { predicate = Img X s
-                      ; predWellDef = Img-WellDefined X s
-                      }
+E-Pred : ∀ {ℓ₃} → (X : Predicate ℓ₃) → Predicate _
+E-Pred X s = record { predicate = E X s
+                    ; predWellDef = E-WellDefined X s
+                    }
 
-E : ∀ {ℓ₃}  (X : Predicate ℓ₃) → Predicate (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃)
-E X s = ∪-SetoidPred (X s) (Img-Pred X s)
+X⊆E : ∀ {ℓ₃} (X : Predicate ℓ₃) → X ⊆ₚ E-Pred X
+X⊆E X s a∈X = inX a∈X
 
-open import Data.Sum
-
-E-inc : ∀ {ℓ₃} → (X : Predicate ℓ₃) → X ⊆ₚ E X
-E-inc X s px = inj₁ px
-
-E-mono : ∀ {ℓ₃ ℓ₄} → (X : Predicate ℓ₃) → (Y : Predicate ℓ₄) →
-       X ⊆ₚ Y → E X ⊆ₚ E Y
-E-mono X Y X⊆Y s (inj₁ px) = inj₁ (X⊆Y s px)
-E-mono X Y X⊆Y s (inj₂ ((ar , f) , (ts , eq))) = (inj₂ ((ar , f) , ({!!} , {!!})))
+E-opClosed : ∀ {ℓ₃} → (X : Predicate ℓ₃) → OpClosed A (predicate ∘ E-Pred X)
+E-opClosed X {ar} {s} f {ts} tsp = img {f = f} (⇨vtoΣ tsp) prop
   where open Setoid (A ⟦ s ⟧ₛ)
+        prop : (A ⟦ f ⟧ₒ) ⟨$⟩ mapV (λ _ → proj₁) (⇨vtoΣ tsp) ≈ (A ⟦ f ⟧ₒ) ⟨$⟩ ts
+        prop rewrite proj₁-inv-⇨vtoΣ tsp = refl
 
-open import Data.Nat hiding (_^_;_⊔_)
 
-l^ : Level → ℕ → Level
-l^ ℓ zero = ℓ
-l^ ℓ (suc n) = ℓ₁ ⊔ ℓ₂ ⊔ (l^ ℓ n)
+E-SubAlg : ∀ {ℓ₃} → (X : Predicate ℓ₃) → SubAlg {ℓ₃ = ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃} A
+E-SubAlg X = record { pr = E-Pred X ; opClosed = E-opClosed X }
 
-E^ : ∀ (n : ℕ) → {ℓ₃ : Level} → (X : Predicate ℓ₃) → Predicate (l^ ℓ₃ n)
-E^ zero X = X
-E^ (suc n) {ℓ₃} X = E {ℓ₃ = l^ ℓ₃ n} (E^ n X)
+-- Equivalence between ⋂-SubAlg' and E-SubAlg, stated in terms of predicates.
+E⊆⋂-Sub : ∀ {ℓ₃} → (X : Predicate ℓ₃) →
+        pr (⋂-SubAlg' {ℓ₃ = ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ } (λ Q → X ⊆ₚ pr Q)) ⊆ₚ E-Pred X
+E⊆⋂-Sub X s a = a (E-SubAlg X) (X⊆E X)
 
-E∞ : ∀ {ℓ₃} → (X : Predicate ℓ₃) → Predicate _
-E∞ {ℓ₃} X s = record { predicate = {!!}
-                ; predWellDef = {!!}
-                }
+-- ⋂-Sub⊆E : ∀ {ℓ₃} → (X : Predicate ℓ₃) →
+--         E-Pred X ⊆ₚ
+--         pr (⋂-SubAlg' {ℓ₃ = ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ } (λ Q → X ⊆ₚ pr Q))
+-- ⋂-Sub⊆E X s (inX x) Q X⊆Q = X⊆Q s x
+-- ⋂-Sub⊆E X s (img ts x) X⊆Q = {!!}

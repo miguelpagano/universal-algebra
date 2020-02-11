@@ -118,6 +118,12 @@ proj₁⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Se
            {is} {vs : HVec A is} → P ⇨v vs → HVec A is
 proj₁⇨v {vs = vs} _ = vs
 
+proj₁-inv-⇨vtoΣ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
+           {is} {vs : HVec A is} → (ps : P ⇨v vs) →
+           map (λ s → proj₁) (⇨vtoΣ ps) ≡ vs
+proj₁-inv-⇨vtoΣ {vs = ⟨⟩} ⇨v⟨⟩ = refl
+proj₁-inv-⇨vtoΣ {vs = v ▹ vs} (⇨v▹ pv ps) = cong₂ _▹_ refl (proj₁-inv-⇨vtoΣ ps) 
+
 ⇨v-pointwise : ∀ {l₀ l₁ I} {is : List I} {A : I → Set l₀}
                  {P : (i : I) → A i → Set l₁} →
                  (vs : HVec A is) → P ⇨v vs →

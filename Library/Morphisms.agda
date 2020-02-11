@@ -387,12 +387,47 @@ SubImg {Σ} A B h = record { pr = subipr ; opClosed = subicond }
                 p≈ ⇨v⟨⟩ = ∼⟨⟩
                 p≈ (⇨v▹ pv pvs) = ∼▹ (proj₂ pv) (p≈ pvs)
 
-
-
 homImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {B : Algebra {ℓ₃} {ℓ₄} Σ} →
                (A : Algebra {ℓ₁} {ℓ₂} Σ) → (h : Homo A B) → Algebra Σ
 homImg {Σ} {B = B} A h = SubAlgebra (SubImg A B h)
 
+{-
+  The homomorphic image of a isomorphism between algebras A and B is
+  a subalgebra isomorphic to B.
+-}
+homImg-iso-prop : ∀ {ℓ₀ Σ} →
+                    (A B : Algebra {ℓ₀} {ℓ₀} Σ) → (h : Isomorphism A B) →
+                    Isomorphism (homImg A (hom h)) B
+homImg-iso-prop {ℓ₀} {Σ} A B record { hom = homAB ; bij = bij } =
+           record { hom = record { ′_′ = homImgAB-to-B
+                                 ; cond = λ {_} {s'} f as →
+                                             Setoid.refl (B Algebra.⟦ s' ⟧ₛ )
+                                 }
+                  ; bij = λ s → record { injective = λ feqs → feqs
+                                        ; surjective = homImgAB-to-B-Surj s
+                                        }
+                  }
+    where
+    homBA : Homo B A
+    homBA = invHomo A B homAB bij
+
+    homImgAB-to-B :  homImg A homAB ⟿ B
+    homImgAB-to-B s = record { _⟨$⟩_ = proj₁
+                             ; cong = λ x → x
+                             }
+
+    homImgAB-from-B :  B ⟿ homImg A homAB
+    homImgAB-from-B s = record { _⟨$⟩_ = λ b → b ↦
+                                               ((′ homBA ′ s ⟨$⟩ b) ↦
+                                               right-inverse-of (bij s) b)
+                               ; cong = λ x → x
+                               }
+
+    homImgAB-to-B-Surj : ∀ s → Surjective (homImgAB-to-B s)
+    homImgAB-to-B-Surj s = record { from = homImgAB-from-B s
+                                  ; right-inverse-of =
+                                    λ x → Setoid.refl (B Algebra.⟦ s ⟧ₛ )
+                                  }
 
 Kernel : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Algebra {ℓ₁} {ℓ₂} Σ} {B : Algebra {ℓ₃} {ℓ₄} Σ}
                              (h : Homo A B) →

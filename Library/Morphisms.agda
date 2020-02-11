@@ -403,7 +403,7 @@ homImg-iso-prop {ℓ₀} {Σ} A B record { hom = homAB ; bij = bij } =
                                  ; cond = λ {_} {s'} f as →
                                              Setoid.refl (B Algebra.⟦ s' ⟧ₛ )
                                  }
-                  ; bij = λ s → record { injective = λ feqs → feqs
+                  ; bij = λ s → record { injective = F.id
                                         ; surjective = homImgAB-to-B-Surj s
                                         }
                   }
@@ -413,14 +413,14 @@ homImg-iso-prop {ℓ₀} {Σ} A B record { hom = homAB ; bij = bij } =
 
     homImgAB-to-B :  homImg A homAB ⟿ B
     homImgAB-to-B s = record { _⟨$⟩_ = proj₁
-                             ; cong = λ x → x
+                             ; cong = F.id
                              }
 
     homImgAB-from-B :  B ⟿ homImg A homAB
-    homImgAB-from-B s = record { _⟨$⟩_ = λ b → b ↦
-                                               ((′ homBA ′ s ⟨$⟩ b) ↦
-                                               right-inverse-of (bij s) b)
-                               ; cong = λ x → x
+    homImgAB-from-B s = record { _⟨$⟩_ = λ b → b ,
+                                              ′ homBA ′ s ⟨$⟩ b ,
+                                              right-inverse-of (bij s) b
+                               ; cong = F.id
                                }
 
     homImgAB-to-B-Surj : ∀ s → Surjective (homImgAB-to-B s)

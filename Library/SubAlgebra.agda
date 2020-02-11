@@ -5,9 +5,12 @@ module SubAlgebra (Σ₁ : Signature) {ℓ₁ ℓ₂ : Level} (A : Algebra {ℓ�
 
 open import Relation.Binary
 open import Relation.Unary renaming (_⊆_ to _⊆r_) hiding (_⇒_)
-open import Data.Product hiding (map)
-open import Function as F hiding (Bijective; Surjective; Bijection; Surjection)
+open import Data.Product renaming (map to ×f)
+open import Function as F hiding (Injective; Bijective; Surjective)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid;_⇨_)
+open import Function.Bijection hiding (_∘_)
+open import Function.Surjection hiding (_∘_)
+open import Function.Injection hiding (_∘_)
 open import Equational
 open import Product
 open import Morphisms
@@ -122,3 +125,36 @@ E⊆⋂-Sub X s a = a (E-SubAlg X) (X⊆E X)
 ⋂-Sub⊆E* X Q X⊆Q {s ∷ _} (v ▹ ts) = ⇨v▹ (⋂-Sub⊆E X s (proj₂ v) Q X⊆Q)
                                             (⋂-Sub⊆E* X Q X⊆Q ts)
 
+
+≅-SubAlg : ∀ {ℓ₃ ℓ₄} → (B : SubAlg {ℓ₃ = ℓ₃} A) → (C : SubAlg {ℓ₃ = ℓ₄} A) → Set _
+≅-SubAlg B C = pr B ⊆ₚ pr C × pr C ⊆ₚ pr B
+
+open Homo
+≅-SubAlg-iso : ∀ {ℓ₃ ℓ₄} → (B : SubAlg {ℓ₃ = ℓ₃} A) → (C : SubAlg {ℓ₃ = ℓ₄} A) →
+               ≅-SubAlg B C → Isomorphism (SubAlgebra B) (SubAlgebra C)
+≅-SubAlg-iso {ℓ₃} {ℓ₄} B C (B≤C , C≤B) =
+               record { hom = H
+                      ; bij = λ s → record { injective = F.id
+                                           ; surjective = isSurj s
+                                           }
+                      }
+   where ′H′ : ∀ s → (SubAlgebra B) ⟦ s ⟧ₛ ⟶ (SubAlgebra C) ⟦ s ⟧ₛ
+         ′H′ s = record { _⟨$⟩_ = ×f F.id (B≤C s)
+                        ; cong = F.id
+                        }
+         Hcond : homCond (SubAlgebra B) (SubAlgebra C) ′H′
+         Hcond {s = s} f as
+           rewrite propMapV∘ as (λ i → ×f F.id (B≤C i)) (λ _ → proj₁) = Setoid.refl (A ⟦ s ⟧ₛ)
+         H : Homo (SubAlgebra B) (SubAlgebra C)
+         H = record { ′_′ = ′H′
+                    ; cond = Hcond
+                    }
+
+         H⁻¹ : ∀ s → (SubAlgebra C) ⟦ s ⟧ₛ ⟶ (SubAlgebra B) ⟦ s ⟧ₛ
+         H⁻¹ s = record { _⟨$⟩_ = ×f F.id (C≤B s)
+                        ; cong = F.id
+                        }
+         isSurj : ∀ s → Surjective (′ H ′ s)
+         isSurj s = record { from = H⁻¹ s
+                           ; right-inverse-of = λ _ → Setoid.refl (A ⟦ s ⟧ₛ)
+                           }

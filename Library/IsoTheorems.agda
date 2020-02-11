@@ -6,20 +6,19 @@ open import UnivAlgebra
 open import Morphisms
 open import HeterogeneousVec
 open import Setoids
-open import Function as F
+open import Function as F hiding (Surjective;Bijective)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
+open import Function.Bijection renaming (_∘_ to _∘b_)
+open import Function.Surjection hiding (_∘_)
 open import Relation.Binary.PropositionalEquality as PE
 open import Data.Product hiding (map)
 open import Relation.Binary
 open import Relation.Unary hiding (_⊆_;_⇒_)
 open import Data.List hiding (map)
 
-
 open Signature
 open Hom
 open Homo
-open import Function.Bijection renaming (_∘_ to _∘b_) 
-open import Function.Surjection hiding (_∘_)
 
 {- Isomorphism Theorems -}
 module FirstIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}

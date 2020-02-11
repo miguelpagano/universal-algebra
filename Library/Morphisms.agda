@@ -392,8 +392,8 @@ homImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {B : Algebra {ℓ₃} {ℓ₄} �
 homImg {Σ} {B = B} A h = SubAlgebra (SubImg A B h)
 
 {-
-  The homomorphic image of a isomorphism between algebras A and B is
-  a subalgebra isomorphic to B.
+  The homomorphic image of an isomorphism between algebras A and B is a
+  subalgebra isomorphic to B.
 -}
 homImg-iso-prop : ∀ {ℓ₀ Σ} →
                     (A B : Algebra {ℓ₀} {ℓ₀} Σ) → (h : Isomorphism A B) →

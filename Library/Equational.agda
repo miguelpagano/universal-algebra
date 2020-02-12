@@ -97,7 +97,8 @@ module Subst {Σ} {X : Vars Σ} where
     map↪id ⟨⟩ = _≡_.refl
     map↪id (t ▹ ts) = cong₂ (_▹_) (idSubst≡ t) (map↪id ts)
 
-open Hom 
+open Hom
+open Homo
 open Setoid
 
 
@@ -141,7 +142,8 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
   HomEnv h = (s : sorts Σ) → (x : X s) → _≈_ (A ⟦ s ⟧ₛ) ( ′ h ′ s ⟨$⟩ term (inj₂ x) ⟨⟩ ) (a x)
 
  
-  tot : (H H' : Homo (T Σ 〔 X 〕) A) → HomEnv H → HomEnv H' → _≈ₕ_ (T Σ 〔 X 〕) A H  H'
+  tot : (H H' : Homo (T Σ 〔 X 〕) A) → HomEnv H → HomEnv H' →
+                                         _≈ₕ_ (T Σ 〔 X 〕) A H  H'
   tot H H' he he' s (TermAlgebra.term {[]} (inj₂ x) ⟨⟩) = begin (′ H ′ s ⟨$⟩ term (inj₂ x) ⟨⟩)
                                                           ≈⟨ he s x ⟩
                                                           a x
@@ -204,7 +206,6 @@ module SubstitutionTheorem {ℓ₁ ℓ₂ : Level}
 
 open TermAlgebra
 
-
 {- Equations -}
 record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
   constructor ⋀_≈_if「_」_
@@ -241,13 +242,103 @@ _⊨_ {X = X} {s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
 _⊨T_ : ∀ {ℓ₁ ℓ₂ Σ X ar} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
              (E : Theory Σ X ar) → Set _
 A ⊨T E = ∀ {s e} → _∈_ {i = s} e E → A ⊨ e
-       
 
 ⊨All : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} → (E : Theory Σ X ar) →
                (e : Equation Σ X s) → Set (lsuc ℓ₂ Level.⊔ lsuc ℓ₁)
 ⊨All {ℓ₁} {ℓ₂} {Σ} E e = (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T E → A ⊨ e
 
 
+{- Isomorphisms of algebras preserve satisfaction of equations -}
+module IsoRespectModel {Σ : Signature} {X : Vars Σ} {ar : Arity Σ}
+                       {E : Theory Σ X ar} {ℓ₀} where
+
+  open Algebra
+  open Signature
+  import Setoids using (∥_∥)
+
+  open import Function.Bijection
+  open import Function.Surjection hiding (_∘_)
+  open Bijective
+
+  open import TermAlgebra (Σ 〔 X 〕)
+
+  open TermAlgebra.HU
+  open Isomorphism
+  open InitHomoExt
+  open HomComp
+
+  _IsoRespects⊨_ : (A B : Algebra {ℓ₀} {ℓ₀} Σ) → A ≅ B → A ⊨T E → B ⊨T E
+  _IsoRespects⊨_ A B record { iso = record { hom = homAB ; bij = bij } } mA
+                     {s} {e} e∈E θB eqB = eqB' {s} {Equation.left e}
+                                                   {Equation.right e} e-eqA
+    where
+
+    isoBA : Isomorphism B A
+    isoBA = symIso A B (record { hom = homAB ; bij = bij })
+
+    θA : Env X A
+    θA {s₁} x = ′ hom isoBA ′ s₁ ⟨$⟩ (θB x)
+
+    _,_≈A_ : (s : sorts Σ) → _
+    _,_≈A_ s = Setoid._≈_ (A ⟦ s ⟧ₛ)
+
+    ⟦_⟧A : ∀ {s : sorts Σ} → (t : TermAlgebra.HU (Σ 〔 X 〕) s) → ∥ A ⟦ s ⟧ₛ ∥
+    ⟦_⟧A {s} t = (X EnvExt.↪) A θA t
+
+    _,_≈B_ : (s : sorts Σ) → _
+    _,_≈B_ s = Setoid._≈_ (B ⟦ s ⟧ₛ)
+
+    ⟦_⟧B : ∀ {s : sorts Σ} → (t : TermAlgebra.HU (Σ 〔 X 〕) s) → ∥ B ⟦ s ⟧ₛ ∥
+    ⟦_⟧B {s} t = (X EnvExt.↪) B θB t
+
+    ⟦t⟧A≈iso⟦t⟧B : ∀ {s : sorts Σ} → (t : TermAlgebra.HU (Σ 〔 X 〕) s) →
+                   s , ⟦ t ⟧A ≈A (′ hom isoBA ′ s ⟨$⟩ ⟦ t ⟧B)
+    ⟦t⟧A≈iso⟦t⟧B {s} t = tot A θA (TΣXHom A θA)
+                                 ((hom isoBA) ∘ₕ (TΣXHom B θB))
+                                 (λ s₂ x₁ → Setoid.refl (A ⟦ s₂ ⟧ₛ))
+                                 (λ s₂ x₁ → Setoid.refl (A ⟦ s₂ ⟧ₛ)) s t
+
+    ⟦t⟧B≈iso⟦t⟧A : ∀ {s : sorts Σ} → (t : TermAlgebra.HU (Σ 〔 X 〕) s) →
+                   s , ⟦ t ⟧B ≈B (′ homAB ′ s ⟨$⟩ ⟦ t ⟧A)
+    ⟦t⟧B≈iso⟦t⟧A {s} t = tot B θB (TΣXHom B θB)
+                                 (homAB ∘ₕ (TΣXHom A θA))
+                                 (λ s₂ x → Setoid.refl (B ⟦ s₂ ⟧ₛ))
+                                 (λ s₂ x → right-inverse-of (bij s₂) (θB x)) s t
+
+    eqA' : ∀ {s : sorts Σ} {t t' : TermAlgebra.HU (Σ 〔 X 〕) s} →
+             (s , ⟦ t ⟧B ≈B ⟦ t' ⟧B) → (s , ⟦ t ⟧A ≈A ⟦ t' ⟧A)
+    eqA' {s} {t} {t'} eq = begin
+                           ⟦ t ⟧A
+                           ≈⟨ ⟦t⟧A≈iso⟦t⟧B t ⟩
+                           ′ hom isoBA ′ s ⟨$⟩ ⟦ t ⟧B
+                           ≈⟨ Π.cong (′ hom isoBA ′ s) eq ⟩
+                           ′ hom isoBA ′ s ⟨$⟩ ⟦ t' ⟧B
+                           ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (⟦t⟧A≈iso⟦t⟧B t')  ⟩
+                           ⟦ t' ⟧A
+                           ∎
+                where open EqR (A ⟦ s ⟧ₛ)
+
+    eqB' : ∀ {s : sorts Σ} {t t' : TermAlgebra.HU (Σ 〔 X 〕) s} →
+                           s , ⟦ t ⟧A ≈A ⟦ t' ⟧A → s , ⟦ t ⟧B ≈B ⟦ t' ⟧B
+    eqB' {s} {t} {t'} eq = begin
+                           ⟦ t ⟧B
+                           ≈⟨ ⟦t⟧B≈iso⟦t⟧A t ⟩
+                           ′ homAB ′ s ⟨$⟩ ⟦ t ⟧A
+                           ≈⟨ Π.cong (′ homAB ′ s) eq ⟩
+                           ′ homAB ′ s ⟨$⟩ ⟦ t' ⟧A
+                           ≈⟨ Setoid.sym (B ⟦ s ⟧ₛ) (⟦t⟧B≈iso⟦t⟧A t') ⟩
+                           ⟦ t' ⟧B
+                           ∎
+                where open EqR (B ⟦ s ⟧ₛ)
+
+    eqA : proj₁ (Equation.cond e) ∼v proj₂ (Equation.cond e)
+    eqA = map∼v (λ {s'} {t} {t'} eq → eqA' {s'} {t} {t'} eq) eqB
+
+    A⊨e : A ⊨ e
+    A⊨e = mA e∈E
+
+    e-eqA : (s , ⟦ Equation.left e ⟧A ≈A ⟦ Equation.right e ⟧A)
+    e-eqA = A⊨e θA eqA
 
 {- Provability -}
 data _⊢_ {Σ X}

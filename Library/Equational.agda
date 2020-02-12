@@ -258,23 +258,33 @@ module IsoRespectModel {Σ : Signature} {X : Vars Σ} {ar : Arity Σ}
 
   open import Function.Bijection
   open import Function.Surjection hiding (_∘_)
-  open Bijective
-
   open import TermAlgebra (Σ 〔 X 〕)
 
   open TermAlgebra.HU
   open Isomorphism
   open InitHomoExt
   open HomComp
+  open _≅_
+  open Bijective
 
-  _IsoRespects⊨_ : (A B : Algebra {ℓ₀} {ℓ₀} Σ) → A ≅ B → A ⊨T E → B ⊨T E
-  _IsoRespects⊨_ A B record { iso = record { hom = homAB ; bij = bij } } mA
-                     {s} {e} e∈E θB eqB = eqB' {s} {Equation.left e}
-                                                   {Equation.right e} e-eqA
+  IsoRespects⊨ : ∀ {s : sorts Σ} →
+                 (A B : Algebra {ℓ₀} {ℓ₀} Σ) (e : Equation Σ X s) →
+                 A ≅ B → A ⊨ e → B ⊨ e
+  IsoRespects⊨ {s} A B e A≅B A⊨e θB eqB = eqB' {s} {Equation.left e}
+                                                    {Equation.right e} e-eqA
     where
 
+    isoAB : Isomorphism A B
+    isoAB = iso A≅B
+
     isoBA : Isomorphism B A
-    isoBA = symIso A B (record { hom = homAB ; bij = bij })
+    isoBA = symIso A B isoAB
+
+    homAB : Homo A B
+    homAB = hom isoAB
+
+    bijAB :  (s : sorts Σ) → Function.Bijection.Bijective (′ homAB ′ s)
+    bijAB s = bij isoAB s
 
     θA : Env X A
     θA {s₁} x = ′ hom isoBA ′ s₁ ⟨$⟩ (θB x)
@@ -303,7 +313,8 @@ module IsoRespectModel {Σ : Signature} {X : Vars Σ} {ar : Arity Σ}
     ⟦t⟧B≈iso⟦t⟧A {s} t = tot B θB (TΣXHom B θB)
                                  (homAB ∘ₕ (TΣXHom A θA))
                                  (λ s₂ x → Setoid.refl (B ⟦ s₂ ⟧ₛ))
-                                 (λ s₂ x → right-inverse-of (bij s₂) (θB x)) s t
+                                 (λ s₂ x → right-inverse-of (bijAB s₂) (θB x))
+                                 s t
 
     eqA' : ∀ {s : sorts Σ} {t t' : TermAlgebra.HU (Σ 〔 X 〕) s} →
              (s , ⟦ t ⟧B ≈B ⟦ t' ⟧B) → (s , ⟦ t ⟧A ≈A ⟦ t' ⟧A)
@@ -334,11 +345,15 @@ module IsoRespectModel {Σ : Signature} {X : Vars Σ} {ar : Arity Σ}
     eqA : proj₁ (Equation.cond e) ∼v proj₂ (Equation.cond e)
     eqA = map∼v (λ {s'} {t} {t'} eq → eqA' {s'} {t} {t'} eq) eqB
 
-    A⊨e : A ⊨ e
-    A⊨e = mA e∈E
-
     e-eqA : (s , ⟦ Equation.left e ⟧A ≈A ⟦ Equation.right e ⟧A)
     e-eqA = A⊨e θA eqA
+
+  IsoRespects⊨T : (A B : Algebra {ℓ₀} {ℓ₀} Σ) → A ≅ B → A ⊨T E → B ⊨T E
+  IsoRespects⊨T A B A≅B A⊨TE {s} {e} e∈E θB eqB = IsoRespects⊨ A B e A≅B
+                                                                A⊨e θB eqB
+    where
+      A⊨e : A ⊨ e
+      A⊨e = A⊨TE e∈E
 
 {- Provability -}
 data _⊢_ {Σ X}

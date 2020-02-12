@@ -39,13 +39,21 @@ record Signature : Set₁ where
 
 open Signature
 
+module Universe (Σ : Signature) where
+  Universe : ∀  ℓ₁ ℓ₂ → Set _
+  Universe ℓ₁ ℓ₂ = (s : sorts Σ) → Setoid ℓ₁ ℓ₂
 
+  _⟶ₛ_ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} →
+         (X : Universe ℓ₁ ℓ₂) → (Y : Universe ℓ₃ ℓ₄) → Set _
+  X ⟶ₛ Y = (s : sorts Σ) → X s ⟶ Y s
+
+open Universe
 {- Algebra -}
 record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
   constructor _∥_
 
   field
-    _⟦_⟧ₛ   : sorts Σ → Setoid ℓ₁ ℓ₂
+    _⟦_⟧ₛ   : Universe Σ ℓ₁ ℓ₂
     _⟦_⟧ₒ    : ∀ {ar s} → ops Σ (ar , s) →
                 _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 
@@ -53,6 +61,7 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
   _⟦_⟧ₛ* ar = ∥ _⟦_⟧ₛ ✳ ar ∥
 
 open Algebra
+
 {- A class of algebras is a predicate over algebras -}
 AlgClass : ∀ {ℓ₀ ℓ₁} Σ → Set (lsuc (ℓ₀ ⊔ ℓ₁))
 AlgClass {ℓ₀} {ℓ₁} Σ = Algebra {ℓ₀} {ℓ₁} Σ → Set (ℓ₀ ⊔ ℓ₁)

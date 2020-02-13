@@ -52,7 +52,7 @@ module ∨-Monoid where
                ∨-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
 
   ∨-Alg : Algebra Σ-mon
-  ∨-Alg = ∨-Monₛ ∥ ∨-Monₒ
+  ∨-Alg = record { _⟦_⟧ₛ = ∨-Monₛ ; _⟦_⟧ₒ = ∨-Monₒ } 
 
 
   ∧-Monₛ : ⊤ → _
@@ -67,7 +67,7 @@ module ∨-Monoid where
                ∧-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
 
   ∧-Alg : Algebra Σ-mon
-  ∧-Alg = ∧-Monₛ ∥ ∧-Monₒ
+  ∧-Alg = record { _⟦_⟧ₛ =  ∧-Monₛ ; _⟦_⟧ₒ =  ∧-Monₒ }
 
   open import Morphisms
   ¬-⟿ : ∨-Alg ⟿ ∧-Alg
@@ -135,13 +135,16 @@ module Theory where
     open import Relation.Binary as BC
     
     MkMonoid : ∀ {a l A _≈_ _∘_} {e : A} → (m : IsMonoid {a} {l} _≈_ _∘_ e) → Algebra {a} {l} Σ-mon 
-    MkMonoid {A = A} {_≈_} {_∘_} {eA} isMon = (λ _ → record { Carrier = A ; _≈_ = _≈_
-                                                       ; isEquivalence = isEquivalence  })
-                                       ∥ (λ { e → record { _⟨$⟩_ = λ x₁ → eA ; cong = λ {i} {j} _ →
-                                                                                          BC.IsEquivalence.refl
-                                                                                          (IsSemigroup.isEquivalence (isSemigroup )) }
+    MkMonoid {A = A} {_≈_} {_∘_} {eA} isMon =
+       record { _⟦_⟧ₛ = λ _ → record { Carrier = A ; _≈_ = _≈_
+                               ; isEquivalence = isEquivalence
+                               }
+              ; _⟦_⟧ₒ = (λ { e → record { _⟨$⟩_ = λ x₁ → eA
+                                        ; cong = λ {i} {j} _ → BC.IsEquivalence.refl
+                                                               (IsSemigroup.isEquivalence (isSemigroup )) }
                                          ; op → record { _⟨$⟩_ = λ { (v ▹ v₁ ▹ ⟨⟩) → v ∘ v₁ }
                                          ; cong = λ { (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) → ∙-cong x₁ x₂ } } })
+             }                            
              where open IsMonoid isMon
 
 

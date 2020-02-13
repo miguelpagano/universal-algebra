@@ -73,7 +73,7 @@ iₑ : ∀ {ar s} → ops Σₑ (ar , s) → ⟦_⟧ₑ ✳ ar ⟶ ⟦ s ⟧ₑ
 iₑ f = record  { _⟨$⟩_ = iopsₑ f ; cong = icongₑ f }
 
 Semₑ : Algebra Σₑ
-Semₑ =  ⟦_⟧ₑ ∥ iₑ
+Semₑ = record {_⟦_⟧ₛ = ⟦_⟧ₑ ; _⟦_⟧ₒ = iₑ } 
 
 open TermAlgebra Σₑ renaming (∣T∣ to ∣T∣ₑ ; ∣H∣ to ∣H∣ₑ ; ∣T∣isInitial to ∣T∣ₑInit)
 
@@ -147,7 +147,7 @@ iₘ f = record  { _⟨$⟩_ = iopsₘ f
                ; cong = icongₘ f }
 
 Exec : Algebra Σₘ
-Exec = ⟦_⟧ₘ ∥ iₘ
+Exec = record { _⟦_⟧ₛ = ⟦_⟧ₘ ; _⟦_⟧ₒ = iₘ }
 
 open TermAlgebra Σₘ renaming (∣T∣ to ∣T∣ₘ ; ∣H∣ to ∣H∣ₘ)
 

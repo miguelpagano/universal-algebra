@@ -159,7 +159,7 @@ module ReductAlgebra {Σₛ Σₜ} (t : Σₛ ↝ Σₜ) where
     where open FormalTermInt A
 
   〈_〉 : ∀ {ℓ₀ ℓ₁} → Algebra {ℓ₀} {ℓ₁} Σₜ → Algebra Σₛ
-  〈 A 〉 =  (A ⟨_⟩ₛ) ∥ ((A ⟨_⟩ₒ))
+  〈 A 〉 = record { _⟦_⟧ₛ = A ⟨_⟩ₛ ; _⟦_⟧ₒ = A ⟨_⟩ₒ } 
 
 
 {- Reduct homomorphism -}

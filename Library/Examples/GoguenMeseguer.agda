@@ -190,7 +190,7 @@ module EqBool1 where
                       ; cong = λ { {() ▹ ⟨⟩} {noel₂ ▹ ⟨⟩} (∼▹ ₁≡₂ x) } }
 
     model : Algebra Σ∼
-    model = isorts ∥ iops
+    model = record { _⟦_⟧ₛ =  isorts ; _⟦_⟧ₒ = iops }
 
     open Theory
 

@@ -530,7 +530,7 @@ module BoolModel₂ where
 
 
   B₂ : Algebra Σbool₂
-  B₂ = BCarrier ∥ Bops
+  B₂ = record { _⟦_⟧ₛ = BCarrier ; _⟦_⟧ₒ = Bops }
 
   open Theory₂
 

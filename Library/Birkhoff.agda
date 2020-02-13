@@ -6,6 +6,7 @@ open import Variety
 open import Morphisms
 open import HeterogeneousVec
 
+open import Data.List using (List)
 open import Data.Product hiding (Σ;map)
 open import Function.Bijection  hiding (_∘_)
 open import Function.Surjection hiding (_∘_)
@@ -25,6 +26,9 @@ open Equation
 open Hom
 open Homo
 
+Terms : ∀ s → Set _
+Terms s = ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥
+
 
 
 module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃} 
@@ -33,8 +37,6 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
   θA : Env X A
   θA {s} x = ′ H ′ s ⟨$⟩ θB x
 
-  Terms : ∀ s → Set _
-  Terms s = ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥
 
   open InitHomoExt B θB renaming (TΣXHom to TΣB) hiding (tot)
   open InitHomoExt A θA renaming (TΣXHom to TΣA)
@@ -74,7 +76,6 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
                          ∎
               where open EqR (A ⟦ s ⟧ₛ)
 
-  open import Data.List using (List)
   open Setoid
   
   rA : ∀ s → Rel (Terms s) ℓ₁
@@ -171,8 +172,33 @@ module Product-Preserve-⊨
          where open EqR (A i ⟦ s ⟧ₛ)
                open Setoid (A i ⟦ s ⟧ₛ)
                open aux-sem (A i) Πalg θ (π i)
+
+module HomImg-Preserves-⊨
+  {ℓ₀ ℓ₁ ℓ₂ ℓ₃} 
+  (A : Algebra {ℓ₀} {ℓ₁} Σ) (B : Algebra {ℓ₂} {ℓ₃} Σ)
+  (θB : Env X B) (H : Homo A B) {s : sorts Σ} (t t' : Terms s)
+   (A⊨e : A ⊨ (⋀ t ≈ t'))  where
+
+   A/h : _
+   A/h = A / Kernel H
+   ν : Homo A (A / Kernel H)
+   ν = Natural A B H
+   A/h⊨e : A/h ⊨ (⋀ t ≈ t')
+   A/h⊨e θk ∼⟨⟩ = begin
+                ⟦ t ⟧A
+                ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
+                ′ ν ′ s ⟨$⟩ ⟦ t ⟧B --
+                ≈⟨ Π.cong (′ ν ′ s) (A⊨e θA ∼⟨⟩) ⟩
+                ′ ν ′ s ⟨$⟩ ⟦ t' ⟧B 
+                ≈⟨ sym (⟦t⟧A≈H⟦t⟧B t') ⟩
+                ⟦ t' ⟧A
+                  ∎
+     where open EqR (A/h ⟦ s ⟧ₛ)
+           open Setoid (A/h ⟦ s ⟧ₛ)
+           open aux-sem {ℓ₀ = ℓ₀} {ℓ₁ = ℓ₃} {ℓ₂ = ℓ₀} {ℓ₃ = ℓ₁} A/h A θk ν
+
    
-{- Proposition 2.2.8 (Part 'if' of Birkhoff theorem) -}
-prop : ∀ {ℓ₀} {Σ} → (C : AlgClass {ℓ₀} {ℓ₀} Σ) → EqDefClass {ℓ₀} {ℓ₀} Σ C →
-                     Variety {ℓ₀} Σ C
-prop C eqc = {!!}
+-- {- Proposition 2.2.8 (Part 'if' of Birkhoff theorem) -}
+-- prop : ∀ {ℓ₀} {Σ} → (C : AlgClass {ℓ₀} {ℓ₀} Σ) → EqDefClass {ℓ₀} {ℓ₀} Σ C →
+--                      Variety {ℓ₀} Σ C
+-- prop C eqc = {!!}

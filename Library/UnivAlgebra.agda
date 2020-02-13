@@ -50,8 +50,6 @@ module Universe (Σ : Signature) where
 open Universe
 {- Algebra -}
 record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
-  constructor _∥_
-
   field
     _⟦_⟧ₛ   : Universe Σ ℓ₁ ℓ₂
     _⟦_⟧ₒ    : ∀ {ar s} → ops Σ (ar , s) →
@@ -63,7 +61,7 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
 open Algebra
 
 {- A class of algebras is a predicate over algebras -}
-AlgClass : ∀ {ℓ₀ ℓ₁} Σ → Set (lsuc (ℓ₀ ⊔ ℓ₁))
+AlgClass : ∀ {ℓ₀ ℓ₁} Σ → Set (lsuc ℓ₀ ⊔ lsuc ℓ₁)
 AlgClass {ℓ₀} {ℓ₁} Σ = Algebra {ℓ₀} {ℓ₁} Σ → Set (ℓ₀ ⊔ ℓ₁)
 
 {- Subalgebras -}
@@ -96,7 +94,7 @@ record SubAlg {ℓ₃ ℓ₁ ℓ₂} {Σ} (A : Algebra {ℓ₁} {ℓ₂} Σ) :
 -- A subsetoid closed by operations is an Algebra.
 SubAlgebra : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
                    SubAlg {ℓ₃ = ℓ₃} A → Algebra Σ
-SubAlgebra {Σ} {A = A} S = is ∥ if 
+SubAlgebra {Σ} {A = A} S = record { _⟦_⟧ₛ = is ; _⟦_⟧ₒ = if }
            where
              open SubAlg S 
              is : sorts Σ → _
@@ -127,9 +125,14 @@ _⊆_ : ∀ {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature} {A : Algebra {ℓ₁} {ℓ�
 {- Quotient Algebra -}
 _/_ : ∀ {ℓ₁ ℓ₂ ℓ₃} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence {ℓ₃} A) →
                             Algebra {ℓ₁} {ℓ₃} Σ
-A / C = (λ s → record { Carrier = Carrier (A ⟦ s ⟧ₛ)
+A / C = record { _⟦_⟧ₛ = A/Cₛ ; _⟦_⟧ₒ = A/Cₒ }
+  where A/Cₛ : _ → _
+        A/Cₛ s = record { Carrier = Carrier (A ⟦ s ⟧ₛ)
                               ; _≈_ = rel C s
-                              ; isEquivalence = cequiv C s })
-               ∥
-               (λ {ar} {s} f → record { _⟨$⟩_ = λ v → A ⟦ f ⟧ₒ ⟨$⟩ v
-                                      ; cong = csubst C f } )
+                              ; isEquivalence = cequiv C s
+                              }
+        A/Cₒ : ∀ {ar} {s} → _ → (A/Cₛ  ✳ ar) ⟶ A/Cₛ s
+        A/Cₒ {ar} {s} f = record { _⟨$⟩_ = λ v → A ⟦ f ⟧ₒ ⟨$⟩ v
+                                ; cong = csubst C f
+                                }
+

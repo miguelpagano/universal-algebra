@@ -32,10 +32,7 @@ module FirstIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                     ; bij = bij₁
                     }
   where homo₁ : Homo (A / Kernel h) B
-        homo₁ = record { ′_′ = λ s → record { _⟨$⟩_ = λ a → ′ h ′ s ⟨$⟩ a
-                                            ; cong = F.id }
-                       ; cond = λ { f as → cond h f as }
-                       }
+        homo₁ = KerEmbedding A B h
         surj₁ : (s : sorts Σ) → Surjective (′ homo₁ ′ s)
         surj₁ s = record { from = record { _⟨$⟩_ = λ b → Surjective.from
                                                                  (surj s) ⟨$⟩ b

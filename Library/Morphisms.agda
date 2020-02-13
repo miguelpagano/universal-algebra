@@ -298,6 +298,15 @@ isoEquiv {Σ = Σ} = record { refl = reflIso
                                            transIso A₀ A₁ A₂ i₀ i₁
                           }
 
+{- Using an isomorphism -}
+open HomComp
+iso-≈ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
+          {A : Algebra {ℓ₁} {ℓ₂} Σ} → {A' : Algebra {ℓ₃} {ℓ₄} Σ} →
+          (H : Isomorphism A A') → ∀ s t →
+           Setoid._≈_ (A' ⟦ s ⟧ₛ) t (′ hom H ∘ₕ hom (symIso A A' H) ′ s ⟨$⟩ t)
+iso-≈ {A' = A'} H s t = Setoid.sym (A' ⟦ s ⟧ₛ) (right-inverse-of (bij H s) t)
+  where open Surjective
+        open Bijective
 
 {- Total relation -}
 Total : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _ 
@@ -498,4 +507,33 @@ QuotHom {Σ} A Q = record { ′_′ = fₕ
                          as' ≡ map (λ _ a → a) as'
                 mapid≡ {as' = ⟨⟩} = PE.refl
                 mapid≡ {as' = v ▹ as'} = PE.cong (λ as'' → v ▹ as'') mapid≡
-                
+
+{- Monomorphism from any sub-algebra of A to A -}
+Canonical : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+                        (B : SubAlg {ℓ₃} A) → Homo (SubAlgebra B) A
+Canonical A B = record { ′_′ = h ; cond = λ {_} {s} f as → Setoid.refl (A ⟦ s ⟧ₛ) }
+  where h : SubAlgebra B ⟿ A
+        h s = record { _⟨$⟩_ = proj₁ ; cong = F.id }
+
+{- Epimorphism from A to A quotiened by the kernel of H -}
+Natural : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+            (B : Algebra {ℓ₃} {ℓ₄} Σ) →  (h : Homo A B) →
+            Homo A (A / Kernel h)
+Natural A B H = record { ′_′ = h
+                       ; cond = condH
+                       }
+        where h : A ⟿ (A / Kernel H)
+              h s = record { _⟨$⟩_ = F.id
+                           ; cong = λ eq → Π.cong (′ H ′ s) eq
+                           }
+              condH : homCond A (A / Kernel H) h
+              condH {s = s} f as rewrite mapId as = Setoid.refl (B ⟦ s ⟧ₛ)
+
+{- Monomorphism from the quotient algebra to the target algebra -}
+KerEmbedding : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+            (B : Algebra {ℓ₃} {ℓ₄} Σ) → (h : Homo A B) → Homo (A / Kernel h) B
+KerEmbedding A B H = record { ′_′ = λ s → record { _⟨$⟩_ = λ a → ′ H ′ s ⟨$⟩ a
+                                            ; cong = F.id }
+                       ; cond = λ { f as → cond H f as }
+                       }
+        

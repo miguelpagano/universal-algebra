@@ -1,11 +1,12 @@
 {- Definition of the theory of Groups, extending theory of Monoids. -}
 module Examples.Group where
 
+open import Level using (0ℓ)
 open import UnivAlgebra
 open import Equational
 open import Morphisms
 open import SigMorphism
-open import Data.Unit hiding (setoid)
+open import Data.Unit.Polymorphic renaming (⊤ to ⊤₀)
 open import Data.List
 open import Data.Product
 open import Data.Nat
@@ -37,7 +38,7 @@ module GrpTheory where
   open Theory
   -- Axioms
 
-  Eq-grp : Set
+  Eq-grp : Set₁
   Eq-grp = Equation Σ-grp X tt
 
   open import TermAlgebra
@@ -50,7 +51,7 @@ module GrpTheory where
   toGrpF : Form → Form-grp
   toGrpF (term {[]} {.tt} (inj₁ e) x₁) = term (inj₁ e) ⟨⟩
   toGrpF (term {[]} {.tt} (inj₂ y) x) = term (inj₂ y) ⟨⟩
-  toGrpF (term {.tt ∷ .(tt ∷ [])} {.tt} op (v ▹ v₁ ▹ ⟨⟩)) = term op ((toGrpF v) ▹ ((toGrpF v₁) ▹ ⟨⟩))
+  toGrpF (term {.tt ∷ .(tt ∷ [])} {.tt} (op , tt) (v ▹ v₁ ▹ ⟨⟩)) = term (op , tt) ((toGrpF v) ▹ ((toGrpF v₁) ▹ ⟨⟩))
 
   toGrpEq : Eq₁ → Eq-grp
   toGrpEq (⋀ left ≈ right if「 carty 」 (us , us')) =
@@ -59,10 +60,10 @@ module GrpTheory where
   module _ where
     -- smart constructors
     _∘_ : Form-grp → Form-grp → Form-grp
-    a ∘ b = term op ⟨⟨ a , b ⟩⟩
+    a ∘ b = term (op , tt) ⟨⟨ a , b ⟩⟩
 
     _⁻ : Form-grp → Form-grp
-    a ⁻ = term _⁻¹ (⟪ a ⟫)
+    a ⁻ = term (_⁻¹ , tt) (⟪ a ⟫)
     
 
     open Smartcons hiding (_∘_)
@@ -87,7 +88,7 @@ module GrpTheory where
 
     module Proofs₁ where
         open import Relation.Binary.EqReasoning (⊢RSetoid GrpTheory tt)
-        open Subst {Σ-grp} {X}
+        open Subst {Σ = Σ-grp} {X = X}
         u' : _
         u' = toGrpF u
 

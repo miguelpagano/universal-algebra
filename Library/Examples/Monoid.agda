@@ -4,11 +4,12 @@
    and the universal algebra approach. -}
 module Examples.Monoid where
 
+open import Level using (0ℓ)
 open import UnivAlgebra
 open import Equational
 open import Morphisms
 open import SigMorphism
-open import Data.Unit hiding (setoid)
+open import Data.Unit.Polymorphic renaming (⊤ to ⊤₀)
 open import Data.List
 open import Data.Product
 open import Data.Nat
@@ -17,6 +18,8 @@ open import HeterogeneousVec
 open import Setoids
 
 open Hom
+⊤ : Set
+⊤ = ⊤₀ {0ℓ}
 
 data op-mon : List ⊤ × ⊤ → Set where
   e    : op-mon ([] ↦ tt)
@@ -84,7 +87,7 @@ module Theory where
   X : Vars Σ-mon
   X ⊤ = ℕ
 
-  Eq₁ : Set
+  Eq₁ : Set₁
   Eq₁ = Equation Σ-mon X tt
 
   open import TermAlgebra
@@ -98,7 +101,7 @@ module Theory where
   module Smartcons where
     -- smart constructors
     _∘_ : Form → Form → Form
-    φ ∘ ψ = term op ⟨⟨ φ , ψ ⟩⟩
+    φ ∘ ψ = term (op , tt) ⟨⟨ φ , ψ ⟩⟩
 
     x : Form
     x = term (inj₂ 0) ⟨⟩

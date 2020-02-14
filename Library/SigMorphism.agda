@@ -362,7 +362,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   ∈↝T {s₀ ∷ ar} (e ▹ Thₛ) (there e∈Thₛ) = there (∈↝T Thₛ e∈Thₛ)
 
   -- Implication of theories
-  _⇒T~_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set
+  _⇒T~_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set₁
   Tₜ ⇒T~ Tₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Tₛ → Tₜ ⊢ eq↝ ax
 
   

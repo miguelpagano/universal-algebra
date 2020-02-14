@@ -1,9 +1,9 @@
 module Examples.PLogic (V : Set) (vp vq vr : V) where
-
+open import Level using (0ℓ)
 open import UnivAlgebra
 open import Equational
 open import HeterogeneousVec
-open import Data.Unit
+open import Data.Unit.Polymorphic renaming (⊤ to ⊤₀)
 open import Data.List hiding (and ; or)
 open import Data.Nat
 open import Data.Product
@@ -14,6 +14,9 @@ open import Relation.Binary.PropositionalEquality as PE hiding ([_] ; _≢_)
 open import Function.Equality
 import TermAlgebra
 -- Lógica proposicional ecuacional
+
+⊤ : Set
+⊤ = ⊤₀ {0ℓ}
 
 data Opsₚ : List ⊤ × ⊤ → Set where
   t∙     : Opsₚ ([] , tt)
@@ -65,31 +68,31 @@ false∼ = term (inj₁ f∙) ⟨⟩
 
 -- sintactic sugar
 ¬ : Formₚ → Formₚ
-¬ t₀ = term neg (t₀ ▹ ⟨⟩)
+¬ t₀ = term (neg , tt) (t₀ ▹ ⟨⟩)
 
 _≐_ : Formₚ → Formₚ → Formₚ
-t₁ ≐ t₂ = term equiv (t₁ ▹ t₂ ▹ ⟨⟩)
+t₁ ≐ t₂ = term (equiv , tt) (t₁ ▹ t₂ ▹ ⟨⟩)
 
 _≢_ : Formₚ → Formₚ → Formₚ
-t₁ ≢ t₂ = term nequiv (t₁ ▹ t₂ ▹ ⟨⟩)
+t₁ ≢ t₂ = term (nequiv , tt) (t₁ ▹ t₂ ▹ ⟨⟩)
 
 infixl 5 _≐_
 infixl 5 _≢_
 
 _∧∙_ : Formₚ → Formₚ → Formₚ
-t₁ ∧∙ t₂ = term and (t₁ ▹ t₂ ▹ ⟨⟩)
+t₁ ∧∙ t₂ = term (and , tt) (t₁ ▹ t₂ ▹ ⟨⟩)
 
 _∨∙_ : Formₚ → Formₚ → Formₚ
-t₁ ∨∙ t₂ = term or (t₁ ▹ t₂ ▹ ⟨⟩)
+t₁ ∨∙ t₂ = term (or , tt) (t₁ ▹ t₂ ▹ ⟨⟩)
 
 infixl 6 _∨∙_
 infixl 6 _∧∙_
 
 _⇒_ : Formₚ → Formₚ → Formₚ
-t₁ ⇒ t₂ = term impl (t₁ ▹ t₂ ▹ ⟨⟩)
+t₁ ⇒ t₂ = term (impl , tt) (t₁ ▹ t₂ ▹ ⟨⟩)
 
 _⇐_ : Formₚ → Formₚ → Formₚ
-t₁ ⇐ t₂ = term conseq (t₁ ▹ t₂ ▹ ⟨⟩)
+t₁ ⇐ t₂ = term (conseq , tt) (t₁ ▹ t₂ ▹ ⟨⟩)
 
 
 Ax₁ : Equation Σₚ Vₚ _
@@ -340,17 +343,17 @@ printF : (pv : V → String) → Formₚ → String
 printF pv (TermAlgebra.term {[]} (inj₁ t∙) ⟨⟩) = "true"
 printF pv (TermAlgebra.term {[]} (inj₁ f∙) ⟨⟩) = "false"
 printF pv (TermAlgebra.term {[]} (inj₂ y) ⟨⟩) = pv y
-printF pv (TermAlgebra.term {_ ∷ []} neg (f ▹ ⟨⟩)) = "¬ (" ++s (printF pv f) ++s ")"
-printF pv (TermAlgebra.term {_ ∷ _ ∷ []} equiv (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (TermAlgebra.term {_ ∷ []} (neg , tt) (f ▹ ⟨⟩)) = "¬ (" ++s (printF pv f) ++s ")"
+printF pv (TermAlgebra.term {_ ∷ _ ∷ []} (equiv , tt) (f₁ ▹ f₂ ▹ ⟨⟩)) =
                                "(" ++s (printF pv f₁) ++s ") ≡ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} nequiv (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} (nequiv , tt) (f₁ ▹ f₂ ▹ ⟨⟩)) =
                                "(" ++s (printF pv f₁) ++s ") ≢ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} and (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} (and , tt) (f₁ ▹ f₂ ▹ ⟨⟩)) =
                                "(" ++s (printF pv f₁) ++s ") ∧ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} or (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} (or , tt) (f₁ ▹ f₂ ▹ ⟨⟩)) =
                                "(" ++s (printF pv f₁) ++s ") ∨ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} impl (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} (impl , tt) (f₁ ▹ f₂ ▹ ⟨⟩)) =
                             "(" ++s (printF pv f₁) ++s ") ⇒ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} conseq (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} (conseq , tt) (f₁ ▹ f₂ ▹ ⟨⟩)) =
                             "(" ++s (printF pv f₁) ++s ") ⇐ (" ++s (printF pv f₂) ++s ")"
 printF pv (TermAlgebra.term {_ ∷ _ ∷ _ ∷ _} () x₃)

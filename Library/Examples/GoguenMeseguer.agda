@@ -1,12 +1,12 @@
 {- Example from paper "Completeness of Many-sorted equational
    logic" of Goguen and Meseguer. -}
 module Examples.GoguenMeseguer where
-
+open import Level using (0ℓ)
 open import UnivAlgebra
 open import Equational
 open import Morphisms
 open import SigMorphism
-open import Data.Unit hiding (setoid)
+open import Data.Unit.Polymorphic
 open import Data.List
 open import Data.Product
 open import Data.Nat
@@ -17,7 +17,6 @@ module EqBool1 where
 
   open import UnivAlgebra
   open import Equational
-  open import Data.Unit hiding (setoid)
   open import Data.List
   open import Data.Product
   open import Data.Nat
@@ -44,12 +43,11 @@ module EqBool1 where
 
 
   open import Data.Empty
-  open import Data.Unit
   Vars∼ : Vars Σ∼
   Vars∼ bool = ℕ
-  Vars∼ a = ⊤
+  Vars∼ a = ⊤ {0ℓ}
 
-  Eq∼ : Set
+  Eq∼ : Set₁
   Eq∼ = Equation Σ∼ Vars∼ bool
 
   open import TermAlgebra
@@ -65,16 +63,16 @@ module EqBool1 where
   module Smartcons where
 
     ¬ : Form → Form
-    ¬ φ = term neg ⟪ φ ⟫
+    ¬ φ = term (neg , tt) ⟪ φ ⟫
 
     _∨_ : Form → Form → Form
-    φ ∨ ψ = term or∼ ⟨⟨ φ , ψ ⟩⟩
+    φ ∨ ψ = term (or∼ , tt) ⟨⟨ φ , ψ ⟩⟩
 
     _∧_ : Form → Form → Form
-    φ ∧ ψ = term and∼ ⟨⟨ φ , ψ ⟩⟩
+    φ ∧ ψ = term (and∼ , tt) ⟨⟨ φ , ψ ⟩⟩
 
     fu : aterm → Form
-    fu aₜ = term foo ⟪ aₜ ⟫
+    fu aₜ = term (foo , tt) ⟪ aₜ ⟫
 
     b : Form
     b = term (inj₂ 0) ⟨⟩
@@ -128,7 +126,7 @@ module EqBool1 where
   module Proof where
     open Theory
     open import Relation.Binary.EqReasoning (⊢RSetoid Th bool)
-    open Subst {Σ∼} {Vars∼}
+    open Subst {Σ = Σ∼} {X = Vars∼}
     open Equation
     open Smartcons
     open TermAlgebra

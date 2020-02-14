@@ -13,7 +13,7 @@ open import Data.Vec
 open import Data.Nat
 open import Relation.Nullary hiding (¬_)
 open import Data.Product
-
+open import Data.Unit.Polymorphic hiding (_≟_)
 import Relation.Binary.EqReasoning as EqR
 
 
@@ -168,7 +168,7 @@ module ToEquational where
   ⟦ f₁ ⇐ f₂ ⟧ = ⟦ f₁ ⟧ ⇐ₚ ⟦ f₂ ⟧
 
 
-  open Subst {Σₚ} {λ _ → ℕ}
+  open Subst {Σ = Σₚ} {X = λ _ → ℕ}
 
   -- Traducción de axiomas
   {- Las metavariables φ' ψ' y τ que se utilizan para los meta-axiomas, son reemplazadas
@@ -220,8 +220,8 @@ module ToEquational where
   pleibin : ∀ {ψ τ φ₁ φ₂ p} → (σ : ops Σₚ (_ ∷ _ ∷ [] , _)) →
               Tₚ ⊢ (⋀ ⟦ φ₁ [ p := ψ ] ⟧ ≈ ⟦ φ₁ [ p := τ ] ⟧) →
               Tₚ ⊢ (⋀ ⟦ φ₂ [ p := ψ ] ⟧ ≈ ⟦ φ₂ [ p := τ ] ⟧) →
-              Tₚ ⊢ (⋀ term σ (⟦ φ₁ [ p := ψ ] ⟧ ▹ ⟦ φ₂ [ p := ψ ] ⟧ ▹ ⟨⟩) ≈
-                      term σ (⟦ φ₁ [ p := τ ] ⟧ ▹ ⟦ φ₂ [ p := τ ] ⟧ ▹ ⟨⟩))
+              Tₚ ⊢ (⋀ term (σ , tt) (⟦ φ₁ [ p := ψ ] ⟧ ▹ ⟦ φ₂ [ p := ψ ] ⟧ ▹ ⟨⟩) ≈
+                      term (σ , tt) (⟦ φ₁ [ p := τ ] ⟧ ▹ ⟦ φ₂ [ p := τ ] ⟧ ▹ ⟨⟩))
   pleibin σ p₁ p₂ = preemp (∼▹ p₁ (∼▹ p₂ ∼⟨⟩))
 
   pleib : ∀ {ψ τ φ p} → Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ τ ⟧) → Tₚ ⊢ (⋀ ⟦ φ [ p := ψ ] ⟧ ≈ ⟦ φ [ p := τ ] ⟧)

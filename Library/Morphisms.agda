@@ -18,7 +18,6 @@ open import Level renaming (suc to lsuc ; zero to lzero)
 
 import Relation.Binary.EqReasoning as EqR
 
-open Signature
 open Setoid
 
 {- Homomorphism from A to B -}
@@ -27,8 +26,6 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
        {Σ : Signature}
        (A : Algebra {ℓ₁} {ℓ₂} Σ) 
        (B : Algebra {ℓ₃} {ℓ₄} Σ) where 
-
-  open Algebra
 
   -- Function between algebras
   _⟿_ : Set _
@@ -85,7 +82,6 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
        {A₁ : Algebra {ℓ₃} {ℓ₄} Σ}
        {A₂ : Algebra {l₅} {l₆} Σ} where
 
-  open Algebra
   
   open Hom
   open Homo
@@ -138,7 +134,6 @@ HomId {A = A} = record { ′_′ = λ s → FE.id
                        }
       where open Hom
             open Homo
-            open Algebra
 
 {- Homomorphism composition properties -}
 module HomCompProp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈}
@@ -150,7 +145,6 @@ module HomCompProp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈}
                    {H₀ : Hom.Homo A₀ A₁}
                    {H₁ : Hom.Homo A₁ A₂}
                    {H₂ : Hom.Homo A₂ A₃} where
-  open Algebra
 
   open Hom
   open Homo
@@ -191,7 +185,7 @@ open Bijective
 
 open Hom
 open Homo
-open Algebra
+
 
 {- Homomorphism inverse -}
 invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
@@ -327,7 +321,6 @@ module Initial (Σ : Signature)
                {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
 
   open Hom
-  open Algebra
 
   record Initial  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
     field
@@ -342,7 +335,6 @@ module Initial (Σ : Signature)
 module Final (Σ : Signature)
              {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
   open Hom
-  open Algebra
 
   record Final  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
     field
@@ -410,7 +402,7 @@ homImg-iso-prop : ∀ {ℓ₀ Σ} →
 homImg-iso-prop {ℓ₀} {Σ} A B record { hom = homAB ; bij = bij } =
            record { hom = record { ′_′ = homImgAB-to-B
                                  ; cond = λ {_} {s'} f as →
-                                             Setoid.refl (B Algebra.⟦ s' ⟧ₛ )
+                                             Setoid.refl (B ⟦ s' ⟧ₛ )
                                  }
                   ; bij = λ s → record { injective = F.id
                                         ; surjective = homImgAB-to-B-Surj s
@@ -435,7 +427,7 @@ homImg-iso-prop {ℓ₀} {Σ} A B record { hom = homAB ; bij = bij } =
     homImgAB-to-B-Surj : ∀ s → Surjective (homImgAB-to-B s)
     homImgAB-to-B-Surj s = record { from = homImgAB-from-B s
                                   ; right-inverse-of =
-                                    λ x → Setoid.refl (B Algebra.⟦ s ⟧ₛ )
+                                    λ x → Setoid.refl (B ⟦ s ⟧ₛ )
                                   }
 
 Kernel : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Algebra {ℓ₁} {ℓ₂} Σ} {B : Algebra {ℓ₃} {ℓ₄} Σ}

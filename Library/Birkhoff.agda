@@ -1,7 +1,6 @@
 open import UnivAlgebra
 open import Equational
 module Birkhoff {Σ : Signature} {X : Vars Σ} where
-open Signature 
 --open import Variety
 open import Morphisms
 open import HeterogeneousVec
@@ -14,8 +13,6 @@ open import Function hiding (module Bijection;Bijection;Bijective)
 open import Function.Equality hiding (_∘_)
 open import Relation.Binary
 import Relation.Binary.EqReasoning as EqR
-open Algebra
-open Signature
 open import Setoids using (∥_∥)
 open import Product
 

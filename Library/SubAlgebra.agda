@@ -17,8 +17,6 @@ open import Equational
 open import Morphisms
 open import Setoids
 open import HeterogeneousVec renaming (map to mapV)
-open Signature
-open Algebra
 
 open SetoidPredicate
 Predicate : (ℓ₃ : Level) → Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃))

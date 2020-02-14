@@ -22,9 +22,6 @@ open import Data.Fin hiding (#_)
 open import HeterogeneousVec 
 import TermAlgebra
 
-open Signature
-open Algebra
-
 module FormalTerm (Σ : Signature) where
 
  data _⊩_  (ar' : Arity Σ) : (sorts Σ) → Set where

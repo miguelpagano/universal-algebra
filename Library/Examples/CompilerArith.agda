@@ -24,8 +24,6 @@ open import Category.Monad
 {- An example of use of signature morphisms:
    A correct compiler for arithmetic expressions -}
 
-open Signature
-open Algebra
 open Setoid
 open Hom
 

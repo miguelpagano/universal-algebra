@@ -19,8 +19,6 @@ open import HeterogeneousVec renaming (map to mapV)
 import TermAlgebra
 import Relation.Binary.EqReasoning as EqR
 
-open Signature
-
 {- Variables symbols of a signature. In the bibliography is presented too
    as Ground Signature (signature with only constant symbols) -}
 Vars : (Σ : Signature) → Set₁
@@ -33,8 +31,6 @@ _〔_〕 : (Σ : Signature) → (X : Vars Σ) → Signature
                              ; (s' ∷ ar , s) → ops Σ (s' ∷ ar , s)
                              }
                    }
-
-open Algebra
 
 {- Term Algebra of Σ (X) as Σ-Algebra -}
 T_〔_〕 : (Σ : Signature) → (X : Vars Σ) →

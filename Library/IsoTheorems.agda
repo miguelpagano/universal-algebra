@@ -16,7 +16,6 @@ open import Relation.Binary
 open import Relation.Unary hiding (_⊆_;_⇒_)
 open import Data.List hiding (map)
 
-open Signature
 open Hom
 open Homo
 
@@ -47,7 +46,6 @@ module FirstIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
 
 open Congruence
 open Setoid
-open Algebra
 
 module SecondIsoTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
                     (A : Algebra {ℓ₁} {ℓ₂} Σ)

@@ -13,8 +13,6 @@ open import Data.Sum
 open import HeterogeneousVec renaming (map to vmap)
 open import Setoids
 
-open Signature
-open Algebra
 open Hom
 
 open import Examples.Monoid

@@ -30,8 +30,6 @@ data Opsₚ : List ⊤ × ⊤ → Set where
 Σₚ = record { sorts = ⊤
             ; ops = Opsₚ }
 
-open Signature
-
 -- variables
 Vₚ : sorts Σₚ → Set
 Vₚ _ = V
@@ -41,7 +39,6 @@ repeat : ∀ {A : Set} → A → ℕ → List A
 repeat a zero = []
 repeat a (suc n) = a ∷ repeat a n
 
-open Algebra
 open TermAlgebra (Σₚ 〔 (λ _ → V) 〕)
 
 

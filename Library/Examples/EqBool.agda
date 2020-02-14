@@ -34,8 +34,6 @@ data Σops₁ : List ⊤ × ⊤ → Set where
 Σbool₁ : Signature
 Σbool₁ = record { sorts = ⊤ ; ops = Σops₁ }
 
-open Signature
-
 {- Definition of the equational theory -}
 module Theory₁ where
 
@@ -169,7 +167,6 @@ module Translation where
   open import Data.List renaming (map to lmap)
 
   open TermAlgebra
-  open Algebra
   open FormalTerm Σbool₂
 
   {- For each operation of Σbool₁, we define a

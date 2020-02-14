@@ -13,8 +13,6 @@ open import Data.Nat
 open import Data.Sum
 open import HeterogeneousVec
 
-open Signature
-
 module EqBool1 where
 
   open import UnivAlgebra

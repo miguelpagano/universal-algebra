@@ -217,8 +217,6 @@ module ToEquational where
           reflψ₂ : Tₚ ⊢ (⋀ ⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧ ≈ true∼)
           reflψ₂ = psubst axrefl≡ subs₀ ∼⟨⟩
 
-  open Signature
-
   pleibin : ∀ {ψ τ φ₁ φ₂ p} → (σ : ops Σₚ (_ ∷ _ ∷ [] , _)) →
               Tₚ ⊢ (⋀ ⟦ φ₁ [ p := ψ ] ⟧ ≈ ⟦ φ₁ [ p := τ ] ⟧) →
               Tₚ ⊢ (⋀ ⟦ φ₂ [ p := ψ ] ⟧ ≈ ⟦ φ₂ [ p := τ ] ⟧) →

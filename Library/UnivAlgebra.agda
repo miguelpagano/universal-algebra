@@ -25,21 +25,26 @@ pattern _↦_ ar s = (ar , s)
 open Setoid
 open import Setoids
 
-{- Multisort Signature -}
-record Signature : Set₁ where 
-  field
-    sorts  : Set
-    ops    : (List sorts) × sorts → Set
 
-  Arity : Set
+{- Multisort Signature -}
+record Sign (ℓsig : Level) : Set (lsuc ℓsig) where 
+  field
+    sorts  : Set ℓsig
+    ops    : (List sorts) × sorts → Set ℓsig
+
+  Arity : Set _
   Arity = List sorts
 
-  Type : Set
+  Type : Set _
   Type = List sorts × sorts
 
-open Signature
 
-module Universe (Σ : Signature) where
+Signature : Set₁
+Signature = Sign lzero
+
+open Sign public
+
+module Universe {ℓsig : Level} (Σ : Sign ℓsig) where
   Universe : ∀  ℓ₁ ℓ₂ → Set _
   Universe ℓ₁ ℓ₂ = (s : sorts Σ) → Setoid ℓ₁ ℓ₂
 
@@ -48,17 +53,22 @@ module Universe (Σ : Signature) where
   X ⟶ₛ Y = (s : sorts Σ) → X s ⟶ Y s
 
 open Universe
+
 {- Algebra -}
-record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ ℓ₂)) where
+record Alg {ℓsig ℓ₁ ℓ₂ : Level} (Σ : Sign ℓsig) : Set ((lsuc (ℓsig ⊔ ℓ₁ ⊔ ℓ₂))) where
   field
-    _⟦_⟧ₛ   : Universe Σ ℓ₁ ℓ₂
+    _⟦_⟧ₛ   : Universe {ℓsig} Σ ℓ₁ ℓ₂
     _⟦_⟧ₒ    : ∀ {ar s} → ops Σ (ar , s) →
                 _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 
   _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
   _⟦_⟧ₛ* ar = ∥ _⟦_⟧ₛ ✳ ar ∥
 
-open Algebra
+
+Algebra : {ℓ₁ ℓ₂ : Level} → (Σ : Signature) → Set (lsuc (ℓ₁ ⊔ ℓ₂))
+Algebra  {ℓ₁} {ℓ₂} Σ = Alg {lzero} {ℓ₁} {ℓ₂} Σ
+
+open Alg public
 
 {- A class of algebras is a predicate over algebras -}
 AlgClass : ∀ {ℓ₀ ℓ₁} Σ → Set (lsuc ℓ₀ ⊔ lsuc ℓ₁)

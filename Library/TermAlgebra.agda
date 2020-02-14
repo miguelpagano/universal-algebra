@@ -15,8 +15,6 @@ open import Data.Product hiding (map ; Σ)
 import Relation.Binary.EqReasoning as EqR
 
 open Hom
-open Algebra
-open Signature
 
 data HU : (s : sorts Σ) → Set where
   term : ∀  {ar s} →  (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s

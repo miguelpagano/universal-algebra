@@ -6,7 +6,6 @@ open import Equational
 open import Product
 open import Morphisms
 
-open Signature
 open ProdAlg
 open Hom
 

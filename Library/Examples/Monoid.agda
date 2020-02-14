@@ -16,8 +16,6 @@ open import Data.Sum
 open import HeterogeneousVec
 open import Setoids
 
-open Signature
-open Algebra
 open Hom
 
 data op-mon : List ⊤ × ⊤ → Set where
@@ -158,7 +156,6 @@ module Theory where
       where open IsMonoid
     MonoidModel m (there (there (there ()))) θ x₂
 
-    open Algebra
     open import Relation.Binary hiding (Total)
     open Setoid
     open import Function.Equality

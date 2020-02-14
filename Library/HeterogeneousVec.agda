@@ -12,7 +12,7 @@ open import Data.Product hiding (map;zip)
 
 -- Types
 
-data HVec {l} {I : Set} (A : I -> Set l) : List I → Set l where
+data HVec {li l} {I : Set li} (A : I -> Set l) : List I → Set l where
   ⟨⟩  : HVec A []
   _▹_ : ∀ {i is} → (v : A i) → (vs : HVec A is) → HVec A (i ∷ is)
 
@@ -22,7 +22,7 @@ pattern ⟪_⟫ a = a ▹ ⟨⟩
 infixr 6 _▹_
 infixr 5 _∈_
 
-data _∈_ {l} {I} {A : I → Set l} : {i : I} {is : List I} → A i →
+data _∈_ {li l} {I : Set li} {A : I → Set l} : {i : I} {is : List I} → A i →
          HVec A is → Set l where
   here  : ∀ {i} {is} {v : A i} {vs : HVec A is} → v ∈ v ▹ vs
   there : ∀ {i i'} {is} {v : A i} {w : A i'} {vs : HVec A is}
@@ -39,33 +39,33 @@ _‼_ : ∀ {l} {A : Set l} (xs : List A) → Fin (length xs) → A
 (_ ∷ xs) ‼ (suc n) = xs ‼ n
 
 {- HVec indexing -}
-_‼v_ : ∀ {l I} {is : List I} {A : I → Set l} →
+_‼v_ : ∀ {li l} {I : Set li} {is : List I} {A : I → Set l} →
          (vs : HVec A is) → (n : Fin (length is)) → A (is ‼ n)
 ⟨⟩ ‼v ()
 (v ▹ _) ‼v zero = v
 (_ ▹ vs) ‼v suc n = vs ‼v n
 
 {- Concat -}
-_++v_ : ∀ {l I} {is is' : List I} {A : I → Set l} →
+_++v_ : ∀ {l li} {I : Set li} {is is' : List I} {A : I → Set l} →
          (vs : HVec A is) → (vs' : HVec A is') → HVec A (is ++ is')
 ⟨⟩ ++v vs' = vs'
 (v ▹ vs) ++v vs' = v ▹ (vs ++v vs')
 
 
 {- Zipping -}
-zip : ∀ {l₀ l₁ I} {A : I → Set l₀} {B : I → Set l₁}  {is : List I} →
+zip : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} {B : I → Set l₁}  {is : List I} →
           (vs : HVec A is) → (vs' : HVec B is) → HVec (λ i → A i × B i) is
 zip ⟨⟩ ⟨⟩ = ⟨⟩
 zip (v ▹ vs) (v' ▹ vs') = (v , v') ▹ zip vs vs'
 
 {- Map -}
-map : ∀ {l₀ l₁ I} {A : I → Set l₀} {A' : I → Set l₁} {is : List I} →
+map : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} {A' : I → Set l₁} {is : List I} →
          (f : (i : I) → (A i) → (A' i)) → (vs : HVec A is) → HVec A' is
 map {is = []} f ⟨⟩ = ⟨⟩
 map {is = i₀ ∷ is} f (v₀ ▹ vs) = f i₀ v₀ ▹ map f vs
 
 
-mapId : ∀ {l₀ I} {A : I → Set l₀} {is : List I} →
+mapId : ∀ {li l₀} {I : Set li} {A : I → Set l₀} {is : List I} →
           (vs : HVec A is) → map (λ _ a → a) vs ≡ vs
 mapId ⟨⟩ = refl
 mapId (v ▹ vs) = cong (_▹_ v) (mapId vs)
@@ -74,39 +74,38 @@ mapId (v ▹ vs) = cong (_▹_ v) (mapId vs)
 {-
 Extension of predicates
 -}
-data _⇨v_ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁) :
-           {is : List I} → HVec A is → Set (l₀ ⊔ l₁) where
+data _⇨v_ {li l₀ l₁} {I : Set li} {A : I → Set l₀} (P : (i : I) → A i → Set l₁) :
+           {is : List I} → HVec A is → Set (li ⊔ l₀ ⊔ l₁) where
      ⇨v⟨⟩ : P ⇨v ⟨⟩
      ⇨v▹ : ∀ {i} {is} {v} {vs} → (pv : P i v) →
              (pvs : _⇨v_ P {is} vs) → P ⇨v (_▹_ {i = i} v vs)
 
-
-open import Data.Unit
-
-_*′ : ∀ {I } {A : I → Set} → (R : (i : I) →  (A i) → A i → Set) → {is : List I} →  (HVec A is) → (HVec A is) → Set
+open import Data.Unit.Polymorphic
+_*′ : ∀ {li la lr} {I : Set li} {A : I → Set la} → (R : (i : I) →  (A i) → A i → Set lr) →
+      {is : List I} →  (HVec A is) → (HVec A is) → Set (li ⊔ la ⊔ lr)
 (R *′) {[]} ⟨⟩ ⟨⟩ = ⊤
 (R *′) {x ∷ is} (v ▹ as) (v₁ ▹ as') = R x v v₁ × (R *′) as as'
 
 
 open import Relation.Unary using (Pred)
-_⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁) → 
-           {is : List I} → Pred (HVec A is) (l₀ ⊔ l₁)
+_⇨v : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} (P : (i : I) → A i → Set l₁) → 
+           {is : List I} → Pred (HVec A is) (li ⊔ l₀ ⊔ l₁)
 P ⇨v = P ⇨v_
 
 
-⇨₂ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁} → 
+⇨₂ : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} {P : (i : I) → A i → Set l₁} → 
            {is : List I}
            (as : HVec (λ i → Σ[ a ∈ A i ] (P i a)) is) →
            (P ⇨v map (λ _ → proj₁) as)
 ⇨₂ {P = P} {[]} ⟨⟩ = ⇨v⟨⟩
 ⇨₂ {P = P} {i ∷ is} ((a , p) ▹ as) = ⇨v▹ p (⇨₂ {P = P} {is} as)
 
-⇨vtoΣ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
+⇨vtoΣ : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
            {is} {vs : HVec A is} → P ⇨v vs → HVec (λ i → Σ[ a ∈ A i ] P i a) is
 ⇨vtoΣ ⇨v⟨⟩ = ⟨⟩
 ⇨vtoΣ (⇨v▹ {v = v} pv p⇨vs) = (v , pv) ▹ ⇨vtoΣ p⇨vs
 
-map⇨v : ∀ {l₀ l₁ l₂ I is} {A : I → Set l₀} {vs : HVec A is}
+map⇨v : ∀ {li l₀ l₁ l₂} {I : Set li} {is} {A : I → Set l₀} {vs : HVec A is}
            {P : (i : I) → A i → Set l₁} {P' : (i : I) → A i → Set l₂} →
            (f : ∀ {i'} {a : A i'} → P i' a → P' i' a) →
            P ⇨v vs → P' ⇨v vs
@@ -114,17 +113,17 @@ map⇨v f ⇨v⟨⟩ = ⇨v⟨⟩
 map⇨v f (⇨v▹ pv pvs) = ⇨v▹ (f pv) (map⇨v f pvs)
            
 
-proj₁⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
+proj₁⇨v : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
            {is} {vs : HVec A is} → P ⇨v vs → HVec A is
 proj₁⇨v {vs = vs} _ = vs
 
-proj₁-inv-⇨vtoΣ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
+proj₁-inv-⇨vtoΣ : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
            {is} {vs : HVec A is} → (ps : P ⇨v vs) →
            map (λ s → proj₁) (⇨vtoΣ ps) ≡ vs
 proj₁-inv-⇨vtoΣ {vs = ⟨⟩} ⇨v⟨⟩ = refl
 proj₁-inv-⇨vtoΣ {vs = v ▹ vs} (⇨v▹ pv ps) = cong₂ _▹_ refl (proj₁-inv-⇨vtoΣ ps) 
 
-⇨v-pointwise : ∀ {l₀ l₁ I} {is : List I} {A : I → Set l₀}
+⇨v-pointwise : ∀ {li l₀ l₁} {I : Set li} {is : List I} {A : I → Set l₀}
                  {P : (i : I) → A i → Set l₁} →
                  (vs : HVec A is) → P ⇨v vs →
                  (n : Fin (length is)) → P (is ‼ n) (vs ‼v n)
@@ -136,7 +135,7 @@ proj₁-inv-⇨vtoΣ {vs = v ▹ vs} (⇨v▹ pv ps) = cong₂ _▹_ refl (proj�
 {-
 Extension of relations
 -}
-data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} :
+data _∼v_ {li l₀ l₁} {I : Set li} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} :
           {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁) where
      ∼⟨⟩ : ⟨⟩ ∼v ⟨⟩
      ∼▹  : ∀ {i} {is} {t₁} {t₂} {ts₁ : HVec A is} {ts₂ : HVec A is} →
@@ -145,7 +144,8 @@ data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} 
 pattern ∼⟨⟨_,_⟩⟩∼ a b = ∼▹ a (∼▹ b ∼⟨⟩)
 
 
-_* : ∀ {l₀ l₁ I} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁)
+_* : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) →
+     {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁)
 R * = _∼v_ {R = R}
 
 
@@ -154,18 +154,18 @@ R * = _∼v_ {R = R}
   predicate over the zipped vectors.
 -}
 private  
-  _*' : ∀ {l₀ l₁ I} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁)
+  _*' : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁ ⊔ li)
   _*' {A = A} R {is} a b = _⇨v_ {A = λ i → A i × A i} (λ { i (a , b) → R i a b} ) {is} (zip a b)
 
-  from : ∀ {l₀ l₁ I} {is} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → (as as' : HVec A is) → (R *') as as' → (R *) as as'
+  from : ∀ {li l₀ l₁} {I : Set li} {is} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → (as as' : HVec A is) → (R *') as as' → (R *) as as'
   from {is = []} R ⟨⟩ ⟨⟩ ⇨v⟨⟩ = ∼⟨⟩
   from {is = x ∷ is} R (v ▹ as) (v₁ ▹ as') (⇨v▹ {v = .v , .v₁} pv rel) = ∼▹ pv (from R as as' rel)
 
-  to : ∀ {l₀ l₁ I} {is} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → (as as' : HVec A is) → (R *) as as' → (R *') as as'
+  to : ∀ {li l₀ l₁} {I : Set li} {is} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → (as as' : HVec A is) → (R *) as as' → (R *') as as'
   to {is = []} R ⟨⟩ ⟨⟩ ∼⟨⟩ = ⇨v⟨⟩ 
   to {is = x ∷ is} R (v ▹ as) (v₁ ▹ as') (∼▹ x₁ rel) = ⇨v▹ x₁ (to R as as' rel)
   
-map∼v : ∀ {l₀ l₁ l₂ I} {A : I → Set l₀}
+map∼v : ∀ {li l₀ l₁ l₂} {I : Set li} {A : I → Set l₀}
         {R : (i : I) → Rel (A i) l₁} {R' : (i : I) → Rel (A i) l₂}
         {is : List I} {vs vs' : HVec A is} →
         (f : {i : I} {a a' : A i} → R i a a' → R' i a a') →
@@ -173,7 +173,7 @@ map∼v : ∀ {l₀ l₁ l₂ I} {A : I → Set l₀}
 map∼v f ∼⟨⟩ = ∼⟨⟩
 map∼v f (∼▹ vRv' vs≈Rvs') = ∼▹ (f vRv') (map∼v f vs≈Rvs')
 
-fmap∼v : ∀ {l₀ l₁ l₂ l₃ I} {A : I → Set l₀} {B : I → Set l₃}
+fmap∼v : ∀ {li l₀ l₁ l₂ l₃} {I : Set li} {A : I → Set l₀} {B : I → Set l₃}
         {R : (i : I) → Rel (A i) l₁} {R' : (i : I) → Rel (B i) l₂}
         {f : {i : I} → A i → B i} →
         {is : List I} {vs vs' : HVec A is} →
@@ -184,7 +184,7 @@ fmap∼v F (∼▹ vRv' vs≈Rvs') = ∼▹ (F vRv') (fmap∼v F vs≈Rvs')
 
 
 
-~v-pointwise : ∀ {l₀} {l₁} {I : Set} {is : List I}
+~v-pointwise : ∀ {li l₀ l₁} {I : Set li} {is : List I}
                {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} →
                (vs₁ vs₂ : HVec A is) → _∼v_ {R = R} vs₁ vs₂ →
                (n : Fin (length is)) → R (is ‼ n) (vs₁ ‼v n) (vs₂ ‼v n)
@@ -195,7 +195,7 @@ fmap∼v F (∼▹ vRv' vs≈Rvs') = ∼▹ (F vRv') (fmap∼v F vs≈Rvs')
 
 
 
-∼↑v : ∀ {l₀ l₁ I} {A : I -> Set l₀} {is : List I} {R : (i : I) → Rel (A i) l₁}
+∼↑v : ∀ {li l₀ l₁} {I : Set li} {A : I -> Set l₀} {is : List I} {R : (i : I) → Rel (A i) l₁}
         {f : (i : I) → A i → A i} →
         (P : (i : I) → (a : A i) → R i a (f i a)) →
         (vs : HVec A is) → _∼v_ {R = R} vs (map f vs)
@@ -253,7 +253,7 @@ mapReindex {is = i₀ ∷ is} fᵢ h (v ▹ vs) = cong (λ vs' → h (fᵢ i₀)
 {-
 Map and composition
 -}
-propMapV∘ : ∀ {l₀ l₁ l₂ I is}  {A₀ : I → Set l₀} {A₁ : I → Set l₁}
+propMapV∘ : ∀ {li l₀ l₁ l₂} {I : Set li} {is}  {A₀ : I → Set l₀} {A₁ : I → Set l₁}
               {A₂ : I → Set l₂} → (vs : HVec A₀ is) →
               (m : (i : I) → (A₀ i) → (A₁ i)) →
               (m' : (i : I) → (A₁ i) → (A₂ i)) →
@@ -270,7 +270,7 @@ propMapV∘ {is = i₀ ∷ is} (v₀ ▹ vs) m m' = cong₂ (λ x y → x ▹ y)
 
 open Setoid
 
-HVecSet : ∀ {l₁ l₂} → (I : Set) → (A : I → Setoid l₁ l₂) →
+HVecSet : ∀ {li l₁ l₂} → (I : Set li) → (A : I → Setoid l₁ l₂) →
                        List I → Setoid _ _
 HVecSet I A is = record { Carrier = HVec (Carrier ∘ A) is
                        ; _≈_ = _∼v_ {R = _≈_ ∘ A}
@@ -299,12 +299,12 @@ HVecSet I A is = record { Carrier = HVec (Carrier ∘ A) is
 
 
 
-▹inj : ∀ {l₀ I} {A : I → Set l₀} {is} {i : I} {vs vs' : HVec A is} {v v' : A i} →
+▹inj : ∀ {li l₀} {I : Set li} {A : I → Set l₀} {is} {i : I} {vs vs' : HVec A is} {v v' : A i} →
        v ▹ vs ≡ v' ▹ vs' → v ≡ v' × vs ≡ vs'
 ▹inj _≡_.refl = _≡_.refl , _≡_.refl
        
 
-≡to∼v : ∀ {l₀ l₁ I} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} {is : List I}
+≡to∼v : ∀ {li l₀ l₁} {I : Set li} {A : I → Set l₀} {R : (i : I) → Rel (A i) l₁} {is : List I}
         {vs : HVec A is} {vs' : HVec A is} → ((i : I) → IsEquivalence (R i)) →
         vs ≡ vs' →
         _∼v_ {R = R} vs vs'
@@ -317,12 +317,12 @@ HVecSet I A is = record { Carrier = HVec (Carrier ∘ A) is
         vs≡vs' : vs ≡ vs'
         vs≡vs' = proj₂ (▹inj eq)
 
-_✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) →
-                                 List I → Setoid _ _
+_✳_ : ∀ {li l₁ l₂} → {I : Set li} → (A : I → Setoid l₁ l₂) →
+                                    List I → Setoid _ _
 _✳_ {I = I} = HVecSet I
 
 open import Function.Equality
-mapₛ : ∀ {l₁ l₂ l₃ l₄ : Level} {I : Set}
+mapₛ : ∀ {li l₁ l₂ l₃ l₄ : Level} {I : Set li}
          {A : I → Setoid l₁ l₂}
          {B : I → Setoid l₃ l₄} {is : List I} →
          (f : {i : I} → A i ⟶ B i) → (HVecSet I A is) ⟶ (HVecSet I B is)

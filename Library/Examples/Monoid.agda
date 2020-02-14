@@ -28,8 +28,6 @@ data op-mon : List ⊤ × ⊤ → Set where
 Σ-mon : Signature
 Σ-mon = record { sorts = ⊤ ; ops = op-mon }
 
-
-
 {- Booleans with false and ∨ are a monoid. -}
 module ∨-Monoid where
   open import Data.Bool
@@ -39,7 +37,6 @@ module ∨-Monoid where
   ∨-Monₛ : ⊤ → _
   ∨-Monₛ tt = setoid Bool
 
-
   ∨-Monₒ : ∀ {ar s } → ops Σ-mon (ar , s) → (∨-Monₛ ✳ ar) ⟶ ∨-Monₛ s
   ∨-Monₒ e = record {
          _⟨$⟩_ = λ { ⟨⟩ → false };
@@ -48,12 +45,12 @@ module ∨-Monoid where
   ∨-Monₒ op = record { _⟨$⟩_ = ∨-fun ; cong = ∨-cong }
          where ∨-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
                ∨-fun (b ▹ b' ▹ ⟨⟩) = b ∨ b'
-               ∨-cong : ∀ {bs bs'} → _∼v_ {R = λ _ → _≡_} bs bs' → ∨-fun bs ≡ ∨-fun bs'
+               ∨-cong : ∀ {bs bs'} → _∼v_ {R = λ _ → _≡_} bs bs' →
+                                      ∨-fun bs ≡ ∨-fun bs'
                ∨-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
 
   ∨-Alg : Algebra Σ-mon
   ∨-Alg = record { _⟦_⟧ₛ = ∨-Monₛ ; _⟦_⟧ₒ = ∨-Monₒ } 
-
 
   ∧-Monₛ : ⊤ → _
   ∧-Monₛ tt = setoid Bool
@@ -63,7 +60,8 @@ module ∨-Monoid where
   ∧-Monₒ op = record { _⟨$⟩_ = ∧-fun ; cong = ∧-cong }
          where ∧-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
                ∧-fun (b ▹ b' ▹ ⟨⟩) = b ∧ b'
-               ∧-cong : ∀ {bs bs'} → _∼v_ {R = λ _ → _≡_} bs bs' → ∧-fun bs ≡ ∧-fun bs'
+               ∧-cong : ∀ {bs bs'} → _∼v_ {R = λ _ → _≡_} bs bs' →
+                                      ∧-fun bs ≡ ∧-fun bs'
                ∧-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
 
   ∧-Alg : Algebra Σ-mon
@@ -125,7 +123,7 @@ module Theory where
   unitRight : Eq₁
   unitRight = ⋀ x ∘ u ≈ x
 
-  MonTheory : Theory Σ-mon X (tt ∷ tt ∷ [ tt ])
+  MonTheory  : Theory Σ-mon X (tt ∷ tt ∷ [ tt ])
   MonTheory = assocOp ▹ (unitLeft ▹ unitRight ▹ ⟨⟩)
 
 
@@ -134,22 +132,29 @@ module Theory where
     open import Data.Bool
     open import Relation.Binary as BC
     
-    MkMonoid : ∀ {a l A _≈_ _∘_} {e : A} → (m : IsMonoid {a} {l} _≈_ _∘_ e) → Algebra {a} {l} Σ-mon 
+    MkMonoid : ∀ {a l A _≈_ _∘_} {e : A} →
+                 (m : IsMonoid {a} {l} _≈_ _∘_ e) → Algebra {a} {l} Σ-mon 
     MkMonoid {A = A} {_≈_} {_∘_} {eA} isMon =
        record { _⟦_⟧ₛ = λ _ → record { Carrier = A ; _≈_ = _≈_
                                ; isEquivalence = isEquivalence
                                }
               ; _⟦_⟧ₒ = (λ { e → record { _⟨$⟩_ = λ x₁ → eA
-                                        ; cong = λ {i} {j} _ → BC.IsEquivalence.refl
-                                                               (IsSemigroup.isEquivalence (isSemigroup )) }
-                                         ; op → record { _⟨$⟩_ = λ { (v ▹ v₁ ▹ ⟨⟩) → v ∘ v₁ }
-                                         ; cong = λ { (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) → ∙-cong x₁ x₂ } } })
+                                        ; cong = λ {i} {j} _ →
+                                                 BC.IsEquivalence.refl
+                                                 (IsSemigroup.isEquivalence
+                                                   (isSemigroup ))
+                                        }
+                          ; op → record { _⟨$⟩_ = λ { (v ▹ v₁ ▹ ⟨⟩) → v ∘ v₁ }
+                                         ; cong = λ { (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) →
+                                                          ∙-cong x₁ x₂ } }
+                          })
              }                            
              where open IsMonoid isMon
 
 
     {- Each monoid is a model of our theory. -}
-    MonoidModel : ∀ {a l A _≈_ _∘_} {e : A} → (m : IsMonoid {a} {l} _≈_ _∘_ e) → MkMonoid m ⊨T MonTheory
+    MonoidModel : ∀ {a l A _≈_ _∘_} {e : A} →
+                  (m : IsMonoid {a} {l} _≈_ _∘_ e) → MkMonoid m ⊨T MonTheory
     MonoidModel m here θ ∼⟨⟩ = IsSemigroup.assoc (isSemigroup m) (θ 0) (θ 1) (θ 2)
       where open IsMonoid
     MonoidModel m (there here) θ ∼⟨⟩ = proj₁ (identity m) (θ 0) 
@@ -164,14 +169,16 @@ module Theory where
     open import Function.Equality
     open import Data.Unit
     {- and we can also build a monoid from a model. -}
-    fromModel : ∀ {ℓ a} {A : Algebra {ℓ} {a} Σ-mon} → A ⊨T MonTheory → IsMonoid (_≈_ (A ⟦ tt ⟧ₛ))
-                                                                                (λ x y → A ⟦ op ⟧ₒ ⟨$⟩ ⟨⟨ x , y ⟩⟩ )
-                                                                                (A ⟦ e ⟧ₒ ⟨$⟩ ⟨⟩)
+    fromModel : ∀ {ℓ a} {A : Algebra {ℓ} {a} Σ-mon} →
+                  A ⊨T MonTheory → IsMonoid (_≈_ (A ⟦ tt ⟧ₛ))
+                                             (λ x y → A ⟦ op ⟧ₒ ⟨$⟩ ⟨⟨ x , y ⟩⟩ )
+                                             (A ⟦ e ⟧ₒ ⟨$⟩ ⟨⟩)
     fromModel {A = A} mod = record {
                  isSemigroup = record {
                    isMagma = record {
                      isEquivalence = isEquivalence (A ⟦ tt ⟧ₛ)
-                                  ; ∙-cong = λ x₁ x₂ → cong (_⟦_⟧ₒ A op) (∼▹ x₁ (∼▹ x₂ ∼⟨⟩))
+                                  ; ∙-cong = λ x₁ x₂ → cong (_⟦_⟧ₒ A op)
+                                                             (∼▹ x₁ (∼▹ x₂ ∼⟨⟩))
                      }
                      ; assoc = λ x₁ y₁ z₁ → mod here (η x₁ y₁ z₁) ∼⟨⟩
                    }

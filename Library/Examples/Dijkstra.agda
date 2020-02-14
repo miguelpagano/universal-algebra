@@ -1,7 +1,7 @@
 open import Relation.Binary hiding (_⇒_)
 open import Level renaming (suc to lsuc ; zero to lzero)
 
-module Dijkstra where
+module Examples.Dijkstra where
 
 open import Data.Product renaming (map to pmap)
 open import Function as F
@@ -147,7 +147,7 @@ module Example1 where
 
 
 module ToEquational where
-  open import PLogic ℕ 0 1 2 renaming (¬ to ¬ₚ ; _⇒_ to _⇒ₚ_ ; _⇐_ to _⇐ₚ_)
+  open import Examples.PLogic ℕ 0 1 2 renaming (¬ to ¬ₚ ; _⇒_ to _⇒ₚ_ ; _⇐_ to _⇐ₚ_)
   open import UnivAlgebra
   open import Equational
   open import HeterogeneousVec renaming (_∈_ to _∈ₕ_)
@@ -320,7 +320,7 @@ module ToEquational where
 
 module Examples where
   open ToEquational
-  open import PLogic ℕ 0 1 2 renaming (¬ to ¬ₚ ; _⇒_ to _⇒ₚ_ ; _⇐_ to _⇐ₚ_)
+  open import Examples.PLogic ℕ 0 1 2 renaming (¬ to ¬ₚ ; _⇒_ to _⇒ₚ_ ; _⇐_ to _⇐ₚ_)
   open Example1
   open import Data.Nat.Show renaming (show to shown)
   open import Data.String

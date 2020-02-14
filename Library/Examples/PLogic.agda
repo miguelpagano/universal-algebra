@@ -1,4 +1,4 @@
-module PLogic (V : Set) (vp vq vr : V) where
+module Examples.PLogic (V : Set) (vp vq vr : V) where
 
 open import UnivAlgebra
 open import Equational
@@ -216,7 +216,7 @@ module BoolModel where
 
 
   B : Algebra Σₚ
-  B = Bsort ∥ Bops
+  B = record { _⟦_⟧ₛ = Bsort ; _⟦_⟧ₒ = Bops }
 
   open Equation
 

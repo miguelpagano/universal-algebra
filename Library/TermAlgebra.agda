@@ -1,6 +1,6 @@
 open import UnivAlgebra
-
-module TermAlgebra (Σ : Signature) where
+open import Level renaming (suc to lsuc ; zero to lzero)
+module TermAlgebra {lsig lops : Level} (Σ : Sign lsig lops) where
 
 open import Morphisms
 open import HeterogeneousVec
@@ -16,10 +16,10 @@ import Relation.Binary.EqReasoning as EqR
 
 open Hom
 
-data HU : (s : sorts Σ) → Set where
+data HU : (s : sorts Σ) → Set (lsig ⊔ lops) where
   term : ∀  {ar s} →  (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
 
-∣T∣ : Algebra Σ
+∣T∣ : Alg  Σ
 ∣T∣ = record  { _⟦_⟧ₛ = setoid ∘ HU
              ; _⟦_⟧ₒ  = ∣_|ₒ
              }
@@ -44,23 +44,23 @@ open Homo
 open Setoid
 
 mutual
-  ∣h∣→A : ∀ {ℓ₁ ℓ₂ s} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → HU s → ∥ A ⟦ s ⟧ₛ ∥
+  ∣h∣→A : ∀ {ℓ₁ ℓ₂ s} → (A : Alg {ℓ₁} {ℓ₂} Σ) → HU s → ∥ A ⟦ s ⟧ₛ ∥
   ∣h∣→A A (term f ⟨⟩)         =   A ⟦ f ⟧ₒ ⟨$⟩ ⟨⟩
   ∣h∣→A A (term f (t ▹ ts))  =   A ⟦ f ⟧ₒ ⟨$⟩ (∣h∣→A A t ▹ map|h|→A A ts)
   
-  map|h|→A : ∀ {ℓ₁ ℓ₂ ar} → (A : Algebra {ℓ₁} {ℓ₂} Σ)
+  map|h|→A : ∀ {ℓ₁ ℓ₂ ar} → (A : Alg {ℓ₁} {ℓ₂} Σ)
                             → ∣T∣ ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
   map|h|→A A ⟨⟩ = ⟨⟩
   map|h|→A A (t ▹ ts) = ∣h∣→A A t ▹ map|h|→A A ts
 
 
-map|T|→A≡map : ∀ {ℓ₁ ℓ₂ ar} {ts : ∣T∣ ⟦ ar ⟧ₛ*} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
+map|T|→A≡map : ∀ {ℓ₁ ℓ₂ ar} {ts : ∣T∣ ⟦ ar ⟧ₛ*} {A : Alg {ℓ₁} {ℓ₂} Σ} →
                  map|h|→A A ts ≡ map (λ s → ∣h∣→A A) ts
 map|T|→A≡map {ar = []} {⟨⟩} {A} = PE.refl
 map|T|→A≡map {ar = s ∷ ar} {t ▹ ts} {A} =
              PE.cong (λ ts' → ∣h∣→A A t ▹ ts') map|T|→A≡map
 
-∣H∣ : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Homo ∣T∣ A
+∣H∣ : ∀ {ℓ₁ ℓ₂} → (A : Alg {ℓ₁} {ℓ₂} Σ) → Homo ∣T∣ A
 ∣H∣ A = record { ′_′  = fun|T|ₕ
               ; cond = |T|ₕcond
               }
@@ -77,7 +77,7 @@ map|T|→A≡map {ar = s ∷ ar} {t ▹ ts} {A} =
                                  (∣h∣→A A t ▹ ts')) map|T|→A≡map)
 
 
-total : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Total (_≈ₕ_ ∣T∣ A)
+total : ∀ {ℓ₁ ℓ₂} → (A : Alg {ℓ₁} {ℓ₂} Σ) → Total (_≈ₕ_ ∣T∣ A)
 total A H G s (term {ar = ar} f ts) = 
           begin
             ′ H ′ s ⟨$⟩ term f ts

@@ -21,35 +21,39 @@ import Relation.Binary.EqReasoning as EqR
 
 {- Variables symbols of a signature. In the bibliography is presented too
    as Ground Signature (signature with only constant symbols) -}
-Vars : (Σ : Signature) → Set₁
-Vars Σ = (s : sorts Σ) → Set
 
+𝓥 : ∀ {lsig lops} → (Σ : Sign lsig lops) → (l : Level) → Set _
+𝓥 Σ l = (s : sorts Σ) → Set l
+
+Vars : ∀ {lsig lops} → (Σ : Sign lsig lops) → Set _
+Vars Σ = 𝓥 Σ lzero
+
+open import Data.Unit.Polymorphic
 {- Signature extension with variables -}
-_〔_〕 : (Σ : Signature) → (X : Vars Σ) → Signature
-Σ 〔 X 〕 = record { sorts = sorts Σ
+_〔_〕 : ∀ {lsig lops lvars} → (Σ : Sign lsig lops) → (X : 𝓥 Σ lvars) → Sign lsig (lops ⊔ lvars)
+_〔_〕 {lvars = lvars} Σ X = record { sorts = sorts Σ
                    ; ops = λ { ([] , s) → ops Σ ([] , s) ⊎ X s
-                             ; (s' ∷ ar , s) → ops Σ (s' ∷ ar , s)
+                             ; (s' ∷ ar , s) → ops Σ (s' ∷ ar , s) × ⊤ {lvars}
                              }
                    }
 
 {- Term Algebra of Σ (X) as Σ-Algebra -}
-T_〔_〕 : (Σ : Signature) → (X : Vars Σ) →
-          Algebra Σ
+T_〔_〕 : ∀ {lsig lops lvars} → (Σ : Sign lsig lops) → (X : 𝓥 Σ lvars) →
+          Alg {ℓ₁ = lsig ⊔ (lops ⊔ lvars)} Σ 
 T Σ 〔 X 〕 = record { _⟦_⟧ₛ = ∣T∣ ⟦_⟧ₛ
                     ;  _⟦_⟧ₒ = λ { {[]} {s} f → ∣T∣ ⟦ inj₁ f ⟧ₒ
-                             ; {s₀ ∷ ar} {s} f → ∣T∣ ⟦ f ⟧ₒ}
+                             ; {s₀ ∷ ar} {s} f → ∣T∣ ⟦ f , tt ⟧ₒ } 
                     }
   where open TermAlgebra (Σ 〔 X 〕)
 
 open import Setoids
 {- Environments -}
-Env : ∀ {Σ} {ℓ₁ ℓ₂} → (X : Vars Σ) → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Set ℓ₁
-Env {Σ} X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥
-
+Env : ∀ {ℓ₁ ℓ₂ lsig lops} {Σ : Sign lsig lops} {lvars} → (X : 𝓥 Σ lvars) → (A : Alg {ℓ₁} {ℓ₂} Σ) → Set _
+Env {Σ = Σ} X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥
 
 {- Extension of environments to terms -}
-module EnvExt {ℓ₁ ℓ₂ : Level} {Σ} (X : Vars Σ)
-              (A : Algebra {ℓ₁} {ℓ₂} Σ) where
+module EnvExt {ℓ₁ ℓ₂ lsig lops lvars : Level} {Σ : Sign lsig lops} (X : 𝓥 Σ lvars)
+              (A : Alg {ℓ₁} {ℓ₂} Σ) where
 
   open TermAlgebra (Σ 〔 X 〕)
 
@@ -57,17 +61,16 @@ module EnvExt {ℓ₁ ℓ₂ : Level} {Σ} (X : Vars Σ)
     _↪ : (a : Env X A) → {s : sorts Σ} → ∥ ∣T∣ ⟦ s ⟧ₛ ∥ → ∥ A ⟦ s ⟧ₛ ∥
     (a ↪) (term {[]} (inj₁ k) ⟨⟩) = A ⟦ k ⟧ₒ ⟨$⟩ ⟨⟩
     (a ↪) (term {[]} (inj₂ x) ⟨⟩) = a x
-    (a ↪) (term {s₀ ∷ ar'} f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (map↪ a ts)
+    (a ↪) (term {s₀ ∷ ar'} (f , tt) ts) = A ⟦ f ⟧ₒ ⟨$⟩ (map↪ a ts)
 
     
     map↪ : ∀ {ar} → (a : Env X A) → ∣T∣ ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
     map↪ a ⟨⟩ = ⟨⟩
     map↪ {s₀ ∷ ar'} a (t ▹ ts) = ((a ↪) t) ▹ map↪ a ts
 
-  
-module Subst {Σ} {X : Vars Σ} where
+module Subst {lsig lops} {Σ : Sign lsig lops} {lvars} {X : 𝓥 Σ lvars} where
 
-  Subst : Set
+  Subst : Set _
   Subst = Env X (T Σ 〔 X 〕)
 
   open TermAlgebra (Σ 〔 X 〕)
@@ -94,15 +97,16 @@ module Subst {Σ} {X : Vars Σ} where
     map↪id ⟨⟩ = _≡_.refl
     map↪id (t ▹ ts) = cong₂ (_▹_) (idSubst≡ t) (map↪id ts)
 
+
 open Hom
 open Homo
 open Setoid
 
 
 {- Extension of the initial homomorphism to signatures with variables -}
-module InitHomoExt {ℓ₁ ℓ₂ : Level}
-                {Σ : Signature} {X : Vars Σ}
-                (A : Algebra {ℓ₁} {ℓ₂} Σ)
+module InitHomoExt {ℓ₁ ℓ₂ lsig lops lvars : Level}
+                {Σ : Sign lsig lops} {X : 𝓥 Σ lvars}
+                (A : Alg {ℓ₁} {ℓ₂} Σ)
                 (a : Env X A) where
 
   open TermAlgebra (Σ 〔 X 〕) renaming (∣T∣ to ∣T∣x)
@@ -157,15 +161,15 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
                     ′ H' ′ s ⟨$⟩ term (inj₁ k) ⟨⟩
                    ∎
     where open EqR (A ⟦ s ⟧ₛ)
-  tot H H' he he' s (TermAlgebra.term {x ∷ ar} f ts) =
+  tot H H' he he' s (TermAlgebra.term {x ∷ ar} (f , tt) ts) =
                   begin
-                    ′ H ′ s ⟨$⟩ term f ts
+                    ′ H ′ s ⟨$⟩ term (f , tt) ts
                   ≈⟨ cond H f ts ⟩
                     A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ (T Σ 〔 X 〕) A ′ H ′ ts)
                   ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (x ∷ ar) ts) ⟩
                     A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ (T Σ 〔 X 〕) A ′ H' ′ ts)
                   ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond H' f ts) ⟩ 
-                    ′ H' ′ s ⟨$⟩ term f ts
+                    ′ H' ′ s ⟨$⟩ term (f , tt) ts
                   ∎
     where open EqR (A ⟦ s ⟧ₛ)
           map≈ : (ar : Arity Σ) → (ts : HVec (HU) ar) →
@@ -175,13 +179,12 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
                                       (map≈ ar ts)
 
 
-
 open Subst
-module SubstitutionTheorem {ℓ₁ ℓ₂ : Level}
-                {Σ : Signature} {X : Vars Σ}
-                {A : Algebra {ℓ₁} {ℓ₂} Σ}
+module SubstitutionTheorem {ℓ₁ ℓ₂ lsig lops lvars : Level}
+                {Σ : Sign lsig lops} {X : 𝓥 Σ lvars}
+                {A : Alg {ℓ₁} {ℓ₂} Σ}
                 (η : Env X A)
-                (σ : Subst {Σ} {X})
+                (σ : Subst {Σ = Σ} {X = X})
                 where
        module IA = InitHomoExt A η renaming (⟦_⟧ to ⟦_⟧η) 
        open IA using (⟦_⟧η) public
@@ -199,12 +202,13 @@ module SubstitutionTheorem {ℓ₁ ℓ₂ : Level}
        subst-theo* {s ∷ ar} (t ▹ ts) = ∼▹ (subst-theo s t) (subst-theo* ts)
        subst-theo s (term {[]} (inj₁ k) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
        subst-theo s (term {[]} (inj₂ x) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
-       subst-theo s (term {s' ∷ ar} {.s} f ts) = Π.cong (A ⟦ f ⟧ₒ) (subst-theo* ts)
+       subst-theo s (term {s' ∷ ar} {.s} (f , tt) ts) = Π.cong (A ⟦ f ⟧ₒ) (subst-theo* ts)
 
 open TermAlgebra
 
 {- Equations -}
-record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
+record Equation {lsig lops lvars} (Σ : Sign lsig lops) (X : 𝓥 Σ lvars) (s : sorts Σ)
+       : Set (lsuc (lsig ⊔ lops ⊔ lvars)) where
   constructor ⋀_≈_if「_」_
   field
     left  : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
@@ -213,44 +217,43 @@ record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
     cond : HVec (λ s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) carty ×
            HVec (λ s' → ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s' ⟧ₛ ∥) carty
 
-
 {- Unconditional equation -}
-⋀_≈_ : ∀ {Σ X s} → (t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) → Equation Σ X s
+⋀_≈_ : ∀ {lsig lops lvars} {Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {s} → (t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) → Equation Σ X s
 ⋀ t ≈ t' = ⋀ t ≈ t' if「 [] 」 (⟨⟩ , ⟨⟩)
 
 infix 0 ⋀_≈_
 
-record Equ (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
+record Equ {lsig lops lvars} (Σ : Sign lsig lops) (X : 𝓥 Σ lvars) (s : sorts Σ) :  Set (lsuc (lsig ⊔ lops ⊔ lvars))  where
   field
     left  : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
     right : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
 
-Theory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
+Theory : ∀ {lsig lops lvars} → (Σ : Sign lsig lops) → (X : 𝓥 Σ lvars) → (ar : Arity Σ) →  Set (lsuc (lsig ⊔ lops ⊔ lvars)) 
 Theory Σ X ar = HVec (Equation Σ X) ar
 
-equ-to-Equation : ∀ {Σ X} s → Equ Σ X s → Equation Σ X s
+equ-to-Equation : ∀ {lsig lops lvars} {Σ : Sign lsig lops} {X : 𝓥 Σ lvars} s → Equ Σ X s → Equation Σ X s
 equ-to-Equation _ equ = ⋀ (left equ) ≈ (right equ)
   where open Equ
   
-EqTheory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
+EqTheory : ∀ {lsig lops lvars} → (Σ : Sign lsig lops) → (X : 𝓥 Σ lvars) → (ar : Arity Σ) → Set (lsuc (lsig ⊔ lops ⊔ lvars))
 EqTheory Σ X ar = HVec (Equ Σ X) ar
 
-eqTheory-to-Theory : ∀ {Σ X ar} → EqTheory Σ X ar → Theory Σ X ar
+eqTheory-to-Theory : ∀ {lsig lops lvars} {Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} → EqTheory Σ X ar → Theory Σ X ar
 eqTheory-to-Theory = mapV equ-to-Equation 
 
-equation-to-Equ : ∀ {Σ X} s → Equation Σ X s → Equ Σ X s
+equation-to-Equ : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} s → Equation Σ X s → Equ Σ X s
 equation-to-Equ _ equ = record { left = left equ ; right = right equ }
   where open Equation
 
-iso-equ : ∀ {Σ X} s → (eq : Equ Σ X s) →
+iso-equ : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} s → (eq : Equ Σ X s) →
         eq ≡ equation-to-Equ s (equ-to-Equation s eq)
 iso-equ s record { left = t ; right = t' } = PE.refl
   where open Equ
 
 
 {- Satisfactibility -}
-_⊨_ : ∀ {ℓ₁ ℓ₂ Σ X} {s : sorts Σ} →
-        (A : Algebra {ℓ₁} {ℓ₂} Σ) → Equation Σ X s → Set (ℓ₂ Level.⊔ ℓ₁)
+_⊨_ : ∀ {lsig lops lvars ℓ₁ ℓ₂}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {s : sorts Σ} →
+        (A : Alg {ℓ₁} {ℓ₂} Σ) → Equation Σ X s → Set (lsig ⊔ lops ⊔ lvars ⊔ ℓ₂ ⊔ ℓ₁)
 _⊨_ {X = X} {s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
     (θ : Env X A) →
     _∼v_ {R = λ sᵢ uᵢ uᵢ' → _≈_ (A ⟦ sᵢ ⟧ₛ) ((θ ↪) uᵢ) ((θ ↪) uᵢ')} us us' →
@@ -260,19 +263,19 @@ _⊨_ {X = X} {s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
 
 
 {- A is model -}
-_⊨T_ : ∀ {ℓ₁ ℓ₂ Σ X ar} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+_⊨T_ : ∀ {ℓ₁ ℓ₂ lsig lops lvars} {Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} → (A : Alg {ℓ₁} {ℓ₂} Σ) →
              (E : Theory Σ X ar) → Set _
 A ⊨T E = ∀ {s e} → _∈_ {i = s} e E → A ⊨ e
 
-⊨All : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} → (E : Theory Σ X ar) →
-               (e : Equation Σ X s) → Set (lsuc ℓ₂ Level.⊔ lsuc ℓ₁)
-⊨All {ℓ₁} {ℓ₂} {Σ} E e = (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T E → A ⊨ e
+⊨All : ∀ {ℓ₁ ℓ₂ lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar : Arity Σ} {s : sorts Σ} → (E : Theory Σ X ar) →
+               (e : Equation Σ X s) → Set (lsuc (lsig ⊔ lops ⊔ lvars ⊔  ℓ₂ ⊔  ℓ₁))
+⊨All {ℓ₁} {ℓ₂} {Σ = Σ} E e = (A : Alg {ℓ₁} {ℓ₂} Σ) → A ⊨T E → A ⊨ e
 
 
 {- Provability -}
-data _⊢_ {Σ X}
-            {ar : Arity Σ} (E : Theory Σ X ar) :
-          {s : sorts Σ} → Equation Σ X s → Set where
+data _⊢_ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars}
+         {ar : Arity Σ} (E : Theory Σ X ar) :
+          {s : sorts Σ} → Equation Σ X s → Set (lsuc (lsig ⊔ lops ⊔ lvars)) where
   prefl : ∀ {s} {t : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} → E ⊢ (⋀ t ≈ t)
   psym : ∀ {s} {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} → E ⊢ (⋀ t ≈ t') →
                                                   E ⊢ (⋀ t' ≈ t)
@@ -290,7 +293,7 @@ data _⊢_ {Σ X}
 
 
 -- Syntactic sugar
-_∣_ : ∀ {Σ X} {ar : Arity Σ} {E : Theory Σ X ar} {s}
+_∣_ : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar : Arity Σ} {E : Theory Σ X ar} {s}
            {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
            (⋀ t ≈ t') ∈ E → (σ : Subst) →
            E ⊢ (⋀ t /s σ ≈ t' /s σ)
@@ -298,7 +301,8 @@ ax ∣ σ = psubst ax σ ∼⟨⟩
 
 
 {- Birkhoff soundness and completeness -}
-soundness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
+soundness : ∀ {ℓ₁ ℓ₂ lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars}
+              {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
                 {e : Equation Σ X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E e
 soundness {s = s} prefl A _ _ _ = Setoid.refl (A ⟦ s ⟧ₛ)
 soundness {s = s} {E} (psym t₁≈t₀) A A⊨E θ ∼⟨⟩ = 
@@ -335,16 +339,16 @@ soundness {Σ = Σ} {X} {ar} {s} {E}
         IHus θ' (∼▹ ⊢u₁≈u₂ ⊢us₁≈us₂) = ∼▹ (soundness ⊢u₁≈u₂ A A⊨E θ' ∼⟨⟩) (IHus θ' ⊢us₁≈us₂)
 
 soundness {s = s} {E} (preemp {[]} ∼⟨⟩ {f}) A A⊨E θ ∼⟨⟩ = Setoid.refl (A ⟦ s ⟧ₛ)
-soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
-            (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' {f}) A A⊨E θ ∼⟨⟩ =
+soundness {ℓ₁} {ℓ₂} {Σ = Σ} {X} {ar} {s} {E}
+            (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' {f , tt}) A A⊨E θ ∼⟨⟩ =
                 begin
-                   (θ ↪) (term f ts)
+                   (θ ↪) (term (f , tt) ts)
                  ≈⟨ TΣXcond f ts ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts
                  ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (IHts ⊢ts≈ts')) ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts'
                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
-                   (θ ↪) (term f ts')
+                   (θ ↪) (term (f , tt) ts')
                 ∎
                 
   where open EqR (A ⟦ s ⟧ₛ)
@@ -370,25 +374,26 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
 
 
 -- Completeness
-⊢R : ∀ {Σ X ar} → (E : Theory Σ X ar) → (s : sorts Σ) →
-       Rel (∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) (Level.zero)
+⊢R : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} → (E : Theory Σ X ar) → (s : sorts Σ) →
+       Rel (∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) (lsuc lsig ⊔ lsuc lops ⊔ lsuc lvars)
 ⊢R E s t t' = E ⊢ (⋀ t ≈ t') 
 
-⊢REquiv : ∀ {Σ X ar} → (E : Theory Σ X ar) → (s : sorts Σ) →
+⊢REquiv : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} → (E : Theory Σ X ar) → (s : sorts Σ) →
           IsEquivalence (⊢R E s)
 ⊢REquiv E s = record { refl = prefl
                      ; sym = psym
                      ; trans = ptrans
                      }
 
-⊢RSetoid : ∀ {Σ X ar} → (E : Theory Σ X ar) → (s : sorts Σ) → Setoid (Level.zero) (Level.zero)
-⊢RSetoid {Σ} {X} {ar} E s = record { Carrier = ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
+⊢RSetoid : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} → (E : Theory Σ X ar) → (s : sorts Σ)
+           → Setoid (lsig ⊔ lops ⊔ lvars) (lsuc (lsig ⊔ lops ⊔ lvars))
+⊢RSetoid {Σ = Σ} {X} {ar} E s = record { Carrier = ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
                                    ; _≈_ = ⊢R E s
                                    ; isEquivalence = ⊢REquiv E s
                                    }
 
-⊢Cong : ∀ {Σ X ar} → (E : Theory Σ X ar) → Congruence (T Σ 〔 X 〕)
-⊢Cong {Σ} {X} E = record { rel = ⊢R E
+⊢Cong : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} → (E : Theory Σ X ar) → Congruence (T Σ 〔 X 〕)
+⊢Cong {Σ = Σ} {X} E = record { rel = ⊢R E
                ; welldef = pwdef
                ; cequiv = ⊢REquiv E
                ; csubst = pcsubst }
@@ -397,12 +402,13 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
         pcsubst : ∀ {ar} {s} → (f : ops Σ (ar , s)) →
                     _∼v_ =[ _⟨$⟩_ (T Σ 〔 X 〕 ⟦ f ⟧ₒ) ]⇒ ⊢R E s
         pcsubst {[]} f ∼⟨⟩ = prefl
-        pcsubst {s₀ ∷ ar} {s} f {ts} {ts'} ⊢ts≈ts' = preemp ⊢ts≈ts' {f}
+        pcsubst {s₀ ∷ ar} {s} f {ts} {ts'} ⊢ts≈ts' = preemp ⊢ts≈ts' {f , tt}
         
-⊢Quot : ∀ {Σ X ar} → (E : Theory Σ X ar) → Algebra {Level.zero} {Level.zero} Σ
-⊢Quot {Σ} {X} E = T Σ 〔 X 〕 / (⊢Cong E)
+⊢Quot : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} → (E : Theory Σ X ar) →
+        Alg {(lsig ⊔ lops ⊔ lvars)} {(lsuc lsig ⊔ lsuc lops ⊔ lsuc lvars)} Σ
+⊢Quot {Σ = Σ} {X} E = T Σ 〔 X 〕 / (⊢Cong E)
 
-module ⊢QuotSubst {Σ X ar} (E : Theory Σ X ar) where
+module ⊢QuotSubst {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} (E : Theory Σ X ar) where
   open EnvExt X (⊢Quot E)
   open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
 
@@ -417,8 +423,8 @@ module ⊢QuotSubst {Σ X ar} (E : Theory Σ X ar) where
     thm' {s ∷ ar} {ts = v ▹ ts} {θ} = cong₂ _▹_ (thm {s} {t = v} {θ}) (thm' {ts = ts} {θ})
 
 
-⊢Quot⊨E : ∀ {Σ X ar} → (E : Theory Σ X ar) → (⊢Quot E) ⊨T E
-⊢Quot⊨E {Σ} {X} {ar} E = A⊨E
+⊢Quot⊨E : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar} → (E : Theory Σ X ar) → (⊢Quot E) ⊨T E
+⊢Quot⊨E {Σ = Σ} {X} {ar} E = A⊨E
   where
     open EnvExt X (⊢Quot E)
     open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
@@ -436,10 +442,11 @@ module ⊢QuotSubst {Σ X ar} (E : Theory Σ X ar) where
 
 
 
-complete : ∀ {Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
+complete : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars}
+             {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
              {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥ } →
-             ⊨All {Level.zero} {Level.zero} E (⋀ t ≈ t') → E ⊢ (⋀ t ≈ t')
-complete {Σ} {X} {ar} {s} {E} {t} {t'} A⊨E = begin t
+             ⊨All {(lops ⊔ lsig ⊔ lvars)} {lsuc (lops ⊔ lsig ⊔ lvars)} E (⋀ t ≈ t') → E ⊢ (⋀ t ≈ t')
+complete {Σ = Σ} {X} {ar} {s} {E} {t} {t'} A⊨E = begin t
                   ≈⟨ ≡to≈ (⊢RSetoid E s) (PE.sym (idSubst≡ t)) ⟩
                   t /s idSubst
                   ≈⟨ Congruence.welldef (⊢Cong E ) s
@@ -457,17 +464,18 @@ complete {Σ} {X} {ar} {s} {E} {t} {t'} A⊨E = begin t
 
   
 {- Theory implication -}
-_⇒T_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
-_⇒T_ {Σ} {X} T₁ T₂ = ∀ {s} {ax : Equation Σ X s} → ax ∈ T₂ → T₁ ⊢ ax
+_⇒T_ : ∀ {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar ar'} →
+     Theory Σ X ar → Theory Σ X ar' → Set (lsuc lsig ⊔ lsuc lops ⊔ lsuc lvars)
+_⇒T_ {Σ = Σ} {X} T₁ T₂ = ∀ {s} {ax : Equation Σ X s} → ax ∈ T₂ → T₁ ⊢ ax
 
 
-⊨T⇒ : ∀ {ℓ₁ ℓ₂ Σ X ar ar'} → (T₁ : Theory Σ X ar) (T₂ : Theory Σ X ar')
-        (p⇒ : T₁ ⇒T T₂) → (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T T₁ → A ⊨T T₂
+⊨T⇒ : ∀ {ℓ₁ ℓ₂} {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar ar'} → (T₁ : Theory Σ X ar) (T₂ : Theory Σ X ar')
+        (p⇒ : T₁ ⇒T T₂) → (A : Alg {ℓ₁} {ℓ₂} Σ) → A ⊨T T₁ → A ⊨T T₂
 ⊨T⇒ T₁ T₂ p⇒ A satAll = λ ax → soundness (p⇒ ax) A satAll
 
 {- Initiality of Quotiened Term Algebra -}
-module InitialityModel {Σ X ar ℓ₁ ℓ₂} (E : Theory Σ X ar)
-       (A : Algebra {ℓ₁} {ℓ₂} Σ) (M : A ⊨T E)
+module InitialityModel {lsig lops lvars}{Σ : Sign lsig lops} {X : 𝓥 Σ lvars} {ar ℓ₁ ℓ₂} (E : Theory Σ X ar)
+       (A : Alg {ℓ₁} {ℓ₂} Σ) (M : A ⊨T E)
           where
 
   import Morphisms
@@ -481,3 +489,4 @@ module InitialityModel {Σ X ar ℓ₁ ℓ₂} (E : Theory Σ X ar)
                 ; cond = λ f as → TΣXcond f as
                 }
        where open InitHomoExt A θ
+

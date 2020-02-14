@@ -27,10 +27,10 @@ open import Setoids
 
 
 {- Multisort Signature -}
-record Sign (ℓsig : Level) : Set (lsuc ℓsig) where 
+record Sign (ℓsig ℓops : Level) : Set (lsuc ℓsig ⊔ lsuc ℓops) where 
   field
     sorts  : Set ℓsig
-    ops    : (List sorts) × sorts → Set ℓsig
+    ops    : (List sorts) × sorts → Set ℓops
 
   Arity : Set _
   Arity = List sorts
@@ -40,11 +40,11 @@ record Sign (ℓsig : Level) : Set (lsuc ℓsig) where
 
 
 Signature : Set₁
-Signature = Sign lzero
+Signature = Sign lzero lzero
 
 open Sign public
 
-module Universe {ℓsig : Level} (Σ : Sign ℓsig) where
+module Universe {ℓsig lops : Level} (Σ : Sign ℓsig lops) where
   Universe : ∀  ℓ₁ ℓ₂ → Set _
   Universe ℓ₁ ℓ₂ = (s : sorts Σ) → Setoid ℓ₁ ℓ₂
 
@@ -55,9 +55,9 @@ module Universe {ℓsig : Level} (Σ : Sign ℓsig) where
 open Universe
 
 {- Algebra -}
-record Alg {ℓsig ℓ₁ ℓ₂ : Level} (Σ : Sign ℓsig) : Set ((lsuc (ℓsig ⊔ ℓ₁ ⊔ ℓ₂))) where
+record Alg {ℓ₁ ℓ₂ ℓsig lops : Level} (Σ : Sign ℓsig lops) : Set ((lsuc (ℓsig ⊔ lops ⊔ ℓ₁ ⊔ ℓ₂))) where
   field
-    _⟦_⟧ₛ   : Universe {ℓsig} Σ ℓ₁ ℓ₂
+    _⟦_⟧ₛ   : Universe {ℓsig} {lops} Σ ℓ₁ ℓ₂
     _⟦_⟧ₒ    : ∀ {ar s} → ops Σ (ar , s) →
                 _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 
@@ -66,7 +66,7 @@ record Alg {ℓsig ℓ₁ ℓ₂ : Level} (Σ : Sign ℓsig) : Set ((lsuc (ℓsi
 
 
 Algebra : {ℓ₁ ℓ₂ : Level} → (Σ : Signature) → Set (lsuc (ℓ₁ ⊔ ℓ₂))
-Algebra  {ℓ₁} {ℓ₂} Σ = Alg {lzero} {ℓ₁} {ℓ₂} Σ
+Algebra  {ℓ₁} {ℓ₂} Σ = Alg {ℓ₁} {ℓ₂} Σ
 
 open Alg public
 
@@ -77,14 +77,14 @@ AlgClass {ℓ₀} {ℓ₁} Σ = Algebra {ℓ₀} {ℓ₁} Σ → Set (ℓ₀ ⊔
 {- Subalgebras -}
 open SetoidPredicate
 
-OpClosed : ∀ {ℓ₁ ℓ₂ ℓ₃ Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+OpClosed : ∀ {ℓ₁ ℓ₂ ℓ₃ lsig lops} {Σ : Sign lsig lops} → (A : Alg {ℓ₁} {ℓ₂} Σ) →
                   (P : (s : sorts Σ) → Pred (∥ A ⟦ s ⟧ₛ ∥) ℓ₃) → Set _
 OpClosed {ℓ₃ = ℓ₃} {Σ = Σ} A P = ∀ {ar s} (f : ops Σ (ar , s)) →
              (P ⇨v ⟨→⟩ P s) (A ⟦ f ⟧ₒ ⟨$⟩_)
 
 -- Subalgebra condition: A subsetoid closed by operations.
-record SubAlg {ℓ₃ ℓ₁ ℓ₂} {Σ} (A : Algebra {ℓ₁} {ℓ₂} Σ) :
-                                          Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃)) where
+record SubAlg {ℓ₃ ℓ₁ ℓ₂ lsig lops} {Σ : Sign lsig lops} (A : Alg {ℓ₁} {ℓ₂} Σ) :
+                                          Set (lsuc (lsig ⊔ lops ⊔ ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃)) where
 
   field
     pr   : (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)
@@ -102,9 +102,9 @@ record SubAlg {ℓ₃ ℓ₁ ℓ₂} {Σ} (A : Algebra {ℓ₁} {ℓ₂} Σ) :
   
 
 -- A subsetoid closed by operations is an Algebra.
-SubAlgebra : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
-                   SubAlg {ℓ₃ = ℓ₃} A → Algebra Σ
-SubAlgebra {Σ} {A = A} S = record { _⟦_⟧ₛ = is ; _⟦_⟧ₒ = if }
+SubAlgebra : ∀ {ℓ₁ ℓ₂ ℓ₃ lsig lops} {Σ : Sign lsig lops} {A : Alg {ℓ₁} {ℓ₂} Σ} →
+                   SubAlg {ℓ₃ = ℓ₃} A → Alg {ℓ₁ ⊔ ℓ₃} {ℓ₂} Σ
+SubAlgebra {Σ = Σ} {A = A} S = record { _⟦_⟧ₛ = is ; _⟦_⟧ₒ = if }
            where
              open SubAlg S 
              is : sorts Σ → _
@@ -116,8 +116,8 @@ SubAlgebra {Σ} {A = A} S = record { _⟦_⟧ₛ = is ; _⟦_⟧ₒ = if }
                                   }
 
 {- Congruence -}
-record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}
-                  (A : Algebra {ℓ₁} {ℓ₂} Σ) : Set (lsuc ℓ₃ ⊔ ℓ₂ ⊔ ℓ₁) where
+record Congruence {ℓ₃ ℓ₁ ℓ₂ lsig lops} {Σ : Sign lsig lops}
+                  (A : Alg {ℓ₁} {ℓ₂} Σ) : Set (lsuc ℓ₃ ⊔ ℓ₂ ⊔ ℓ₁ ⊔ lsig ⊔ lops) where
   field
     rel : (s : sorts Σ) → Rel (Carrier (A ⟦ s ⟧ₛ)) ℓ₃
     welldef : (s : sorts Σ) → WellDefRel (A ⟦ s ⟧ₛ) (rel s)
@@ -127,14 +127,14 @@ record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}
 
 open Congruence
 
-_⊆_ : ∀ {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
+_⊆_ : ∀ {ℓ₃ ℓ₁ ℓ₂ lsig lops} {Σ : Sign lsig lops} {A : Alg {ℓ₁} {ℓ₂} Σ} →
         Congruence {ℓ₃} A → Congruence {ℓ₃} A → Set _
 Φ ⊆ Ψ = ∀ s → (rel Φ s) ⇒ (rel Ψ s)
 
 
 {- Quotient Algebra -}
-_/_ : ∀ {ℓ₁ ℓ₂ ℓ₃} {Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (C : Congruence {ℓ₃} A) →
-                            Algebra {ℓ₁} {ℓ₃} Σ
+_/_ : ∀ {ℓ₁ ℓ₂ ℓ₃ lsig lops} {Σ : Sign lsig lops} → (A : Alg {ℓ₁} {ℓ₂} Σ) → (C : Congruence {ℓ₃} A) →
+                            Alg {ℓ₁} {ℓ₃} Σ
 A / C = record { _⟦_⟧ₛ = A/Cₛ ; _⟦_⟧ₒ = A/Cₒ }
   where A/Cₛ : _ → _
         A/Cₛ s = record { Carrier = Carrier (A ⟦ s ⟧ₛ)
@@ -145,4 +145,3 @@ A / C = record { _⟦_⟧ₛ = A/Cₛ ; _⟦_⟧ₒ = A/Cₒ }
         A/Cₒ {ar} {s} f = record { _⟨$⟩_ = λ v → A ⟦ f ⟧ₒ ⟨$⟩ v
                                 ; cong = csubst C f
                                 }
-

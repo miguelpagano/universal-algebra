@@ -22,10 +22,10 @@ open Setoid
 
 {- Homomorphism from A to B -}
 
-module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
-       {Σ : Signature}
-       (A : Algebra {ℓ₁} {ℓ₂} Σ) 
-       (B : Algebra {ℓ₃} {ℓ₄} Σ) where 
+module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops}
+       {Σ : Sign lsig lops}
+       (A : Alg {ℓ₁} {ℓ₂} Σ) 
+       (B : Alg {ℓ₃} {ℓ₄} Σ) where 
 
   -- Function between algebras
   _⟿_ : Set _
@@ -46,7 +46,7 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
                              (B ⟦ f ⟧ₒ ⟨$⟩ (map⟿ h as))
 
   ℓ' : _
-  ℓ' = lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)
+  ℓ' = lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂ ⊔ lsig ⊔ lops)
 
 
   {- Homomorphism -}
@@ -76,11 +76,11 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
                    }
 
 {- Homomorphism composition -}
-module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
-       {Σ : Signature}
-       {A₀ : Algebra {ℓ₁} {ℓ₂} Σ}
-       {A₁ : Algebra {ℓ₃} {ℓ₄} Σ}
-       {A₂ : Algebra {l₅} {l₆} Σ} where
+module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆ lsig lops}
+       {Σ : Sign lsig lops}
+       {A₀ : Alg {ℓ₁} {ℓ₂} Σ}
+       {A₁ : Alg {ℓ₃} {ℓ₄} Σ}
+       {A₂ : Alg {l₅} {l₆} Σ} where
 
   
   open Hom
@@ -124,7 +124,7 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
 
 
 {- Homomorphism identity -}
-HomId : ∀ {ℓ₁ ℓ₂} {Σ} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
+HomId : ∀ {ℓ₁ ℓ₂ lsig lops} {Σ : Sign lsig lops} {A : Alg {ℓ₁} {ℓ₂} Σ} →
           Hom.Homo A A
 HomId {A = A} = record { ′_′ = λ s → FE.id
                        ; cond = λ { {ar} {s} f as →
@@ -136,12 +136,12 @@ HomId {A = A} = record { ′_′ = λ s → FE.id
             open Homo
 
 {- Homomorphism composition properties -}
-module HomCompProp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈}
-                   {Σ : Signature}
-                   {A₀ : Algebra {ℓ₁} {ℓ₂} Σ}
-                   {A₁ : Algebra {ℓ₃} {ℓ₄} Σ}
-                   {A₂ : Algebra {ℓ₅} {ℓ₆} Σ}
-                   {A₃ : Algebra {ℓ₇} {ℓ₈} Σ}
+module HomCompProp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈ lsig lops}
+                   {Σ : Sign lsig lops}
+                   {A₀ : Alg {ℓ₁} {ℓ₂} Σ}
+                   {A₁ : Alg {ℓ₃} {ℓ₄} Σ}
+                   {A₂ : Alg {ℓ₅} {ℓ₆} Σ}
+                   {A₃ : Alg {ℓ₇} {ℓ₈} Σ}
                    {H₀ : Hom.Homo A₀ A₁}
                    {H₁ : Hom.Homo A₁ A₂}
                    {H₂ : Hom.Homo A₂ A₃} where
@@ -188,8 +188,8 @@ open Homo
 
 
 {- Homomorphism inverse -}
-invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
-          (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
+invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops} → 
+          (A : Alg {ℓ₁} {ℓ₂} Σ) → (A' : Alg {ℓ₃} {ℓ₄} Σ) →
           (h : Homo A A') → (bj : (s : sorts Σ) → Bijective (′ h ′ s)) →
           Homo A' A
 invHomo {Σ = Σ} A A' h bj = record { ′_′ = h⁻¹
@@ -218,9 +218,9 @@ invHomo {Σ = Σ} A A' h bj = record { ′_′ = h⁻¹
 
 
 {- Isomorphism -}
-record Isomorphism {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
-                   (A : Algebra {ℓ₁} {ℓ₂} Σ) (A' : Algebra {ℓ₃} {ℓ₄} Σ) : 
-                                    Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+record Isomorphism {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops}
+                   (A : Alg {ℓ₁} {ℓ₂} Σ) (A' : Alg {ℓ₃} {ℓ₄} Σ) : 
+                                    Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂ ⊔ lsig ⊔ lops)) where
   field
     hom : Homo A A'
     bij : (s : sorts Σ) → Bijective (′ hom ′ s)
@@ -235,7 +235,7 @@ record _≅_ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} �
 
 
 {- The relation of isomorphism between algebras is an equivalence relation -}
-reflIso : ∀ {ℓ₁ ℓ₂ Σ} → Reflexive (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ})
+reflIso : ∀ {ℓ₁ ℓ₂ lsig lops} {Σ : Sign lsig lops} → Reflexive (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ = Σ})
 reflIso {Σ = Σ} {A} = record { hom = HomId
                               ; bij = λ s → record { injective = F.id
                                                     ; surjective = surj s } }
@@ -243,8 +243,8 @@ reflIso {Σ = Σ} {A} = record { hom = HomId
         surj s = record { from = FE.id
                         ; right-inverse-of = λ x → Setoid.refl (A ⟦ s ⟧ₛ) }
 
-symIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
-          (A : Algebra {ℓ₁} {ℓ₂} Σ) → (A' : Algebra {ℓ₃} {ℓ₄} Σ) →
+symIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops} → 
+          (A : Alg {ℓ₁} {ℓ₂} Σ) → (A' : Alg {ℓ₃} {ℓ₄} Σ) →
           Isomorphism A A' → Isomorphism A' A
 symIso {Σ = Σ} A A' i = record { hom = h⁻¹
                                ; bij = bij⁻¹ }
@@ -268,9 +268,9 @@ symIso {Σ = Σ} A A' i = record { hom = h⁻¹
                          ; surjective = surj⁻¹ s }
               where open EqR (A' ⟦ s ⟧ₛ)
 
-transIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆} {Σ : Signature} → 
-             (A₀ : Algebra {ℓ₁} {ℓ₂} Σ) → (A₁ : Algebra {ℓ₃} {ℓ₄} Σ) →
-             (A₂ : Algebra {ℓ₅} {ℓ₆} Σ) →
+transIso : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ lsig lops} {Σ : Sign lsig lops} → 
+             (A₀ : Alg {ℓ₁} {ℓ₂} Σ) → (A₁ : Alg {ℓ₃} {ℓ₄} Σ) →
+             (A₂ : Alg {ℓ₅} {ℓ₆} Σ) →
              Isomorphism A₀ A₁ → Isomorphism A₁ A₂ → Isomorphism A₀ A₂
 transIso {Σ = Σ} A₀ A₁ A₂ iso₀ iso₁ =
             record { hom = hom iso₁ ∘ₕ hom iso₀
@@ -285,7 +285,7 @@ transIso {Σ = Σ} A₀ A₁ A₂ iso₀ iso₁ =
                        ; bijective = bij iso₁ s }
         
 
-isoEquiv : ∀ {ℓ₁ ℓ₂} {Σ} → IsEquivalence (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ})
+isoEquiv : ∀ {ℓ₁ ℓ₂ lsig lops} {Σ : Sign lsig lops} → IsEquivalence (Isomorphism {ℓ₁} {ℓ₂} {ℓ₁} {ℓ₂} {Σ = Σ})
 isoEquiv {Σ = Σ} = record { refl = reflIso
                           ; sym = λ {A} {A'} i → symIso A A' i
                           ; trans = λ {A₀} {A₁} {A₂} i₀ i₁ →
@@ -294,8 +294,8 @@ isoEquiv {Σ = Σ} = record { refl = reflIso
 
 {- Using an isomorphism -}
 open HomComp
-iso-≈ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} → 
-          {A : Algebra {ℓ₁} {ℓ₂} Σ} → {A' : Algebra {ℓ₃} {ℓ₄} Σ} →
+iso-≈ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops} → 
+          {A : Alg {ℓ₁} {ℓ₂} Σ} → {A' : Alg {ℓ₃} {ℓ₄} Σ} →
           (H : Isomorphism A A') → ∀ s t →
            Setoid._≈_ (A' ⟦ s ⟧ₛ) t (′ hom H ∘ₕ hom (symIso A A' H) ′ s ⟨$⟩ t)
 iso-≈ {A' = A'} H s t = Setoid.sym (A' ⟦ s ⟧ₛ) (right-inverse-of (bij H s) t)
@@ -317,37 +317,37 @@ Unique' {A = A} _≈_ _ = ∀ a a' → a ≈ a'
 
 
 {- Initial Algebra -}
-module Initial (Σ : Signature)
+module Initial {lsig lops} (Σ : Sign lsig lops)
                {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
 
   open Hom
 
-  record Initial  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+  record Initial  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂ ⊔ lsig ⊔ lops)) where
     field
-      alg   : Algebra {ℓ₁} {ℓ₂} Σ
-      init  : (A : Algebra {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ alg A)
+      alg   : Alg {ℓ₁} {ℓ₂} Σ
+      init  : (A : Alg {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ alg A)
 
   private
-    Initial' : ∀ {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) →  {ℓ₃ ℓ₄ : Level} → Set _
-    Initial' A {ℓ₃} {ℓ₄} = ∀ (B : Algebra {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ A B)
+    Initial' : ∀ {ℓ₁ ℓ₂} (A : Alg {ℓ₁} {ℓ₂} Σ) →  {ℓ₃ ℓ₄ : Level} → Set _
+    Initial' A {ℓ₃} {ℓ₄} = ∀ (B : Alg {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ A B)
 
 {- Final Algebra -}
-module Final (Σ : Signature)
-             {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
+module Final {lsig lops} (Σ : Sign lsig lops)
+               {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
   open Hom
 
-  record Final  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+  record Final  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂ ⊔ lsig ⊔ lops)) where
     field
-      alg   : Algebra {ℓ₁} {ℓ₂} Σ
-      init  : (A : Algebra {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ A alg)
+      alg   : Alg {ℓ₁} {ℓ₂} Σ
+      init  : (A : Alg {ℓ₃} {ℓ₄} Σ) → Unique (_≈ₕ_ A alg)
 
 open SetoidPredicate
 
 {- Homomorphic image is a SubAlgebra of B -}
-SubImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-                              (B : Algebra {ℓ₃} {ℓ₄} Σ) →
+SubImg : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops} (A : Alg {ℓ₁} {ℓ₂} Σ) →
+                              (B : Alg {ℓ₃} {ℓ₄} Σ) →
                               (h : Homo A B) → SubAlg B
-SubImg {Σ} A B h = record { pr = subipr ; opClosed = subicond }
+SubImg {Σ = Σ} A B h = record { pr = subipr ; opClosed = subicond }
   where subiwdef : ∀ {s} {b₀ b₁} → _≈_ (B ⟦ s ⟧ₛ) b₀ b₁ →
                      ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b₀) →
                      ∃ (λ a → _≈_ (B ⟦ s ⟧ₛ) (′ h ′ s ⟨$⟩ a ) b₁)
@@ -388,8 +388,8 @@ SubImg {Σ} A B h = record { pr = subipr ; opClosed = subicond }
                 p≈ ⇨v⟨⟩ = ∼⟨⟩
                 p≈ (⇨v▹ pv pvs) = ∼▹ (proj₂ pv) (p≈ pvs)
 
-homImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {B : Algebra {ℓ₃} {ℓ₄} Σ} →
-               (A : Algebra {ℓ₁} {ℓ₂} Σ) → (h : Homo A B) → Algebra Σ
+homImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {B : Alg {ℓ₃} {ℓ₄} Σ} →
+               (A : Alg {ℓ₁} {ℓ₂} Σ) → (h : Homo A B) → Algebra Σ
 homImg {Σ} {B = B} A h = SubAlgebra (SubImg A B h)
 
 {-
@@ -397,7 +397,7 @@ homImg {Σ} {B = B} A h = SubAlgebra (SubImg A B h)
   subalgebra isomorphic to B.
 -}
 homImg-iso-prop : ∀ {ℓ₀ Σ} →
-                    (A B : Algebra {ℓ₀} {ℓ₀} Σ) → (h : Isomorphism A B) →
+                    (A B : Alg {ℓ₀} {ℓ₀} Σ) → (h : Isomorphism A B) →
                     Isomorphism (homImg A (hom h)) B
 homImg-iso-prop {ℓ₀} {Σ} A B record { hom = homAB ; bij = bij } =
            record { hom = record { ′_′ = homImgAB-to-B
@@ -430,10 +430,10 @@ homImg-iso-prop {ℓ₀} {Σ} A B record { hom = homAB ; bij = bij } =
                                     λ x → Setoid.refl (B ⟦ s ⟧ₛ )
                                   }
 
-Kernel : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Algebra {ℓ₁} {ℓ₂} Σ} {B : Algebra {ℓ₃} {ℓ₄} Σ}
+Kernel : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops} {A : Alg {ℓ₁} {ℓ₂} Σ} {B : Alg {ℓ₃} {ℓ₄} Σ}
                              (h : Homo A B) →
                              Congruence {ℓ₃ = ℓ₄} A
-Kernel {Σ} {ℓ₄ = ℓ₄} {A = A} {B} h =
+Kernel {ℓ₄ = ℓ₄} {Σ = Σ} {A = A} {B} h =
        record { rel = krel
               ; welldef = λ {s {(x , y)} {(w , z)} eq p → krelWdef s (proj₁ eq) (proj₂ eq) p }
               ; cequiv = krelEquiv
@@ -482,9 +482,9 @@ Kernel {Σ} {ℓ₄ = ℓ₄} {A = A} {B} h =
 open Congruence
 open import Data.Product.Relation.Pointwise.NonDependent using (×-setoid)
 
-QuotHom : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+QuotHom : ∀ {ℓ₁ ℓ₂ ℓ₃ lsig lops} {Σ : Sign lsig lops} (A : Alg {ℓ₁} {ℓ₂} Σ) →
                         (Q : Congruence {ℓ₃} A) → Homo A (A / Q)
-QuotHom {Σ} A Q = record { ′_′ = fₕ
+QuotHom {Σ = Σ} A Q = record { ′_′ = fₕ
                          ; cond = condₕ }
   where fₕ : A ⟿ (A / Q)
         fₕ s = record { _⟨$⟩_ = F.id
@@ -501,15 +501,15 @@ QuotHom {Σ} A Q = record { ′_′ = fₕ
                 mapid≡ {as' = v ▹ as'} = PE.cong (λ as'' → v ▹ as'') mapid≡
 
 {- Monomorphism from any sub-algebra of A to A -}
-Canonical : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+Canonical : ∀ {ℓ₁ ℓ₂ ℓ₃ lsig lops} {Σ : Sign lsig lops} (A : Alg {ℓ₁} {ℓ₂} Σ) →
                         (B : SubAlg {ℓ₃} A) → Homo (SubAlgebra B) A
 Canonical A B = record { ′_′ = h ; cond = λ {_} {s} f as → Setoid.refl (A ⟦ s ⟧ₛ) }
   where h : SubAlgebra B ⟿ A
         h s = record { _⟨$⟩_ = proj₁ ; cong = F.id }
 
 {- Epimorphism from A to A quotiened by the kernel of H -}
-Natural : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-            (B : Algebra {ℓ₃} {ℓ₄} Σ) →  (h : Homo A B) →
+Natural : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops} (A : Alg {ℓ₁} {ℓ₂} Σ) →
+            (B : Alg {ℓ₃} {ℓ₄} Σ) →  (h : Homo A B) →
             Homo A (A / Kernel h)
 Natural A B H = record { ′_′ = h
                        ; cond = condH
@@ -522,8 +522,8 @@ Natural A B H = record { ′_′ = h
               condH {s = s} f as rewrite mapId as = Setoid.refl (B ⟦ s ⟧ₛ)
 
 {- Monomorphism from the quotient algebra to the target algebra -}
-KerEmbedding : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-            (B : Algebra {ℓ₃} {ℓ₄} Σ) → (h : Homo A B) → Homo (A / Kernel h) B
+KerEmbedding : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops} (A : Alg {ℓ₁} {ℓ₂} Σ) →
+            (B : Alg {ℓ₃} {ℓ₄} Σ) → (h : Homo A B) → Homo (A / Kernel h) B
 KerEmbedding A B H = record { ′_′ = λ s → record { _⟨$⟩_ = λ a → ′ H ′ s ⟨$⟩ a
                                             ; cong = F.id }
                        ; cond = λ { f as → cond H f as }

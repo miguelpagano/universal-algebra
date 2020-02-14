@@ -2,11 +2,11 @@ open import UnivAlgebra
 open import Equational
 module Birkhoff {Σ : Signature} {X : Vars Σ} where
 open Signature 
-open import Variety
+--open import Variety
 open import Morphisms
 open import HeterogeneousVec
 
-open import Data.List using (List)
+open import Data.List using (List;[])
 open import Data.Product hiding (Σ;map)
 open import Function.Bijection  hiding (_∘_)
 open import Function.Surjection hiding (_∘_)
@@ -17,6 +17,7 @@ import Relation.Binary.EqReasoning as EqR
 open Algebra
 open Signature
 open import Setoids using (∥_∥)
+open import Product
 
 open import TermAlgebra (Σ 〔 X 〕) hiding (∣T∣)
 open import TermAlgebra
@@ -28,7 +29,6 @@ open Homo
 
 Terms : ∀ s → Set _
 Terms s = ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥
-
 
 
 module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃} 
@@ -90,8 +90,8 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
   ⊨B*→⊨A* B⊨conds = map∼v (λ {s'} {t} {t'} eq → ≈B→≈A {s'} {t} {t'} eq) B⊨conds
 
 
-{- Isomorphisms of algebras preserve satisfaction of equations -}
-module IsoRespectModel
+{- Isomorphisms of algebras preserve satisfaction of conditional equations -}
+module IsoRespectSatisfaction
   {ℓ₀ ℓ₁ ℓ₂ ℓ₃} {s : sorts Σ} (e : Equation Σ X s)
   (A : Algebra {ℓ₀} {ℓ₁} Σ) (B : Algebra {ℓ₂} {ℓ₃} Σ) 
   (A≅B : A ≅ B) (A⊨e : A ⊨ e)
@@ -132,10 +132,10 @@ module IsoRespectModel
       symA = Setoid.sym (A ⟦ s ⟧ₛ)
 
 
-{- Sub-algebras preserve satisfaction of equations -}
-module SubAlgebra-Preserve-⊨
+{- Sub-algebras preserve satisfaction of conditional equations -}
+module SubAlgebrasRespectSatisfaction
        {ℓ₃} {ℓ₁ ℓ₂} {s : sorts Σ} (e : Equation Σ X s)
-       (A : Algebra {ℓ₁} {ℓ₂} Σ) (A⊨e : A ⊨ e) (B≤A : SubAlg {ℓ₃} A)
+       (A : Algebra {ℓ₁} {ℓ₂} Σ) (B≤A : SubAlg {ℓ₃} A) (A⊨e : A ⊨ e) 
        where
      
   SubRespects⊨ : SubAlgebra B≤A ⊨ e
@@ -152,15 +152,14 @@ module SubAlgebra-Preserve-⊨
               open Setoid (A ⟦ s ⟧ₛ)
               open aux-sem A (SubAlgebra B≤A) θB (Canonical A B≤A)
 
-module Product-Preserve-⊨
+module ProductRespectSatisfaction
        {ℓ₁ ℓ₂ ℓ₃} {s : sorts Σ} (e : Equation Σ X s)
-       {I : Set ℓ₁} {A : I → Algebra {ℓ₂} {ℓ₃} Σ}
+       {I : Set ℓ₁} (A : I → Algebra {ℓ₂} {ℓ₃} Σ)
          (Ai⊨e : (i : I) → A i ⊨ e) where
-  open import Product
   open IndexedProduct {I = I} A 
   
-  Πalg⊨e : Πalg ⊨ e
-  Πalg⊨e θ Π⊨conds i =  begin
+  Πalg⊨ : Πalg ⊨ e
+  Πalg⊨ θ Π⊨conds i =  begin
                      ′ π i ′ s ⟨$⟩ ⟦ left e ⟧B
                         ≈⟨ sym (⟦t⟧A≈H⟦t⟧B (left e)) ⟩
                       ⟦ left e ⟧A
@@ -173,21 +172,27 @@ module Product-Preserve-⊨
                open Setoid (A i ⟦ s ⟧ₛ)
                open aux-sem (A i) Πalg θ (π i)
 
-module HomImg-Preserves-⊨
-  {ℓ₀ ℓ₁ ℓ₂ ℓ₃} 
+{- Homomorphic images preserve equations -}
+module HomImgRespectSatisfaction
+  {ℓ₀ ℓ₁ ℓ₂ ℓ₃}  {s : sorts Σ} (e : Equ Σ X s)
   (A : Algebra {ℓ₀} {ℓ₁} Σ) (B : Algebra {ℓ₂} {ℓ₃} Σ)
-  (θB : Env X B) (H : Homo A B) {s : sorts Σ} (t t' : Terms s)
-   (A⊨e : A ⊨ (⋀ t ≈ t'))  where
+  (H : Homo A B) (A⊨e : A ⊨ equ-to-Equation s e) where
 
    A/h : _
    A/h = A / Kernel H
    ν : Homo A (A / Kernel H)
    ν = Natural A B H
-   A/h⊨e : A/h ⊨ (⋀ t ≈ t')
+
+   t : Terms s
+   t' : Terms s
+   t = Equ.left e
+   t' = Equ.right e
+
+   A/h⊨e : A/h ⊨ equ-to-Equation s e
    A/h⊨e θk ∼⟨⟩ = begin
                 ⟦ t ⟧A
                 ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
-                ′ ν ′ s ⟨$⟩ ⟦ t ⟧B --
+                ′ ν ′ s ⟨$⟩ ⟦ t ⟧B
                 ≈⟨ Π.cong (′ ν ′ s) (A⊨e θA ∼⟨⟩) ⟩
                 ′ ν ′ s ⟨$⟩ ⟦ t' ⟧B 
                 ≈⟨ sym (⟦t⟧A≈H⟦t⟧B t') ⟩
@@ -197,8 +202,62 @@ module HomImg-Preserves-⊨
            open Setoid (A/h ⟦ s ⟧ₛ)
            open aux-sem {ℓ₀ = ℓ₀} {ℓ₁ = ℓ₃} {ℓ₂ = ℓ₀} {ℓ₃ = ℓ₁} A/h A θk ν
 
+   -- imgH⊨e : homImg A H ⊨ (⋀ Equ.left e ≈ Equ.right e)
+   -- imgH⊨e = {!!}
    
--- {- Proposition 2.2.8 (Part 'if' of Birkhoff theorem) -}
--- prop : ∀ {ℓ₀} {Σ} → (C : AlgClass {ℓ₀} {ℓ₀} Σ) → EqDefClass {ℓ₀} {ℓ₀} Σ C →
---                      Variety {ℓ₀} Σ C
--- prop C eqc = {!!}
+   {- We can obtain this by composition of closedness over
+   isomorphism, but we lack at the moment the isomorphism between
+   A/ker h and the homomorphic image of h on B.  -}
+
+
+module ModSemiEquationIsISP  {ar} (E : Theory Σ X ar) where
+
+  isoClosed : ∀ {ℓ₀ ℓ₁ ℓ₂ ℓ₃} (A : Algebra  {ℓ₀} {ℓ₁} Σ) → A ⊨T E →
+               (B : Algebra  {ℓ₂} {ℓ₃} Σ)  → A ≅ B → B ⊨T E
+  isoClosed A A⊨E B iso {e = e} e∈E = IsoRespects⊨ (A⊨E e∈E) 
+    where open IsoRespectSatisfaction e A B iso
+
+
+  subClosed : ∀ {ℓ₀ ℓ₁ ℓ₂} (A : Algebra  {ℓ₀} {ℓ₁} Σ) → A ⊨T E →
+               (B : SubAlg {ℓ₂} A) → SubAlgebra B ⊨T E
+  subClosed A A⊨E B {e = e} e∈E = SubRespects⊨ (A⊨E e∈E)
+    where open SubAlgebrasRespectSatisfaction e A B 
+
+  open IndexedProduct
+  prodClosed : ∀ {ℓ₀ ℓ₁ ℓ₂} {I : Set ℓ₀}
+               (A : I → Algebra  {ℓ₁} {ℓ₂} Σ) →
+               (∀ i → A i ⊨T E) → Πalg A ⊨T E
+  prodClosed A Ai⊨E {e = e} e∈E = Πalg⊨ (λ i → Ai⊨E i e∈E)
+    where open ProductRespectSatisfaction e A
+
+module ModEquationIsIHSP  {ar} (T : EqTheory Σ X ar) where
+
+  E : Theory Σ X ar
+  E = eqTheory-to-Theory T
+  open import Relation.Binary.PropositionalEquality using (_≡_)
+
+  module ISP = ModSemiEquationIsISP E  
+
+  isoClosed : ∀ {ℓ₀ ℓ₁ ℓ₂ ℓ₃} (A : Algebra  {ℓ₀} {ℓ₁} Σ) → A ⊨T E →
+               (B : Algebra  {ℓ₂} {ℓ₃} Σ) → A ≅ B → B ⊨T E
+  isoClosed = ISP.isoClosed
+
+
+  subClosed : ∀ {ℓ₀ ℓ₁ ℓ₂} (A : Algebra {ℓ₀} {ℓ₁} Σ) → A ⊨T E →
+               (B : SubAlg {ℓ₂} A) → SubAlgebra B ⊨T E
+  subClosed = ISP.subClosed
+
+
+  open IndexedProduct
+  prodClosed : ∀ {ℓ₀ ℓ₁ ℓ₂} {I : Set ℓ₀}
+               (A : I → Algebra  {ℓ₁} {ℓ₂} Σ) →
+               (∀ i → A i ⊨T E) → Πalg A ⊨T E
+  prodClosed = ISP.prodClosed
+
+  {- We should change the definition of Equation -}
+  himgClosed : ∀ {ℓ₀ ℓ₁ ℓ₂ ℓ₃} (A : Algebra  {ℓ₀} {ℓ₁} Σ) → 
+               (B : Algebra  {ℓ₂} {ℓ₃} Σ) →(h : Homo A B) →
+               ∀ {s} {e} → e ∈ T → A ⊨ (equ-to-Equation s e) →
+               (A / Kernel h) ⊨ (equ-to-Equation s e)
+  himgClosed A B h {s = s} {e = e} e∈E A⊨e = A/h⊨e A⊨e
+    where open HomImgRespectSatisfaction e A B h

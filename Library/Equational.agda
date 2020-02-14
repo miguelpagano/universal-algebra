@@ -224,8 +224,32 @@ record Equation (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
 
 infix 0 ⋀_≈_
 
+record Equ (Σ : Signature) (X : Vars Σ) (s : sorts Σ) : Set where
+  field
+    left  : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
+    right : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥
+
 Theory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
 Theory Σ X ar = HVec (Equation Σ X) ar
+
+equ-to-Equation : ∀ {Σ X} s → Equ Σ X s → Equation Σ X s
+equ-to-Equation _ equ = ⋀ (left equ) ≈ (right equ)
+  where open Equ
+  
+EqTheory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
+EqTheory Σ X ar = HVec (Equ Σ X) ar
+
+eqTheory-to-Theory : ∀ {Σ X ar} → EqTheory Σ X ar → Theory Σ X ar
+eqTheory-to-Theory = mapV equ-to-Equation 
+
+equation-to-Equ : ∀ {Σ X} s → Equation Σ X s → Equ Σ X s
+equation-to-Equ _ equ = record { left = left equ ; right = right equ }
+  where open Equation
+
+iso-equ : ∀ {Σ X} s → (eq : Equ Σ X s) →
+        eq ≡ equation-to-Equ s (equ-to-Equation s eq)
+iso-equ s record { left = t ; right = t' } = PE.refl
+  where open Equ
 
 
 {- Satisfactibility -}

@@ -50,7 +50,7 @@ open SubAlg
              { pr = ⋂p {ℓ₃} {ℓ₄} P
              ; opClosed = ⋂-OpClosed {ℓ₃} P isClosed
              }
-⋂-SubAlg' : ∀ {ℓ₃ ℓ₄} → (P : Pred (SubAlg {ℓ₃ = ℓ₃} A) ℓ₄) → 
+⋂-SubAlg' : ∀ {ℓ₃ ℓ₄} → (P : Pred (SubAlg {ℓ₃ = ℓ₃} A) ℓ₄) →
               SubAlg {ℓ₃ = lsuc lsig ⊔ lsuc lops ⊔ lsuc ℓ₁ ⊔ lsuc ℓ₂ ⊔ lsuc ℓ₃ ⊔ ℓ₄} A
 ⋂-SubAlg' {ℓ₃} {ℓ₄} P = record
              { pr = pred
@@ -174,20 +174,6 @@ Img {X} X⊆ₛA s = record { predicate = λ a → ∃ (λ x → a ≈ (to ⟨$�
 ⟨ X⊆A ⟩' = ⟨ Img X⊆A ⟩
 
 open Setoid
-module UMP where
-  UMP : ∀ {ℓ₃ ℓ₄ ℓ₅ ℓ₆} {X : Universe ℓ₃ ℓ₄} →
-        (X ⊆ₛ (A ⟦_⟧ₛ)) → Alg {ℓ₅} {ℓ₆} Σ → Set (lsuc (lsig ⊔ lops ⊔ ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₅ ⊔ ℓ₆) ⊔ ℓ₄)
-  UMP {X = X} X⊆A B = (f : X ⟶ₛ (B ⟦_⟧ₛ)) → ∃! _≈ₕ_ (Pr f)
-    where open Hom (⟨ X⊆A ⟩') B
-          open Homo
-          ι : X ⟶ₛ (⟨ X⊆A ⟩' ⟦_⟧ₛ)
-          ι s = record { _⟨$⟩_ = λ {x → (to ⟨$⟩ x) , inX (x , Setoid.refl (A ⟦ s ⟧ₛ)) };
-                               cong = λ {a} {b} x → cong to x
-                               }
-            where open Injection (X⊆A {s}) 
-          Pr : X ⟶ₛ (B ⟦_⟧ₛ) → Homo → Set _
-          Pr f H = ∀ s x → Setoid._≈_ (B ⟦ s ⟧ₛ) (f s ⟨$⟩ x) (′ H ′ s ⟨$⟩ (ι s ⟨$⟩ x))
-
 
 module Free {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} where
   data Free  : (s : sorts Σ) → Set (ℓ₃ ⊔ ℓ₄ ⊔ lsig ⊔ lops)  where
@@ -224,7 +210,6 @@ module Free {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} where
                        ; sym = isSym s
                        ; trans = isTrans s
                        }
-     where 
 
   freeSetoid : (s : sorts Σ) → Setoid (lsig ⊔ lops ⊔ ℓ₃ ⊔ ℓ₄) (lsig ⊔ lops ⊔ ℓ₃ ⊔ ℓ₄)
   freeSetoid s = record { Carrier = Free s
@@ -232,7 +217,7 @@ module Free {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} where
                       ; isEquivalence = ≈FisEquiv s
                       }
 
-  freeAlgebra : Alg Σ
+  freeAlgebra : Alg {lsig ⊔ lops ⊔ ℓ₃ ⊔ ℓ₄} {lsig ⊔ lops ⊔ ℓ₃ ⊔ ℓ₄} Σ
   freeAlgebra = record { _⟦_⟧ₛ = freeSetoid
                        ; _⟦_⟧ₒ = ∣_∣o
                        }
@@ -255,7 +240,7 @@ module FreeExt {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₁ ℓ₂} (B
     ∣h∣→A : ∀ {s} → Free s → ∥ B ⟦ s ⟧ₛ ∥
     ∣h∣→A (var {s} x) = to (θ {s}) ⟨$⟩ x
     ∣h∣→A (app f x) = B ⟦ f ⟧ₒ ⟨$⟩ map|h|→A x
-    
+
     map|h|→A : ∀ {ar} → HVec Free ar → B ⟦ ar ⟧ₛ*
     map|h|→A ⟨⟩ = ⟨⟩
     map|h|→A (t ▹ ts) = ∣h∣→A t ▹ map|h|→A ts
@@ -277,7 +262,7 @@ module FreeExt {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₁ ℓ₂} (B
   map|h|-≈ {s ∷ _} (v ▹ ts) = ∼▹ (refl (B ⟦ s ⟧ₛ)) (map|h|-≈ ts)
   |T|ₕcond : (homCond freeAlgebra B) fun|T|ₕ
   |T|ₕcond {_} {s} f ts = cong (B ⟦ f ⟧ₒ) (map|h|-≈ ts)
-        
+
   open Hom
   ∣H∣ : Homo freeAlgebra B
   ∣H∣ = record { ′_′  = fun|T|ₕ
@@ -294,7 +279,7 @@ module FreeExt {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₁ ℓ₂} (B
   _≈h_ = _≈ₕ_ freeAlgebra B
   UMP : ∀ (H : Homo freeAlgebra B) → extends-θ H → H ≈h ∣H∣
   UMP H prop s (var x) = prop s x
-  UMP H prop s (app {ar} f ts) = 
+  UMP H prop s (app {ar} f ts) =
           begin
             ′ H ′ s ⟨$⟩ app f ts
               ≈⟨ cond H f ts ⟩
@@ -306,8 +291,54 @@ module FreeExt {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₁ ℓ₂} (B
           map≈ : (ar : Arity Σ) → (ts : HVec Free ar) →
                  (mapV (_⟨$⟩_ ∘ ′ H ′) ts) ∼v (map|h|→A ts)
           map≈ [] ⟨⟩ = ∼⟨⟩
-          map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (UMP H prop s t)
-                                      (map≈ ar ts)
+          map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (UMP H prop s t) (map≈ ar ts) 
+
+
+module Gen {ℓ₃ ℓ₄ : Level} {X : Universe ℓ₃ ℓ₄} (ι : X ⊆ₛ (A ⟦_⟧ₛ))  where
+  open Free {X = X}
+  open FreeExt A ι
+  open Hom
+  open Setoid
+  open Injection
+
+
+  ⊆E : ∀ s t → predicate (E-Pred (Img ι) s) (∣h∣→A t)
+  ⊆E* : ∀ ar (ts : HVec Free ar) → HVec ((λ x → ∃ (λ a' → E (Img ι) x a'))) ar
+  proj₁⊆E* : ∀ ar (ts : HVec Free ar) →
+       _≈_ ((λ s → A ⟦ s ⟧ₛ) ✳ ar) (mapV (λ _ → proj₁) (⊆E* ar ts)) (map|h|→A ts)
+  ⊆E* [] ⟨⟩ = ⟨⟩
+  ⊆E* (x ∷ ar) (v ▹ ts) = (∣h∣→A v , ⊆E x v) ▹ ⊆E* ar ts
+  proj₁⊆E* [] ⟨⟩ = ∼⟨⟩
+  proj₁⊆E* (s ∷ ar) (v ▹ ts) = ∼▹ (refl (A ⟦ s ⟧ₛ)) (proj₁⊆E* ar ts )
+  ⊆E s (var x) = inX (x , refl (A ⟦ s ⟧ₛ))
+  ⊆E s (app {ar = ar} f ts) = img {f = f} (⊆E* ar ts) (cong (A ⟦ f ⟧ₒ) (proj₁⊆E* ar ts))
+
+  ⊇E : ∀ s a → predicate (E-Pred (Img ι) s) a → ∃ (λ t → _≈_ (A ⟦ s ⟧ₛ) a (∣h∣→A t))
+  ⊇E*1 : ∀ ar (ts : HVec (λ x₁ → ∃ (E (Img ι) x₁)) ar) →
+    HVec Free ar
+  ⊇E* : ∀ ar (ts : HVec (λ x₁ → ∃ (E (Img ι) x₁)) ar) →
+    HVec (λ x → ∃ (λ a → ∃ (λ t → _≈_ (A ⟦ x ⟧ₛ) a (∣h∣→A t)))) ar
+  proj₁⊇E* : ∀ ar (ts : HVec (λ x₁ → ∃ (E (Img ι) x₁)) ar) →
+       _≈_ ((λ s → A ⟦ s ⟧ₛ) ✳ ar) (mapV (λ _ → proj₁) ts)
+                 (map|h|→A (⊇E*1 ar ts))
+  ⊇E*1 [] ⟨⟩ = ⟨⟩
+  ⊇E*1 (x ∷ ar) ((a , p) ▹ ts) = (proj₁ (⊇E x a p)) ▹ ⊇E*1 ar ts
+  ⊇E* [] ⟨⟩ = ⟨⟩
+  ⊇E* (x ∷ ar) ((a , p) ▹ ts) = (a , ⊇E x a p) ▹ ⊇E* ar ts
+  proj₁⊇E* [] ⟨⟩ = ∼⟨⟩
+  proj₁⊇E* (x ∷ ar) ((a , p) ▹ ts) = ∼▹ (proj₂ (⊇E x a p)) (proj₁⊇E* ar ts)
+  ⊇E s a (inX (x , eq)) = var x , eq
+  ⊇E s a (img {ar = ar} {f} ts x) =
+    (app f (⊇E*1 ar ts)) , trans (A ⟦ s ⟧ₛ) (sym (A ⟦ s ⟧ₛ) x) (Π.cong (A ⟦ f ⟧ₒ) (proj₁⊇E* ar ts))
+
+
+  E⊆H : E-Pred (Img ι) ⊆ₚ  pr (SubImg freeAlgebra A ∣H∣)
+  E⊆H s {a} p = proj₁ (⊇E s a p) , sym (A ⟦ s ⟧ₛ) (proj₂ (⊇E s a p))
+  H⊆E : pr (SubImg freeAlgebra A ∣H∣) ⊆ₚ E-Pred (Img ι)
+  H⊆E s {a} (t , eq) = E-WellDefined (Img ι) s eq (⊆E s t)
+
+  ⟨ι⟩≅Imgι : ⟨ ι ⟩' ≅ homImg freeAlgebra ∣H∣
+  ⟨ι⟩≅Imgι = record { iso = ≅-SubAlg-iso (E-SubAlg (Img ι)) (SubImg freeAlgebra A ∣H∣) (E⊆H , H⊆E) }
 
 -- A is generated by X if ∀ a ∈ A, E a
 IsGeneratedBy : ∀ {ℓ₃} → (X : Predicate ℓ₃) → Set _

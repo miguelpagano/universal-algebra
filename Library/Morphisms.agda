@@ -228,8 +228,8 @@ record Isomorphism {ℓ₁ ℓ₂ ℓ₃ ℓ₄ lsig lops} {Σ : Sign lsig lops}
 open Isomorphism
 
 {- Isomorphic algebras -}
-record _≅_ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ)
-               (B : Algebra {ℓ₃} {ℓ₄} Σ) : Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄)) where
+record _≅_  {lsig lops} {Σ : Sign lsig lops} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Alg {ℓ₁} {ℓ₂} Σ)
+               (B : Alg {ℓ₃} {ℓ₄} Σ) : Set (lsuc (lsig ⊔ lops  ⊔  ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄)) where
   field
     iso : Isomorphism A B
 
@@ -388,15 +388,16 @@ SubImg {Σ = Σ} A B h = record { pr = subipr ; opClosed = subicond }
                 p≈ ⇨v⟨⟩ = ∼⟨⟩
                 p≈ (⇨v▹ pv pvs) = ∼▹ (proj₂ pv) (p≈ pvs)
 
-homImg : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {B : Alg {ℓ₃} {ℓ₄} Σ} →
-               (A : Alg {ℓ₁} {ℓ₂} Σ) → (h : Homo A B) → Algebra Σ
+homImg : ∀ {lsig lops} {Σ : Sign lsig lops} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {B : Alg {ℓ₃} {ℓ₄} Σ} →
+               (A : Alg {ℓ₁} {ℓ₂} Σ) → (h : Homo A B) → Alg Σ
 homImg {Σ} {B = B} A h = SubAlgebra (SubImg A B h)
 
 {-
   The homomorphic image of an isomorphism between algebras A and B is a
   subalgebra isomorphic to B.
 -}
-homImg-iso-prop : ∀ {ℓ₀ Σ} →
+homImg-iso-prop : ∀ {ℓ₀ lsig lops}
+                    {Σ : Sign lsig lops} →
                     (A B : Alg {ℓ₀} {ℓ₀} Σ) → (h : Isomorphism A B) →
                     Isomorphism (homImg A (hom h)) B
 homImg-iso-prop {ℓ₀} {Σ} A B record { hom = homAB ; bij = bij } =

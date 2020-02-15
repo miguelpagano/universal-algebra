@@ -18,127 +18,136 @@ open Algebra
 open Hom
 
 open import Examples.Monoid
-data op-grp : List ⊤ × ⊤ → Set where
-  mop : ∀ {ar} {s} → (op-mon (ar ↦ s)) → op-grp (ar ↦ s)
-  _⁻¹ : op-grp ([ tt ] ↦ tt)
 
-Σ-grp : Signature
-Σ-grp = record { sorts = ⊤ ; ops = op-grp }
+module Group {op-grp : List ⊤ × ⊤ → Set}
+             (e      : op-grp ([] ↦ tt))
+             (_⁻¹    : op-grp ([ tt ] ↦ tt))
+             (●     : op-grp ((tt ∷ [ tt ]) ↦ tt))
+       where
+       open module M = Monoid {op-grp} e ●
 
-module GrpTheory where
-  open Theory
-  -- Axioms
+       Σ-grp : Signature
+       Σ-grp = record { sorts = ⊤ ; ops = op-grp }
 
-  Eq-grp : Set
-  Eq-grp = Equation Σ-grp X tt
+       module GrpTheory where
+         open M.Theory
+         open import TermAlgebra
 
-  open import TermAlgebra
-  
-  -- A formula is a term of the Term Algebra
-  Form-grp : Set
-  Form-grp = HU (Σ-grp 〔 X 〕) tt
+         Eq-grp : Set
+         Eq-grp = Equation Σ-grp X tt
 
-  toGrpF : Form → Form-grp
-  toGrpF (term {[]} {.tt} (inj₁ e) x₁) = term (inj₁ (mop e)) ⟨⟩
-  toGrpF (term {[]} {.tt} (inj₂ y) x) = term (inj₂ y) ⟨⟩
-  toGrpF (term {.tt ∷ .(tt ∷ [])} {.tt} op (v ▹ v₁ ▹ ⟨⟩)) =
-               term (mop op) ((toGrpF v) ▹ ((toGrpF v₁) ▹ ⟨⟩))
+         -- A formula is a term of the Term Algebra
+         Form-grp : Set
+         Form-grp = HU (Σ-grp 〔 X 〕) tt
 
-  toGrpEq : Eq₁ → Eq-grp
-  toGrpEq (⋀ left ≈ right if「 carty 」 (us , us')) =
-    ⋀ (toGrpF left) ≈ (toGrpF right) if「 carty 」
-                      (vmap (λ i x → toGrpF x) us , vmap (λ i x → toGrpF x) us')
+         module GrpSmartcons where
+         -- smart constructors
+           _∘_ : Form-grp → Form-grp → Form-grp
+           a ∘ b = term ● ⟨⟨ a , b ⟩⟩
 
-  module GrpSmartcons where
-    
-    -- smart constructors
-    _∘_ : Form-grp → Form-grp → Form-grp
-    a ∘ b = term (mop op) ⟨⟨ a , b ⟩⟩
+           _⁻ : Form-grp → Form-grp
+           a ⁻ = term _⁻¹ (⟪ a ⟫)
 
-    _⁻ : Form-grp → Form-grp
-    a ⁻ = term _⁻¹ (⟪ a ⟫)
+           x : Form-grp
+           x = term (inj₂ 0) ⟨⟩
 
-    x : Form-grp
-    x = term (inj₂ 0) ⟨⟩
+           u : Form-grp
+           u = term (inj₁ e) ⟨⟩
 
-    u : Form-grp
-    u = term (inj₁ (mop e)) ⟨⟩
+         open GrpSmartcons
+         -- Axioms
+         invElemLeft : Eq-grp
+         invElemLeft = ⋀ (x ∘ (x ⁻)) ≈ u
 
-  open GrpSmartcons
-  -- Axioms
-  invElemLeft : Eq-grp
-  invElemLeft = ⋀ (x ∘ (x ⁻)) ≈ u
+         invElemRight : Eq-grp
+         invElemRight = ⋀ ((x ⁻) ∘ x) ≈ u
 
-  invElemRight : Eq-grp
-  invElemRight = ⋀ ((x ⁻) ∘ x) ≈ u
+         GrpTheory : Theory Σ-grp X (tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
+         GrpTheory = invElemRight ▹ (invElemLeft ▹ MonTheory)
 
-  MonTheory' : _
-  MonTheory' = vmap (λ _ eq → toGrpEq eq) MonTheory
+         module Props where
+         open import Relation.Binary.EqReasoning (⊢RSetoid GrpTheory tt)
+         open Subst {Σ-grp} {X}
 
-  GrpTheory : Theory Σ-grp X (tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
-  GrpTheory = invElemRight ▹ (invElemLeft ▹ MonTheory')
+         pattern invR-ax = here
+         pattern invL-ax = there here
+         pattern ass-ax  = there (there here)
+         pattern unitL-ax = there (there (there here ))
+         pattern unitR-ax = there (there (there (there here)))
 
-  module Props where
-    open import Relation.Binary.EqReasoning (⊢RSetoid GrpTheory tt)
-    open Subst {Σ-grp} {X}
-
-    pattern invR-ax = here
-    pattern invL-ax = there here
-    pattern ass-ax  = there (there here)
-    pattern unitL-ax = there (there (there here ))
-    pattern unitR-ax = there (there (there (there here)))
-
-    {- unit is its own inverse. -}
-    p₁ : GrpTheory ⊢ (⋀ (u ⁻) ≈ u)
-    p₁ = begin ((u ⁻))
-         ≈⟨  psym (psubst unitL-ax (λ x₁ → (u ⁻)) ∼⟨⟩) ⟩
-         ((u ∘ (u ⁻)))
-         ≈⟨ psubst invL-ax (λ x₁ → u) ∼⟨⟩ ⟩
-         u
-         ∎
-
-    inv-inv : GrpTheory ⊢ (⋀ x ≈ ((x ⁻) ⁻) if「 [] 」 (⟨⟩ , ⟨⟩))
-    inv-inv = begin x
-              ≈⟨ psym (psubst unitR-ax (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
-              (x ∘ u)
-              ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst invL-ax
-                                                (λ _ → x ⁻) ∼⟨⟩)) ∼⟨⟩)) ⟩
-              (x ∘ ((x ⁻) ∘ (((x ⁻)) ⁻)))
-              ≈⟨ psym (psubst ass-ax σ ∼⟨⟩) ⟩
-              ((x ∘ (x ⁻)) ∘ ((x ⁻) ⁻))
-              ≈⟨ preemp (∼▹ (psubst invL-ax (λ _ → x) ∼⟨⟩) (∼▹ prefl ∼⟨⟩)) ⟩
-              (u ∘ ((x ⁻) ⁻))
-              ≈⟨ psubst unitL-ax (λ _ → (x ⁻) ⁻) ∼⟨⟩ ⟩
-              ((x ⁻) ⁻)
+         {- unit is its own inverse. -}
+         p₁ : GrpTheory ⊢ (⋀ (u ⁻) ≈ u)
+         p₁ = begin ((u ⁻))
+              ≈⟨  psym (psubst unitL-ax (λ x₁ → (u ⁻)) ∼⟨⟩) ⟩
+              ((u ∘ (u ⁻)))
+              ≈⟨ psubst invL-ax (λ x₁ → u) ∼⟨⟩ ⟩
+              u
               ∎
+
+         inv-inv : GrpTheory ⊢ (⋀ x ≈ ((x ⁻) ⁻) if「 [] 」 (⟨⟩ , ⟨⟩))
+         inv-inv = begin x
+                   ≈⟨ psym (psubst unitR-ax (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
+                   (x ∘ u)
+                   ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst invL-ax
+                                                (λ _ → x ⁻) ∼⟨⟩)) ∼⟨⟩)) ⟩
+                   (x ∘ ((x ⁻) ∘ (((x ⁻)) ⁻)))
+                   ≈⟨ psym (psubst ass-ax σ ∼⟨⟩) ⟩
+                   ((x ∘ (x ⁻)) ∘ ((x ⁻) ⁻))
+                   ≈⟨ preemp (∼▹ (psubst invL-ax (λ _ → x) ∼⟨⟩) (∼▹ prefl ∼⟨⟩)) ⟩
+                   (u ∘ ((x ⁻) ⁻))
+                   ≈⟨ psubst unitL-ax (λ _ → (x ⁻) ⁻) ∼⟨⟩ ⟩
+                   ((x ⁻) ⁻)
+                   ∎
               where σ : Subst
                     σ zero = x
                     σ (suc zero) = x ⁻
                     σ (suc (suc zero)) = (x ⁻) ⁻
                     σ v = term (inj₂ v) ⟨⟩
-    
-module AbeGrpTheory where
-  open Theory
-  open GrpTheory
 
-  Eq-abe-grp : Set
-  Eq-abe-grp = Eq-grp
+{- Abelian group -}
+module AbeGroup {op-abe-grp : List ⊤ × ⊤ → Set}
+                (e      : op-abe-grp ([] ↦ tt))
+                (_⁻¹    : op-abe-grp ([ tt ] ↦ tt))
+                (bop    : op-abe-grp ((tt ∷ [ tt ]) ↦ tt))
+       where
 
-  open import TermAlgebra
+       Σ-abe-grp : Signature
+       Σ-abe-grp = record { sorts = ⊤ ; ops = op-abe-grp }
 
-  Form-abe-grp : Set
-  Form-abe-grp = Form-grp
+       open module G = Group {op-abe-grp} e _⁻¹ bop
 
-  module AbeGrpSmartcons where
-    
-    y : Form-grp
-    y = term (inj₂ 1) ⟨⟩
+       module AbeGrpTheory where
 
-  open GrpSmartcons
-  open AbeGrpSmartcons
-  -- Commutativity
-  commOp : Eq-abe-grp
-  commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
+         open M.Theory
+         open G.GrpTheory
 
-  AbeGrpTheory : Theory Σ-grp X (tt ∷ tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
-  AbeGrpTheory = commOp ▹ GrpTheory
+         open import TermAlgebra
+
+         Eq-abe-grp : Set
+         Eq-abe-grp = Eq-grp
+
+         Form-abe-grp : Set
+         Form-abe-grp = Form-grp
+
+         module AbeGrpSmartcons where
+           y : Form-grp
+           y = term (inj₂ 1) ⟨⟩
+
+         open GrpSmartcons
+         open AbeGrpSmartcons
+         -- Commutativity
+         commOp : Eq-abe-grp
+         commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
+
+         AbeGrpTheory : Theory Σ-abe-grp X (tt ∷ tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
+         AbeGrpTheory = commOp ▹ GrpTheory
+
+module Groups where
+
+  data op-grp : List ⊤ × ⊤ → Set where
+    e    : op-grp ([] ↦ tt)
+    _⁻¹  : op-grp ([ tt ] ↦ tt)
+    op   : op-grp ((tt ∷ [ tt ]) ↦ tt)
+
+  Σ-grp : Signature
+  Σ-grp = record { sorts = ⊤ ; ops = op-grp }

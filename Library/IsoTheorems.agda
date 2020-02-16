@@ -10,7 +10,7 @@ open import Function as F hiding (Surjective;Bijective)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Function.Bijection renaming (_∘_ to _∘b_)
 open import Function.Surjection hiding (_∘_)
-open import Relation.Binary.PropositionalEquality as PE
+open import Relation.Binary.PropositionalEquality as PE hiding (refl)
 open import Data.Product hiding (map)
 open import Relation.Binary
 open import Relation.Unary hiding (_⊆_;_⇒_)
@@ -180,5 +180,56 @@ module ThirdIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
             cond⇉* {[]} ⟨⟩ = ∼⟨⟩
             cond⇉* {i ∷ is} (v ▹ as) = ∼▹ (ref (cequiv Φ i)) (cond⇉* as)
 
-
-
+{- The homomorphic image of H : A → B is isomorphic to A/ker H -}
+import Relation.Binary.EqReasoning as EqR
+open Setoid
+iso-A/kerH : ∀ {Σ} {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+             (B : Algebra {ℓ₃} {ℓ₄} Σ) → (h : Homo A B) →
+             (A / Kernel h) ≅ homImg A h
+iso-A/kerH {Σ} A B h = record { iso = f }
+  where i : ∀ s → _ ⟶ _
+        i s = record { _⟨$⟩_ = λ x → ′ h ′ s ⟨$⟩ x , x , refl (B ⟦ s ⟧ₛ)
+                   ; cong = F.id
+                   }
+        j : ∀ s → _ ⟶ _
+        j s = record { _⟨$⟩_ = proj₁ ∘ proj₂
+                     ; cong = λ { {a , u , eq} {b , v , eq'} a≈b →
+                       begin
+                       ′ h ′ s ⟨$⟩ u
+                       ≈⟨ eq ⟩
+                       a
+                       ≈⟨ a≈b ⟩
+                       b
+                       ≈⟨ Setoid.sym (B ⟦ s ⟧ₛ) eq' ⟩
+                       ′ h ′ s ⟨$⟩ v
+                       ∎
+                     }
+                     }
+           where open EqR (B ⟦ s ⟧ₛ)
+        i-cond : homCond (A / Kernel h) (homImg A h) i
+        i-cond {ar} {s} f as = begin
+                    ′ h ′ s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as)
+                    ≈⟨ cond h f as ⟩
+                    B ⟦ f ⟧ₒ ⟨$⟩ map (λ s' a → ′ h ′ s' ⟨$⟩ a) as
+                    ≈⟨ Π.cong (B ⟦ f ⟧ₒ) (eq-as as) ⟩
+                    B ⟦ f ⟧ₒ ⟨$⟩ map (λ _ → proj₁) (map (λ s' → i s' ⟨$⟩_) as)
+                    ∎
+          where open EqR (B ⟦ s ⟧ₛ)
+                eq-as : ∀ {ar : List (sorts Σ)} (as : HVec (λ s' → ∥ A ⟦ s' ⟧ₛ ∥) ar) →
+                  _≈_ ((λ s' → B ⟦ s' ⟧ₛ) ✳ ar)
+                    (map (λ s' a → ′ h ′ s' ⟨$⟩ a) as)
+                    (map (λ _ → proj₁) (map (λ s' → i s' ⟨$⟩_) as))
+                eq-as {[]} ⟨⟩ = ∼⟨⟩
+                eq-as {s' ∷ _} (v ▹ as') = ∼▹ (Setoid.refl (B ⟦ s' ⟧ₛ)) (eq-as as')
+        F : Homo (A / Kernel h) (homImg A h)
+        F = record { ′_′ = i
+                   ; cond = i-cond
+                   }
+        f : Isomorphism (A / Kernel h) (homImg A h)
+        f = record { hom = F
+                   ; bij = λ s → record { injective = F.id
+                             ; surjective = record { from = j s
+                                                   ; right-inverse-of = proj₂ ∘ proj₂
+                                                   }
+                             }
+                   }

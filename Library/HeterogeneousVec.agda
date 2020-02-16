@@ -89,12 +89,12 @@ _*′ : ∀ {I } {A : I → Set} → (R : (i : I) →  (A i) → A i → Set) �
 
 
 open import Relation.Unary using (Pred)
-_⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁) → 
+_⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} (P : (i : I) → A i → Set l₁) →
            {is : List I} → Pred (HVec A is) (l₀ ⊔ l₁)
 P ⇨v = P ⇨v_
 
 
-⇨₂ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁} → 
+⇨₂ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁} →
            {is : List I}
            (as : HVec (λ i → Σ[ a ∈ A i ] (P i a)) is) →
            (P ⇨v map (λ _ → proj₁) as)
@@ -112,7 +112,7 @@ map⇨v : ∀ {l₀ l₁ l₂ I is} {A : I → Set l₀} {vs : HVec A is}
            P ⇨v vs → P' ⇨v vs
 map⇨v f ⇨v⟨⟩ = ⇨v⟨⟩
 map⇨v f (⇨v▹ pv pvs) = ⇨v▹ (f pv) (map⇨v f pvs)
-           
+
 
 proj₁⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A i → Set l₁}
            {is} {vs : HVec A is} → P ⇨v vs → HVec A is
@@ -122,7 +122,7 @@ proj₁-inv-⇨vtoΣ : ∀ {l₀ l₁ I} {A : I → Set l₀} {P : (i : I) → A
            {is} {vs : HVec A is} → (ps : P ⇨v vs) →
            map (λ s → proj₁) (⇨vtoΣ ps) ≡ vs
 proj₁-inv-⇨vtoΣ {vs = ⟨⟩} ⇨v⟨⟩ = refl
-proj₁-inv-⇨vtoΣ {vs = v ▹ vs} (⇨v▹ pv ps) = cong₂ _▹_ refl (proj₁-inv-⇨vtoΣ ps) 
+proj₁-inv-⇨vtoΣ {vs = v ▹ vs} (⇨v▹ pv ps) = cong₂ _▹_ refl (proj₁-inv-⇨vtoΣ ps)
 
 ⇨v-pointwise : ∀ {l₀ l₁ I} {is : List I} {A : I → Set l₀}
                  {P : (i : I) → A i → Set l₁} →

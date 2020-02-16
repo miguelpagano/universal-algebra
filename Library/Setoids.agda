@@ -44,7 +44,7 @@ module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoi
                         g ⟨$⟩ a'
                         ∎
      where open EqR B
-    
+
   Equiv≈→ : IsEquivalence (_≈→_)
   Equiv≈→ = record { refl = λ {f} → isRefl {f}
                     ; sym = λ {f} {g} prf → isSym {f} {g} prf
@@ -147,13 +147,13 @@ private
 
   W'↔W : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → (R : Rel (Carrier S) ℓ₃) → WellDefRel S R → WellDefRel' S R
   W'↔W S R wd {a} {b} {c} {d} eq  eq' pa = wd (eq , eq') pa
-  
+
 
 -- Indexed Setoids
 module IndexedSetoid {ℓ₁ ℓ₂ ℓ₃ }
        {I : Set ℓ₁}
         (A : I → Setoid ℓ₂ ℓ₃ ) where
-  
+
   Π-setoid : Setoid (ℓ₁ ⊔ ℓ₂) (ℓ₁ ⊔ ℓ₃)
   Π-setoid = record { Carrier = (i : I) → carrier i
                            ; _≈_ = ≈ᵢ

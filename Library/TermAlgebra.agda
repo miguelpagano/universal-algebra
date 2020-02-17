@@ -49,7 +49,7 @@ mutual
   ∣h∣→A : ∀ {ℓ₁ ℓ₂ s} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → HU s → ∥ A ⟦ s ⟧ₛ ∥
   ∣h∣→A A (term f ⟨⟩)         =   A ⟦ f ⟧ₒ ⟨$⟩ ⟨⟩
   ∣h∣→A A (term f (t ▹ ts))  =   A ⟦ f ⟧ₒ ⟨$⟩ (∣h∣→A A t ▹ map|h|→A A ts)
-  
+
   map|h|→A : ∀ {ℓ₁ ℓ₂ ar} → (A : Algebra {ℓ₁} {ℓ₂} Σ)
                             → ∣T∣ ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
   map|h|→A A ⟨⟩ = ⟨⟩
@@ -80,14 +80,14 @@ map|T|→A≡map {ar = s ∷ ar} {t ▹ ts} {A} =
 
 
 total : ∀ {ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Total (_≈ₕ_ ∣T∣ A)
-total A H G s (term {ar = ar} f ts) = 
+total A H G s (term {ar = ar} f ts) =
           begin
             ′ H ′ s ⟨$⟩ term f ts
               ≈⟨ cond H f ts ⟩
             A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ∣T∣ A ′ H ′ ts)
               ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ ar ts) ⟩
             A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ∣T∣ A ′ G ′ ts)
-              ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond G f ts) ⟩ 
+              ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond G f ts) ⟩
             ′ G ′ s ⟨$⟩ term f ts
           ∎
   where open EqR (A ⟦ s ⟧ₛ)

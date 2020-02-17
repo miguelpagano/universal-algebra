@@ -153,7 +153,7 @@ R * = _∼v_ {R = R}
   under this view, the extension of R is the same as the extension of the
   predicate over the zipped vectors.
 -}
-private  
+private
   _*' : ∀ {l₀ l₁ I} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → {is : List I} → Rel (HVec A is) (l₀ ⊔ l₁)
   _*' {A = A} R {is} a b = _⇨v_ {A = λ i → A i × A i} (λ { i (a , b) → R i a b} ) {is} (zip a b)
 
@@ -162,9 +162,9 @@ private
   from {is = x ∷ is} R (v ▹ as) (v₁ ▹ as') (⇨v▹ {v = .v , .v₁} pv rel) = ∼▹ pv (from R as as' rel)
 
   to : ∀ {l₀ l₁ I} {is} {A : I → Set l₀} (R : (i : I) → Rel (A i) l₁) → (as as' : HVec A is) → (R *) as as' → (R *') as as'
-  to {is = []} R ⟨⟩ ⟨⟩ ∼⟨⟩ = ⇨v⟨⟩ 
+  to {is = []} R ⟨⟩ ⟨⟩ ∼⟨⟩ = ⇨v⟨⟩
   to {is = x ∷ is} R (v ▹ as) (v₁ ▹ as') (∼▹ x₁ rel) = ⇨v▹ x₁ (to R as as' rel)
-  
+
 map∼v : ∀ {l₀ l₁ l₂ I} {A : I → Set l₀}
         {R : (i : I) → Rel (A i) l₁} {R' : (i : I) → Rel (A i) l₂}
         {is : List I} {vs vs' : HVec A is} →

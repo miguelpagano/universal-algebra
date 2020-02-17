@@ -9,7 +9,7 @@ open import HeterogeneousVec
 open import Relation.Binary hiding (Total)
 open import Relation.Binary.PropositionalEquality as PE
 open import Relation.Unary
-open import Function as F hiding (Bijective; Surjective; Bijection; Surjection)
+open import Function as F hiding (Bijective; Surjective; Bijection; Surjection; Injective; Injection)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Setoids
 open import Data.Product hiding (map)
@@ -70,13 +70,19 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
   ≈A→B : (s : sorts Σ) → IsEquivalence (_≈→_ {A = A ⟦ s ⟧ₛ} {B = B ⟦ s ⟧ₛ})
   ≈A→B s = Equiv≈→ {A = A ⟦ s ⟧ₛ} {B = B ⟦ s ⟧ₛ}
   equiv≈ₕ : IsEquivalence _≈ₕ_
-  equiv≈ₕ = record { refl = λ {h} s a → ref (≈A→B s)  {′ h ′ s} a
+  equiv≈ₕ = record { refl = λ {h} s a → ref (≈A→B s) {′ h ′ s} a
                    ; sym = λ {h} {g} eq s a → symm (≈A→B s)
                                               {′ h ′ s} {′ g ′ s} (eq s) a
                    ; trans = λ {f} {g} {h} eq eq' s a →
                                    tran (≈A→B s) {′ f ′ s} {′ g ′ s}
                                         {′ h ′ s} (eq s) (eq' s) a
                    }
+
+  ≈ₕ-setoid : Setoid (lsuc ℓ₁ ⊔ lsuc ℓ₂ ⊔ lsuc ℓ₃ ⊔ lsuc ℓ₄) (ℓ₁ ⊔ ℓ₄)
+  ≈ₕ-setoid = record { Carrier = Homo
+                     ; _≈_ = _≈ₕ_
+                     ; isEquivalence = equiv≈ₕ
+                     }
 
 {- Homomorphism composition -}
 module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
@@ -97,7 +103,7 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
                        }
         where comp : A₀ ⟿ A₂
               comp s = ′ H₁ ′ s ∘ₛ ′ H₀ ′ s
- 
+
               ∘ₕcond : homCond A₀ A₂ comp
               ∘ₕcond {ar} {s} f as =
                 begin
@@ -124,7 +130,7 @@ module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
                           A₂ ⟦ f ⟧ₒ ⟨$⟩ (map⟿ A₀ A₂ comp as)
                         ∎
 
-
+  infixr 21 _∘ₕ_
 
 
 {- Homomorphism identity -}
@@ -307,6 +313,40 @@ iso-≈ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature} →
 iso-≈ {A' = A'} H s t = Setoid.sym (A' ⟦ s ⟧ₛ) (right-inverse-of (bij H s) t)
   where open Surjective
         open Bijective
+
+
+module IsoProp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} {Σ : Signature}
+          {A : Algebra {ℓ₁} {ℓ₂} Σ}  {A' : Algebra {ℓ₃} {ℓ₄} Σ}  where
+
+  open Hom
+  open Homo
+  open import Function.Injection
+  open module HCA = HomComp {A₀ = A} {A'} {A} renaming (_∘ₕ_ to _∘a_)
+  open module HCA' = HomComp {A₀ = A'} {A} {A'} renaming (_∘ₕ_ to _∘a'_)
+  open module HA = Hom A A renaming (_≈ₕ_ to _≈a_) hiding (Homo)
+  open module HA' = Hom A' A' renaming (_≈ₕ_ to _≈a'_) hiding (Homo)
+  iso-intro : (H : Homo A A') → (H' : Homo A' A) →
+          (H ∘a' H' ≈a' HomId) → (H' ∘a H ≈a HomId) → Isomorphism A A'
+  iso-intro H H' eq eq' = record { hom = H ; bij = isBij }
+    where isBij : ∀ s → Bijective (′ H ′ s)
+          isInj : ∀ s → Injective (′ H ′ s)
+          isSurj : ∀ s → Surjective (′ H ′ s)
+          isSurj s = record { from = ′ H' ′ s
+                            ; right-inverse-of = eq s
+                            }
+          isInj s {x} {y} hx≈hy = begin
+                                  x
+                                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (eq' s x) ⟩
+                                  ′ H' ′ s ⟨$⟩ (′ H ′ s ⟨$⟩ x)
+                                  ≈⟨ Π.cong (′ H' ′ s ) hx≈hy  ⟩
+                                  ′ H' ′ s ⟨$⟩ (′ H ′ s ⟨$⟩ y)
+                                  ≈⟨  eq' s y ⟩
+                                  y
+                                  ∎
+            where open EqR (A ⟦ s ⟧ₛ)
+          isBij s = record { injective = isInj s
+                           ; surjective = isSurj s
+                           }
 
 {- Total relation -}
 Total : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} → Rel A ℓ₂ → Set _

@@ -7,11 +7,15 @@ open import Relation.Binary
 open import Relation.Unary renaming (_⊆_ to _⊆r_) hiding (_⇒_)
 open import Data.Product renaming (map to ×f) hiding(Σ)
 open import Data.List
-open import Function as F hiding (Injective; Bijective; Surjective;module Injection;Injection)
+open import Function as F hiding (Injective; Bijective; Surjective; Inverse;
+                          module Injection;Injection; module Bijection; Bijection;
+                          module Inverse)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid;_⇨_)
 open import Function.Bijection hiding (_∘_)
 open import Function.Surjection hiding (_∘_)
-open import Function.Injection hiding (_∘_)
+open import Function.Injection renaming (_∘_ to _∘ᵢ_)
+
+import Relation.Binary.EqReasoning as EqR
 
 open import Equational
 open import Morphisms
@@ -185,6 +189,9 @@ module Free {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} where
     ≈app : ∀ {ar s} → (f : ops Σ (ar ↦ s)) → {ts ts' : HVec Free ar} →
              _∼v_ {R = ≈F} ts ts' → ≈F s (app f ts) (app f ts')
 
+  ≈var-inj : ∀ {s : sorts Σ} {a} {b} → ≈F s (var a) (var b) → _≈_ (X s) a b
+  ≈var-inj (≈var eq) = eq
+
   isRefl : ∀ s → Reflexive (≈F s)
   isRefl* : ∀ ar → Reflexive (_∼v_ {R = ≈F} {is = ar})
   isRefl* [] {x = ⟨⟩} = ∼⟨⟩
@@ -225,24 +232,35 @@ module Free {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} where
                        ; cong = ≈app f
                        }
 
+  η-inj : X ⊆ₛ (freeAlgebra ⟦_⟧ₛ)
+  η-inj {s} = record { to = record { _⟨$⟩_ = var ; cong = ≈var }
+                     ; injective = ≈var-inj
+                     }
+
+  open Hom
+  open Homo
+  open Injection
+  extends : ∀ {ℓ₅ ℓ₆} {B : Algebra {ℓ₅} {ℓ₆} Σ} (θ : X ⊆ₛ (B ⟦_⟧ₛ)) → (H : Homo freeAlgebra B) → Set _
+  extends {B = B} θ H = ∀ s (x : Carrier (X s)) → _≈_ (B ⟦ s ⟧ₛ) (′ H ′ s ⟨$⟩ var x) (to θ ⟨$⟩ x)
+
+  Id-extends-η : extends η-inj HomId
+  Id-extends-η s x = refl (freeAlgebra ⟦ s ⟧ₛ)
 
 
-
-module FreeExt {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₁ ℓ₂} (B : Algebra {ℓ₁} {ℓ₂} Σ) (θ : X ⊆ₛ (B ⟦_⟧ₛ)) where
-  open Free {X = X}
+module FreeExt {ℓ₃ ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₅ ℓ₆} (B : Algebra {ℓ₅} {ℓ₆} Σ) (θ : X ⊆ₛ (B ⟦_⟧ₛ)) where
+  open Free {X = X} public
   open Injection
   open Hom
   open Homo
-
   open Injection
-  mutual
-    ∣h∣→A : ∀ {s} → Free s → ∥ B ⟦ s ⟧ₛ ∥
-    ∣h∣→A (var {s} x) = to (θ {s}) ⟨$⟩ x
-    ∣h∣→A (app f x) = B ⟦ f ⟧ₒ ⟨$⟩ map|h|→A x
 
-    map|h|→A : ∀ {ar} → HVec Free ar → B ⟦ ar ⟧ₛ*
-    map|h|→A ⟨⟩ = ⟨⟩
-    map|h|→A (t ▹ ts) = ∣h∣→A t ▹ map|h|→A ts
+  ∣h∣→A : ∀ {s} → Free s → ∥ B ⟦ s ⟧ₛ ∥
+  map|h|→A : ∀ {ar} → HVec Free ar → B ⟦ ar ⟧ₛ*
+
+  ∣h∣→A (var {s} x) = to (θ {s}) ⟨$⟩ x
+  ∣h∣→A (app f x) = B ⟦ f ⟧ₒ ⟨$⟩ map|h|→A x
+  map|h|→A ⟨⟩ = ⟨⟩
+  map|h|→A (t ▹ ts) = ∣h∣→A t ▹ map|h|→A ts
 
   congfun : ∀ {s} {t₁ t₂ : Free s} → ≈F s t₁ t₂ → _≈_ (B ⟦ s ⟧ₛ) (∣h∣→A t₁) (∣h∣→A t₂)
   congfun {s} (≈var x) = cong (to (θ {s})) x
@@ -254,9 +272,7 @@ module FreeExt {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₁ ℓ₂} (B
           congfun* {.(_ ∷ _)} (∼▹ eq eqs) = ∼▹ (congfun eq) (congfun* eqs)
 
   fun|T|ₕ : freeAlgebra ⟿ B
-  fun|T|ₕ s = record { _⟨$⟩_ = ∣h∣→A {s = s}
-                     ; cong  = congfun {s}
-                     }
+  fun|T|ₕ s = record { _⟨$⟩_ = ∣h∣→A {s = s} ; cong  = congfun {s} }
 
   |T|ₕcond : (homCond freeAlgebra B) fun|T|ₕ
   |T|ₕcond {_} {s} f ts = cong (B ⟦ f ⟧ₒ) (map|h|-≈ ts)
@@ -266,21 +282,13 @@ module FreeExt {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₁ ℓ₂} (B
           map|h|-≈ {s ∷ _} (v ▹ ts) = ∼▹ (refl (B ⟦ s ⟧ₛ)) (map|h|-≈ ts)
 
 
-  open Hom
   ∣H∣ : Homo freeAlgebra B
-  ∣H∣ = record { ′_′  = fun|T|ₕ
-                 ; cond = |T|ₕcond
-                 }
-
-  extends-θ : (H : Homo freeAlgebra B) → Set _
-  extends-θ H = ∀ s (x : Carrier (X s)) → _≈_ (B ⟦ s ⟧ₛ) (′ H ′ s ⟨$⟩ var x) (to θ ⟨$⟩ x)
-
-  import Relation.Binary.EqReasoning as EqR
+  ∣H∣ = record { ′_′  = fun|T|ₕ  ; cond = |T|ₕcond }
 
   _≈h_ : _
   _≈h_ = _≈ₕ_ freeAlgebra B
 
-  UMP : ∀ (H : Homo freeAlgebra B) → extends-θ H → H ≈h ∣H∣
+  UMP : ∀ (H : Homo freeAlgebra B) → extends θ H → H ≈h ∣H∣
   UMP H prop s (var x) = prop s x
   UMP H prop s (app {ar} f ts) =
           begin
@@ -296,9 +304,7 @@ module FreeExt {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₁ ℓ₂} (B
           map≈ [] ⟨⟩ = ∼⟨⟩
           map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (UMP H prop s t) (map≈ ar ts)
 
-
 module Gen {ℓ₃ ℓ₄ : Level} {X : Universe ℓ₃ ℓ₄} (ι : X ⊆ₛ (A ⟦_⟧ₛ))  where
-  open Free {X = X}
   open FreeExt A ι
   open Hom
   open Setoid
@@ -342,3 +348,84 @@ module Gen {ℓ₃ ℓ₄ : Level} {X : Universe ℓ₃ ℓ₄} (ι : X ⊆ₛ (
 
   ⟨ι⟩≅Imgι : ⟨ ι ⟩' ≅ homImg freeAlgebra ∣H∣
   ⟨ι⟩≅Imgι = record { iso = ≅-SubAlg-iso (E⊆H , H⊆E) }
+
+-- open import Function.Inverse hiding (_∘_)
+_≅ₛ_ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} → Universe ℓ₁ ℓ₂ → Universe ℓ₃ ℓ₄ → Set _
+_≅ₛ_ {ℓ₁} {ℓ₂} {ℓ₃} {ℓ₄} X Y = ∀ {s} → Bijection {ℓ₁} {ℓ₂} {ℓ₃} {ℓ₄} (X s) (Y s)
+
+-- Free Algebras are unique up-to isomorphisms.
+module UniqueFree {ℓ₃ ℓ₄ ℓ₅ ℓ₆ : Level} {X : Universe ℓ₃ ℓ₄} {Y : Universe ℓ₅ ℓ₆ }
+       (ι : X ⊆ₛ (A ⟦_⟧ₛ)) (ξ : Y ⊆ₛ (A ⟦_⟧ₛ)) (iso : X ≅ₛ Y) where
+
+  open Bijection
+  α : X ⊆ₛ Y
+  α {s} = Bijection.injection (iso {s})
+
+  β : Y ⊆ₛ X
+  β {s} = record { to = Bijection.from (iso {s}) ; injective = inj s }
+    where inj : ∀ s → Injective (from (iso {s}))
+          inj s {a} {b} a≈b = begin
+                            a
+                            ≈⟨ Setoid.sym (Y s) (Bijection.right-inverse-of iso a) ⟩
+                            to iso ⟨$⟩ (from iso ⟨$⟩ a)
+                            ≈⟨ Π.cong (to iso) a≈b ⟩
+                            to iso ⟨$⟩ (from iso ⟨$⟩ b)
+                            ≈⟨ Bijection.right-inverse-of iso b ⟩
+                            b
+                            ∎
+            where open EqR (Y s)
+
+  module FX = Free {X = X}
+  module FY = Free {X = Y}
+
+  open Hom
+
+  XF : Algebra Σ
+  XF = FX.freeAlgebra
+  YF : Algebra Σ
+  YF = FY.freeAlgebra
+
+  module Fα = FreeExt {X = X} YF (FY.η-inj ∘ᵢ α)
+  module Fβ = FreeExt {X = Y} XF (FX.η-inj ∘ᵢ β)
+  module FηX = FreeExt {X = X} XF (FX.η-inj)
+  module FηY = FreeExt {X = Y} YF (FY.η-inj)
+
+  α* = Fα.∣H∣
+  β* = Fβ.∣H∣
+
+  open module HXF = HomComp {A₀ = XF} {YF} {XF} renaming (_∘ₕ_ to _∘x_)
+  open module HXY = HomComp {A₀ = YF} {XF} {YF} renaming (_∘ₕ_ to _∘y_)
+  module HX = Hom XF XF
+  module HY = Hom YF YF
+
+  β*α*-extends-ηX : FηX.extends FX.η-inj (β* ∘x α*)
+  β*α*-extends-ηX s x = Π.cong (Injection.to (FηX.η-inj {s})) (left-inverse-of iso x)
+
+  α*β*-extends-ηY : FηY.extends FY.η-inj (α* ∘y β*)
+  α*β*-extends-ηY s x = Π.cong (Injection.to (FηY.η-inj {s})) (right-inverse-of iso x)
+
+  {- The following proofs should be fine. -}
+  α*β*≈idFX : β* ∘x α* HX.≈ₕ HomId
+  α*β*≈idFX = begin
+               β* ∘x α*
+              ≈⟨ FηX.UMP (β* ∘x α*) β*α*-extends-ηX ⟩
+               FηX.∣H∣
+              ≈⟨ sym HX.≈ₕ-setoid (FηX.UMP HomId FX.Id-extends-η) ⟩
+               HomId
+              ∎
+    where open EqR HX.≈ₕ-setoid
+
+
+  β*α*≈idFY : α* ∘y β* HY.≈ₕ HomId
+  β*α*≈idFY = begin
+               α* ∘y β*
+              ≈⟨ FηY.UMP (α* ∘y β*) α*β*-extends-ηY ⟩
+               FηY.∣H∣
+              ≈⟨ sym HY.≈ₕ-setoid (FηY.UMP HomId FY.Id-extends-η) ⟩
+               HomId
+              ∎
+   where open EqR HY.≈ₕ-setoid
+
+  XF≈YF : XF ≅ YF
+  XF≈YF = record { iso = iso-intro α* β* β*α*≈idFY α*β*≈idFX }
+    where open IsoProp {A = XF} {YF}

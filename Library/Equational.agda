@@ -63,12 +63,11 @@ module EnvExt {ℓ₁ ℓ₂ : Level} {Σ} (X : Vars Σ)
     (a ↪) (term {[]} (inj₂ x) ⟨⟩) = a x
     (a ↪) (term {s₀ ∷ ar'} f ts) = A ⟦ f ⟧ₒ ⟨$⟩ (map↪ a ts)
 
-    
     map↪ : ∀ {ar} → (a : Env X A) → ∣T∣ ⟦ ar ⟧ₛ* → A ⟦ ar ⟧ₛ*
     map↪ a ⟨⟩ = ⟨⟩
     map↪ {s₀ ∷ ar'} a (t ▹ ts) = ((a ↪) t) ▹ map↪ a ts
 
-  
+
 module Subst {Σ} {X : Vars Σ} where
 
   Subst : Set
@@ -121,14 +120,14 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
          map↪ a ts ≡ mapV (λ s → (a ↪) {s}) ts
   map↪≡map {ar = []} {⟨⟩} = PE.refl
   map↪≡map {ar = s ∷ ar} {t ▹ ts} = PE.cong ((a ↪) t ▹_) map↪≡map
- 
+
   TΣX⇝A : T Σ 〔 X 〕 ⟿ A
   TΣX⇝A s = record { _⟨$⟩_ = (a ↪)
                    ; cong = conga↪
                    }
- 
+
   ⟦_⟧ : ∀ {s} → ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥ → ∥ A ⟦ s ⟧ₛ ∥
-  ⟦_⟧ {s} = TΣX⇝A s ⟨$⟩_ 
+  ⟦_⟧ {s} = TΣX⇝A s ⟨$⟩_
 
 
   {- Homomorphism condition of TΣX⇝A -}
@@ -142,7 +141,7 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
   HomEnv : Homo (T Σ 〔 X 〕) A → Set _
   HomEnv h = (s : sorts Σ) → (x : X s) → _≈_ (A ⟦ s ⟧ₛ) ( ′ h ′ s ⟨$⟩ term (inj₂ x) ⟨⟩ ) (a x)
 
- 
+
   tot : (H H' : Homo (T Σ 〔 X 〕) A) → HomEnv H → HomEnv H' →
                                          _≈ₕ_ (T Σ 〔 X 〕) A H  H'
   tot H H' he he' s (TermAlgebra.term {[]} (inj₂ x) ⟨⟩) = begin (′ H ′ s ⟨$⟩ term (inj₂ x) ⟨⟩)
@@ -168,7 +167,7 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
                     A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ (T Σ 〔 X 〕) A ′ H ′ ts)
                   ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (x ∷ ar) ts) ⟩
                     A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ (T Σ 〔 X 〕) A ′ H' ′ ts)
-                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond H' f ts) ⟩ 
+                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond H' f ts) ⟩
                     ′ H' ′ s ⟨$⟩ term f ts
                   ∎
     where open EqR (A ⟦ s ⟧ₛ)
@@ -187,7 +186,7 @@ module SubstitutionTheorem {ℓ₁ ℓ₂ : Level}
                 (η : Env X A)
                 (σ : Subst {Σ} {X})
                 where
-       module IA = InitHomoExt A η renaming (⟦_⟧ to ⟦_⟧η) 
+       module IA = InitHomoExt A η renaming (⟦_⟧ to ⟦_⟧η)
        open IA using (⟦_⟧η) public
        module IT = InitHomoExt (T Σ 〔 X 〕)  σ renaming (⟦_⟧ to ⟦_⟧σ)
        open IT using (⟦_⟧σ) public
@@ -235,12 +234,12 @@ Theory Σ X ar = HVec (Equation Σ X) ar
 equ-to-Equation : ∀ {Σ X} s → Equ Σ X s → Equation Σ X s
 equ-to-Equation _ equ = ⋀ (left equ) ≈ (right equ)
   where open Equ
-  
+
 EqTheory : (Σ : Signature) → (X : Vars Σ) → (ar : Arity Σ) → Set
 EqTheory Σ X ar = HVec (Equ Σ X) ar
 
 eqTheory-to-Theory : ∀ {Σ X ar} → EqTheory Σ X ar → Theory Σ X ar
-eqTheory-to-Theory = mapV equ-to-Equation 
+eqTheory-to-Theory = mapV equ-to-Equation
 
 equation-to-Equ : ∀ {Σ X} s → Equation Σ X s → Equ Σ X s
 equation-to-Equ _ equ = record { left = left equ ; right = right equ }
@@ -259,7 +258,7 @@ _⊨_ {X = X} {s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
     (θ : Env X A) →
     _∼v_ {R = λ sᵢ uᵢ uᵢ' → _≈_ (A ⟦ sᵢ ⟧ₛ) ((θ ↪) uᵢ) ((θ ↪) uᵢ')} us us' →
     (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) t) ((θ ↪) t')
-    
+
   where open EnvExt X A
 
 
@@ -290,7 +289,7 @@ data _⊢_ {Σ X}
            E ⊢ (⋀ t /s σ ≈ t' /s σ )
   preemp : ∀ {ar'} {s} {ts ts' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'} →
              _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' →
-             {f : ops (Σ 〔 X 〕) (ar' , s)} → E ⊢ (⋀ term f ts ≈ term f ts') 
+             {f : ops (Σ 〔 X 〕) (ar' , s)} → E ⊢ (⋀ term f ts ≈ term f ts')
 
 
 -- Syntactic sugar
@@ -305,12 +304,12 @@ ax ∣ σ = psubst ax σ ∼⟨⟩
 soundness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
                 {e : Equation Σ X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E e
 soundness {s = s} prefl A _ _ _ = Setoid.refl (A ⟦ s ⟧ₛ)
-soundness {s = s} {E} (psym t₁≈t₀) A A⊨E θ ∼⟨⟩ = 
+soundness {s = s} {E} (psym t₁≈t₀) A A⊨E θ ∼⟨⟩ =
              Setoid.sym (A ⟦ s ⟧ₛ) (soundness t₁≈t₀ A A⊨E θ ∼⟨⟩)
 soundness {X = X} {ar} {s} {E} (ptrans t₀≈t₁ t₁≈t₂) A x θ ∼⟨⟩ =
              Setoid.trans (A ⟦ s ⟧ₛ)
                (soundness t₀≈t₁ A x θ ∼⟨⟩)
-               (soundness t₁≈t₂ A x θ ∼⟨⟩) 
+               (soundness t₁≈t₂ A x θ ∼⟨⟩)
 soundness {Σ = Σ} {X} {ar} {s} {E}
             (psubst {t = t} {t'} e∈E σ ⊢us≈us') A A⊨E θ ∼⟨⟩ = begin
                  ⟦ ⟦ t ⟧σ ⟧θ
@@ -318,20 +317,20 @@ soundness {Σ = Σ} {X} {ar} {s} {E}
                  ⟦ t ⟧θσ
               ≈⟨ A⊨E e∈E θ∘σ (
                  map∼v (λ {s₀} {uᵢ} {uᵢ'} eq → A-trans (A-sym (subst-theo s₀ uᵢ))
-                                             (A-trans eq (subst-theo s₀ uᵢ')) ) (IHus θ ⊢us≈us')) ⟩ 
+                                             (A-trans eq (subst-theo s₀ uᵢ')) ) (IHus θ ⊢us≈us')) ⟩
                  ⟦ t' ⟧θσ
               ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (subst-theo s t') ⟩
                  ⟦ ⟦ t' ⟧σ ⟧θ
               ∎
   where open EqR (A ⟦ s ⟧ₛ)
-        A-sym : ∀ {s} {i j} → _ → _ 
+        A-sym : ∀ {s} {i j} → _ → _
         A-sym {s} {i} {j} eq = Setoid.sym (A ⟦ s ⟧ₛ) {i} {j} eq
         A-trans : ∀ {s} {i j k} → _ → _ → _
         A-trans {s} {i} {j} {k} eq eq' = Setoid.trans (A ⟦ s ⟧ₛ) {i} {j} {k} eq eq'
         open SubstitutionTheorem {A = A} θ σ renaming (⟦_⟧ησ to ⟦_⟧θσ;⟦_⟧η to ⟦_⟧θ;_∘ₑ_ to θ∘σ)
-        open EnvExt X A 
+        open EnvExt X A
         IHus : ∀ {ar₀} {us₀ us₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
-               (θ' : Env X A) → 
+               (θ' : Env X A) →
                _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ uᵢ /s σ ≈  uᵢ' /s σ )} us₀ us₀' →
                _∼v_ {R = λ sᵢ uᵢ uᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ' ↪) (uᵢ /s σ))
                                                  ((θ' ↪) (uᵢ' /s σ))} us₀ us₀'
@@ -350,10 +349,10 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
                    (θ ↪) (term f ts')
                 ∎
-                
+
   where open EqR (A ⟦ s ⟧ₛ)
         open InitHomoExt A θ
-        open EnvExt X A 
+        open EnvExt X A
         IHts : ∀ {ar₀} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
                _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts₀ ts₀' →
                _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ ↪) tᵢ)
@@ -376,7 +375,7 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
 -- Completeness
 ⊢R : ∀ {Σ X ar} → (E : Theory Σ X ar) → (s : sorts Σ) →
        Rel (∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥) (Level.zero)
-⊢R E s t t' = E ⊢ (⋀ t ≈ t') 
+⊢R E s t t' = E ⊢ (⋀ t ≈ t')
 
 ⊢REquiv : ∀ {Σ X ar} → (E : Theory Σ X ar) → (s : sorts Σ) →
           IsEquivalence (⊢R E s)
@@ -402,7 +401,7 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                     _∼v_ =[ _⟨$⟩_ (T Σ 〔 X 〕 ⟦ f ⟧ₒ) ]⇒ ⊢R E s
         pcsubst {[]} f ∼⟨⟩ = prefl
         pcsubst {s₀ ∷ ar} {s} f {ts} {ts'} ⊢ts≈ts' = preemp ⊢ts≈ts' {f}
-        
+
 ⊢Quot : ∀ {Σ X ar} → (E : Theory Σ X ar) → Algebra {Level.zero} {Level.zero} Σ
 ⊢Quot {Σ} {X} E = T Σ 〔 X 〕 / (⊢Cong E)
 
@@ -427,10 +426,10 @@ module ⊢QuotSubst {Σ X ar} (E : Theory Σ X ar) where
     open EnvExt X (⊢Quot E)
     open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
     open ⊢QuotSubst E
-    
+
     A⊨E : ∀ {s} {e : Equation Σ X s} → _∈_ {is = ar} e E → (⊢Quot E) ⊨ e
     A⊨E {s} {e = ⋀ t ≈ t' if「 ar' 」 ( us , us') } e∈E θ us~us' =
-                Congruence.welldef (⊢Cong E) s (thm {s = s} {t} {θ} , thm {s = s} {t'} {θ}) equi 
+                Congruence.welldef (⊢Cong E) s (thm {s = s} {t} {θ} , thm {s = s} {t'} {θ}) equi
           where open EqR (⊢RSetoid E s)
                 equi : E ⊢ (⋀ t /s θ ≈ t' /s θ)
                 equi = psubst {us = us} {us'} e∈E θ
@@ -457,9 +456,9 @@ complete {Σ} {X} {ar} {s} {E} {t} {t'} A⊨E = begin t
    open EqR (⊢RSetoid E s)
    open EnvExt X (⊢Quot E)
    open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
-   open ⊢QuotSubst E   
+   open ⊢QuotSubst E
 
-  
+
 {- Theory implication -}
 _⇒T_ : ∀ {Σ X ar ar'} → Theory Σ X ar → Theory Σ X ar' → Set
 _⇒T_ {Σ} {X} T₁ T₂ = ∀ {s} {ax : Equation Σ X s} → ax ∈ T₂ → T₁ ⊢ ax

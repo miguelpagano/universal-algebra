@@ -141,7 +141,6 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
   HomEnv : Homo (T Σ 〔 X 〕) A → Set _
   HomEnv h = (s : sorts Σ) → (x : X s) → _≈_ (A ⟦ s ⟧ₛ) ( ′ h ′ s ⟨$⟩ term (inj₂ x) ⟨⟩ ) (a x)
 
-
   tot : (H H' : Homo (T Σ 〔 X 〕) A) → HomEnv H → HomEnv H' →
                                          _≈ₕ_ (T Σ 〔 X 〕) A H  H'
   tot H H' he he' s (TermAlgebra.term {[]} (inj₂ x) ⟨⟩) = begin (′ H ′ s ⟨$⟩ term (inj₂ x) ⟨⟩)
@@ -176,6 +175,25 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
           map≈ [] ⟨⟩ = ∼⟨⟩
           map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (tot H H' he he' s t)
                                       (map≈ ar ts)
+
+module InitExtId {Σ : Signature} (X : Vars Σ) where
+  open import TermAlgebra
+
+  TX = T Σ 〔 X 〕
+
+  η-tx : Env X TX
+  η-tx {s} x = term (inj₂ x) ⟨⟩
+
+  open InitHomoExt TX η-tx
+
+  HomId-extends-η : HomEnv HomId
+  HomId-extends-η s x = PE.refl
+
+  module HX = Hom TX TX
+  open Homo
+
+  H≈idFX : (H : Homo TX TX) → HomEnv H → H HX.≈ₕ HomId
+  H≈idFX H ext = tot H HomId ext HomId-extends-η
 
 
 

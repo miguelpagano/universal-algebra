@@ -26,15 +26,15 @@ module FirstIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                      (B : Algebra {ℓ₃} {ℓ₄} Σ)
                      (h : Homo A B) where
 
- firstIsoTheo : (surj : (s : sorts Σ) → Surjective (′ h ′ s)) → Isomorphism (A / Kernel h) B
+ firstIsoTheo : isEpi h → Isomorphism (A / Kernel h) B
  firstIsoTheo surj =
              record { hom = homo₁
                     ; bij = bij₁
                     }
   where homo₁ : Homo (A / Kernel h) B
-        homo₁ = KerEmbedding A B h
+        homo₁ = ker-embedding A B h
         open Surjective
-        surj₁ : (s : sorts Σ) → Surjective (′ homo₁ ′ s)
+        surj₁ : isEpi homo₁
         surj₁ s = record { from = record { _⟨$⟩_ = from (surj s) ⟨$⟩_
                                          ; cong = Π.cong (′ h ′ s ∘ₛ from (surj s))
                                          }
@@ -78,8 +78,8 @@ module SecondIsoTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
                  }
         where
               condₕ : homCond (A / Φ) ((A / Ψ) / theo₁) (λ s → FE.id)
-              condₕ {ar} {s} f as = subst ((rel Φ s) (A ⟦ f ⟧ₒ ⟨$⟩ as))
-                                    (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) (PE.sym (mapId as)))
+              condₕ {ar} {s} f as = subst ((rel Φ {s}) (A ⟦ f ⟧ₒ ⟨$⟩ as))
+                                    (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) (PE.sym (map-id as)))
                                     (IsEquivalence.refl (cequiv Φ s))
 
 open SetoidPredicate
@@ -91,15 +91,15 @@ module ThirdIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
 
   -- Trace of a congruence in a subalgebra.
   trace : (s : sorts Σ) → Rel ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ _
-  trace s (b , _) (b' , _) = rel Φ s b b'
+  trace s (b , _) (b' , _) = rel Φ {s} b b'
 
   -- Collection of equivalence classes that intersect B
   A/Φ∩B : (s : sorts Σ) → Pred ∥ (A / Φ) ⟦ s ⟧ₛ ∥ _
-  A/Φ∩B s = λ a → Σ[ b ∈ ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ ] (rel Φ s) a (proj₁ b)
+  A/Φ∩B s = λ a → Σ[ b ∈ ∥ (SubAlgebra B) ⟦ s ⟧ₛ ∥ ] (rel Φ {s}) a (proj₁ b)
 
   -- Item 1 of theorem. The trace of Φ in B is a congruence on B.
   theo₁ : Congruence (SubAlgebra B)
-  theo₁ = record { rel = trace
+  theo₁ = record { rel = trace $-
                  ; welldef = wellDef
                  ; cequiv = cEquiv
                  ; csubst = λ f x → csubst Φ f (fmap∼v F.id x)
@@ -120,14 +120,14 @@ module ThirdIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
                 where open IsEquivalence (cequiv Φ s) renaming (trans to tr ; sym to sy)
 
   bs : ∀ ar → (vs : HVec (λ z → Carrier ((A / Φ) ⟦ z ⟧ₛ)) ar) →
-            (as : vs Relation.Unary.∈ _⇨v_ ((predicate) ∘ isor)) →
+            (as : vs Relation.Unary.∈ _⇨v_ ((predicate ∘ isor) $-)) →
           HVec (λ i → Σ[ a ∈ (Carrier (A ⟦ i ⟧ₛ)) ] (predicate (pr B i) a)) ar
   bs [] ⟨⟩ ⇨v⟨⟩ = ⟨⟩
   bs (i ∷ is) (v ▹ vs₁) (⇨v▹ ((b , pv) , bv) as₁) = (b , pv) ▹ bs is vs₁ as₁
      where open IsEquivalence (cequiv Φ i) renaming (trans to tr ; sym to sy)
   bseq :  ∀ {ar}
           (vs : HVec (λ z → Carrier ((A / Φ) ⟦ z ⟧ₛ)) ar) →
-          (as : vs Relation.Unary.∈ _⇨v_ ((predicate) ∘ isor)) →
+          (as : vs Relation.Unary.∈ _⇨v_ ((predicate ∘ isor) $-)) →
           _∼v_ {R = rel Φ} vs (map (λ _ → proj₁) (bs ar vs as))
   bseq {[]} ⟨⟩ ⇨v⟨⟩ = ∼⟨⟩
   bseq {i ∷ is} (v ▹ vs) (⇨v▹ pv as₁) = ∼▹ (proj₂ pv)
@@ -139,7 +139,7 @@ module ThirdIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
   theo₂ = record { pr = isor ; opClosed = io }
           where
             io : ∀ {ar s} → (f : ops Σ (ar , s)) →
-              (_⇨v_ (( predicate) ∘ isor) ⟨→⟩ predicate (isor s)) (_⟨$⟩_ ((A / Φ) ⟦ f ⟧ₒ))
+              (_⇨v_ ((predicate ∘ isor) $-) ⟨→⟩ predicate (isor s)) (_⟨$⟩_ ((A / Φ) ⟦ f ⟧ₒ))
             io {ar} {s} f {vs} as = SubAlgebra B ⟦ f ⟧ₒ ⟨$⟩ bs ar vs as
                                   , csubst Φ f (bseq vs as)
 

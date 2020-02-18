@@ -1,23 +1,25 @@
-{- (conditional) equational logic: Signature with variables, environments,
-   equations, equational theories, proofs, models, Birkhoff soundness and 
-   completeness. -}
+-- Universal Algebra Library
+--
+-- Conditional equational logic: Signature with variables, environments,
+--  equations, equational theories, proofs, models, Birkhoff soundness and
+-- completeness.
 
 module Equational where
 
-open import UnivAlgebra
-open import Morphisms
 open import Data.List
 open import Data.Product
 open import Data.Sum
-open import Level renaming (zero to lzero ; suc to lsuc)
-open import Relation.Binary hiding (Total)
-open import Relation.Binary.PropositionalEquality as PE
 open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘e_)
-open import HeterogeneousVec renaming (map to mapV)
-
-import TermAlgebra
+open import Level renaming (zero to lzero ; suc to lsuc)
+open import Relation.Binary hiding (Total)
 import Relation.Binary.EqReasoning as EqR
+open import Relation.Binary.PropositionalEquality as PE
+
+open import HeterogeneousVec renaming (map to mapV)
+open import UnivAlgebra
+open import Morphisms
+import TermAlgebra
 
 open Signature
 
@@ -171,7 +173,7 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
                   ∎
     where open EqR (A ⟦ s ⟧ₛ)
           map≈ : (ar : Arity Σ) → (ts : HVec (HU) ar) →
-                 _∼v_ {R = _≈_ ∘ (_⟦_⟧ₛ A)} (mapV (_⟨$⟩_ ∘ ′ H ′) ts) (mapV (_⟨$⟩_ ∘ ′ H' ′) ts)
+                 _∼v_ {R = λ {s} → _≈_ (A ⟦ s ⟧ₛ)} (mapV (_⟨$⟩_ ∘ ′ H ′) ts) (mapV (_⟨$⟩_ ∘ ′ H' ′) ts)
           map≈ [] ⟨⟩ = ∼⟨⟩
           map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (tot H H' he he' s t)
                                       (map≈ ar ts)
@@ -274,7 +276,7 @@ _⊨_ : ∀ {ℓ₁ ℓ₂ Σ X} {s : sorts Σ} →
         (A : Algebra {ℓ₁} {ℓ₂} Σ) → Equation Σ X s → Set (ℓ₂ Level.⊔ ℓ₁)
 _⊨_ {X = X} {s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
     (θ : Env X A) →
-    _∼v_ {R = λ sᵢ uᵢ uᵢ' → _≈_ (A ⟦ sᵢ ⟧ₛ) ((θ ↪) uᵢ) ((θ ↪) uᵢ')} us us' →
+    _∼v_ {R = λ {sᵢ} uᵢ uᵢ' → _≈_ (A ⟦ sᵢ ⟧ₛ) ((θ ↪) uᵢ) ((θ ↪) uᵢ')} us us' →
     (_≈_ (A ⟦ s ⟧ₛ)) ((θ ↪) t) ((θ ↪) t')
 
   where open EnvExt X A
@@ -303,10 +305,10 @@ data _⊢_ {Σ X}
            {t t' : ∥ T Σ 〔 X 〕 ⟦ s ⟧ₛ ∥} →
            (⋀ t ≈ t' if「 ar' 」 (us , us')) ∈ E →
            (σ : Subst) →
-           _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ uᵢ /s σ ≈ uᵢ' /s σ)} us us' →
+           _∼v_ {R = λ uᵢ uᵢ' → E ⊢ (⋀ uᵢ /s σ ≈ uᵢ' /s σ)} us us' →
            E ⊢ (⋀ t /s σ ≈ t' /s σ )
   preemp : ∀ {ar'} {s} {ts ts' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'} →
-             _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' →
+             _∼v_ {R = λ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' →
              {f : ops (Σ 〔 X 〕) (ar' , s)} → E ⊢ (⋀ term f ts ≈ term f ts')
 
 
@@ -349,8 +351,8 @@ soundness {Σ = Σ} {X} {ar} {s} {E}
         open EnvExt X A
         IHus : ∀ {ar₀} {us₀ us₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
                (θ' : Env X A) →
-               _∼v_ {R = λ sᵢ uᵢ uᵢ' → E ⊢ (⋀ uᵢ /s σ ≈  uᵢ' /s σ )} us₀ us₀' →
-               _∼v_ {R = λ sᵢ uᵢ uᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ' ↪) (uᵢ /s σ))
+               _∼v_ {R = λ uᵢ uᵢ' → E ⊢ (⋀ uᵢ /s σ ≈  uᵢ' /s σ )} us₀ us₀' →
+               _∼v_ {R = λ {sᵢ} uᵢ uᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ' ↪) (uᵢ /s σ))
                                                  ((θ' ↪) (uᵢ' /s σ))} us₀ us₀'
         IHus θ' ∼⟨⟩ = ∼⟨⟩
         IHus θ' (∼▹ ⊢u₁≈u₂ ⊢us₁≈us₂) = ∼▹ (soundness ⊢u₁≈u₂ A A⊨E θ' ∼⟨⟩) (IHus θ' ⊢us₁≈us₂)
@@ -372,8 +374,8 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
         open InitHomoExt A θ
         open EnvExt X A
         IHts : ∀ {ar₀} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
-               _∼v_ {R = λ sᵢ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts₀ ts₀' →
-               _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ ↪) tᵢ)
+               _∼v_ {R = λ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts₀ ts₀' →
+               _∼v_ {R = λ {sᵢ} tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ ↪) tᵢ)
                                                  ((θ ↪) tᵢ')} ts₀ ts₀'
         IHts {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
         IHts {s₀ ∷ ar₀} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ ⊢t₀≈t₀' ⊢ts₀≈ts₀') =
@@ -382,9 +384,9 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                        E ⊢ (⋀ tᵢ ≈ tᵢ') → ⊨All E (⋀ tᵢ ≈ tᵢ')
                 ih {s'} {tᵢ} {tᵢ'} peq = soundness peq
         map≈ : ∀ {ar'} {ts₀ ts₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar'} →
-               (p : _∼v_ {R = λ sᵢ tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ ↪) tᵢ)
+               (p : _∼v_ {R = λ {sᵢ} tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ (θ ↪) tᵢ)
                                                  ((θ ↪) tᵢ')} ts₀ ts₀') →
-               _∼v_ {R = λ s₀ → _≈_ (A ⟦ s₀ ⟧ₛ)}
+               _∼v_ {R = λ {s₀} → _≈_ (A ⟦ s₀ ⟧ₛ)}
                (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts₀) (map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts₀')
         map≈ {[]} ∼⟨⟩ = ∼⟨⟩
         map≈ {i ∷ is} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ p₀ p) = ∼▹ p₀ (map≈ p)
@@ -409,10 +411,12 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                                    }
 
 ⊢Cong : ∀ {Σ X ar} → (E : Theory Σ X ar) → Congruence (T Σ 〔 X 〕)
-⊢Cong {Σ} {X} E = record { rel = ⊢R E
-               ; welldef = pwdef
-               ; cequiv = ⊢REquiv E
-               ; csubst = pcsubst }
+⊢Cong {Σ} {X} E = record
+  { rel = (⊢R E) $-
+  ; welldef = pwdef
+  ; cequiv = ⊢REquiv E
+  ; csubst = pcsubst
+  }
   where pwdef : ∀ s → WellDefRel (T Σ 〔 X 〕 ⟦ s ⟧ₛ) (⊢R E s)
         pwdef s {(t , t')} {(.t , .t')} (PE.refl , PE.refl) ⊢t₀≈t₁ = ⊢t₀≈t₁
         pcsubst : ∀ {ar} {s} → (f : ops Σ (ar , s)) →
@@ -441,19 +445,20 @@ module ⊢QuotSubst {Σ X ar} (E : Theory Σ X ar) where
 ⊢Quot⊨E : ∀ {Σ X ar} → (E : Theory Σ X ar) → (⊢Quot E) ⊨T E
 ⊢Quot⊨E {Σ} {X} {ar} E = A⊨E
   where
-    open EnvExt X (⊢Quot E)
-    open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
-    open ⊢QuotSubst E
+  open EnvExt X (⊢Quot E)
+  open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
+  open ⊢QuotSubst E
 
-    A⊨E : ∀ {s} {e : Equation Σ X s} → _∈_ {is = ar} e E → (⊢Quot E) ⊨ e
-    A⊨E {s} {e = ⋀ t ≈ t' if「 ar' 」 ( us , us') } e∈E θ us~us' =
-                Congruence.welldef (⊢Cong E) s (thm {s = s} {t} {θ} , thm {s = s} {t'} {θ}) equi
-          where open EqR (⊢RSetoid E s)
-                equi : E ⊢ (⋀ t /s θ ≈ t' /s θ)
-                equi = psubst {us = us} {us'} e∈E θ
-                                (map∼v (λ {s'} {t₁} {t₂} → Congruence.welldef (⊢Cong E) s'
-                                ((Setoid.sym (_⟦_⟧ₛ T Σ 〔 X 〕 s') (thm {t = t₁} {θ})) ,
-                                  (Setoid.sym (_⟦_⟧ₛ T Σ 〔 X 〕 s') (thm {t = t₂} {θ})))) us~us')
+  A⊨E : ∀ {s} {e : Equation Σ X s} → _∈_ {is = ar} e E → (⊢Quot E) ⊨ e
+  A⊨E {s} {e = ⋀ t ≈ t' if「 ar' 」 ( us , us') } e∈E θ us~us' =
+              Congruence.welldef (⊢Cong E) s (thm {s = s} {t} {θ} , thm {s = s} {t'} {θ}) equi
+    where
+    open EqR (⊢RSetoid E s)
+    equi : E ⊢ (⋀ t /s θ ≈ t' /s θ)
+    equi = psubst {us = us} {us'} e∈E θ
+                  (map∼v (λ {s'} {t₁} {t₂} → Congruence.welldef (⊢Cong E) s'
+                    ((Setoid.sym (_⟦_⟧ₛ T Σ 〔 X 〕 s') (thm {t = t₁} {θ})) ,
+                     (Setoid.sym (_⟦_⟧ₛ T Σ 〔 X 〕 s') (thm {t = t₂} {θ})))) us~us')
 
 
 
@@ -471,10 +476,10 @@ complete {Σ} {X} {ar} {s} {E} {t} {t'} A⊨E = begin t
                   ≈⟨ ≡to≈ (⊢RSetoid E s) ((idSubst≡ t')) ⟩
                   t' ∎
   where
-   open EqR (⊢RSetoid E s)
-   open EnvExt X (⊢Quot E)
-   open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
-   open ⊢QuotSubst E
+  open EqR (⊢RSetoid E s)
+  open EnvExt X (⊢Quot E)
+  open EnvExt X (T Σ 〔 X 〕) hiding (_↪) renaming (map↪ to map↪ₜ)
+  open ⊢QuotSubst E
 
 
 {- Theory implication -}
@@ -487,18 +492,20 @@ _⇒T_ {Σ} {X} T₁ T₂ = ∀ {s} {ax : Equation Σ X s} → ax ∈ T₂ → T
 ⊨T⇒ T₁ T₂ p⇒ A satAll = λ ax → soundness (p⇒ ax) A satAll
 
 {- Initiality of Quotiened Term Algebra -}
-module InitialityModel {Σ X ar ℓ₁ ℓ₂} (E : Theory Σ X ar)
-       (A : Algebra {ℓ₁} {ℓ₂} Σ) (M : A ⊨T E)
-          where
+module InitialityModel {Σ X ar ℓ₁ ℓ₂} {E : Theory Σ X ar}
+                       {A : Algebra {ℓ₁} {ℓ₂} Σ} (M : A ⊨T E)
+       where
 
   import Morphisms
   open Hom
   open Homo
 
   init : (θ : Env X A) → Hom.Homo (⊢Quot E) A
-  init θ = record { ′_′ = λ s → record { _⟨$⟩_ = _⟨$⟩_ ( ′ TΣXHom ′ s)
-                                     ; cong = λ {j} {i} E⊢e → soundness E⊢e A M θ ∼⟨⟩
-                                     }
-                ; cond = λ f as → TΣXcond f as
-                }
-       where open InitHomoExt A θ
+  init θ = record
+    { ′_′ = λ s → record
+        { _⟨$⟩_ = _⟨$⟩_ ( ′ TΣXHom ′ s)
+        ; cong = λ {j} {i} E⊢e → soundness E⊢e A M θ ∼⟨⟩
+        }
+    ; cond = λ f as → TΣXcond f as
+    }
+    where open InitHomoExt A θ

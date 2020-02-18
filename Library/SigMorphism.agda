@@ -1,26 +1,27 @@
-{- Signature morphisms: 
-   Derived signature morphism, reduct algebra, reduct homomorphism, 
+{- Signature morphisms:
+   Derived signature morphism, reduct algebra, reduct homomorphism,
    translation of terms and translation of equational theories. -}
 
 module SigMorphism where
 
-open import Setoids
-open import UnivAlgebra
-open import Morphisms
-
-open import Relation.Binary
-open import Level renaming (suc to lsuc ; zero to lzero)
+open import Data.Bool hiding (T)
+open import Data.List renaming (map to lmap;lookup to _‼_)
+import Data.List.Properties as LP
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
 open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (id)
-open import Data.Bool hiding (T)
-open import Data.List renaming (map to lmap)
+open import Level renaming (suc to lsuc ; zero to lzero)
+open import Relation.Binary
 open import Relation.Binary.PropositionalEquality as PE
-open import Data.String hiding (length; _≈_)
 open import Data.Fin hiding (#_)
-open import HeterogeneousVec 
+
+open import HeterogeneousVec
 import TermAlgebra
+
+open import Setoids
+open import UnivAlgebra
+open import Morphisms
 
 open Signature
 open Algebra
@@ -29,7 +30,7 @@ module FormalTerm (Σ : Signature) where
 
  data _⊩_  (ar' : Arity Σ) : (sorts Σ) → Set where
    #   : (n : Fin (length ar')) → ar' ⊩ (ar' ‼ n)
-   _∣$∣_ : ∀ {ar s} → ops Σ (ar , s) → 
+   _∣$∣_ : ∀ {ar s} → ops Σ (ar , s) →
                HVec (ar' ⊩_) ar → ar' ⊩ s
 
  {- Lifting of indices -}
@@ -49,7 +50,7 @@ module FormalTerm (Σ : Signature) where
    ⊩_/_ {ar} {s = .(ar ‼ n)} (# n) ts' = ts' ‼v n
    ⊩ f ∣$∣ ts / ts' = f ∣$∣ (⊩* ts / ts')
 
-   
+
    ⊩*_/_ : {ar ar' ar'' : Arity Σ} → HVec (ar ⊩_) ar'' → HVec (ar' ⊩_) ar → HVec (ar' ⊩_) ar''
    ⊩* ⟨⟩ / ts' = ⟨⟩
    ⊩* t ▹ ts / ts' = (⊩ t / ts') ▹ (⊩* ts / ts')
@@ -65,14 +66,14 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
 
     ⟦_⟧⊩* : ∀ {ar ar'} → HVec (ar ⊩_) ar' → A ⟦ ar ⟧ₛ* → A ⟦ ar' ⟧ₛ*
     ⟦ ⟨⟩ ⟧⊩*      as = ⟨⟩
-    ⟦ t ▹ ts ⟧⊩*  as = ⟦ t ⟧⊩ as ▹ ⟦ ts ⟧⊩* as 
+    ⟦ t ▹ ts ⟧⊩*  as = ⟦ t ⟧⊩ as ▹ ⟦ ts ⟧⊩* as
 
 
   cong⟦⟧⊩ : ∀ {ar s} {vs vs' : A ⟦ ar ⟧ₛ* } →
             (t : ar ⊩ s) →
-            _∼v_  {R = Setoid._≈_ ∘ _⟦_⟧ₛ A} vs vs' →
+            _∼v_  {R = ((Setoid._≈_ ∘ _⟦_⟧ₛ A) $-)} vs vs' →
             Setoid._≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧⊩ vs) (⟦ t ⟧⊩ vs')
-  cong⟦⟧⊩ {vs = vs} {vs'} (# n) eq = ~v-pointwise vs vs' eq n
+  cong⟦⟧⊩ {vs = vs} {vs'} (# n) eq = ~v-pointwise eq n
   cong⟦⟧⊩ {ar} {_} {vs} {vs'} (f ∣$∣ ts) eq = Π.cong (A ⟦ f ⟧ₒ) (cong⟦⟧⊩* ts)
     where  cong⟦⟧⊩* : ∀ {ar'} →
                    (ts : HVec (ar ⊩_) ar') →
@@ -108,22 +109,22 @@ module SigMorTerms {Σ₁ Σ₂ : Signature} where
       _↝f*_ : ∀ {ar ar' : Arity Σ₁} → (m : Σ₁ ↝ Σ₂) → HVec (ar ⊩₁_) ar' → HVec (lmap (↝ₛ m) ar ⊩₂_) (lmap (↝ₛ m) ar')
       m ↝f* ⟨⟩ = ⟨⟩
       m ↝f* (v ▹ vs) = m ↝f v ▹ (m ↝f* vs)
- 
+
 
 module SigMorCat where
-  open import Data.List.Properties 
+  open import Data.List.Properties
   module Id-mor (Σ : Signature) where
     open FormalTerm Σ
-    
+
     id-π : (ar : Arity Σ) → HVec (ar ⊩_) ar
     id-π [] = ⟨⟩
-    id-π (s ∷ ar) = (# Fin.zero) ▹ ↑* ar s (id-π ar) 
+    id-π (s ∷ ar) = (# Fin.zero) ▹ ↑* ar s (id-π ar)
 
     id-mor : Σ ↝ Σ
     id-mor = record { ↝ₛ = id
-                    ; ↝ₒ = λ {ar} {s} f → f ∣$∣ subst (λ ar' → HVec (ar' ⊩_) ar ) (sym (map-id ar)) (id-π ar)
+                    ; ↝ₒ = λ {ar} {s} f → f ∣$∣ subst (λ ar' → HVec (ar' ⊩_) ar ) (sym (LP.map-id ar)) (id-π ar)
                     }
-                
+
   module ∘-mor (Σ₁ Σ₂ Σ₃ : Signature) where
     open FormalTerm
     open _↝_
@@ -133,7 +134,7 @@ module SigMorCat where
     _⊩₃_ : Arity Σ₃ → sorts Σ₃ → Set
     _⊩₃_ = _⊩_ Σ₃
     ∘↝∘  : ∀ {ar} {s} (m : Σ₁ ↝ Σ₂)  (m' : Σ₂ ↝ Σ₃)  → (lmap (↝ₛ m) ar) ⊩₂ (↝ₛ m s) → (lmap (↝ₛ m' ∘ ↝ₛ m) ar) ⊩₃ (↝ₛ m' (↝ₛ m s))
-    ∘↝∘ {ar} {s} m m' ft = subst (_⊩₃ (↝ₛ m' (↝ₛ m s))) (sym (map-compose {g = ↝ₛ m'} {↝ₛ m} ar)) (m' ↝f ft)
+    ∘↝∘ {ar} {s} m m' ft = subst (_⊩₃ (↝ₛ m' (↝ₛ m s))) (sym (LP.map-compose {g = ↝ₛ m'} {↝ₛ m} ar)) (m' ↝f ft)
 
     _∘↝_ : (m : Σ₁ ↝ Σ₂) (m' : Σ₂ ↝ Σ₃) → Σ₁ ↝ Σ₃
     m ∘↝ m' = record { ↝ₛ = ↝ₛ m' ∘ ↝ₛ m
@@ -153,50 +154,50 @@ module ReductAlgebra {Σₛ Σₜ} (t : Σₛ ↝ Σₜ) where
   _⟨_⟩ₒ :  ∀  {ℓ₀ ℓ₁ ar s} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
               ops Σₛ (ar , s) →
               (A ⟨_⟩ₛ) ✳ ar ⟶  A ⟨ s ⟩ₛ
-  A ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ t f ⟧⊩ ∘ reindex (↝ₛ t) 
+  A ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ t f ⟧⊩ ∘ reindex (↝ₛ t)
                     ;  cong =  cong⟦⟧⊩ (↝ₒ t f) ∘ ∼v-reindex (↝ₛ t)
                     }
     where open FormalTermInt A
 
   〈_〉 : ∀ {ℓ₀ ℓ₁} → Algebra {ℓ₀} {ℓ₁} Σₜ → Algebra Σₛ
-  〈 A 〉 = record { _⟦_⟧ₛ = A ⟨_⟩ₛ ; _⟦_⟧ₒ = A ⟨_⟩ₒ } 
+  〈 A 〉 = record { _⟦_⟧ₛ = A ⟨_⟩ₛ ; _⟦_⟧ₒ = A ⟨_⟩ₒ }
 
 
 {- Reduct homomorphism -}
 module ReductHomo {Σₛ Σₜ}  {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
                  (t : Σₛ ↝ Σₜ)
                  (A : Algebra {ℓ₁} {ℓ₂} Σₜ)
-                 (A' : Algebra {ℓ₃} {ℓ₄} Σₜ) where 
+                 (A' : Algebra {ℓ₃} {ℓ₄} Σₜ) where
 
   open Hom
   open Homo
   open FormalTerm Σₜ
   open ReductAlgebra t
   open _↝_
-  
+
   hcond↝ : ∀ {l₀ l₁ l₂ l₃}
              {A : Algebra {l₀} {l₁} Σₜ}
              {A' : Algebra {l₂} {l₃} Σₜ}
-             (h : Homo A A') → 
-             homCond 〈 A 〉 〈 A' 〉 (′ h ′ ∘ ↝ₛ t) 
-  hcond↝  {A = A} {A'} h {ar} {s} f as = 
+             (h : Homo A A') →
+             homCond 〈 A 〉 〈 A' 〉 (′ h ′ ∘ ↝ₛ t)
+  hcond↝  {A = A} {A'} h {ar} {s} f as =
                        subst (λ vec → Setoid._≈_ (A' ⟦ ↝ₛ t s ⟧ₛ)
                                     (′ h ′ (↝ₛ t s) ⟨$⟩
                                            ⟦_⟧⊩ A (↝ₒ t f) (reindex (↝ₛ t) as))
-                                    (⟦_⟧⊩ A' (↝ₒ t f) vec) 
+                                    (⟦_⟧⊩ A' (↝ₒ t f) vec)
                                     )
-                       (mapReindex (↝ₛ t) 
+                       (mapReindex (↝ₛ t)
                                    (_⟨$⟩_ ∘ ′ h ′)  as)
                        (homCond↝' (lmap (↝ₛ t) ar) (↝ₛ t s) (↝ₒ t f)
                                   (reindex (↝ₛ t) as))
 
     where open FormalTermInt
           homCond↝' : (ar' : Arity Σₜ) → (s' : sorts Σₜ) → (e : ar' ⊩ s') →
-                      (vs : A ⟦ ar' ⟧ₛ* ) →                   
+                      (vs : A ⟦ ar' ⟧ₛ* ) →
                       Setoid._≈_ (_⟦_⟧ₛ A' s')
                                  (′ h ′ s' ⟨$⟩ ⟦_⟧⊩ A e vs)
                                  (⟦ A' ⟧⊩ e (map⟿ A A' ′ h ′ vs))
-          homCond↝' [] _ (# ()) ⟨⟩                           
+          homCond↝' [] _ (# ()) ⟨⟩
           homCond↝' (s ∷ ar) .s (# zero) (v ▹ vs) = Setoid.refl (A' ⟦ s ⟧ₛ)
           homCond↝' (s ∷ ar) .(ar ‼ n) (# (suc n)) (v ▹ vs) =
                                                  homCond↝' ar (ar ‼ n) (# n) vs
@@ -204,9 +205,9 @@ module ReductHomo {Σₛ Σₜ}  {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
                     Setoid.trans (A' ⟦ s ⟧ₛ) (cond h f₁ (⟦_⟧⊩* A es vs))
                                              (Π.cong (A' ⟦ f₁ ⟧ₒ)
                                                      (homCond↝'vec ar₁ es))
-            where homCond↝'vec : (ar₁ : Arity Σₜ) → 
-                                  (es : HVec (_⊩_ ar) ar₁) → 
-                                    _∼v_ {R = Setoid._≈_ ∘ (A' ⟦_⟧ₛ) }
+            where homCond↝'vec : (ar₁ : Arity Σₜ) →
+                                  (es : HVec (_⊩_ ar) ar₁) →
+                                    _∼v_ {R = (Setoid._≈_ ∘ (A' ⟦_⟧ₛ)) $- }
                                       (map (λ x → _⟨$⟩_ (′ h ′ x)) (⟦_⟧⊩* A es vs))
                                       (⟦_⟧⊩* A' es (map (λ x → _⟨$⟩_ (′ h ′ x)) vs))
                   homCond↝'vec .[] ⟨⟩ = ∼⟨⟩
@@ -232,7 +233,7 @@ module TermTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ) where
 
   -- Variable translation
   _↝̬ : Vars Σₛ → Vars Σₜ
-  (X ↝̬) s' = Σ[ p ∈ Img⁻¹ (↝ₛ Σ↝) s' ] X (proj₁ p) 
+  (X ↝̬) s' = Σ[ p ∈ Img⁻¹ (↝ₛ Σ↝) s' ] X (proj₁ p)
 
   open Hom
   open ReductAlgebra Σ↝
@@ -289,7 +290,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
     open Homo
     open ReductHomo Σ↝ (T Σₜ 〔 Xₛ ↝̬ 〕) Aₜ
     open HomComp
-    
+
     reductTh : ∀ {s} → (t : ∥ T Σₛ 〔 Xₛ 〕 ⟦ s ⟧ₛ ∥) →
                  _≈_ (〈 Aₜ 〉 ⟦ s ⟧ₛ) ⟦ t ⟧Σₛ ⟦ t ∼ₜ ⟧Σₜ
     reductTh {s} t = totΣₛ ∣H∣ₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ) he₁ he₂ s t
@@ -322,7 +323,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
                      ⟦ t ∼ₜ ⟧Σₜ
                    ≈⟨ sat θₜ (∼v-reindex _∼ (reductTh* us≈us')) ⟩
                      ⟦ t' ∼ₜ ⟧Σₜ
-                   ≈⟨ Setoid.sym (〈 Aₜ 〉 ⟦ s ⟧ₛ) (reductTh t') ⟩ 
+                   ≈⟨ Setoid.sym (〈 Aₜ 〉 ⟦ s ⟧ₛ) (reductTh t') ⟩
                      ⟦ t' ⟧Σₛ
                    ∎
       where open InitHomoExt 〈 Aₜ 〉 θ renaming
@@ -333,8 +334,8 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
             open ReductTheorem Aₜ θₜ
             reductTh* : ∀ {ar₀}
                         {us₀ us₀' : HVec (λ s' → ∥ T Σₛ 〔 Xₛ 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
-                        _∼v_ {R = λ sᵢ uᵢ uᵢ' → _≈_ (〈 Aₜ 〉 ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧Σₛ ⟦ uᵢ' ⟧Σₛ} us₀ us₀' →
-                        _∼v_ {R = λ sᵢ uᵢ∼ uᵢ∼' → _≈_ (Aₜ ⟦ sᵢ ∼ ⟧ₛ) ⟦ uᵢ∼ ⟧Σₜ ⟦ uᵢ∼' ⟧Σₜ}
+                        _∼v_ {R = λ {sᵢ} uᵢ uᵢ' → _≈_ (〈 Aₜ 〉 ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧Σₛ ⟦ uᵢ' ⟧Σₛ} us₀ us₀' →
+                        _∼v_ {R = λ {sᵢ} uᵢ∼ uᵢ∼' → _≈_ (Aₜ ⟦ sᵢ ∼ ⟧ₛ) ⟦ uᵢ∼ ⟧Σₜ ⟦ uᵢ∼' ⟧Σₜ}
                              (map (λ s₀ → _∼ₜ {s₀}) us₀)
                              (map (λ s₀ → _∼ₜ {s₀}) us₀')
             reductTh* {[]} ∼⟨⟩ = ∼⟨⟩
@@ -368,7 +369,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   _⇒T~_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set
   Tₜ ⇒T~ Tₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Tₛ → Tₜ ⊢ eq↝ ax
 
-  
+
 
   module ModelPreserv {ar} (Thₛ : Theory Σₛ Xₛ ar) where
 
@@ -380,7 +381,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
     -- Model preservation from a implicated theory
     ⊨T⇒↝ : ∀ {ℓ₁ ℓ₂} {ar'} →
              (Thₜ : Theory Σₜ Xₜ ar') → (p⇒ : Thₜ ⇒T~ Thₛ) →
-             (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨T Thₜ → 〈 Aₜ 〉 ⊨T Thₛ 
+             (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨T Thₜ → 〈 Aₜ 〉 ⊨T Thₛ
     ⊨T⇒↝ Thₜ p⇒ Aₜ satAll {s} {e} = λ ax θ ceq → satProp e
                                           (soundness (p⇒ ax) Aₜ satAll) θ ceq
       where open SatProp Aₜ

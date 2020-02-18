@@ -1,23 +1,21 @@
 open import UnivAlgebra
 open import Equational
 module Birkhoff {Σ : Signature} {X : Vars Σ} where
-open Signature
---open import Variety
-open import Morphisms
-open import HeterogeneousVec
 
 open import Data.List using (List;[])
 open import Data.Product hiding (Σ;map)
 open import Function.Bijection  hiding (_∘_)
-open import Function.Surjection hiding (_∘_)
 open import Function hiding (module Bijection;Bijection;Bijective)
 open import Function.Equality hiding (_∘_)
+open import Function.Surjection hiding (_∘_)
 open import Relation.Binary
 import Relation.Binary.EqReasoning as EqR
+
 open Algebra
 open Signature
-open import Setoids using (∥_∥)
 open import Product
+open import Morphisms
+open import HeterogeneousVec
 
 open import TermAlgebra (Σ 〔 X 〕) hiding (∣T∣)
 open import TermAlgebra
@@ -28,7 +26,7 @@ open Hom
 open Homo
 
 Terms : ∀ s → Set _
-Terms s = ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥
+Terms s = ∣T∣ (Σ 〔 X 〕) ∥ s ∥
 
 
 module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
@@ -47,13 +45,13 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
   _,_≈A_ : (s : sorts Σ) → _
   _,_≈A_ s = Setoid._≈_ (A ⟦ s ⟧ₛ)
 
-  ⟦_⟧A : ∀ {s : sorts Σ} → Terms s → ∥ A ⟦ s ⟧ₛ ∥
+  ⟦_⟧A : ∀ {s : sorts Σ} → Terms s → A ∥ s ∥
   ⟦_⟧A {s} = θA ↪A
 
   _,_≈B_ : (s : sorts Σ) → _
   _,_≈B_ s = Setoid._≈_ (B ⟦ s ⟧ₛ)
 
-  ⟦_⟧B : ∀ {s : sorts Σ} → Terms s → ∥ B ⟦ s ⟧ₛ ∥
+  ⟦_⟧B : ∀ {s : sorts Σ} → Terms s → B ∥ s ∥
   ⟦_⟧B {s}  = θB ↪B
 
   ⟦t⟧A≈H⟦t⟧B : ∀ {s : sorts Σ} → (t : Terms s) →
@@ -63,7 +61,7 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
                         (λ s' _ → Setoid.refl (A ⟦ s' ⟧ₛ))
                         s t
 
-  ≈B→≈A : ∀ {s : sorts Σ} {t t' : ∥ ∣T∣ (Σ 〔 X 〕) ⟦ s ⟧ₛ ∥ } →
+  ≈B→≈A : ∀ {s : sorts Σ} {t t' : ∣T∣ (Σ 〔 X 〕) ∥ s ∥ } →
            (s , ⟦ t ⟧B ≈B ⟦ t' ⟧B) → (s , ⟦ t ⟧A ≈A ⟦ t' ⟧A)
   ≈B→≈A {s} {t} {t'} eq = begin
                          ⟦ t ⟧A
@@ -78,15 +76,16 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
 
   open Setoid
 
-  rA : ∀ s → Rel (Terms s) ℓ₁
-  rA sᵢ uᵢ uᵢ' = _≈_ (A ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧A ⟦ uᵢ' ⟧A
+  private
+    rA : ∀ {s} → Rel (Terms s) ℓ₁
+    rA {sᵢ} uᵢ uᵢ' = _≈_ (A ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧A ⟦ uᵢ' ⟧A
 
-  rB : ∀ s → Rel (Terms s) ℓ₃
-  rB sᵢ uᵢ uᵢ' = _≈_ (B ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧B ⟦ uᵢ' ⟧B
+    rB : ∀ {s} → Rel (Terms s) ℓ₃
+    rB {sᵢ} uᵢ uᵢ' = _≈_ (B ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧B ⟦ uᵢ' ⟧B
 
   ⊨B*→⊨A* : ∀ {ar : List (sorts Σ)} {ts ts' : HVec Terms ar } →
            _∼v_ {R = rB} ts ts' →
-           _∼v_ {R = rA } ts ts'
+           _∼v_ {R = rA} ts ts'
   ⊨B*→⊨A* B⊨conds = map∼v (λ {s'} {t} {t'} eq → ≈B→≈A {s'} {t} {t'} eq) B⊨conds
 
 
@@ -150,7 +149,7 @@ module SubAlgebrasRespectSatisfaction
         ∎
         where open EqR (A ⟦ s ⟧ₛ)
               open Setoid (A ⟦ s ⟧ₛ)
-              open aux-sem A (SubAlgebra B≤A) θB (Canonical A B≤A)
+              open aux-sem A (SubAlgebra B≤A) θB (sub-embedding A B≤A)
 
 module ProductRespectSatisfaction
        {ℓ₁ ℓ₂ ℓ₃} {s : sorts Σ} (e : Equation Σ X s)
@@ -181,7 +180,7 @@ module HomImgRespectSatisfaction
    A/h : _
    A/h = A / Kernel H
    ν : Homo A (A / Kernel H)
-   ν = Natural A B H
+   ν = QuotHom A (Kernel H)
 
    t : Terms s
    t' : Terms s

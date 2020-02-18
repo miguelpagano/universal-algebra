@@ -66,8 +66,8 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
             hom-cond : ∀ {s} {ar} (ft : ops Σ (ar , s)) (as : HVec _ ar) →
                      (< ′ f ′ s , ′ g ′ s >ₛ ⟨$⟩ ((C ⟦ ft ⟧ₒ) ⟨$⟩ as)) ≈×
                                   (_×-alg_ ⟦ ft ⟧ₒ ⟨$⟩ (map (λ x → < _⟨$⟩_ (′ f ′ x) , _⟨$⟩_ (′ g ′ x) >) as))
-            hom-cond {s} ft as rewrite propMapV∘ as fg (λ _ → proj₁)
-                                     | propMapV∘ as fg (λ _ → proj₂) = cond f ft as , cond g ft as
+            hom-cond {s} ft as rewrite map-compose fg (λ _ → proj₁) as
+                                     | map-compose fg (λ _ → proj₂) as = cond f ft as , cond g ft as
 
 
 
@@ -125,7 +125,7 @@ module IndexedProduct {ℓ₁ ℓ₂ ℓ₃}
             hom-cond : ∀ {s} {ar} (ft : ops Σ (ar , s)) (cs : HVec _ ar) i →
                       (′ f i ′ s ⟨$⟩ ((C ⟦ ft ⟧ₒ) ⟨$⟩ cs)) ≈Ai
                       (((A i ⟦ ft ⟧ₒ) ⟨$⟩ map (λ _ x → x i) (map <f> cs)))
-            hom-cond {s} ft cs i rewrite (propMapV∘ cs <f> (λ s' x → x i)) = cond (f i) ft cs
+            hom-cond {s} ft cs i rewrite map-compose <f> (λ s' x → x i) cs = cond (f i) ft cs
 
 
 module BinaryProduct {ℓ₁ ℓ₂}
@@ -164,9 +164,9 @@ module BinaryProduct {ℓ₁ ℓ₂}
                      congh eq true = proj₁ eq
                      condh : Hom.homCond A×B Πalg (λ s → record { _⟨$⟩_ = _$h_ ; cong = λ {i} {j} → congh })
                      condh {ar = ar} f as false
-                       rewrite propMapV∘ as (λ x → _$h_)  (λ _ x → x false) = Π.cong (B ⟦ f ⟧ₒ) (Setoid.refl (_⟦_⟧ₛ B ✳ ar))
+                       rewrite map-compose (λ x → _$h_)  (λ _ x → x false) as = Π.cong (B ⟦ f ⟧ₒ) (Setoid.refl (_⟦_⟧ₛ B ✳ ar))
                      condh {ar = ar} f as true
-                       rewrite propMapV∘ as (λ x → _$h_)  (λ _ x → x true) = Π.cong (A ⟦ f ⟧ₒ) (Setoid.refl (_⟦_⟧ₛ A ✳ ar))
+                       rewrite map-compose (λ x → _$h_)  (λ _ x → x true) as = Π.cong (A ⟦ f ⟧ₒ) (Setoid.refl (_⟦_⟧ₛ A ✳ ar))
 
                      H : Hom.Homo A×B Πalg
                      H = record { ′_′ = λ s → record { _⟨$⟩_ = _$h_ {s}

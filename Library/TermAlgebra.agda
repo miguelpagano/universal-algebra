@@ -2,17 +2,17 @@ open import UnivAlgebra
 
 module TermAlgebra (Σ : Signature) where
 
-open import Morphisms
-open import HeterogeneousVec
-open import Relation.Binary hiding (Total)
-open import Relation.Binary.PropositionalEquality as PE
-open import Function as F
-open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
-open import Setoids
 open import Data.List hiding (map)
 open import Data.Product hiding (map ; Σ)
-
+open import Function as F
+open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
+open import Relation.Binary hiding (Total)
 import Relation.Binary.EqReasoning as EqR
+open import Relation.Binary.PropositionalEquality as PE
+
+open import Morphisms {Σ}
+open import HeterogeneousVec
+open import Setoids
 
 open Hom
 open Algebra
@@ -26,14 +26,14 @@ data HU : (s : sorts Σ) → Set where
              ; _⟦_⟧ₒ  = ∣_|ₒ
              }
   where ≡vec : ∀ {ar}  → (ts₁ ts₂ : HVec HU ar) →
-                          _∼v_ {R = λ _ → _≡_} ts₁ ts₂ →
+                          _∼v_ {R = λ {_} → _≡_} ts₁ ts₂ →
                           ts₁ ≡ ts₂
         ≡vec ⟨⟩ ⟨⟩ ≈⟨⟩ = PE.refl
         ≡vec (t ▹ ts₁) (.t ▹ ts₂) (∼▹ PE.refl ts₁≈ts₂) =
                                   PE.cong (λ ts → t ▹ ts)
                                           (≡vec ts₁ ts₂ ts₁≈ts₂)
         fcong : ∀ {ar s} {f : ops Σ (ar ↦ s)} → (ts₁ ts₂ : HVec HU ar) →
-                         _∼v_ {R = λ s₀ → _≡_} ts₁ ts₂ → term f ts₁ ≡ term f ts₂
+                         _∼v_ {R = λ {s₀} → _≡_} ts₁ ts₂ → term f ts₁ ≡ term f ts₂
         fcong {f = f} ts₁ ts₂ ts₁≈ts₂ = PE.cong (term f) (≡vec ts₁ ts₂ ts₁≈ts₂)
         ∣_|ₒ  : ∀ {ar s} → ops Σ (ar ↦ s) → (setoid ∘ HU) ✳ ar ⟶ (setoid ∘ HU) s
         ∣ f |ₒ = record { _⟨$⟩_ = term f
@@ -98,7 +98,7 @@ total A H G s (term {ar = ar} f ts) =
                                     (map≈ ar ts)
 
 
-open Initial Σ
+open Initial
 
 ∣T∣isInitial : ∀ {ℓ₁ ℓ₂} → Initial {ℓ₃ = ℓ₁} {ℓ₄ = ℓ₂}
 ∣T∣isInitial = record  { alg = ∣T∣

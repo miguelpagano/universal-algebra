@@ -1,69 +1,53 @@
-{- Definitions and properties about Setoids -}
 module Setoids where
 
-open import Relation.Binary
+open import Data.Fin hiding (_+_)
+open import Data.Product
+open import Data.Product.Relation.Binary.Pointwise.NonDependent using (×-setoid)
+open import Data.Sum
 open import Level renaming (suc to lsuc ; zero to lzero)
-open import Relation.Binary.PropositionalEquality as PE
 open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
-
-open import Data.Fin hiding (_+_)
-
+open import Relation.Binary
 import Relation.Binary.EqReasoning as EqR
-
-open Setoid
+import Relation.Binary.PropositionalEquality as PE
+open import Relation.Unary
 
 {- Carrier -}
 ∥_∥ : ∀ {l₁ l₂} → (Setoid l₁ l₂) → Set l₁
-∥ S ∥ =  Carrier S
-
+∥ S ∥ =  Carrier
+  where open Setoid S
 
 ≡to≈ : ∀ {ℓ₁ ℓ₂} → (S : Setoid ℓ₁ ℓ₂) →
-         {x y : Carrier S } → x ≡ y → Setoid._≈_ S x y
-≡to≈ S refl = Setoid.refl S
+        {x y : ∥ S ∥ } → x PE.≡ y → Setoid._≈_ S x y
+≡to≈ S PE.refl = Setoid.refl S
 
-{- Extensional equality -}
+-- Extensional Equality
 module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoid ℓ₃ ℓ₄} where
   private
     _≈B_ : _
-    _≈B_ = _≈_ B
+    _≈B_ = Setoid._≈_ B
 
     _≈A_ : _
-    _≈A_ = _≈_ A
+    _≈A_ = Setoid._≈_ A
 
+  open Setoid B
   _≈→_ : Rel (A ⟶ B) _
   f ≈→ g  = ∀ (a : ∥ A ∥) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
 
-  ≈→-preserves-≈ : ∀ a a' f g → f ≈→ g → a ≈A a' → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a')
-  ≈→-preserves-≈ a a' f g f≈g a≈a' =
-                      begin
-                        f ⟨$⟩ a
-                          ≈⟨ Π.cong f a≈a' ⟩
-                        f ⟨$⟩ a'
-                          ≈⟨ f≈g a' ⟩
-                        g ⟨$⟩ a'
-                        ∎
-     where open EqR B
+  ext-preserves-≈ : ∀ {a a' f g} → f ≈→ g → a ≈A a' → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a')
+  ext-preserves-≈ {a' = a'} {f} f≈g a≈a' = trans (Π.cong f a≈a') (f≈g a')
 
   Equiv≈→ : IsEquivalence (_≈→_)
-  Equiv≈→ = record { refl = λ {f} → isRefl {f}
-                    ; sym = λ {f} {g} prf → isSym {f} {g} prf
-                    ; trans = λ {f} {g} {h} p q → isTrans {f} {g} {h} p q
-                    }
-    where isRefl : Reflexive (_≈→_)
-          isRefl {f} a = Setoid.refl B {f ⟨$⟩ a}
-          isSym : Symmetric (_≈→_)
-          isSym {f} {g} p a = Setoid.sym B (p a)
-          isTrans : Transitive (_≈→_)
-          isTrans {f} {g} {h} p q a = Setoid.trans B (p a) (q a)
+  Equiv≈→ = record { refl = λ {f} a → refl {f ⟨$⟩ a}
+                   ; sym = λ p a → sym (p a)
+                   ; trans = λ p q a → trans (p a) (q a)
+                   }
 
 {- A predicate over a setoid should be even with respect to the equality -}
-open import Relation.Unary
+open Setoid
 WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Pred (Carrier S) ℓ₃ → Set _
 WellDef S P = ∀ {x y : Carrier S } → _≈_ S x y → P x → P y
 
-open import Data.Sum
-open import Data.Product
 {- The union of two well-defined relations is well-defined -}
 ∪-WellDef : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} → {S : Setoid ℓ₁ ℓ₂} →
           {P : Pred (Carrier S) ℓ₃} → {Q : Pred (Carrier S) ℓ₄} →
@@ -80,9 +64,7 @@ open import Data.Product
 {- A binary relation over a setoid should be even with respect to the equality -}
 open import Data.Product
 WellDefRel : ∀ {ℓ₁ ℓ₂ ℓ₃} → (S : Setoid ℓ₁ ℓ₂) → Rel (Carrier S) ℓ₃ → Set _
-WellDefRel S R = WellDef S² (λ {(a , b) → R a b})
-  where open import Data.Product.Relation.Binary.Pointwise.NonDependent
-        S² = ×-setoid S S
+WellDefRel S R = WellDef (×-setoid S S) (λ {(a , b) → R a b})
 
 
 {- A pre-congruene is a well-defined equivalence relation -}
@@ -92,7 +74,7 @@ PreCong S R = WellDefRel S R × IsEquivalence R
 {-  The setoid equality is finer than a pre-congruence -}
 PC-resp-~ : ∀ {ℓ₁ ℓ₂ ℓ₃} {S : Setoid ℓ₁ ℓ₂} (R : Rel (Carrier S) ℓ₃) →
   PreCong S R → {x y : Carrier S} → _≈_ S x y → R x y
-PC-resp-~ {S = S} R (wd , isEq) {x} {y} eq = wd (Setoid.refl S {x} , eq)
+PC-resp-~ {S = S} R (wd , isEq) {x} {y} eq = wd (refl S {x} , eq)
                                                 (IsEquivalence.refl isEq {x})
 
 
@@ -104,6 +86,7 @@ record SetoidPredicate {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) :
     predWellDef : WellDef S predicate
 
 open SetoidPredicate
+
 ∪-SetoidPred : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {S : Setoid ℓ₁ ℓ₂} →
                SetoidPredicate {ℓ₃ = ℓ₃} S → SetoidPredicate {ℓ₃ = ℓ₄} S  →
                SetoidPredicate {ℓ₃ = ℓ₃ ⊔ ℓ₄} S
@@ -120,7 +103,6 @@ open SetoidPredicate
                            ; predWellDef = ∩-WellDef {S = S} (predWellDef P)  (predWellDef Q)
                            }
 
-open import Relation.Unary hiding (_⊆_)
 Subset : ∀ {ℓ₁ ℓ₂} → (A : Set ℓ₁) → (Pred A ℓ₂) → Set _
 Subset A P = Σ[ a ∈ A ] (P a)
 
@@ -132,9 +114,9 @@ SubSetoid S P = record { Carrier = Subset (Carrier S) P
                        ; isEquivalence = pequiv
                        }
   where pequiv : _
-        pequiv = record { refl = Setoid.refl S
-                        ; sym = Setoid.sym S
-                        ; trans = Setoid.trans S }
+        pequiv = record { refl = refl S
+                        ; sym = sym S
+                        ; trans = trans S }
 
 
 private
@@ -150,21 +132,23 @@ private
 
 
 -- Indexed Setoids
-module IndexedSetoid {ℓ₁ ℓ₂ ℓ₃ }
-       {I : Set ℓ₁}
-        (A : I → Setoid ℓ₂ ℓ₃ ) where
+module IndexedSetoid {ℓ₁ ℓ₂ ℓ₃ } {I : Set ℓ₁} (A : I → Setoid ℓ₂ ℓ₃ ) where
+
+  private
+    carrier : I → Set ℓ₂
+    carrier i = Carrier (A i)
+    ≈ᵢ : Rel ((i : I) → (carrier i)) (ℓ₁ ⊔ ℓ₃)
+    ≈ᵢ f g = ∀ i → _≈_ (A i) (f i) (g i)
+    isEquiv : IsEquivalence ≈ᵢ
+    isEquiv = record
+      { refl = λ i → refl (A i)
+      ; sym = λ x i → sym (A i) (x i)
+      ; trans = λ x x₁ i → trans (A i) (x i) (x₁ i)
+      }
 
   Π-setoid : Setoid (ℓ₁ ⊔ ℓ₂) (ℓ₁ ⊔ ℓ₃)
-  Π-setoid = record { Carrier = (i : I) → carrier i
-                           ; _≈_ = ≈ᵢ
-                           ; isEquivalence = isEquiv
-                           }
-    where carrier : I → Set ℓ₂
-          carrier i = Setoid.Carrier (A i)
-          ≈ᵢ : Rel ((i : I) → (carrier i)) (ℓ₁ ⊔ ℓ₃)
-          ≈ᵢ f g = ∀ i → Setoid._≈_ (A i) (f i) (g i)
-          isEquiv : IsEquivalence ≈ᵢ
-          isEquiv = record { refl = λ i → Setoid.refl (A i)
-                          ; sym = λ x i → Setoid.sym (A i) (x i)
-                          ; trans = λ x x₁ i → Setoid.trans (A i) (x i) (x₁ i)
-                          }
+  Π-setoid = record {
+    Carrier = (i : I) → carrier i
+    ; _≈_ = ≈ᵢ
+    ; isEquivalence = isEquiv
+    }

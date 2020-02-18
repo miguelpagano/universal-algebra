@@ -1,3 +1,10 @@
+-- Universal Algebra Library
+--
+-- Varieties.
+--
+-- Note: This definitions are troublesome because we cannot mix
+--  algebras at different levels.
+
 module Variety where
 
 open import Level renaming (zero to lzero ; suc to lsuc)
@@ -19,7 +26,7 @@ record _≋_ {ℓ₀ ℓ₁ Σ} (C₁ : AlgClass {ℓ₀} {ℓ₁} Σ)
   field
     ≋to   : (A : Algebra {ℓ₀} {ℓ₁} Σ) → A ∈ C₁ → A ∈ C₂
     ≋from : (A : Algebra {ℓ₀} {ℓ₁} Σ) → A ∈ C₂ → A ∈ C₁
-  
+
 
 ModClass : ∀ {ℓ₀ ℓ₁ Σ X ar} → (E : Theory Σ X ar) → AlgClass {ℓ₀} {ℓ₁} Σ
 ModClass E = _⊨T E
@@ -42,7 +49,7 @@ SClosed {ℓ₀} {Σ} C = (A : Algebra {ℓ₀} {ℓ₀} Σ) → A ∈ C →
 
 PClosed : ∀ {ℓ₀ Σ} → AlgClass {ℓ₀} {ℓ₀} Σ → Set (lsuc ℓ₀)
 PClosed {ℓ₀} {Σ} C = (A B : Algebra {ℓ₀} {ℓ₀} Σ) →
-                     A ∈ C → B ∈ C → (A ×-alg B) ∈ C 
+                     A ∈ C → B ∈ C → (A ×-alg B) ∈ C
 
 HClosed : ∀ {ℓ₀ Σ} → AlgClass {ℓ₀} {ℓ₀} Σ → Set (lsuc ℓ₀)
 HClosed {ℓ₀} {Σ} C = (A B : Algebra {ℓ₀} {ℓ₀} Σ) → (h : Homo A B) →

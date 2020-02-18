@@ -66,6 +66,10 @@ module Monoid {op-mon : List ⊤ × ⊤ → Set}
          unitRight : Eq₁
          unitRight = ⋀ x ∘ u ≈ x
 
+         pattern mon-assoc-ax = here
+         pattern mon-unitL-ax = there here
+         pattern mon-unitR-ax  = there (there here)
+
          MonTheory  : Theory Σ-mon X (tt ∷ tt ∷ [ tt ])
          MonTheory = assocOp ▹ (unitLeft ▹ unitRight ▹ ⟨⟩)
 
@@ -130,13 +134,13 @@ module Monoids where
   {- Each monoid is a model of our theory. -}
   MonoidModel : ∀ {a l A _≈_ _∘_} {e : A} →
                 (m : IsMonoid {a} {l} _≈_ _∘_ e) → MkMonoid m ⊨T MonTheory
-  MonoidModel m here θ ∼⟨⟩ = IsSemigroup.assoc (isSemigroup m) (θ 0) (θ 1) (θ 2)
+  MonoidModel m mon-assoc-ax θ ∼⟨⟩ =
+                IsSemigroup.assoc (isSemigroup m) (θ 0) (θ 1) (θ 2)
     where open IsMonoid
-  MonoidModel m (there here) θ ∼⟨⟩ = proj₁ (identity m) (θ 0)
+  MonoidModel m mon-unitL-ax θ ∼⟨⟩ =  proj₁ (identity m) (θ 0) 
     where open IsMonoid
-  MonoidModel m (there (there here)) θ x₂ = proj₂ (identity m) (θ 0)
+  MonoidModel m mon-unitR-ax θ ∼⟨⟩ =  proj₂ (identity m) (θ 0) 
     where open IsMonoid
-  MonoidModel m (there (there (there ()))) θ x₂
 
   open Algebra
   open import Relation.Binary hiding (Total)
@@ -144,9 +148,9 @@ module Monoids where
   open import Function.Equality
   open import Data.Unit
   {- and we can also build a monoid from a model. -}
-  fromModel : ∀ {ℓ a} {A : Algebra {ℓ} {a} Σ-mon} → A ⊨T MonTheory →
+  monFromModel : ∀ {ℓ a} {A : Algebra {ℓ} {a} Σ-mon} → A ⊨T MonTheory →
     IsMonoid (_≈_ (A ⟦ tt ⟧ₛ)) (λ x y → A ⟦ op ⟧ₒ ⟨$⟩ ⟨⟨ x , y ⟩⟩ ) (A ⟦ e ⟧ₒ ⟨$⟩ ⟨⟩)
-  fromModel {A = A} mod = record {
+  monFromModel {A = A} mod = record {
                  isSemigroup = record {
                    isMagma = record {
                      isEquivalence = isEquivalence (A ⟦ tt ⟧ₛ)

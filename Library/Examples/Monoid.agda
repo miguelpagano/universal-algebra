@@ -188,7 +188,8 @@ module Monoids where
       open ModSemiEquationIsISP MonTheory
       modelM×M' = binProdClosed M M' M⊨Mon M'⊨Mon
 
-
+-- Test that shows we can compute with the constructed product.
+{-
 test : _
 test = {!proj₁ (IsMonoid.identity (M×M' (isMonoid m1) (isMonoid m2))) (true , false)!} -- M×M' (isMonoid m1) (isMonoid m2)
   where open import Data.Bool.Properties
@@ -200,7 +201,7 @@ test = {!proj₁ (IsMonoid.identity (M×M' (isMonoid m1) (isMonoid m2))) (true ,
         open IsMonoid
         open import Data.Bool
         open import Data.Product
-
+-}
 
 
 {- Booleans with false and ∨ are a monoid. -}

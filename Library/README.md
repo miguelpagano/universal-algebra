@@ -1,7 +1,17 @@
-### Formalization of Universal Algebra in Agda
+###  Heterogeneous Universal Algebra in Agda
 
-This development corresponds to the formalization of
-Universal Algebra in Agda, accepted for presentation in LSFA 2017.
+This library formalizes main concepts of heterogeneous universal
+algebra, up to the proof of the three isomorphisms theorems and the
+freeness of the term algebra over a set of variables. In order to
+define the term algebra we have introduced heterogeneous vectors,
+which later turned out to be very useful in other parts of the
+library, for example as the set of axioms of finite theories and as
+premises of deduction rules. We further introduced a formal systems
+for conditional equational logic and proved its soundness and
+completeness. Finally, we defined a novel representation for (derived)
+signature morphisms and its associated contra-variant functor on
+algebras. We also show that, under some restrictions, this functor
+also preserves models.
 
 This README file contains a description of the modules and
 instructions to install agda and compile the library.
@@ -10,7 +20,7 @@ instructions to install agda and compile the library.
 
 The formalization is modularized in these files:
 
-- [Setoids](Setoids.agda)
+- Setoids.agda
 	Definitions and properties about setoids.
 - HeterogeneousVec.agda
 	Definition, operations, and properties of heterogeneous vectors.
@@ -43,7 +53,7 @@ The formalization is modularized in these files:
 	  Definition of two theories of Boolean algebras; translation between them,
 	  and preservation of models.
   -- Monoid.agda
-          Definition of the theory of Monoids. Examples of monoids (as algebras)
+      Definition of the theory of Monoids. Examples of monoids (as algebras)
 	  and a homomorphism between them.
 	  Bijection between the standard library definition of monoids
 	  and the universal algebra approach.

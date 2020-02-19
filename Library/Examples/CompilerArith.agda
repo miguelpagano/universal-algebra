@@ -1,28 +1,32 @@
-{- A compiler of an arithmetic language to a stack-based
-   machine, proved correct via Universal Algebra -}
+-- Universal Algebra Library
+--
+-- A compiler of an arithmetic language to a stack-based machine,
+--   proved correct via Universal Algebra.
+--
+-- The translation of code is done by means of signature morphisms.
+--
 module Examples.CompilerArith where
 
-open import UnivAlgebra
-open import Setoids
-open import Morphisms
-import TermAlgebra
-open import SigMorphism
+open import Category.Monad
+open import Data.Fin hiding (_+_ ; #_)
 open import Data.List renaming (map to lmap)
+open import Data.Maybe hiding (map)
+open import Data.Nat
 open import Data.String hiding (_≈_)
 open import Data.Product
 open import Function
 open import Function.Equality renaming (_∘_ to _∘ₛ_ ; cong to Πcong)
-open import Data.Nat
-open import Data.Fin hiding (_+_ ; #_)
 open import Relation.Binary
-open import HeterogeneousVec
-open import Relation.Binary.PropositionalEquality hiding ([_])
-open import Data.Maybe hiding (map)
-open import Category.Monad
--- open import Category.Monad.Identity 
 
-{- An example of use of signature morphisms:
-   A correct compiler for arithmetic expressions -}
+import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality hiding ([_])
+
+open import HeterogeneousVec
+open import Setoids
+open import Morphisms
+open import SigMorphism
+import TermAlgebra
+open import UnivAlgebra
 
 open Signature
 open Algebra
@@ -62,7 +66,7 @@ iopsₑ (var x) ⟨⟩ = λ σ → σ x
 
 icongₑ : ∀ {ar} {s} → (f : ops Σₑ (ar , s)) →
           {vs vs' : ∥ ⟦_⟧ₑ ✳ ar ∥ } →
-         _∼v_ {R = _≈_ ∘ ⟦_⟧ₑ} vs vs' →
+         _∼v_ {R = λ {s} → _≈_ (⟦ s ⟧ₑ)} vs vs' →
          _≈_ (⟦ s ⟧ₑ) (iopsₑ f vs) (iopsₑ f vs')
 icongₑ (val n) {⟨⟩} ∼⟨⟩ = λ σ → _≡_.refl
 icongₑ plus {v₀ ▹ (v₀' ▹ ⟨⟩)} {v₁ ▹ (v₁' ▹ ⟨⟩)} (∼▹ v₀≈v₁ (∼▹ v₀'≈v₁' ∼⟨⟩)) =
@@ -73,7 +77,7 @@ iₑ : ∀ {ar s} → ops Σₑ (ar , s) → ⟦_⟧ₑ ✳ ar ⟶ ⟦ s ⟧ₑ
 iₑ f = record  { _⟨$⟩_ = iopsₑ f ; cong = icongₑ f }
 
 Semₑ : Algebra Σₑ
-Semₑ = record {_⟦_⟧ₛ = ⟦_⟧ₑ ; _⟦_⟧ₒ = iₑ } 
+Semₑ = record {_⟦_⟧ₛ = ⟦_⟧ₑ ; _⟦_⟧ₒ = iₑ }
 
 open TermAlgebra Σₑ renaming (∣T∣ to ∣T∣ₑ ; ∣H∣ to ∣H∣ₑ ; ∣T∣isInitial to ∣T∣ₑInit)
 
@@ -118,7 +122,7 @@ iopsₘ seqₘ ⟨⟨ f , g ⟩⟩ (s , σ) =  f (s , σ) >>= (λ s' → g (s' ,
 
 icongₘ : ∀ {ar} {s} → (f : ops Σₘ (ar , s)) →
            {vs vs' : ∥ ⟦_⟧ₘ ✳ ar ∥ } →
-           _∼v_ {R = Setoid._≈_ ∘ ⟦_⟧ₘ} vs vs' →
+           _∼v_ {R = λ {s} → Setoid._≈_ (⟦ s ⟧ₘ)} vs vs' →
            Setoid._≈_ (⟦ s ⟧ₘ) (iopsₘ f vs) (iopsₘ f vs')
 icongₘ (pushₘ n) ∼⟨⟩ = Setoid.refl ⟦ C ⟧ₘ
 icongₘ (loadₘ v) ∼⟨⟩ = Setoid.refl ⟦ C ⟧ₘ
@@ -131,15 +135,13 @@ icongₘ seqₘ {⟨⟨ t₁ , t₃ ⟩⟩} {⟨⟨ t₂ , t₄ ⟩⟩}
                                              ≡⟨ congSeq ⟩
                                              ((t₂ (s , σ)) >>= (λ s' → t₄ (s' , σ)))
                                              ∎
-    where open Data.Maybe
-          import Relation.Binary.PropositionalEquality
-          open ≡-Reasoning
+    where open ≡-Reasoning
           congSeq : (t₂ (s , σ) >>= (λ s' → t₃ (s' , σ)))
                     ≡
                     (t₂ (s , σ) >>= (λ s' → t₄ (s' , σ)))
           congSeq with t₂ (s , σ)
           ... | nothing = _≡_.refl
-          ... | just s' = t₃≈t₄ (s' , σ)        
+          ... | just s' = t₃≈t₄ (s' , σ)
 
 iₘ :  ∀ {ar s} →  ops Σₘ (ar , s) →
                   ⟦_⟧ₘ ✳ ar ⟶ ⟦ s ⟧ₘ
@@ -208,7 +210,7 @@ encH = record { ′_′ = enc ; cond = condEnc }
 
 open HomComp
 open Hom ∣T∣ₑ Execₑ renaming (_≈ₕ_ to _≈ₑₕ_)
-open Initial Σₑ
+open Initial
 
 open Initial.Initial
 
@@ -244,9 +246,8 @@ Code = ∥ ∣T∣ₘ ⟦ C ⟧ₛ ∥
 compₑ : Expr → Code
 compₑ e = ′ hcomp ′ E ⟨$⟩ e
 
-
 {- Correctness -}
 correct : ∀  e s σ →
-             ⟪∣ compₑ  e ∣⟫ (s , σ) ≡ just ((⟦ e ⟧ σ ) ∷ s) 
+          ⟪∣ compₑ  e ∣⟫ (s , σ) ≡ just ((⟦ e ⟧ σ ) ∷ s)
 correct e s σ = eqH E e (s , σ)
 

@@ -138,7 +138,7 @@ module BinaryProduct {ℓ₁ ℓ₂}
        Ai : Bool → Algebra {ℓ₁} {ℓ₂} Σ
        Ai false = B
        Ai true = A
-       open IndexedProduct {Σ = Σ} {Bool} Ai
+       open IndexedProduct {Σ = Σ} {Bool} Ai public
        open import Morphisms
        open Isomorphism
        open Algebra

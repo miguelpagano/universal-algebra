@@ -231,6 +231,25 @@ module ModSemiEquationIsISP  {ar} (E : Theory Σ X ar) where
   prodClosed A Ai⊨E {e = e} e∈E = Πalg⊨ (λ i → Ai⊨E i e∈E)
     where open ProductRespectSatisfaction e A
 
+
+  open ProdAlg
+  binProdClosed : ∀ {ℓ₀ ℓ₁} (A B : Algebra  {ℓ₀} {ℓ₁} Σ) →
+               A ⊨T E → B ⊨T E →
+               (A ×-alg B) ⊨T E
+  binProdClosed A B A⊨E B⊨E = isoClosed ΠAB ΠAB⊨E (A ×-alg B) A×B≅Π
+    where
+    open BinaryProduct A B renaming (Πalg to ΠAB)
+    open import Morphisms
+    open import Data.Bool
+    open _≅_
+    A×B≅Π = record { iso = symIso (A ×-alg B) ΠAB iso×-2→ }
+    Ai⊨E : (i : Bool) → Ai i ⊨T E
+    Ai⊨E false = B⊨E
+    Ai⊨E true = A⊨E
+    ΠAB⊨E : ΠAB ⊨T E
+    ΠAB⊨E = prodClosed Ai Ai⊨E
+
+
 module ModEquationIsIHSP  {ar} (T : EqTheory Σ X ar) where
 
   E : Theory Σ X ar

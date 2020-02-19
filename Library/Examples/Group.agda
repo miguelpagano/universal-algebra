@@ -18,109 +18,215 @@ open Algebra
 open Hom
 
 open import Examples.Monoid
-data op-grp : List ⊤ × ⊤ → Set where
-  _⁻¹ : op-grp ([ tt ] ↦ tt)
 
-open import Data.Empty
+module Group {op-grp : List ⊤ × ⊤ → Set}
+             (e      : op-grp ([] ↦ tt))
+             (_⁻¹    : op-grp ([ tt ] ↦ tt))
+             (●     : op-grp ((tt ∷ [ tt ]) ↦ tt))
+       where
+       open module M = Monoid {op-grp} e ●
 
-{- We extend the Monoid operations, adding
-   an unary operation (we can do this with a function (instead of a relation)
-   because there are no operations with the same arity) -}
-ops-grp : List ⊤ × ⊤ → Set
-ops-grp ([] , tt) = op-mon ([] , tt)
-ops-grp (tt ∷ [] , tt) = op-grp ([ tt ] , tt)
-ops-grp (tt ∷ tt ∷ [] , tt) = op-mon (tt ∷ [ tt ] , tt)
-ops-grp (tt ∷ tt ∷ _ ∷ _ , tt) = ⊥
+       Σ-grp : Signature
+       Σ-grp = record { sorts = ⊤ ; ops = op-grp }
 
-Σ-grp : Signature
-Σ-grp = record { sorts = ⊤ ; ops = ops-grp }
+       module GrpTheory where
+         open M.Theory
+         open import TermAlgebra
 
-module GrpTheory where
-  open Theory
-  -- Axioms
+         Eq-grp : Set
+         Eq-grp = Equation Σ-grp X tt
 
-  Eq-grp : Set
-  Eq-grp = Equation Σ-grp X tt
+         -- A formula is a term of the Term Algebra
+         Form-grp : Set
+         Form-grp = HU (Σ-grp 〔 X 〕) tt
 
-  open import TermAlgebra
+         module GrpSmartcons where
+         -- smart constructors
+           _∘_ : Form-grp → Form-grp → Form-grp
+           a ∘ b = term ● ⟨⟨ a , b ⟩⟩
 
-  
-  -- A formula is a term of the Term Algebra
-  Form-grp : Set
-  Form-grp = HU (Σ-grp 〔 X 〕) tt
+           _⁻ : Form-grp → Form-grp
+           a ⁻ = term _⁻¹ (⟪ a ⟫)
 
-  toGrpF : Form → Form-grp
-  toGrpF (term {[]} {.tt} (inj₁ e) x₁) = term (inj₁ e) ⟨⟩
-  toGrpF (term {[]} {.tt} (inj₂ y) x) = term (inj₂ y) ⟨⟩
-  toGrpF (term {.tt ∷ .(tt ∷ [])} {.tt} op (v ▹ v₁ ▹ ⟨⟩)) = term op ((toGrpF v) ▹ ((toGrpF v₁) ▹ ⟨⟩))
+           x : Form-grp
+           x = term (inj₂ 0) ⟨⟩
 
-  toGrpEq : Eq₁ → Eq-grp
-  toGrpEq (⋀ left ≈ right if「 carty 」 (us , us')) =
-    ⋀ (toGrpF left) ≈ (toGrpF right) if「 carty 」 (vmap (λ i x → toGrpF x) us , vmap (λ i x → toGrpF x) us')
-    
-  module _ where
-    -- smart constructors
-    _∘_ : Form-grp → Form-grp → Form-grp
-    a ∘ b = term op ⟨⟨ a , b ⟩⟩
+           u : Form-grp
+           u = term (inj₁ e) ⟨⟩
 
-    _⁻ : Form-grp → Form-grp
-    a ⁻ = term _⁻¹ (⟪ a ⟫)
-    
+         open GrpSmartcons
+         -- Axioms
+         invElemRight : Eq-grp
+         invElemRight = ⋀ (x ∘ (x ⁻)) ≈ u
 
-    open Smartcons hiding (_∘_)
-    invLeft : Eq-grp
-    invLeft = ⋀ (toGrpF x) ∘ ((toGrpF x) ⁻) ≈ toGrpF u if「 [] 」 (⟨⟩ , ⟨⟩)
+         invElemLeft : Eq-grp
+         invElemLeft = ⋀ ((x ⁻) ∘ x) ≈ u
 
-    invRight : Eq-grp
-    invRight = ⋀ ((toGrpF x) ⁻) ∘ (toGrpF x) ≈ toGrpF u if「 [] 」 (⟨⟩ , ⟨⟩)
+         pattern grp-invR-ax = here
+         pattern grp-invL-ax = there here
+         pattern grp-ass-ax  = there (there here)
+         pattern grp-unitL-ax = there (there (there here ))
+         pattern grp-unitR-ax = there (there (there (there here)))
 
-    MonTheory' : _
-    MonTheory' = vmap (λ _ eq → toGrpEq eq) MonTheory
+         GrpTheory : Theory Σ-grp X (tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
+         GrpTheory = invElemRight ▹ (invElemLeft ▹ MonTheory)
 
-    GrpTheory : Theory Σ-grp X (tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
-    GrpTheory = invRight ▹ (invLeft ▹ MonTheory')
+         module Props where
+           open import Relation.Binary.EqReasoning (⊢RSetoid GrpTheory tt)
+           open Subst {Σ-grp} {X}
 
-    pattern invR-ax = here
-    pattern invL-ax = there here
-    pattern ass-ax  = there (there here)
-    pattern unitL-ax = there (there (there here ))
-    pattern unitR-ax = there (there (there (there here)))
-    
+           {- unit is its own inverse. -}
+           p₁ : GrpTheory ⊢ (⋀ (u ⁻) ≈ u)
+           p₁ = begin ((u ⁻))
+                ≈⟨  psym (psubst grp-unitL-ax (λ x₁ → (u ⁻)) ∼⟨⟩) ⟩
+                ((u ∘ (u ⁻)))
+                ≈⟨ psubst grp-invR-ax (λ x₁ → u) ∼⟨⟩ ⟩
+                u
+                ∎
 
-    module Proofs₁ where
-        open import Relation.Binary.EqReasoning (⊢RSetoid GrpTheory tt)
-        open Subst {Σ-grp} {X}
-        u' : _
-        u' = toGrpF u
+           inv-inv : GrpTheory ⊢ (⋀ x ≈ ((x ⁻) ⁻) if「 [] 」 (⟨⟩ , ⟨⟩))
+           inv-inv = begin x
+                     ≈⟨ psym (psubst grp-unitR-ax (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
+                     (x ∘ u)
+                     ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst grp-invR-ax
+                                                   (λ _ → x ⁻) ∼⟨⟩)) ∼⟨⟩)) ⟩
+                     (x ∘ ((x ⁻) ∘ (((x ⁻)) ⁻)))
+                     ≈⟨ psym (psubst grp-ass-ax σ ∼⟨⟩) ⟩
+                     ((x ∘ (x ⁻)) ∘ ((x ⁻) ⁻))
+                     ≈⟨ preemp (∼▹ (psubst grp-invR-ax (λ _ → x) ∼⟨⟩)
+                               (∼▹ prefl ∼⟨⟩)) ⟩
+                     (u ∘ ((x ⁻) ⁻))
+                     ≈⟨ psubst grp-unitL-ax (λ _ → (x ⁻) ⁻) ∼⟨⟩ ⟩
+                     ((x ⁻) ⁻)
+                     ∎
+              where σ : Subst
+                    σ zero = x
+                    σ (suc zero) = x ⁻
+                    σ (suc (suc zero)) = (x ⁻) ⁻
+                    σ v = term (inj₂ v) ⟨⟩
 
-        x' : _
-        x' = toGrpF x
+{- Abelian group -}
+module AbeGroup {op-abe-grp : List ⊤ × ⊤ → Set}
+                (e      : op-abe-grp ([] ↦ tt))
+                (_⁻¹    : op-abe-grp ([ tt ] ↦ tt))
+                (bop    : op-abe-grp ((tt ∷ [ tt ]) ↦ tt))
+       where
 
-        {- unit is its own inverse. -}
-        p₁ : GrpTheory ⊢ (⋀ (u' ⁻) ≈ u')
-        p₁ = begin ((u' ⁻))
-                   ≈⟨  psym (psubst unitL-ax (λ x₁ → (u' ⁻)) ∼⟨⟩) ⟩
-                   ((u' ∘ (u' ⁻)))
-                   ≈⟨ psubst invL-ax (λ x₁ → u') ∼⟨⟩ ⟩
-                   u'
-                   ∎
+       Σ-abe-grp : Signature
+       Σ-abe-grp = record { sorts = ⊤ ; ops = op-abe-grp }
 
-        inv-inv : GrpTheory ⊢ (⋀ x' ≈ ((x' ⁻) ⁻) if「 [] 」 (⟨⟩ , ⟨⟩))
-        inv-inv = begin x'
-                        ≈⟨ psym (psubst unitR-ax (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
-                        (x' ∘ u')
-                        ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst invL-ax (λ x₁ → x' ⁻) ∼⟨⟩)) ∼⟨⟩)) ⟩
-                        (x' ∘ ((x' ⁻) ∘ (((x' ⁻)) ⁻)))
-                        ≈⟨ psym (psubst ass-ax σ ∼⟨⟩) ⟩
-                        ((x' ∘ (x' ⁻)) ∘ ((x' ⁻) ⁻))
-                        ≈⟨ preemp (∼▹ (psubst invL-ax (λ x₁ → x') ∼⟨⟩) (∼▹ prefl ∼⟨⟩)) ⟩
-                        (u' ∘ ((x' ⁻) ⁻))
-                        ≈⟨ psubst unitL-ax (λ x → (x' ⁻) ⁻) ∼⟨⟩ ⟩
-                        ((x' ⁻) ⁻)
-                  ∎
-                  where σ : Subst
-                        σ zero = x'
-                        σ (suc zero) = x' ⁻
-                        σ (suc (suc zero)) = (x' ⁻) ⁻
-                        σ v = term (inj₂ v) ⟨⟩
-    
+       open module G = Group {op-abe-grp} e _⁻¹ bop
+
+       module AbeGrpTheory where
+
+         open M.Theory
+         open G.GrpTheory
+
+         open import TermAlgebra
+
+         Eq-abe-grp : Set
+         Eq-abe-grp = Eq-grp
+
+         Form-abe-grp : Set
+         Form-abe-grp = Form-grp
+
+         module AbeGrpSmartcons where
+           y : Form-grp
+           y = term (inj₂ 1) ⟨⟩
+
+         open GrpSmartcons
+         open AbeGrpSmartcons
+         -- Commutativity
+         commOp : Eq-abe-grp
+         commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
+
+         AbeGrpTheory : Theory Σ-abe-grp X (tt ∷ tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
+         AbeGrpTheory = commOp ▹ GrpTheory
+
+module Groups where
+
+  data op-grp : List ⊤ × ⊤ → Set where
+    e    : op-grp ([] ↦ tt)
+    _⁻¹  : op-grp ([ tt ] ↦ tt)
+    op   : op-grp ((tt ∷ [ tt ]) ↦ tt)
+
+  open module G = Group {op-grp} e _⁻¹ op
+  open G.GrpTheory
+  open M.Theory
+  open Monoids
+
+  open import Algebra.Structures
+  open import Data.Bool
+  open import Relation.Binary as BC
+
+  {- Each group is a model of our theory. -}
+  MkGroup : ∀ {l₀ l₁ A _≈_ bop uop} {e : A} →
+             (g : IsGroup {l₀} {l₁} _≈_ bop e uop) → Algebra {l₀} {l₁} G.Σ-grp
+  MkGroup {A = A} {_≈_} {bop} {uop} {eA} isGrp =
+       record { _⟦_⟧ₛ = λ _ → record { Carrier = A
+                                     ; _≈_ = _≈_
+                                     ; isEquivalence = isEquivalence
+                                     }
+              ; _⟦_⟧ₒ = λ { e → record { _⟨$⟩_ = λ x → eA
+                                       ; cong = λ x → IsEquivalence.refl
+                                                  (IsMonoid.isEquivalence
+                                                  isMonoid)
+                                       }
+                         ; _⁻¹ → record { _⟨$⟩_ = λ { ⟪ v ⟫ → uop v}
+                                        ; cong = λ { (∼▹ x ∼⟨⟩) → ⁻¹-cong x }
+                                        }
+                        ; op → record { _⟨$⟩_ = λ { (v ▹ v₁ ▹ ⟨⟩) → bop v v₁ }
+                                         ; cong = λ { (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) →
+                                                      ∙-cong x₁ x₂ }
+                                         }
+                         }
+             }
+             where open IsGroup isGrp
+
+  {- Each monoid is a model of our theory. -}
+  GroupModel : ∀ {l₀ l₁ A _≈_ bop uop} {e : A} →
+             (g : IsGroup {l₀} {l₁} _≈_ bop e uop) → MkGroup g ⊨T GrpTheory
+  GroupModel m grp-invR-ax  θ eqs = inverseʳ m (θ 0)
+    where open IsGroup
+  GroupModel m grp-invL-ax  θ eqs = inverseˡ m (θ 0)
+    where open IsGroup
+  GroupModel m grp-ass-ax   θ eqs = MonoidModel (isMonoid m) mon-assoc-ax θ ∼⟨⟩
+    where open IsGroup
+  GroupModel m grp-unitL-ax θ eqs = MonoidModel (isMonoid m) mon-unitL-ax θ ∼⟨⟩
+    where open IsGroup
+  GroupModel m grp-unitR-ax θ eqs = MonoidModel (isMonoid m) mon-unitR-ax θ ∼⟨⟩
+    where open IsGroup
+
+  open Algebra
+  open import Relation.Binary hiding (Total)
+  open Setoid
+  open import Function.Equality
+  open import Data.Unit
+
+  {- and we can also build a group from a model. -}
+  grpFromModel : ∀ {ℓ a} {A : Algebra {ℓ} {a} Σ-grp} → A ⊨T GrpTheory →
+    IsGroup (_≈_ (A ⟦ tt ⟧ₛ))
+            (λ x y → A ⟦ op ⟧ₒ ⟨$⟩ ⟨⟨ x , y ⟩⟩ ) (A ⟦ e ⟧ₒ ⟨$⟩ ⟨⟩)
+            (λ x → (A ⟦ _⁻¹ ⟧ₒ) ⟨$⟩ ⟪ x ⟫)
+  grpFromModel {A = A} mod =
+            record { isMonoid = record {
+                 isSemigroup = record {
+                   isMagma = record {
+                     isEquivalence = isEquivalence (A ⟦ tt ⟧ₛ)
+                                  ; ∙-cong = λ x₁ x₂ → cong (_⟦_⟧ₒ A op)
+                                                             (∼▹ x₁ (∼▹ x₂ ∼⟨⟩))
+                     }
+                     ; assoc = λ x₁ y₁ z₁ → mod grp-ass-ax (η x₁ y₁ z₁) ∼⟨⟩
+                   }
+                 ; identity = (λ x₁ → mod grp-unitL-ax (λ x₂ → x₁) ∼⟨⟩)
+                              , (λ x₁ → mod grp-unitR-ax (λ _ → x₁) ∼⟨⟩)
+                 }
+                   ; inverse = ( (λ x → mod grp-invL-ax (λ x₂ → x) ∼⟨⟩)
+                               , (λ x → mod grp-invR-ax (λ x₂ → x) ∼⟨⟩)
+                               )
+                   ; ⁻¹-cong = λ {x} {y} x≈y → cong (A ⟦ _⁻¹ ⟧ₒ) (∼▹ x≈y ∼⟨⟩)
+                   }
+      where η : ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → Env X A
+            η a b c zero = a
+            η a b c (suc zero) = b
+            η a b c (suc (suc x₁)) = c

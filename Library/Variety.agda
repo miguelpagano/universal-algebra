@@ -4,7 +4,7 @@
 --
 -- Note: This definitions are troublesome because we cannot mix
 --  algebras at different levels.
-
+--
 module Variety where
 
 open import Level renaming (zero to lzero ; suc to lsuc)

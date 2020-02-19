@@ -3,7 +3,7 @@
 -- Morphisms: Homomorphism, Homo composition and equality,
 --  Isomorphism, Initial and Final Algebras,
 --  Homomorphic image, Kernel of a congruence.
-
+--
 open import UnivAlgebra
 module Morphisms {Σ : Signature} where
 

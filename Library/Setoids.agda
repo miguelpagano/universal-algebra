@@ -1,3 +1,7 @@
+-- Universal Algebra Library
+--
+-- Extensional equality. Predicates on Setoids. Indexed Setoids.
+--
 module Setoids where
 
 open import Data.Fin hiding (_+_)

@@ -2,7 +2,7 @@
 --
 -- Basic definitions of Heterogeneous Universal Algebra:
 --   Signature, Algebra, Homomorphism, Congruence, Quotient, Subalgebra.
-
+--
 module UnivAlgebra where
 
 open import Data.List.Base hiding (map)

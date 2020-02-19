@@ -1,4 +1,8 @@
-{- Product algebra -}
+-- Universal Algebra Library
+--
+-- Binary and Arbitrary products of algebras (products of models are
+-- in the module Birkhoff).
+--
 module Product where
 open import Relation.Binary
 open import Level renaming (suc to lsuc ; zero to lzero)

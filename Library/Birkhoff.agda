@@ -1,3 +1,8 @@
+-- Universal Algebra Library
+--
+-- Models of semi-equational theories are closed under ISP.
+-- Models of equational theories are closde under IHSP.
+--
 open import UnivAlgebra
 open import Equational
 module Birkhoff {Σ : Signature} {X : Vars Σ} where

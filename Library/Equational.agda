@@ -3,6 +3,7 @@
 -- Conditional equational logic: Signature with variables, environments,
 --  equations, equational theories, proofs, models, Birkhoff soundness and
 -- completeness.
+--
 module Equational where
 
 open import Data.List
@@ -13,12 +14,14 @@ open import Function.Equality as FE renaming (_∘_ to _∘e_)
 open import Level renaming (zero to lzero ; suc to lsuc)
 open import Relation.Binary hiding (Total)
 import Relation.Binary.EqReasoning as EqR
-open import Relation.Binary.PropositionalEquality as PE
+open import Relation.Binary.PropositionalEquality using (_≡_;cong₂)
+import Relation.Binary.PropositionalEquality as PE
 
 open import HeterogeneousVec renaming (map to mapV)
 open import UnivAlgebra
 open import Morphisms
 import TermAlgebra
+open import Setoids
 
 open Signature
 
@@ -46,7 +49,6 @@ T Σ 〔 X 〕 = record { _⟦_⟧ₛ = ∣T∣ ⟦_⟧ₛ
                     }
   where open TermAlgebra (Σ 〔 X 〕)
 
-open import Setoids
 {- Environments -}
 Env : ∀ {Σ} {ℓ₁ ℓ₂} → (X : Vars Σ) → (A : Algebra {ℓ₁} {ℓ₂} Σ) → Set ℓ₁
 Env {Σ} X A = ∀ {s} → X s → ∥ A ⟦ s ⟧ₛ ∥
@@ -178,8 +180,7 @@ module InitHomoExt {ℓ₁ ℓ₂ : Level}
                                       (map≈ ar ts)
 
 module InitExtId {Σ : Signature} (X : Vars Σ) where
-  open import TermAlgebra
-
+  open TermAlgebra
   TX = T Σ 〔 X 〕
 
   η-tx : Env X TX
@@ -318,17 +319,15 @@ _∣_ : ∀ {Σ X} {ar : Arity Σ} {E : Theory Σ X ar} {s}
            E ⊢ (⋀ t /s σ ≈ t' /s σ)
 ax ∣ σ = psubst ax σ ∼⟨⟩
 
-
+open Setoid
 {- Birkhoff soundness and completeness -}
 soundness : ∀ {ℓ₁ ℓ₂ Σ X} {ar : Arity Σ} {s : sorts Σ} {E : Theory Σ X ar}
                 {e : Equation Σ X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E e
-soundness {s = s} prefl A _ _ _ = Setoid.refl (A ⟦ s ⟧ₛ)
+soundness {s = s} prefl A _ _ _ = refl (A ⟦ s ⟧ₛ)
 soundness {s = s} {E} (psym t₁≈t₀) A A⊨E θ ∼⟨⟩ =
-             Setoid.sym (A ⟦ s ⟧ₛ) (soundness t₁≈t₀ A A⊨E θ ∼⟨⟩)
+  sym (A ⟦ s ⟧ₛ) (soundness t₁≈t₀ A A⊨E θ ∼⟨⟩)
 soundness {X = X} {ar} {s} {E} (ptrans t₀≈t₁ t₁≈t₂) A x θ ∼⟨⟩ =
-             Setoid.trans (A ⟦ s ⟧ₛ)
-               (soundness t₀≈t₁ A x θ ∼⟨⟩)
-               (soundness t₁≈t₂ A x θ ∼⟨⟩)
+  trans (A ⟦ s ⟧ₛ) (soundness t₀≈t₁ A x θ ∼⟨⟩) (soundness t₁≈t₂ A x θ ∼⟨⟩)
 soundness {Σ = Σ} {X} {ar} {s} {E}
             (psubst {t = t} {t'} e∈E σ ⊢us≈us') A A⊨E θ ∼⟨⟩ = begin
                  ⟦ ⟦ t ⟧σ ⟧θ
@@ -338,14 +337,14 @@ soundness {Σ = Σ} {X} {ar} {s} {E}
                  map∼v (λ {s₀} {uᵢ} {uᵢ'} eq → A-trans (A-sym (subst-theo s₀ uᵢ))
                                              (A-trans eq (subst-theo s₀ uᵢ')) ) (IHus θ ⊢us≈us')) ⟩
                  ⟦ t' ⟧θσ
-              ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (subst-theo s t') ⟩
+              ≈⟨ sym (A ⟦ s ⟧ₛ) (subst-theo s t') ⟩
                  ⟦ ⟦ t' ⟧σ ⟧θ
               ∎
   where open EqR (A ⟦ s ⟧ₛ)
         A-sym : ∀ {s} {i j} → _ → _
-        A-sym {s} {i} {j} eq = Setoid.sym (A ⟦ s ⟧ₛ) {i} {j} eq
+        A-sym {s} {i} {j} eq = sym (A ⟦ s ⟧ₛ) {i} {j} eq
         A-trans : ∀ {s} {i j k} → _ → _ → _
-        A-trans {s} {i} {j} {k} eq eq' = Setoid.trans (A ⟦ s ⟧ₛ) {i} {j} {k} eq eq'
+        A-trans {s} {i} {j} {k} eq eq' = trans (A ⟦ s ⟧ₛ) {i} {j} {k} eq eq'
         open SubstitutionTheorem {A = A} θ σ renaming (⟦_⟧ησ to ⟦_⟧θσ;⟦_⟧η to ⟦_⟧θ;_∘ₑ_ to θ∘σ)
         open EnvExt X A
         IHus : ∀ {ar₀} {us₀ us₀' : HVec (λ s' → ∥ T Σ 〔 X 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
@@ -356,7 +355,7 @@ soundness {Σ = Σ} {X} {ar} {s} {E}
         IHus θ' ∼⟨⟩ = ∼⟨⟩
         IHus θ' (∼▹ ⊢u₁≈u₂ ⊢us₁≈us₂) = ∼▹ (soundness ⊢u₁≈u₂ A A⊨E θ' ∼⟨⟩) (IHus θ' ⊢us₁≈us₂)
 
-soundness {s = s} {E} (preemp {[]} ∼⟨⟩ {f}) A A⊨E θ ∼⟨⟩ = Setoid.refl (A ⟦ s ⟧ₛ)
+soundness {s = s} {E} (preemp {[]} ∼⟨⟩ {f}) A A⊨E θ ∼⟨⟩ = refl (A ⟦ s ⟧ₛ)
 soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
             (preemp {x ∷ ar'} {.s} {ts} {ts'} ⊢ts≈ts' {f}) A A⊨E θ ∼⟨⟩ =
                 begin
@@ -365,7 +364,7 @@ soundness {ℓ₁} {ℓ₂} {Σ} {X} {ar} {s} {E}
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts
                  ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (IHts ⊢ts≈ts')) ⟩
                    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (T Σ 〔 X 〕) A TΣX⇝A ts'
-                 ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
+                 ≈⟨ sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
                    (θ ↪) (term f ts')
                 ∎
 
@@ -495,7 +494,6 @@ module InitialityModel {Σ X ar ℓ₁ ℓ₂} {E : Theory Σ X ar}
                        {A : Algebra {ℓ₁} {ℓ₂} Σ} (M : A ⊨T E)
        where
 
-  import Morphisms
   open Hom
   open Homo
 

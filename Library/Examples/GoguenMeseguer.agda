@@ -1,34 +1,41 @@
-{- Example from paper "Completeness of Many-sorted equational
-   logic" of Goguen and Meseguer. -}
+-- Universal Algebra Library
+--
+-- Example taken from "Completeness of Many-sorted equational
+--  logic" by Goguen and Meseguer.
+--
 module Examples.GoguenMeseguer where
 
-open import UnivAlgebra
-open import Equational
-open import Morphisms
-open import SigMorphism
-open import Data.Unit hiding (setoid)
+open import Data.Bool using (true;false)
+import Data.Bool as B
+open import Data.Empty
 open import Data.List
-open import Data.Product
 open import Data.Nat
+open import Data.Product
 open import Data.Sum
+open import Data.Unit hiding (setoid)
+import Function as F
+open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid)
+open import Level renaming (zero to lzero ; suc to lsuc)
+open import Relation.Binary
+import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.PropositionalEquality as PE hiding ([_])
+
+open import Equational
 open import HeterogeneousVec
+open import Morphisms
+open import Setoids
+open import SigMorphism
+open import TermAlgebra
+open import UnivAlgebra
+
 
 open Signature
 
-module EqBool1 where
+module EqBool where
 
-  open import UnivAlgebra
-  open import Equational
-  open import Data.Unit hiding (setoid)
-  open import Data.List
-  open import Data.Product
-  open import Data.Nat
-  open import Data.Sum
-  open import HeterogeneousVec
-
-  {- The signature consists of sort bool with operations of
-     propositional logic, and a new sort 'a' with an operation
-     foo : a -> bool -}
+  -- The signature consists of sort bool with the operations of
+  -- propositional logic, and a new sort 'a' with an operation
+  -- foo : a ↦ bool.
   data sorts∼ : Set where
     bool : sorts∼
     a    : sorts∼
@@ -44,9 +51,6 @@ module EqBool1 where
   Σ∼ : Signature
   Σ∼ = record { sorts = sorts∼ ; ops = Σops∼ }
 
-
-  open import Data.Empty
-  open import Data.Unit
   Vars∼ : Vars Σ∼
   Vars∼ bool = ℕ
   Vars∼ a = ⊤
@@ -54,10 +58,7 @@ module EqBool1 where
   Eq∼ : Set
   Eq∼ = Equation Σ∼ Vars∼ bool
 
-  open import TermAlgebra
-
-  
-  -- A formula is a term of the Term Algebra
+  -- A formula is a term of the Term Algebra.
   Form : Set
   Form = HU (Σ∼ 〔 Vars∼ 〕) bool
 
@@ -96,10 +97,9 @@ module EqBool1 where
     {- The theory consist of seven axioms -}
     notT : Eq∼
     notT = ⋀ ¬ T ≈ F
-  
+
     notF : Eq∼
     notF = ⋀ ¬ F ≈ T
-  
     3exc : Eq∼
     3exc = ⋀ b ∨ (¬ b) ≈ T
 
@@ -129,7 +129,7 @@ module EqBool1 where
 
   module Proof where
     open Theory
-    open import Relation.Binary.EqReasoning (⊢RSetoid Th bool)
+    open EqR (⊢RSetoid Th bool)
     open Subst {Σ∼} {Vars∼}
     open Equation
     open Smartcons
@@ -163,29 +163,24 @@ module EqBool1 where
 
   {- Now we try to prove true ≡ false via soundness of equational logic -}
   module NotCorrectness where
-    open import Data.Bool
-    open import Relation.Binary.PropositionalEquality as PE
-    open import Relation.Binary
-    open import Function.Equality hiding (setoid)
-    open import Data.Empty
 
     isorts : sorts Σ∼ → Setoid _ _
-    isorts bool = PE.setoid Bool
+    isorts bool = PE.setoid B.Bool
     isorts a = PE.setoid ⊥
 
     iops : ∀ {ar s} → (op : ops Σ∼ (ar ↦ s)) → isorts ✳ ar ⟶ isorts s
-    iops t = record { _⟨$⟩_ = λ _ → true ; cong = λ _ → refl }
-    iops f = record { _⟨$⟩_ = λ _ → false ; cong = λ _ → refl }
-    iops neg = record { _⟨$⟩_ = λ { ⟪ b ⟫ → not b } ;
-                        cong = λ { {b₀ ▹ ⟨⟩} {b₁ ▹ ⟨⟩} (∼▹ b₀≡b₁ _) → PE.cong not b₀≡b₁ } }
-    iops and∼ = record { _⟨$⟩_ = λ { ⟨⟨ b , b' ⟩⟩ → b ∧ b' } ;
+    iops t = record { _⟨$⟩_ = λ _ → true ; cong = λ _ → PE.refl }
+    iops f = record { _⟨$⟩_ = λ _ → false ; cong = λ _ → PE.refl }
+    iops neg = record { _⟨$⟩_ = λ { ⟪ b ⟫ → B.not b } ;
+                        cong = λ { {b₀ ▹ ⟨⟩} {b₁ ▹ ⟨⟩} (∼▹ b₀≡b₁ _) → PE.cong B.not b₀≡b₁ } }
+    iops and∼ = record { _⟨$⟩_ = λ { ⟨⟨ b , b' ⟩⟩ → b B.∧ b' } ;
                       cong = λ { {⟨⟨ b₀ , b₀' ⟩⟩} {⟨⟨ b₁ , b₁' ⟩⟩}
                                  (∼▹ b₀≡b₁ (∼▹ b₀'≡b₁' ∼⟨⟩)) →
-                                                     cong₂ _∧_ b₀≡b₁ b₀'≡b₁' } }
-    iops or∼ = record { _⟨$⟩_ = λ { ⟨⟨ b , b' ⟩⟩ → b ∨ b' } ;
+                                                     PE.cong₂ B._∧_ b₀≡b₁ b₀'≡b₁' } }
+    iops or∼ = record { _⟨$⟩_ = λ { ⟨⟨ b , b' ⟩⟩ → b B.∨ b' } ;
                       cong = λ { {⟨⟨ b₀ , b₀' ⟩⟩} {⟨⟨ b₁ , b₁' ⟩⟩}
                                  (∼▹ b₀≡b₁ (∼▹ b₀'≡b₁' ∼⟨⟩)) →
-                                                     cong₂ _∨_ b₀≡b₁ b₀'≡b₁' } }
+                                                     PE.cong₂ B._∨_ b₀≡b₁ b₀'≡b₁' } }
     iops foo = record { _⟨$⟩_ = λ { (() ▹ ⟨⟩) }
                       ; cong = λ { {() ▹ ⟨⟩} {noel₂ ▹ ⟨⟩} (∼▹ ₁≡₂ x) } }
 
@@ -196,47 +191,47 @@ module EqBool1 where
 
 
     sat₁ : model ⊨ notT
-    sat₁ θ _ = refl
+    sat₁ θ _ = PE.refl
 
     sat₂ : model ⊨ notT
-    sat₂ θ _ = refl
+    sat₂ θ _ = PE.refl
 
     sat₃ : model ⊨ 3exc
     sat₃ θ _ with θ {bool} 0
-    sat₃ θ x | false = refl
-    sat₃ θ x | true = refl
+    sat₃ θ x | false = PE.refl
+    sat₃ θ x | true = PE.refl
 
     sat₄ : model ⊨ b∧¬b
     sat₄ θ _ with θ {bool} 0
-    sat₄ θ x | false = refl
-    sat₄ θ x | true = refl
+    sat₄ θ x | false = PE.refl
+    sat₄ θ x | true = PE.refl
 
     sat₅ : model ⊨ idem∧
     sat₅ θ _ with θ {bool} 0
-    sat₅ θ x | false = refl
-    sat₅ θ x | true = refl
+    sat₅ θ x | false = PE.refl
+    sat₅ θ x | true = PE.refl
 
     sat₆ : model ⊨ idem∨
     sat₆ θ _ with θ {bool} 0
-    sat₆ θ x | false = refl
-    sat₆ θ x | true = refl
+    sat₆ θ x | false = PE.refl
+    sat₆ θ x | true = PE.refl
 
     sat₇ : model ⊨ fooax
     sat₇ θ ∼⟨⟩ with (θ {a} tt)
     sat₇ θ ∼⟨⟩ | ()
-    
+
 
     ismodel : model ⊨T Th
     ismodel = sat
       where sat : {s : sorts∼} {e : Equation _ Vars∼ s} → e ∈ Th → model ⊨ e
             sat ax₁ = sat₁
-            sat ax₂ = λ θ _ → refl
+            sat ax₂ = λ θ _ → PE.refl
             sat ax₃ = sat₃
             sat ax₄ = sat₄
             sat ax₅ = sat₅
             sat ax₆ = sat₆
             sat ax₇ = sat₇
-            sat noax 
+            sat noax
 
 
     {- We could use soundness to prove this absurd. But we should

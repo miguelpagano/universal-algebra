@@ -1,16 +1,27 @@
 module Examples.Monoid where
 
-open import UnivAlgebra
-open import Equational
-open import Morphisms
-open import SigMorphism
-open import Data.Unit hiding (setoid)
+
+open import Algebra.Structures
+open import Data.Bool
 open import Data.List
-open import Data.Product
 open import Data.Nat
+open import Data.Product
 open import Data.Sum
-open import HeterogeneousVec
+open import Data.Unit using (⊤;tt)
+import Function as F
+open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid)
+open import Level renaming (zero to lzero ; suc to lsuc)
+open import Relation.Binary
+import Relation.Binary.EqReasoning as EqR
+
+open import Birkhoff
+open import Equational
+open import HeterogeneousVec renaming (map to vmap)
+open import Morphisms
+open import Product
 open import Setoids
+open import TermAlgebra
+open import UnivAlgebra
 
 open Signature
 open Algebra
@@ -21,57 +32,57 @@ module Monoid {op-mon : List ⊤ × ⊤ → Set}
               (●     : op-mon ((tt ∷ [ tt ]) ↦ tt))
        where
 
-       Σ-mon : Signature
-       Σ-mon = record { sorts = ⊤ ; ops = op-mon }
+  Σ-mon : Signature
+  Σ-mon = record { sorts = ⊤ ; ops = op-mon }
 
-       module Theory where
+  module Theory where
 
-         X : Vars Σ-mon
-         X ⊤ = ℕ
+    X : Vars Σ-mon
+    X ⊤ = ℕ
 
-         Eq₁ : Set
-         Eq₁ = Equation Σ-mon X tt
+    Eq₁ : Set
+    Eq₁ = Equation Σ-mon X tt
 
-         open import TermAlgebra
+    open import TermAlgebra
 
-         -- A formula is a term of the Term Algebra
-         Form : Set
-         Form = HU (Σ-mon 〔 X 〕) tt
+    -- A formula is a term of the Term Algebra
+    Form : Set
+    Form = HU (Σ-mon 〔 X 〕) tt
 
-         module MonSmartcons where
-         -- smart constructors
-           _∘_ : Form → Form → Form
-           φ ∘ ψ = term ● ⟨⟨ φ , ψ ⟩⟩
+    module MonSmartcons where
+    -- smart constructors
+      _∘_ : Form → Form → Form
+      φ ∘ ψ = term ● ⟨⟨ φ , ψ ⟩⟩
 
-           x : Form
-           x = term (inj₂ 0) ⟨⟩
+      x : Form
+      x = term (inj₂ 0) ⟨⟩
 
-           y : Form
-           y = term (inj₂ 1) ⟨⟩
+      y : Form
+      y = term (inj₂ 1) ⟨⟩
 
-           z : Form
-           z = term (inj₂ 2) ⟨⟩
+      z : Form
+      z = term (inj₂ 2) ⟨⟩
 
-           u : Form
-           u = term (inj₁ e) ⟨⟩
+      u : Form
+      u = term (inj₁ e) ⟨⟩
 
-         open MonSmartcons
-         -- Axioms
-         assocOp : Eq₁
-         assocOp = ⋀ (x ∘ y) ∘ z ≈ (x ∘ (y ∘ z))
+    open MonSmartcons
+    -- Axioms
+    assocOp : Eq₁
+    assocOp = ⋀ (x ∘ y) ∘ z ≈ (x ∘ (y ∘ z))
 
-         unitLeft : Eq₁
-         unitLeft = ⋀ u ∘ x ≈ x
+    unitLeft : Eq₁
+    unitLeft = ⋀ u ∘ x ≈ x
 
-         unitRight : Eq₁
-         unitRight = ⋀ x ∘ u ≈ x
+    unitRight : Eq₁
+    unitRight = ⋀ x ∘ u ≈ x
 
-         pattern mon-assoc-ax = here
-         pattern mon-unitL-ax = there here
-         pattern mon-unitR-ax  = there (there here)
+    pattern mon-assoc-ax = here
+    pattern mon-unitL-ax = there here
+    pattern mon-unitR-ax  = there (there here)
 
-         MonTheory  : Theory Σ-mon X (tt ∷ tt ∷ [ tt ])
-         MonTheory = assocOp ▹ (unitLeft ▹ unitRight ▹ ⟨⟩)
+    MonTheory  : Theory Σ-mon X (tt ∷ tt ∷ [ tt ])
+    MonTheory = assocOp ▹ (unitLeft ▹ unitRight ▹ ⟨⟩)
 
 {- Abelian monoid (commutative monoid) -}
 module AbeMonoid {op-abe-mon : List ⊤ × ⊤ → Set}
@@ -79,24 +90,22 @@ module AbeMonoid {op-abe-mon : List ⊤ × ⊤ → Set}
                  (●          : op-abe-mon ((tt ∷ [ tt ]) ↦ tt))
        where
 
-       Σ-abe-mon : Signature
-       Σ-abe-mon = record { sorts = ⊤ ; ops = op-abe-mon }
+  Σ-abe-mon : Signature
+  Σ-abe-mon = record { sorts = ⊤ ; ops = op-abe-mon }
 
-       open module M = Monoid {op-abe-mon} e ●
+  open module M = Monoid {op-abe-mon} e ●
 
-       module AbeTheory where
+  module AbeTheory where
 
-         open M.Theory
-         open MonSmartcons
+    open M.Theory
+    open MonSmartcons
 
-         open import TermAlgebra
+    -- Commutativity
+    commOp : Eq₁
+    commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
 
-         -- Commutativity
-         commOp : Eq₁
-         commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
-
-         AbeMonTheory : Theory Σ-mon X (tt ∷ tt ∷ tt ∷ tt ∷ [])
-         AbeMonTheory = commOp ▹ MonTheory
+    AbeMonTheory : Theory Σ-mon X (tt ∷ tt ∷ tt ∷ tt ∷ [])
+    AbeMonTheory = commOp ▹ MonTheory
 
 module Monoids where
 
@@ -106,10 +115,6 @@ module Monoids where
 
   open module M = Monoid {op-mon} e op
   open M.Theory
-
-  open import Algebra.Structures
-  open import Data.Bool
-  open import Relation.Binary as BC
 
   e-mon : ∀ {a l A _≈_ _∘_} {e : A} →
              (m : IsMonoid {a} {l} _≈_ _∘_ e) → A
@@ -124,7 +129,7 @@ module Monoids where
             }
     ; _⟦_⟧ₒ = (λ { e → record { _⟨$⟩_ = λ x₁ → eA
                              ; cong = λ {i} {j} _ →
-                                        BC.IsEquivalence.refl
+                                        IsEquivalence.refl
                                         (IsSemigroup.isEquivalence
                                           (isSemigroup ))
                              }
@@ -221,19 +226,21 @@ module ∨-Monoid where
   ∨-Monₛ tt = setoid Bool
 
   ∨-Monₒ : ∀ {ar s } → ops Σ-mon (ar , s) → (∨-Monₛ ✳ ar) ⟶ ∨-Monₛ s
-  ∨-Monₒ e = record {
-         _⟨$⟩_ = λ { ⟨⟩ → false };
-         cong = λ { ∼⟨⟩ → refl }
-         }
+  ∨-Monₒ e = record
+    { _⟨$⟩_ = λ { ⟨⟩ → false };
+    cong = λ { ∼⟨⟩ → refl }
+    }
+
   ∨-Monₒ op = record { _⟨$⟩_ = ∨-fun ; cong = ∨-cong }
-         where ∨-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
-               ∨-fun (b ▹ b' ▹ ⟨⟩) = b ∨ b'
-               ∨-cong : ∀ {bs bs'} → _∼v_ {R = λ _ → _≡_} bs bs' →
-                                      ∨-fun bs ≡ ∨-fun bs'
-               ∨-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
+    where
+    ∨-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
+    ∨-fun (b ▹ b' ▹ ⟨⟩) = b ∨ b'
+    ∨-cong : ∀ {bs bs'} → _∼v_ {R = λ {_} → _≡_} bs bs' →
+                           ∨-fun bs ≡ ∨-fun bs'
+    ∨-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
 
   ∨-Alg : Algebra Σ-mon
-  ∨-Alg = record { _⟦_⟧ₛ = ∨-Monₛ ; _⟦_⟧ₒ = ∨-Monₒ } 
+  ∨-Alg = record { _⟦_⟧ₛ = ∨-Monₛ ; _⟦_⟧ₒ = ∨-Monₒ }
 
   ∧-Monₛ : ⊤ → _
   ∧-Monₛ tt = setoid Bool
@@ -241,11 +248,12 @@ module ∨-Monoid where
   ∧-Monₒ : ∀ {ar s } → ops Σ-mon (ar , s) → (∧-Monₛ ✳ ar) ⟶ ∧-Monₛ s
   ∧-Monₒ e = record { _⟨$⟩_ = λ { ⟨⟩  → true }; cong = λ { ∼⟨⟩ → refl }}
   ∧-Monₒ op = record { _⟨$⟩_ = ∧-fun ; cong = ∧-cong }
-         where ∧-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
-               ∧-fun (b ▹ b' ▹ ⟨⟩) = b ∧ b'
-               ∧-cong : ∀ {bs bs'} → _∼v_ {R = λ _ → _≡_} bs bs' →
-                                      ∧-fun bs ≡ ∧-fun bs'
-               ∧-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
+    where
+    ∧-fun : HVec (λ _ → Bool) (tt ∷ [ tt ]) → Bool
+    ∧-fun (b ▹ b' ▹ ⟨⟩) = b ∧ b'
+    ∧-cong : ∀ {bs bs'} → _∼v_ {R = λ {_} → _≡_} bs bs' →
+                           ∧-fun bs ≡ ∧-fun bs'
+    ∧-cong (∼▹ refl (∼▹ refl ∼⟨⟩)) = refl
 
   ∧-Alg : Algebra Σ-mon
   ∧-Alg = record { _⟦_⟧ₛ =  ∧-Monₛ ; _⟦_⟧ₒ =  ∧-Monₒ }

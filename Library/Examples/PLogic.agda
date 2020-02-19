@@ -1,34 +1,45 @@
+-- Universal Algebra Library
+--
+-- Propositional logic.
+--
 module Examples.PLogic (V : Set) (vp vq vr : V) where
 
-open import UnivAlgebra
-open import Equational
-open import HeterogeneousVec
-open import Data.Unit
-open import Data.List hiding (and ; or)
+open import Data.Bool
+open import Data.Empty
+open import Data.List hiding (and ; or) renaming ([_] to [|_|])
 open import Data.Nat
 open import Data.Product
 open import Data.Sum
+open import Data.Unit hiding (setoid)
+import Function as F
+open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid)
+open import Level renaming (zero to lzero ; suc to lsuc)
 open import Relation.Binary hiding (_⇒_)
-open import Data.Bool
-open import Relation.Binary.PropositionalEquality as PE hiding ([_] ; _≢_)
-open import Function.Equality
+import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.PropositionalEquality as PE hiding ([_])
+open import Relation.Binary.PropositionalEquality  hiding ( _≢_)
+
+open import Equational
+open import HeterogeneousVec
+open import Morphisms
+open import Setoids
+open import SigMorphism
 import TermAlgebra
--- Lógica proposicional ecuacional
+open import UnivAlgebra
 
 data Opsₚ : List ⊤ × ⊤ → Set where
   t∙     : Opsₚ ([] , tt)
   f∙     : Opsₚ ([] , tt)
-  neg    : Opsₚ ([ tt ] , tt)
-  equiv  : Opsₚ (tt ∷ [ tt ] , tt)
-  nequiv : Opsₚ (tt ∷ [ tt ] , tt)
-  and    : Opsₚ (tt ∷ [ tt ] , tt)
-  or     : Opsₚ (tt ∷ [ tt ] , tt)
-  impl   : Opsₚ (tt ∷ [ tt ] , tt)
-  conseq : Opsₚ (tt ∷ [ tt ] , tt)
+  neg    : Opsₚ ([| tt |] , tt)
+  equiv  : Opsₚ (tt ∷ [| tt |] , tt)
+  nequiv : Opsₚ (tt ∷ [| tt |] , tt)
+  and    : Opsₚ (tt ∷ [| tt |] , tt)
+  or     : Opsₚ (tt ∷ [| tt |] , tt)
+  impl   : Opsₚ (tt ∷ [| tt |] , tt)
+  conseq : Opsₚ (tt ∷ [| tt |] , tt)
 
 Σₚ : Signature
-Σₚ = record { sorts = ⊤
-            ; ops = Opsₚ }
+Σₚ = record { sorts = ⊤ ; ops = Opsₚ }
 
 open Signature
 
@@ -36,16 +47,9 @@ open Signature
 Vₚ : sorts Σₚ → Set
 Vₚ _ = V
 
-
-repeat : ∀ {A : Set} → A → ℕ → List A
-repeat a zero = []
-repeat a (suc n) = a ∷ repeat a n
-
 open Algebra
 open TermAlgebra (Σₚ 〔 (λ _ → V) 〕)
 
-
--- Una fórmula es un término en el álgebra de términos
 Formₚ : Set
 Formₚ = HU tt
 
@@ -99,7 +103,7 @@ Ax₁ : Equation Σₚ Vₚ _
 Ax₁ = ⋀ p ≐ (q ≐ r) ≈ ((p ≐ q) ≐ r)
 
 Ax₂ : Equation Σₚ Vₚ _
-Ax₂ = ⋀ (p ≐ q) ≈ (q ≐ p) 
+Ax₂ = ⋀ (p ≐ q) ≈ (q ≐ p)
 
 Ax₃ : Equation Σₚ Vₚ _
 Ax₃ = ⋀ p ≐ true∼ ≈ p
@@ -134,19 +138,19 @@ Ax₁₂ = ⋀ p ⇒ q ≈ (p ∨∙ q ≐ q)
 Ax₁₃ : Equation Σₚ Vₚ _
 Ax₁₃ = ⋀ p ⇐ q ≈ (q ⇒ p)
 
--- Axiomas adicionados a los de Dijkstra:
+-- More axioms.
 
 Ax≡≈ : Equation Σₚ Vₚ _
-Ax≡≈ = ⋀ p ≈ q if「 [ tt ] 」 (((p ≐ q) ▹ ⟨⟩) , (true∼ ▹ ⟨⟩))
+Ax≡≈ = ⋀ p ≈ q if「 [| tt |] 」 (((p ≐ q) ▹ ⟨⟩) , (true∼ ▹ ⟨⟩))
 
 AxRefl≡ : Equation Σₚ Vₚ _
 AxRefl≡ = ⋀ p ≐ p ≈ true∼
 
-Tₚ : Theory Σₚ (λ _ → V) (repeat tt 15)
+Tₚ : Theory Σₚ (λ _ → V) (replicate 15 tt)
 Tₚ = Ax₁ ▹ Ax₂ ▹ Ax₃ ▹ Ax₄ ▹ Ax₅ ▹ Ax₆ ▹ Ax₇ ▹
      Ax₈ ▹ Ax₉ ▹ Ax₁₀ ▹ Ax₁₁ ▹ Ax₁₂ ▹ Ax₁₃ ▹ Ax≡≈ ▹ AxRefl≡ ▹ ⟨⟩
 
--- Patterns para los axiomas en la teoría
+-- Patterns for the axioms.
 pattern axₚ₁ = here
 pattern axₚ₂ = there here
 pattern axₚ₃ = there (there here)
@@ -182,13 +186,13 @@ module BoolModel where
   _=b_ : Bool → Bool → Bool
   false =b b = not b
   true =b b = b
-  
+
   _≠b_ : Bool → Bool → Bool
   b ≠b b' = not (b =b b')
-  
+
   _⇒b_ : Bool → Bool → Bool
   b ⇒b b' = (b ∨ b') =b b'
-  
+
   Bops : ∀ {ar s} → ops Σₚ (ar , s) →
            Bsort ✳ ar ⟶ Bsort s
   Bops t∙ = record { _⟨$⟩_ = λ ⟨⟩ → true ; cong = λ { _ → PE.refl } }
@@ -296,9 +300,6 @@ module BoolModel where
   Bsat₁₃ : B ⊨ Ax₁₃
   Bsat₁₃ θ _ = refl
 
-
-  open import Data.Empty
-
   boolabsurd : true ≡ false → ⊥
   boolabsurd ()
 
@@ -306,9 +307,9 @@ module BoolModel where
   Bsat≡≈ θ satcond with θ vp | θ vq | inspect (θ) vp | inspect (θ) vq
   ... | true | true | c | d = refl
   ... | false | false | c | d = refl
-  Bsat≡≈ θ (∼▹ x ∼⟨⟩) | true | false | Reveal_·_is_.[ eqp ] | Reveal_·_is_.[ eqq ] =
+  Bsat≡≈ θ (∼▹ x ∼⟨⟩) | true | false | [ eqp ] | [ eqq ] =
          ⊥-elim (boolabsurd (sym (subst₂ (λ b₁ b₂ → b₁ =b b₂ ≡ true) eqp eqq x)))
-  Bsat≡≈ θ (∼▹ x ∼⟨⟩) | false | true | Reveal_·_is_.[ eqp ] | Reveal_·_is_.[ eqq ] =
+  Bsat≡≈ θ (∼▹ x ∼⟨⟩) | false | true | [ eqp ] | [ eqq ] =
          ⊥-elim (boolabsurd (sym (subst₂ (λ b₁ b₂ → b₁ =b b₂ ≡ true) eqp eqq x)))
 
   BsatRefl≡ : B ⊨ AxRefl≡

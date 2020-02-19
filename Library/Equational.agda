@@ -3,7 +3,6 @@
 -- Conditional equational logic: Signature with variables, environments,
 --  equations, equational theories, proofs, models, Birkhoff soundness and
 -- completeness.
-
 module Equational where
 
 open import Data.List

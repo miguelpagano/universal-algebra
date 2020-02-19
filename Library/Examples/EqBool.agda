@@ -1,8 +1,10 @@
-{- Definition of two boolean theories and a translation
-   from one of them to the another. The theories are
-   T_Bool and T_DS from the article "Theorem Proving Modulo
-   Based on Boolean Equational Procedures", Camilo Rocha
-   and José Meseguer. -}
+-- Universal Algebra Library
+--
+-- Definition of two boolean theories and a translation from one of
+-- them to the another. The theories are T_Bool and T_DS from the
+-- article "Theorem Proving Modulo Based on Boolean Equational
+-- Procedures", by Camilo Rocha and José Meseguer.
+--
 module Examples.EqBool where
 
 open import UnivAlgebra

@@ -123,6 +123,7 @@ data _∼v_ {l₀ l₁ I} {A : I → Set l₀} {R : IRel A l₁} :
      ∼▹  : ∀ {i is} {t₁ t₂ : A i} {ts₁ ts₂ : HVec A is} →
            R t₁ t₂ → _∼v_ {R = R} ts₁ ts₂ → (t₁ ▹ ts₁) ∼v (t₂ ▹ ts₂)
 
+pattern ∼⟨⟨_,_⟩⟩∼ a b = ∼▹ a (∼▹ b ∼⟨⟩)
 
 _* : ∀ {l₀ l₁ I} {A : I → Set l₀} (R : IRel A l₁) → {is : List I} →
      Rel (HVec A is) (l₀ ⊔ l₁)

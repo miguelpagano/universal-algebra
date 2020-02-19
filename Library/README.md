@@ -10,7 +10,7 @@ instructions to install agda and compile the library.
 
 The formalization is modularized in these files:
 
-- [../blob/Library/Setoids.agda]
+- [Setoids](../blob/Library/Setoids.agda)
 	Definitions and properties about setoids.
 - HeterogeneousVec.agda
 	Definition, operations, and properties of heterogeneous vectors.

@@ -9,10 +9,9 @@ module Birkhoff {Σ : Signature} {X : Vars Σ} where
 
 open import Data.List using (List;[])
 open import Data.Product hiding (Σ;map)
-open import Function.Bijection  hiding (_∘_)
-open import Function hiding (module Bijection;Bijection;Bijective)
+open import Function.Bijection using (Bijective)
+open import Function
 open import Function.Equality hiding (_∘_)
-open import Function.Surjection hiding (_∘_)
 open import Relation.Binary
 import Relation.Binary.EqReasoning as EqR
 

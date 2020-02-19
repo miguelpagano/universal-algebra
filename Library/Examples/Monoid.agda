@@ -111,6 +111,10 @@ module Monoids where
   open import Data.Bool
   open import Relation.Binary as BC
 
+  e-mon : ∀ {a l A _≈_ _∘_} {e : A} →
+             (m : IsMonoid {a} {l} _≈_ _∘_ e) → A
+  e-mon {e = u} _ = u
+
   MkMonoid : ∀ {a l A _≈_ _∘_} {e : A} →
              (m : IsMonoid {a} {l} _≈_ _∘_ e) → Algebra {a} {l} Σ-mon
   MkMonoid {A = A} {_≈_} {_∘_} {eA} isMon = record
@@ -171,7 +175,6 @@ module Monoids where
   module _  {a l A _≈_ _≈′_ _∘_ _∙_} {e e' : A}
                (m : IsMonoid {a} {l} _≈_ _∘_ e)
                (m' : IsMonoid {a} {l} _≈′_ _∙_ e') where
-    open import Algebra
     open import Birkhoff
     open import Product
 
@@ -184,6 +187,22 @@ module Monoids where
       open ProdAlg
       open ModSemiEquationIsISP MonTheory
       modelM×M' = binProdClosed M M' M⊨Mon M'⊨Mon
+
+-- Test that shows we can compute with the constructed product.
+{-
+test : _
+test = {!proj₁ (IsMonoid.identity (M×M' (isMonoid m1) (isMonoid m2))) (true , false)!} -- M×M' (isMonoid m1) (isMonoid m2)
+  where open import Data.Bool.Properties
+        m1 = ∨-isCommutativeMonoid
+        m2 = ∨-isCommutativeMonoid
+        open Monoids
+        open import Algebra
+        open IsCommutativeMonoid
+        open IsMonoid
+        open import Data.Bool
+        open import Data.Product
+-}
+
 
 {- Booleans with false and ∨ are a monoid. -}
 module ∨-Monoid where

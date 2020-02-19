@@ -112,24 +112,25 @@ module Monoids where
   open import Relation.Binary as BC
 
   MkMonoid : ∀ {a l A _≈_ _∘_} {e : A} →
-             (m : IsMonoid {a} {l} _≈_ _∘_ e) → Algebra {a} {l} Σ-mon 
-  MkMonoid {A = A} {_≈_} {_∘_} {eA} isMon =
-       record { _⟦_⟧ₛ = λ _ → record { Carrier = A ; _≈_ = _≈_
-                                     ; isEquivalence = isEquivalence
-                                     }
-              ; _⟦_⟧ₒ = (λ { e → record { _⟨$⟩_ = λ x₁ → eA
-                                        ; cong = λ {i} {j} _ →
-                                                 BC.IsEquivalence.refl
-                                                 (IsSemigroup.isEquivalence
-                                                   (isSemigroup ))
-                                        }
-                           ; op → record { _⟨$⟩_ = λ { (v ▹ v₁ ▹ ⟨⟩) → v ∘ v₁ }
-                                         ; cong = λ { (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) →
-                                                      ∙-cong x₁ x₂ }
-                                         }
-                           })
-             }
-             where open IsMonoid isMon
+             (m : IsMonoid {a} {l} _≈_ _∘_ e) → Algebra {a} {l} Σ-mon
+  MkMonoid {A = A} {_≈_} {_∘_} {eA} isMon = record
+    { _⟦_⟧ₛ = λ _ → record
+            { Carrier = A ; _≈_ = _≈_
+            ; isEquivalence = isEquivalence
+            }
+    ; _⟦_⟧ₒ = (λ { e → record { _⟨$⟩_ = λ x₁ → eA
+                             ; cong = λ {i} {j} _ →
+                                        BC.IsEquivalence.refl
+                                        (IsSemigroup.isEquivalence
+                                          (isSemigroup ))
+                             }
+                  ; op → record { _⟨$⟩_ = λ { (v ▹ v₁ ▹ ⟨⟩) → v ∘ v₁ }
+                                ; cong = λ { (∼▹ x₁ (∼▹ x₂ ∼⟨⟩)) →
+                                             ∙-cong x₁ x₂ }
+                                }
+                  })
+    }
+    where open IsMonoid isMon
 
   {- Each monoid is a model of our theory. -}
   MonoidModel : ∀ {a l A _≈_ _∘_} {e : A} →
@@ -137,9 +138,9 @@ module Monoids where
   MonoidModel m mon-assoc-ax θ ∼⟨⟩ =
                 IsSemigroup.assoc (isSemigroup m) (θ 0) (θ 1) (θ 2)
     where open IsMonoid
-  MonoidModel m mon-unitL-ax θ ∼⟨⟩ =  proj₁ (identity m) (θ 0) 
+  MonoidModel m mon-unitL-ax θ ∼⟨⟩ =  proj₁ (identity m) (θ 0)
     where open IsMonoid
-  MonoidModel m mon-unitR-ax θ ∼⟨⟩ =  proj₂ (identity m) (θ 0) 
+  MonoidModel m mon-unitR-ax θ ∼⟨⟩ =  proj₂ (identity m) (θ 0)
     where open IsMonoid
 
   open Algebra
@@ -166,6 +167,23 @@ module Monoids where
             η a b c zero = a
             η a b c (suc zero) = b
             η a b c (suc (suc x₁)) = c
+
+  module _  {a l A _≈_ _≈′_ _∘_ _∙_} {e e' : A}
+               (m : IsMonoid {a} {l} _≈_ _∘_ e)
+               (m' : IsMonoid {a} {l} _≈′_ _∙_ e') where
+    open import Algebra
+    open import Birkhoff
+    open import Product
+
+    M = MkMonoid m
+    M⊨Mon = MonoidModel m
+    M' = MkMonoid m'
+    M'⊨Mon = MonoidModel m'
+    M×M' = monFromModel {A = M ×-alg M'} modelM×M'
+      where
+      open ProdAlg
+      open ModSemiEquationIsISP MonTheory
+      modelM×M' = binProdClosed M M' M⊨Mon M'⊨Mon
 
 {- Booleans with false and ∨ are a monoid. -}
 module ∨-Monoid where

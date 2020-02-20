@@ -26,9 +26,11 @@ import Relation.Binary.PropositionalEquality as PE
 open import Morphisms {Σ}
 open import Setoids
 open import HeterogeneousVec renaming (map to mapV)
-open import TermAlgebra
+import TermAlgebra as T
 
+-- Equivalent predicates induces an isomorphism of algebras.
 open SetoidPredicate
+open SubAlg
 Predicate : (ℓ₃ : Level) → Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃))
 Predicate ℓ₃ = (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)
 
@@ -36,25 +38,64 @@ _⊆ₚ_ : ∀ {ℓ₃ ℓ₄} → Predicate ℓ₃ → Predicate ℓ₄ → Set
 P ⊆ₚ Q = (s : sorts Σ) → predicate (P s) ⊆r predicate (Q s)
 
 _⊆ₚ*_ : ∀ {ℓ₃ ℓ₄} → Predicate ℓ₃ → Predicate ℓ₄ → Set (ℓ₁ ⊔ ℓ₃ ⊔ ℓ₄)
-P ⊆ₚ* Q = ∀ ar → ((λ {s} → (predicate ∘ P) s) ⇨v) ⊆r ((predicate ∘ Q) $- ⇨v ) {is = ar}
+P ⊆ₚ* Q = ∀ ar → ((λ {s} → (predicate ∘ P) s) ⇨v) ⊆r
+                  ((predicate ∘ Q) $- ⇨v)  {is = ar}
 
-IxPredicate : (ℓ₃ ℓ₄ : Level) → Set _
-IxPredicate ℓ₃ ℓ₄ = Pred (Predicate  ℓ₃) ℓ₄
+
+≅-SubAlg : ∀ {ℓ₃ ℓ₄} → (B : SubAlg {ℓ₃ = ℓ₃} A) → (C : SubAlg {ℓ₃ = ℓ₄} A) → Set _
+≅-SubAlg B C = pr B ⊆ₚ pr C × pr C ⊆ₚ pr B
+
+≅-SubAlg-iso : ∀ {ℓ₃ ℓ₄} → {B : SubAlg {ℓ₃ = ℓ₃} A} → {C : SubAlg {ℓ₃ = ℓ₄} A} →
+               ≅-SubAlg B C → Isomorphism (SubAlgebra B) (SubAlgebra C)
+≅-SubAlg-iso {ℓ₃} {ℓ₄} {B} {C} (B≤C , C≤B) = record
+  { hom = H
+  ; bij = λ s → record
+                  { injective = F.id
+                  ; surjective = isSurj s
+                  }
+  }
+  where
+  open Hom
+  ′H′ : ∀ s → (SubAlgebra B) ⟦ s ⟧ₛ ⟶ (SubAlgebra C) ⟦ s ⟧ₛ
+  ′H′ s = record
+    { _⟨$⟩_ = ×f F.id (B≤C s)
+    ; cong = F.id
+    }
+  Hcond : homCond (SubAlgebra B) (SubAlgebra C) ′H′
+  Hcond {s = s} f as
+    rewrite map-compose (λ i → ×f F.id (B≤C i)) (λ _ → proj₁) as =
+    Setoid.refl (A ⟦ s ⟧ₛ)
+  H : Homo (SubAlgebra B) (SubAlgebra C)
+  H = record { ′_′ = ′H′ ; cond = Hcond }
+
+  H⁻¹ : ∀ s → (SubAlgebra C) ⟦ s ⟧ₛ ⟶ (SubAlgebra B) ⟦ s ⟧ₛ
+  H⁻¹ s = record
+    { _⟨$⟩_ = ×f F.id (C≤B s)
+    ; cong = F.id
+    }
+  isSurj : ∀ s → Surjective (′ H ′ s)
+  isSurj s = record
+    { from = H⁻¹ s
+    ; right-inverse-of = λ _ → Setoid.refl (A ⟦ s ⟧ₛ)
+    }
+
+-- Families of Predicates
+IPredicate : (ℓ₃ ℓ₄ : Level) → Set _
+IPredicate ℓ₃ ℓ₄ = Pred (Predicate  ℓ₃) ℓ₄
 
 -- The Intersection of an OpClosed family of predicates is OpClosed.
-⋂p : ∀ {ℓ₃ ℓ₄} → IxPredicate ℓ₃ ℓ₄ → Predicate _
+⋂p : ∀ {ℓ₃ ℓ₄} → IPredicate ℓ₃ ℓ₄ → Predicate _
 ⋂p P s = record
   {  predicate = λ x → ∀ Q → P Q → predicate (Q s) x
   ; predWellDef = λ eq p Q → predWellDef (Q s) eq ∘ p Q
   }
 
-⋂-OpClosed : ∀ {ℓ₃ ℓ₄} (P : IxPredicate ℓ₃ ℓ₄) →
+⋂-OpClosed : ∀ {ℓ₃ ℓ₄} (P : IPredicate ℓ₃ ℓ₄) →
              (∀ Q → P Q → OpClosed A ((predicate ∘ Q) $-)) →
              OpClosed A ((predicate ∘ ⋂p {ℓ₃ = ℓ₃} {ℓ₄} P) $-)
 ⋂-OpClosed P isClosed f vs Q pQ = isClosed Q pQ f (map⇨v (λ v → v Q pQ) vs)
 
-open SubAlg
-⋂-SubAlg : ∀ {ℓ₃ ℓ₄} (P : IxPredicate ℓ₃ ℓ₄) →
+⋂-SubAlg : ∀ {ℓ₃ ℓ₄} (P : IPredicate ℓ₃ ℓ₄) →
              (∀ Q → P Q → OpClosed A ((predicate ∘ Q) $-)) →
              SubAlg {ℓ₃ = lsuc ℓ₁ ⊔ lsuc ℓ₂ ⊔ lsuc ℓ₃ ⊔ ℓ₄} A
 ⋂-SubAlg {ℓ₃} {ℓ₄} P isClosed = record
@@ -130,39 +171,6 @@ E⊆⋂-Sub X s a = a (E-SubAlg X) (X⊆E X)
                                             (⋂-Sub⊆E* X Q X⊆Q ts)
 
 
-≅-SubAlg : ∀ {ℓ₃ ℓ₄} → (B : SubAlg {ℓ₃ = ℓ₃} A) → (C : SubAlg {ℓ₃ = ℓ₄} A) → Set _
-≅-SubAlg B C = pr B ⊆ₚ pr C × pr C ⊆ₚ pr B
-
-≅-SubAlg-iso : ∀ {ℓ₃ ℓ₄} → {B : SubAlg {ℓ₃ = ℓ₃} A} → {C : SubAlg {ℓ₃ = ℓ₄} A} →
-               ≅-SubAlg B C → Isomorphism (SubAlgebra B) (SubAlgebra C)
-≅-SubAlg-iso {ℓ₃} {ℓ₄} {B} {C} (B≤C , C≤B) =
-               record { hom = H
-                      ; bij = λ s → record { injective = F.id
-                                           ; surjective = isSurj s
-                                           }
-                      }
-   where open Hom
-         open Homo
-         ′H′ : ∀ s → (SubAlgebra B) ⟦ s ⟧ₛ ⟶ (SubAlgebra C) ⟦ s ⟧ₛ
-         ′H′ s = record { _⟨$⟩_ = ×f F.id (B≤C s)
-                        ; cong = F.id
-                        }
-         Hcond : homCond (SubAlgebra B) (SubAlgebra C) ′H′
-         Hcond {s = s} f as
-           rewrite map-compose (λ i → ×f F.id (B≤C i)) (λ _ → proj₁) as = Setoid.refl (A ⟦ s ⟧ₛ)
-         H : Homo (SubAlgebra B) (SubAlgebra C)
-         H = record { ′_′ = ′H′
-                    ; cond = Hcond
-                    }
-
-         H⁻¹ : ∀ s → (SubAlgebra C) ⟦ s ⟧ₛ ⟶ (SubAlgebra B) ⟦ s ⟧ₛ
-         H⁻¹ s = record { _⟨$⟩_ = ×f F.id (C≤B s)
-                        ; cong = F.id
-                        }
-         isSurj : ∀ s → Surjective (′ H ′ s)
-         isSurj s = record { from = H⁻¹ s
-                           ; right-inverse-of = λ _ → Setoid.refl (A ⟦ s ⟧ₛ)
-                           }
 open Universe Σ
 _⊆ₛ_ : ∀ {ℓ₁} {ℓ₂} {ℓ₃} {ℓ₄} → Universe ℓ₁ ℓ₂ → Universe ℓ₃ ℓ₄ → Set _
 _⊆ₛ_ {ℓ₁} {ℓ₂} {ℓ₃} {ℓ₄} X A = ∀ {s} → Injection {ℓ₁} {ℓ₂} {ℓ₃} {ℓ₄} (X s) (A s)
@@ -459,7 +467,8 @@ module UniqueFree {ℓ₃ ℓ₄ ℓ₅ ℓ₆ : Level} {X : Universe ℓ₃ ℓ
     where
 
 -- The term algebra is isomorphic to the algebra generated by X.
-module TX-is-Free (X : Vars Σ) where
+
+module TX-is-Free (X : T.Vars Σ) where
 
   Xs : Universe lzero lzero
   Xs s = PE.setoid (X s)
@@ -467,7 +476,7 @@ module TX-is-Free (X : Vars Σ) where
 
   FX = freeAlgebra
   open Hom
-  open OpenTerm Σ X renaming (T_〔_〕 to TX) hiding (var)
+  open T.OpenTerm Σ X renaming (T_〔_〕 to TX) hiding (var)
 
   θ : Xs ⊆ₛ (TX ⟦_⟧ₛ)
   θ {s} = record { to = record { _⟨$⟩_ = λ x → term (inj₂ x) ⟨⟩

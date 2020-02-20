@@ -173,7 +173,6 @@ module OpenTerm (Σ : Signature) (X : Vars Σ) where
     open Eval A a
     open Setoid
     open Hom T_〔_〕 A
-    open Homo
 
     extends : Homo → Set _
     extends h = ∀ {s} → (x : X s) → _≈_ (A ⟦ s ⟧ₛ) ( ′ h ′ s ⟨$⟩ var x) (a x)

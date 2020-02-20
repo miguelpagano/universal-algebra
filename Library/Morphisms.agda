@@ -71,8 +71,8 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
       }
     }
 
-open Hom.Homo public
 open Hom
+open Homo public
 
 {- Homomorphism composition -}
 module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}

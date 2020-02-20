@@ -241,7 +241,7 @@ module TermTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ) where
   module TΣₛ = T.OpenTerm Σₛ renaming (T_〔_〕 to TΣₛ〔_〕)
   module TΣₜ = T.OpenTerm Σₜ renaming (T_〔_〕 to TΣₜ〔_〕)
 
-  open TΣₛ public
+  open TΣₛ 
   open TΣₜ hiding (Env)
   term↝ : (Xₛ : Vars Σₛ) → Homo (TΣₛ〔 Xₛ 〕) (〈 TΣₜ〔 Xₛ ↝̬ 〕 〉)
   term↝ Xₛ = TΣXHom
@@ -267,6 +267,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   open ReductAlgebra Σ↝
   open Hom
   open Setoid
+  open TΣₛ
   open TΣₜ hiding (Env)
   private Xₜ : Vars Σₜ
   Xₜ = Xₛ ↝̬
@@ -275,7 +276,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   s ∼ = ↝ₛ Σ↝ s
 
   open Homo
-  private _∼ₜ : ∀ {s} →  TΣₛ〔 Xₛ 〕 ∥ s ∥ → TΣₜ〔 Xₛ ↝̬ 〕 ∥ s ∼ ∥
+  private _∼ₜ : ∀ {s} → TΣₛ〔 Xₛ 〕 ∥ s ∥ → TΣₜ〔 Xₛ ↝̬ 〕 ∥ s ∼ ∥
   _∼ₜ {s} t = ′ term↝ Xₛ ′ s ⟨$⟩ t
 
   module ReductTheorem {ℓ₁ ℓ₂}

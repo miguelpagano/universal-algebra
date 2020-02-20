@@ -9,13 +9,16 @@ module Examples.EqBool where
 
 open import UnivAlgebra
 open import Morphisms
-open import Equational
+import Equational
 open import SigMorphism
-import TermAlgebra
+open import TermAlgebra
 open import Data.Unit hiding (setoid)
 open import Data.List
 open import Data.Product
 open import Data.Nat
+open import Function
+open import Data.Fin hiding (#_)
+open import Data.List renaming (map to lmap)
 open import Data.Sum
 open import HeterogeneousVec
 open import Relation.Binary.PropositionalEquality using (refl)
@@ -45,14 +48,15 @@ module Theory₁ where
   Vars₁ : Vars Σbool₁
   Vars₁ s = ℕ
 
+  open Equational Σbool₁
   Eq₁ : Set
-  Eq₁ = Equation Σbool₁ Vars₁ tt
+  Eq₁ = Equation Vars₁ tt
 
-  open TermAlgebra
+  open OpenTerm Σbool₁ Vars₁ renaming (T_〔_〕 to Terms)
 
   -- Formulas are terms of the Term Algebra
   Form₁ : Set
-  Form₁ = HU (Σbool₁ 〔 Vars₁ 〕) tt
+  Form₁ = Terms ∥ tt ∥
 
   module Smartcons where
     {- We define smart constructors to define axioms more easily -}
@@ -61,13 +65,13 @@ module Theory₁ where
 
     _∨_ : Form₁ → Form₁ → Form₁
     φ ∨ ψ = term or₁ ⟨⟨ φ , ψ ⟩⟩
-  
+
     ¬ : Form₁ → Form₁
     ¬ φ = term neg₁ ⟪ φ ⟫
-  
+
     p : Form₁
     p = term (inj₂ 0) ⟨⟩
-    
+
     q : Form₁
     q = term (inj₂ 1) ⟨⟩
 
@@ -121,7 +125,7 @@ module Theory₁ where
 
 
   {- The theory is a vector with the 12 axioms -}
-  Tbool₁ : Theory Σbool₁ Vars₁ (replicate 12 tt)
+  Tbool₁ : Theory Vars₁ (replicate 12 tt)
   Tbool₁ = assocAnd ▹ commAnd ▹ assocOr₁ ▹
            commOr₁ ▹ idemAnd ▹ idemOr₁ ▹
            distAndOr ▹ distOrAnd ▹ abs₁ ▹
@@ -166,11 +170,6 @@ data Σops₂ : List ⊤ × ⊤ → Set where
 
 {- We define signature morphism from Σbool₁ to Σbool₂ -}
 module Translation where
-  open import Function
-  open import Data.Fin hiding (#_)
-  open import Data.List renaming (map to lmap)
-
-  open TermAlgebra
   open FormalTerm Σbool₂
 
   {- For each operation of Σbool₁, we define a
@@ -179,7 +178,7 @@ module Translation where
            lmap id ar ⊩ s
   ops↝ t₁ = t₂ ∣$∣ ⟨⟩
   ops↝ f₁ = f₂ ∣$∣ ⟨⟩
-  ops↝ or₁ = or₂ ∣$∣ ⟨⟨ p , q ⟩⟩ 
+  ops↝ or₁ = or₂ ∣$∣ ⟨⟨ p , q ⟩⟩
     where p = # zero
           q = # (suc zero)
   -- ¬ p is translated to p ≡ false
@@ -201,33 +200,32 @@ open Translation
 
 {- We define now a Σbool₂-theory using variables from Σbool₁ -}
 module Theory₂ where
-  open TermAlgebra
+
   open Theory₁ using (Vars₁)
   open TermTrans Σtrans
 
   Vars₂ : Vars Σbool₂
   Vars₂ = Vars₁ ↝̬
 
-  Eq₂ : Set
-  Eq₂ = Equation Σbool₂ Vars₂ tt
+  open OpenTerm Σbool₂ Vars₂ renaming (T_〔_〕 to Terms₂)
 
   Form₂ : Set
-  Form₂ = HU (Σbool₂ 〔 Vars₂ 〕) tt
+  Form₂ = Terms₂ ∥ tt ∥
 
-  var : Vars₁ tt → Vars₂ tt
-  var n = (tt , refl) , n
+  v : Vars₁ tt → Vars₂ tt
+  v n = (tt , refl) , n
 
   varp : Vars₂ tt
-  varp = var 0
+  varp = v 0
 
   varq : Vars₂ tt
-  varq = var 1
+  varq = v 1
 
   varr : Vars₂ tt
-  varr = var 2
+  varr = v 2
 
   module Smartcons where
-  
+
     _∨_ : Form₂ → Form₂ → Form₂
     φ ∨ ψ = term or₂ ⟨⟨ φ , ψ ⟩⟩
 
@@ -248,6 +246,10 @@ module Theory₂ where
 
     false₂ : Form₂
     false₂ = term (inj₁ f₂) ⟨⟩
+  open Equational Σbool₂
+
+  Eq₂ : Set
+  Eq₂ = Equation Vars₂ tt
 
 
   open Smartcons
@@ -280,9 +282,9 @@ module Theory₂ where
   idemOr = ⋀ p ∨ p ≈ p
 
   distOrEquiv : Eq₂
-  distOrEquiv = ⋀ p ∨ (q ≡ r) ≈ ((p ∨ q) ≡ (p ∨ r)) 
+  distOrEquiv = ⋀ p ∨ (q ≡ r) ≈ ((p ∨ q) ≡ (p ∨ r))
 
-  Tbool₂ : Theory Σbool₂ Vars₂ (replicate 10 tt)
+  Tbool₂ : Theory Vars₂ (replicate 10 tt)
   Tbool₂ = assocEquiv ▹ commEquiv ▹ assocOr ▹
            commOr ▹ neuEquiv ▹ reflEquiv ▹
            absOr ▹ neuOr ▹ idemOr ▹
@@ -311,13 +313,13 @@ module Theory₂ where
   module Tbool₂⇒Tbool₁ where
     open Theory₁
     open TheoryTrans Σtrans Vars₁
-    open import Relation.Binary.EqReasoning (⊢RSetoid Tbool₂ tt)
+    open Provable-Equivalence Tbool₂
+    open import Relation.Binary.EqReasoning (⊢-≈Setoid tt)
 
-  
     {- We have to prove each axiom of
       Tbool₁ in theory Tbool₂ -}
 
-    open Subst
+    open OpenTerm.Subst Σbool₂ Vars₂
 
     T₂⊢idem∨ : Tbool₂ ⊢ eq↝ idemOr₁
     T₂⊢idem∨ =
@@ -509,6 +511,7 @@ module BoolModel₂ where
   open import Relation.Binary
   open import Function.Equality hiding (setoid)
 
+
   BCarrier : sorts Σbool₁ → Setoid _ _
   BCarrier _ = setoid Bool
 
@@ -534,7 +537,8 @@ module BoolModel₂ where
   B₂ = record { _⟦_⟧ₛ = BCarrier ; _⟦_⟧ₒ = Bops }
 
   open Theory₂
-
+  open Equational Σbool₂
+  
   B₂⊨assoc≡ : B₂ ⊨ assocEquiv
   B₂⊨assoc≡ θ ∼⟨⟩ with θ varp | θ varq | θ varr
   B₂⊨assoc≡ θ ∼⟨⟩ | true | b | c = refl
@@ -614,11 +618,12 @@ module BoolModel₁ where
   open import Data.Bool
   open ReductAlgebra Σtrans
   open BoolModel₂
+  open Equational Σbool₁
 
-  {- Instead of prove that Bool is model of Tbool₁ (i.e., 
-     it satisfies each axiom) we obtain this model from
-     B₂ via the reduct theorem -}
-  
+  {- Instead of proving that Bool is model of Tbool₁ (i.e., that it
+     satisfies each axiom) we obtain this model from B₂ via the reduct
+     theorem. -}
+
   B₁ : Algebra Σbool₁
   B₁ = 〈 B₂ 〉
 

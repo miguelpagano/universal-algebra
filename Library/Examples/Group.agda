@@ -19,11 +19,10 @@ open import Relation.Binary
 import Relation.Binary.EqReasoning as EqR
 
 open import Birkhoff
-open import Equational
+import Equational
 open import HeterogeneousVec renaming (map to vmap)
 open import Morphisms
 open import Product
-open import Setoids
 open import TermAlgebra
 open import UnivAlgebra
 
@@ -43,27 +42,29 @@ module Group {op-grp : List ⊤ × ⊤ → Set}
   Σ-grp = record { sorts = ⊤ ; ops = op-grp }
 
   module GrpTheory where
-    open M.Theory
+    open M.Theory hiding (HU;term)
 
+    module OTG = OpenTerm Σ-grp X renaming (T_〔_〕 to GTerms)
+    open OTG
+    open Equational Σ-grp
     Eq-grp : Set
-    Eq-grp = Equation Σ-grp X tt
+    Eq-grp = Equation X tt
 
-    -- A formula is a term of the Term Algebra
-    Form-grp : Set
-    Form-grp = HU (Σ-grp 〔 X 〕) tt
+    Term-grp : Set
+    Term-grp = GTerms ∥ tt ∥
 
     module GrpSmartcons where
     -- smart constructors
-      _∘_ : Form-grp → Form-grp → Form-grp
+      _∘_ : Term-grp → Term-grp → Term-grp
       a ∘ b = term ● ⟨⟨ a , b ⟩⟩
 
-      _⁻ : Form-grp → Form-grp
+      _⁻ : Term-grp → Term-grp
       a ⁻ = term _⁻¹ (⟪ a ⟫)
 
-      x : Form-grp
+      x : Term-grp
       x = term (inj₂ 0) ⟨⟩
 
-      u : Form-grp
+      u : Term-grp
       u = term (inj₁ e) ⟨⟩
 
     open GrpSmartcons
@@ -80,12 +81,13 @@ module Group {op-grp : List ⊤ × ⊤ → Set}
     pattern grp-unitL-ax = there (there (there here ))
     pattern grp-unitR-ax = there (there (there (there here)))
 
-    GrpTheory : Theory Σ-grp X (tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
+    GrpTheory : Theory X (tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
     GrpTheory = invElemRight ▹ (invElemLeft ▹ MonTheory)
 
     module _ where
-      open EqR (⊢RSetoid GrpTheory tt)
-      open Subst {Σ-grp} {X}
+      open Provable-Equivalence GrpTheory
+      open EqR (⊢-≈Setoid tt)
+      open OTG.Subst
 
       {- unit is its own inverse. -}
       p₁ : GrpTheory ⊢ (⋀ (u ⁻) ≈ u)
@@ -133,15 +135,16 @@ module AbeGroup {op-abe-grp : List ⊤ × ⊤ → Set}
 
          open M.Theory
          open G.GrpTheory
+         open Equational Σ-abe-grp
 
          Eq-abe-grp : Set
          Eq-abe-grp = Eq-grp
 
-         Form-abe-grp : Set
-         Form-abe-grp = Form-grp
+         Term-abe-grp : Set
+         Term-abe-grp = Term-grp
 
          module AbeGrpSmartcons where
-           y : Form-grp
+           y : Term-grp
            y = term (inj₂ 1) ⟨⟩
 
          open GrpSmartcons
@@ -150,7 +153,7 @@ module AbeGroup {op-abe-grp : List ⊤ × ⊤ → Set}
          commOp : Eq-abe-grp
          commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
 
-         AbeGrpTheory : Theory Σ-abe-grp X (tt ∷ tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
+         AbeGrpTheory : Theory X (tt ∷ tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
          AbeGrpTheory = commOp ▹ GrpTheory
 
 module Groups where
@@ -164,7 +167,7 @@ module Groups where
   open G.GrpTheory
   open M.Theory
   open Monoids
-
+  open Equational Σ-grp
   {- Each group is a model of our theory. -}
   MkGroup : ∀ {l₀ l₁ A _≈_ bop uop} {e : A} →
              (g : IsGroup {l₀} {l₁} _≈_ bop e uop) → Algebra {l₀} {l₁} G.Σ-grp
@@ -227,7 +230,7 @@ module Groups where
                   )
     ; ⁻¹-cong = λ {x} {y} x≈y → cong (A ⟦ _⁻¹ ⟧ₒ) (∼▹ x≈y ∼⟨⟩)
     }
-    where η : ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → Env X A
+    where η :  A ∥ tt ∥ → A ∥ tt ∥ → A ∥ tt ∥ → OTG.Env A
           η a b c zero = a
           η a b c (suc zero) = b
           η a b c (suc (suc x₁)) = c

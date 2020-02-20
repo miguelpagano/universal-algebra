@@ -20,11 +20,11 @@ import Relation.Binary.PropositionalEquality as PE hiding ([_])
 open import Relation.Nullary using (¬_)
 
 open import Birkhoff
-open import Equational
+import Equational
 open import HeterogeneousVec
 open import Product
-open import Setoids
 open import UnivAlgebra
+open import TermAlgebra
 
 open Signature
 open UnivAlgebra.Algebra
@@ -93,15 +93,12 @@ module Fields where
                     (A : Algebra {l₀} {l₁} Σ-field) → Set (l₀ ⊔ l₁)
   nonzero-unit-ax {l₀} {l₁} A = ∀ x → ¬ (x ≈A 0') → (x ⋆' (x ⁻¹')) ≈A 1'
     where
-    CA : Set l₀
     CA = Carrier (A ⟦ tt ⟧ₛ)
-    1' : CA
     1' = A ⟦ 1# ⟧ₒ ⟨$⟩ ⟨⟩
-    0' : CA
     0' = A ⟦ 0# ⟧ₒ ⟨$⟩ ⟨⟩
-    _⋆'_ : CA → CA → CA
+    _⋆'_ : Op₂ CA
     x ⋆' y = A ⟦ _⋆_ ⟧ₒ ⟨$⟩ ⟨⟨ x , y ⟩⟩
-    _⁻¹' : CA → CA
+    _⁻¹' : Op₁ CA
     x ⁻¹' = A ⟦ _⁻¹ ⟧ₒ ⟨$⟩ ⟪ x ⟫
     _≈A_ : CA → CA → Set l₁
     _≈A_ = _≈_ (A ⟦ tt ⟧ₛ)
@@ -167,6 +164,8 @@ module Fields where
 
   open ModSemiEquationIsISP
 
+  open Equational Σ-field
+
   -- We assume that there is an equational theory for fields; ie. a
   -- theory whose models are exactly fields in the external sense.
   -- Since GF2 is a field in the external sense, then it is a model;
@@ -175,7 +174,7 @@ module Fields where
   -- But we had already proved that GF2² is not a field.
   FieldIsNotEquational : ¬ (Σ[ ar ∈ List (sorts Σ-field) ]
                            (Σ[ X ∈ Vars Σ-field ]
-                           (Σ[ T ∈ Theory Σ-field X ar ]
+                           (Σ[ T ∈ Theory X ar ]
                              ∀ (F : Algebra {lzero} {lzero} Σ-field) →
                                   (F ⊨T T) ⇔ (IsField F))))
   FieldIsNotEquational (_ , _ , T , p) = GF2²-isnot-field GF2²-is-field

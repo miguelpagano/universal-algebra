@@ -19,12 +19,12 @@ open import Relation.Binary
 import Relation.Binary.EqReasoning as EqR
 
 open import Birkhoff
-open import Equational
+import Equational
 open import HeterogeneousVec renaming (map to vmap)
 open import Morphisms
 open import Product
-open import Setoids
-open import TermAlgebra
+open import Setoids hiding (∥_∥)
+open import TermAlgebra using (Vars; module OpenTerm)
 open import UnivAlgebra
 
 open Hom
@@ -42,28 +42,30 @@ module Monoid {op-mon : List ⊤ × ⊤ → Set}
     X : Vars Σ-mon
     X ⊤ = ℕ
 
-    Eq₁ : Set
-    Eq₁ = Equation Σ-mon X tt
+    open OpenTerm Σ-mon X renaming (T_〔_〕 to Terms) public
+    open Equational Σ-mon
 
-    -- A formula is a term of the Term Algebra
-    Form : Set
-    Form = HU (Σ-mon 〔 X 〕) tt
+    Eq₁ : Set
+    Eq₁ = Equation X tt
+
+    Term : Set
+    Term = Terms ∥ tt ∥
 
     module MonSmartcons where
     -- smart constructors
-      _∘_ : Form → Form → Form
+      _∘_ : Term → Term → Term
       φ ∘ ψ = term ● ⟨⟨ φ , ψ ⟩⟩
 
-      x : Form
+      x : Term
       x = term (inj₂ 0) ⟨⟩
 
-      y : Form
+      y : Term
       y = term (inj₂ 1) ⟨⟩
 
-      z : Form
+      z : Term
       z = term (inj₂ 2) ⟨⟩
 
-      u : Form
+      u : Term
       u = term (inj₁ e) ⟨⟩
 
     open MonSmartcons
@@ -81,7 +83,7 @@ module Monoid {op-mon : List ⊤ × ⊤ → Set}
     pattern mon-unitL-ax = there here
     pattern mon-unitR-ax  = there (there here)
 
-    MonTheory  : Theory Σ-mon X (tt ∷ tt ∷ [ tt ])
+    MonTheory  : Theory X (tt ∷ tt ∷ [ tt ])
     MonTheory = assocOp ▹ (unitLeft ▹ unitRight ▹ ⟨⟩)
 
 {- Abelian monoid (commutative monoid) -}
@@ -99,12 +101,13 @@ module AbeMonoid {op-abe-mon : List ⊤ × ⊤ → Set}
 
     open M.Theory
     open MonSmartcons
+    open Equational Σ-abe-mon
 
     -- Commutativity
     commOp : Eq₁
     commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
 
-    AbeMonTheory : Theory Σ-mon X (tt ∷ tt ∷ tt ∷ tt ∷ [])
+    AbeMonTheory : Theory X (tt ∷ tt ∷ tt ∷ tt ∷ [])
     AbeMonTheory = commOp ▹ MonTheory
 
 module Monoids where
@@ -115,7 +118,7 @@ module Monoids where
 
   open module M = Monoid {op-mon} e op
   open M.Theory
-
+  open Equational Σ-mon
   e-mon : ∀ {a l A _≈_ _∘_} {e : A} →
              (m : IsMonoid {a} {l} _≈_ _∘_ e) → A
   e-mon {e = u} _ = u
@@ -168,7 +171,7 @@ module Monoids where
                  ; identity = (λ x₁ → mod (there here) (λ x₂ → x₁) ∼⟨⟩)
                               , (λ x₁ → mod (there (there here)) (λ _ → x₁) ∼⟨⟩)
                  }
-      where η : ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → ∥ A ⟦ tt ⟧ₛ ∥ → Env X A
+      where η : A ∥ tt ∥ →  A ∥ tt ∥ → A ∥ tt ∥ → Env A
             η a b c zero = a
             η a b c (suc zero) = b
             η a b c (suc (suc x₁)) = c

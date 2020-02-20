@@ -20,10 +20,9 @@ open import Relation.Binary
 import Relation.Binary.EqReasoning as EqR
 import Relation.Binary.PropositionalEquality as PE hiding ([_])
 
-open import Equational
+import Equational
 open import HeterogeneousVec
 open import Morphisms
-open import Setoids
 open import SigMorphism
 open import TermAlgebra
 open import UnivAlgebra
@@ -55,15 +54,18 @@ module EqBool where
   Vars∼ bool = ℕ
   Vars∼ a = ⊤
 
+  open OpenTerm Σ∼ Vars∼ renaming (T_〔_〕 to Terms)
+  open Equational Σ∼
+
   Eq∼ : Set
-  Eq∼ = Equation Σ∼ Vars∼ bool
+  Eq∼ = Equation Vars∼ bool
 
   -- A formula is a term of the Term Algebra.
   Form : Set
-  Form = HU (Σ∼ 〔 Vars∼ 〕) bool
+  Form = Terms ∥ bool ∥
 
   aterm : Set
-  aterm = HU (Σ∼ 〔 Vars∼ 〕) a
+  aterm = Terms ∥ a ∥
 
   module Smartcons where
 
@@ -115,7 +117,7 @@ module EqBool where
     fooax : Eq∼
     fooax = ⋀ fu av ≈ ¬ (fu av)
 
-    Th : Theory Σ∼ Vars∼ (replicate 7 bool)
+    Th : Theory Vars∼ (replicate 7 bool)
     Th = notT ▹ notF ▹ 3exc ▹ b∧¬b ▹ idem∧ ▹ idem∨ ▹ fooax ▹ ⟨⟩
 
     pattern ax₁ = here
@@ -129,8 +131,9 @@ module EqBool where
 
   module Proof where
     open Theory
-    open EqR (⊢RSetoid Th bool)
-    open Subst {Σ∼} {Vars∼}
+    open Provable-Equivalence Th
+    open EqR (⊢-≈Setoid bool)
+    open OpenTerm.Subst Σ∼ Vars∼
     open Equation
     open Smartcons
     open TermAlgebra
@@ -223,7 +226,7 @@ module EqBool where
 
     ismodel : model ⊨T Th
     ismodel = sat
-      where sat : {s : sorts∼} {e : Equation _ Vars∼ s} → e ∈ Th → model ⊨ e
+      where sat : {s : sorts∼} {e : Equation Vars∼ s} → e ∈ Th → model ⊨ e
             sat ax₁ = sat₁
             sat ax₂ = λ θ _ → PE.refl
             sat ax₃ = sat₃

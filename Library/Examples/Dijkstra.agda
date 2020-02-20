@@ -149,11 +149,11 @@ module Example1 where
 module ToEquational where
   open import Examples.PLogic ℕ 0 1 2 renaming (¬ to ¬ₚ ; _⇒_ to _⇒ₚ_ ; _⇐_ to _⇐ₚ_)
   open import UnivAlgebra
-  open import Equational
+  import Equational
   open import HeterogeneousVec renaming (_∈_ to _∈ₕ_)
   open import Data.Sum
-  import TermAlgebra
-  open TermAlgebra (Σₚ 〔 (λ _ → ℕ) 〕)
+  open import TermAlgebra
+  open OpenTerm Σₚ (λ _ → ℕ)
 
   ⟦_⟧ : Formula → Formₚ
   ⟦ true ⟧ = true∼
@@ -168,7 +168,7 @@ module ToEquational where
   ⟦ f₁ ⇐ f₂ ⟧ = ⟦ f₁ ⟧ ⇐ₚ ⟦ f₂ ⟧
 
 
-  open Subst {Σₚ} {λ _ → ℕ}
+  open Subst
 
   -- Traducción de axiomas
   {- Las metavariables φ' ψ' y τ que se utilizan para los meta-axiomas, son reemplazadas
@@ -179,7 +179,9 @@ module ToEquational where
   subsₐ φ' ψ' τ  0 = ⟦ φ' ⟧
   subsₐ φ' ψ' τ  1 = ⟦ ψ' ⟧
   subsₐ φ' ψ' τ  2 = ⟦ τ ⟧
-  subsₐ φ' ψ' τ  n = term (inj₂ n) ⟨⟩ 
+  subsₐ φ' ψ' τ  n = term (inj₂ n) ⟨⟩
+
+  open Equational Σₚ
 
   ⟦_⟧ₐ : ∀ {φ' ψ' τ φ ψ} → (φ ≡' ψ) ∈ Axioms φ' ψ' τ → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
   ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁ = psubst axₚ₁ (subsₐ φ' ψ' τ) ∼⟨⟩
@@ -325,9 +327,11 @@ module Examples where
   open import Data.Nat.Show renaming (show to shown)
   open import Data.String
   open import UnivAlgebra
-  open import Equational
+  import Equational
   open import HeterogeneousVec renaming (_∈_ to _∈ₕ_)
   open import Data.Sum
+
+  open Equational Σₚ
 
   ex₁ : (Tₚ ⊢ (⋀ ⟦ true ⟧ ≈ true∼)) ⊎
         (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
@@ -342,7 +346,7 @@ module Examples where
   toproof {φ} (inj₁ x) = φ , true , x
   toproof (inj₂ (φ' , ψ , pr , _)) = φ' , (ψ , pr)
 
-{-
+{- TODO: this is broken!
   showex₁ : String
   showex₁ = printF shown prf
     where prf : _

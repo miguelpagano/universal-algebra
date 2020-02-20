@@ -28,8 +28,9 @@ open Equation
 open Hom
 open Homo
 
-Terms : ∀ s → Set _
-Terms s = TΣX ∥ s ∥
+private
+  Terms : ∀ s → Set _
+  Terms s = TΣX ∥ s ∥
 
 
 module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}

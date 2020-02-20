@@ -18,27 +18,13 @@ open import Relation.Binary
 import Relation.Binary.EqReasoning as EqR
 
 open import Birkhoff
-open import Equational
+import Equational
 open import HeterogeneousVec renaming (map to vmap)
 open import Morphisms
 open import Product
-open import Setoids
 open import TermAlgebra
 open import UnivAlgebra
 
-open import UnivAlgebra
-open import Equational
-open import Morphisms
-open import SigMorphism
-open import Data.Unit hiding (setoid)
-open import Data.List
-open import Data.Product
-open import Data.Nat
-open import Data.Sum
-open import HeterogeneousVec
-open import Setoids
-
-open Signature
 open Hom
 
 open import Examples.Monoid
@@ -68,35 +54,37 @@ module SemiRing {op-semiring : List ⊤ × ⊤ → Set}
 
   module SemiRingTheory where
     open AM.AbeTheory
-    open M'.Theory
+    open M'.Theory  hiding (term)
 
-    open import TermAlgebra
+    module SR = OpenTerm Σ-sr X renaming (T_〔_〕 to SRTerms)
+    open SR
+    open Equational Σ-sr
+
 
     Eq-sr : Set
-    Eq-sr = Equation Σ-sr X tt
+    Eq-sr = Equation X tt
 
-    -- A formula is a term of the Term Algebra
-    Form-sr : Set
-    Form-sr = HU (Σ-sr 〔 X 〕) tt
+    SRTerm : Set
+    SRTerm = SRTerms ∥ tt ∥
 
     module SRSmartcons where
     -- smart constructors
-      _⊹_ : Form-sr → Form-sr → Form-sr
+      _⊹_ : SRTerm → SRTerm → SRTerm
       a ⊹ b = term add ⟨⟨ a , b ⟩⟩
 
-      _⋆_ : Form-sr → Form-sr → Form-sr
+      _⋆_ : SRTerm → SRTerm → SRTerm
       a ⋆ b = term mult ⟨⟨ a , b ⟩⟩
 
-      x : Form
+      x : Term
       x = term (inj₂ 0) ⟨⟩
 
-      y : Form
+      y : Term
       y = term (inj₂ 1) ⟨⟩
 
-      z : Form
+      z : Term
       z = term (inj₂ 2) ⟨⟩
 
-      0' : Form-sr
+      0' : SRTerm
       0' = term (inj₁ 0#) ⟨⟩
 
     open SRSmartcons
@@ -121,7 +109,7 @@ module SemiRing {op-semiring : List ⊤ × ⊤ → Set}
     absMultRight : Eq-sr
     absMultRight = ⋀ x ⋆ 0' ≈ 0'
 
-    SRTheory : Theory Σ-sr X (replicate 11 tt)
+    SRTheory : Theory X (replicate 11 tt)
     SRTheory = distMultOverAddLeft ▹ distMultOverAddRight ▹
                absMultLeft ▹ absMultRight ▹
                MonTheory ++v AbeMonTheory
@@ -153,32 +141,33 @@ module Ring {op-ring : List ⊤ × ⊤ → Set}
 
   module RingTheory where
     open AG.AbeGrpTheory
-    open M.Theory
+    open M.Theory hiding (term)
 
-    open import TermAlgebra
-
+    module RT = OpenTerm Σ-ring X renaming (T_〔_〕 to RTerms)
+    open RT
+    open Equational Σ-ring
     Eq-r : Set
-    Eq-r = Equation Σ-ring X tt
+    Eq-r = Equation X tt
 
     -- A formula is a term of the Term Algebra
-    Form-r : Set
-    Form-r = HU (Σ-ring 〔 X 〕) tt
+    Term-r : Set
+    Term-r = RTerms ∥ tt ∥
 
     module SRSmartcons where
     -- smart constructors
-      _⊹_ : Form-r → Form-r → Form-r
+      _⊹_ : Term-r → Term-r → Term-r
       a ⊹ b = term add ⟨⟨ a , b ⟩⟩
 
-      _⋆_ : Form-r → Form-r → Form-r
+      _⋆_ : Term-r → Term-r → Term-r
       a ⋆ b = term mult ⟨⟨ a , b ⟩⟩
 
-      x : Form-r
+      x : Term-r
       x = term (inj₂ 0) ⟨⟩
 
-      y : Form-r
+      y : Term-r
       y = term (inj₂ 1) ⟨⟩
 
-      z : Form-r
+      z : Term-r
       z = term (inj₂ 2) ⟨⟩
 
     open SRSmartcons
@@ -193,7 +182,7 @@ module Ring {op-ring : List ⊤ × ⊤ → Set}
     distMultOverAddRight : Eq-r
     distMultOverAddRight = ⋀ (x ⊹ y) ⋆ z ≈ (x ⋆ z) ⊹ (y ⋆ z)
 
-    RTheory : Theory Σ-ring X (replicate 11 tt)
+    RTheory : Theory X (replicate 11 tt)
     RTheory = distMultOverAddLeft ▹ distMultOverAddRight ▹
               MonTheory ++v AbeGrpTheory
 
@@ -214,13 +203,16 @@ module CommutativeRing {op-cring : List ⊤ × ⊤ → Set}
 
   module CommRingTheory where
     open R.RingTheory
-    open import TermAlgebra
 
     X : Vars Σ-cring
     X ⊤ = ℕ
 
+    module CR = OpenTerm Σ-cring X renaming (T_〔_〕 to CRTerms)
+    open CR
+    open Equational Σ-cring
+
     Eq-cr : Set
-    Eq-cr = Equation Σ-cring X tt
+    Eq-cr = Equation X tt
 
     open SRSmartcons
     {-  Multiplication is commutative:
@@ -229,5 +221,5 @@ module CommutativeRing {op-cring : List ⊤ × ⊤ → Set}
     commMult : Eq-cr
     commMult = ⋀ x ⋆ y ≈ y ⋆ x
 
-    CRTheory : Theory Σ-cring X (replicate 12 tt)
+    CRTheory : Theory X (replicate 12 tt)
     CRTheory = commMult ▹ RTheory

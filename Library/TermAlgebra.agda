@@ -145,7 +145,7 @@ module OpenTerm (Σ : Signature) (X : Vars Σ) where
 
     open Setoid
     cong-eval : ∀ {s} {t₁ t₂ : ∣T∣ ∥ s ∥} →
-                     t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) (eval t₁) (eval t₂)
+                t₁ ≡ t₂ → _≈_ (A ⟦ s ⟧ₛ) (eval t₁) (eval t₂)
     cong-eval {s} {t₁} eq = ≡to≈ (A ⟦ s ⟧ₛ) (PE.cong eval eq)
     cong-eval* : ∀ {ar} {ts : ∣T∣ ∥ ar ∥*} → eval* ts ≡ map (λ- eval) ts
     cong-eval* {ar = []} {⟨⟩} = PE.refl

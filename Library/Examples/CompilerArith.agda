@@ -25,7 +25,7 @@ open import HeterogeneousVec
 open import Setoids
 open import Morphisms
 open import SigMorphism
-import TermAlgebra
+open import TermAlgebra
 open import UnivAlgebra
 
 open Signature
@@ -78,7 +78,9 @@ iₑ f = record  { _⟨$⟩_ = iopsₑ f ; cong = icongₑ f }
 Semₑ : Algebra Σₑ
 Semₑ = record {_⟦_⟧ₛ = ⟦_⟧ₑ ; _⟦_⟧ₒ = iₑ }
 
-open TermAlgebra Σₑ renaming (∣T∣ to ∣T∣ₑ ; ∣H∣ to ∣H∣ₑ ; ∣T∣isInitial to ∣T∣ₑInit)
+module Me = GroundTerm Σₑ renaming (∣T∣ to ∣T∣ₑ; ∣T∣isInitial to ∣T∣ₑInit)
+open Me
+open Me.Eval renaming (∣H∣ to ∣H∣ₑ )
 
 hsem : Homo ∣T∣ₑ Semₑ
 hsem = ∣H∣ₑ Semₑ
@@ -150,7 +152,9 @@ iₘ f = record  { _⟨$⟩_ = iopsₘ f
 Exec : Algebra Σₘ
 Exec = record { _⟦_⟧ₛ = ⟦_⟧ₘ ; _⟦_⟧ₒ = iₘ }
 
-open TermAlgebra Σₘ renaming (∣T∣ to ∣T∣ₘ ; ∣H∣ to ∣H∣ₘ)
+module Mm = GroundTerm Σₘ renaming (∣T∣ to ∣T∣ₘ)
+open Mm
+open Mm.Eval renaming (∣H∣ to ∣H∣ₘ)
 
 hexec : Homo ∣T∣ₘ Exec
 hexec = ∣H∣ₘ Exec

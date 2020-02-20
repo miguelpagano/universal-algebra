@@ -19,12 +19,12 @@ import Relation.Binary.EqReasoning as EqR
 import Relation.Binary.PropositionalEquality as PE hiding ([_])
 open import Relation.Binary.PropositionalEquality  hiding ( _≢_)
 
-open import Equational
+import Equational
 open import HeterogeneousVec
 open import Morphisms
 open import Setoids
 open import SigMorphism
-import TermAlgebra
+open import TermAlgebra
 open import UnivAlgebra
 
 data Opsₚ : List ⊤ × ⊤ → Set where
@@ -47,7 +47,7 @@ open Signature
 Vₚ : sorts Σₚ → Set
 Vₚ _ = V
 
-open TermAlgebra (Σₚ 〔 (λ _ → V) 〕)
+open OpenTerm Σₚ (λ _ → V)
 
 Formₚ : Set
 Formₚ = HU tt
@@ -97,55 +97,55 @@ t₁ ⇒ t₂ = term impl (t₁ ▹ t₂ ▹ ⟨⟩)
 _⇐_ : Formₚ → Formₚ → Formₚ
 t₁ ⇐ t₂ = term conseq (t₁ ▹ t₂ ▹ ⟨⟩)
 
-
-Ax₁ : Equation Σₚ Vₚ _
+open Equational Σₚ
+Ax₁ : Equation Vₚ _
 Ax₁ = ⋀ p ≐ (q ≐ r) ≈ ((p ≐ q) ≐ r)
 
-Ax₂ : Equation Σₚ Vₚ _
+Ax₂ : Equation Vₚ _
 Ax₂ = ⋀ (p ≐ q) ≈ (q ≐ p)
 
-Ax₃ : Equation Σₚ Vₚ _
+Ax₃ : Equation Vₚ _
 Ax₃ = ⋀ p ≐ true∼ ≈ p
 
-Ax₄ : Equation Σₚ Vₚ _
+Ax₄ : Equation Vₚ _
 Ax₄ = ⋀ p ∨∙ (q ∨∙ r) ≈ ((p ∨∙ q) ∨∙ r)
 
-Ax₅ : Equation Σₚ Vₚ _
+Ax₅ : Equation Vₚ _
 Ax₅ = ⋀ (p ∨∙ q) ≈ (q ∨∙ p)
 
-Ax₆ : Equation Σₚ Vₚ _
+Ax₆ : Equation Vₚ _
 Ax₆ = ⋀ p ∨∙ false∼ ≈ p
 
-Ax₇ : Equation Σₚ Vₚ _
+Ax₇ : Equation Vₚ _
 Ax₇ = ⋀ p ∨∙ p ≈ p
 
-Ax₈ : Equation Σₚ Vₚ _
+Ax₈ : Equation Vₚ _
 Ax₈ = ⋀ p ∨∙ (q ≐ r) ≈ (p ∨∙ q ≐ p ∨∙ r)
 
-Ax₉ : Equation Σₚ Vₚ _
+Ax₉ : Equation Vₚ _
 Ax₉ = ⋀ ¬ p ≈ (p ≐ false∼)
 
-Ax₁₀ : Equation Σₚ Vₚ _
+Ax₁₀ : Equation Vₚ _
 Ax₁₀ = ⋀ p ≢ q ≈ ((¬ p) ≐ q)
 
-Ax₁₁ : Equation Σₚ Vₚ _
+Ax₁₁ : Equation Vₚ _
 Ax₁₁ = ⋀ p ∧∙ q ≈ (p ≐ (q ≐ p ∨∙ q))
 
-Ax₁₂ : Equation Σₚ Vₚ _
+Ax₁₂ : Equation Vₚ _
 Ax₁₂ = ⋀ p ⇒ q ≈ (p ∨∙ q ≐ q)
 
-Ax₁₃ : Equation Σₚ Vₚ _
+Ax₁₃ : Equation Vₚ _
 Ax₁₃ = ⋀ p ⇐ q ≈ (q ⇒ p)
 
 -- More axioms.
 
-Ax≡≈ : Equation Σₚ Vₚ _
+Ax≡≈ : Equation Vₚ _
 Ax≡≈ = ⋀ p ≈ q if「 [| tt |] 」 (((p ≐ q) ▹ ⟨⟩) , (true∼ ▹ ⟨⟩))
 
-AxRefl≡ : Equation Σₚ Vₚ _
+AxRefl≡ : Equation Vₚ _
 AxRefl≡ = ⋀ p ≐ p ≈ true∼
 
-Tₚ : Theory Σₚ (λ _ → V) (replicate 15 tt)
+Tₚ : Theory (λ _ → V) (replicate 15 tt)
 Tₚ = Ax₁ ▹ Ax₂ ▹ Ax₃ ▹ Ax₄ ▹ Ax₅ ▹ Ax₆ ▹ Ax₇ ▹
      Ax₈ ▹ Ax₉ ▹ Ax₁₀ ▹ Ax₁₁ ▹ Ax₁₂ ▹ Ax₁₃ ▹ Ax≡≈ ▹ AxRefl≡ ▹ ⟨⟩
 
@@ -340,20 +340,20 @@ module BoolModel where
 open import Data.String renaming (_++_ to _++s_)
 
 printF : (pv : V → String) → Formₚ → String
-printF pv (TermAlgebra.term {[]} (inj₁ t∙) ⟨⟩) = "true"
-printF pv (TermAlgebra.term {[]} (inj₁ f∙) ⟨⟩) = "false"
-printF pv (TermAlgebra.term {[]} (inj₂ y) ⟨⟩) = pv y
-printF pv (TermAlgebra.term {_ ∷ []} neg (f ▹ ⟨⟩)) = "¬ (" ++s (printF pv f) ++s ")"
-printF pv (TermAlgebra.term {_ ∷ _ ∷ []} equiv (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (term {[]} (inj₁ t∙) ⟨⟩) = "true"
+printF pv (term {[]} (inj₁ f∙) ⟨⟩) = "false"
+printF pv (term {[]} (inj₂ y) ⟨⟩) = pv y
+printF pv (term {_ ∷ []} neg (f ▹ ⟨⟩)) = "¬ (" ++s (printF pv f) ++s ")"
+printF pv (term {_ ∷ _ ∷ []} equiv (f₁ ▹ f₂ ▹ ⟨⟩)) =
                                "(" ++s (printF pv f₁) ++s ") ≡ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} nequiv (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (term {.tt ∷ .tt ∷ []} nequiv (f₁ ▹ f₂ ▹ ⟨⟩)) =
                                "(" ++s (printF pv f₁) ++s ") ≢ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} and (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (term {.tt ∷ .tt ∷ []} and (f₁ ▹ f₂ ▹ ⟨⟩)) =
                                "(" ++s (printF pv f₁) ++s ") ∧ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} or (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (term {.tt ∷ .tt ∷ []} or (f₁ ▹ f₂ ▹ ⟨⟩)) =
                                "(" ++s (printF pv f₁) ++s ") ∨ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} impl (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (term {.tt ∷ .tt ∷ []} impl (f₁ ▹ f₂ ▹ ⟨⟩)) =
                             "(" ++s (printF pv f₁) ++s ") ⇒ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {.tt ∷ .tt ∷ []} conseq (f₁ ▹ f₂ ▹ ⟨⟩)) =
+printF pv (term {.tt ∷ .tt ∷ []} conseq (f₁ ▹ f₂ ▹ ⟨⟩)) =
                             "(" ++s (printF pv f₁) ++s ") ⇐ (" ++s (printF pv f₂) ++s ")"
-printF pv (TermAlgebra.term {_ ∷ _ ∷ _ ∷ _} () x₃)
+printF pv (term {_ ∷ _ ∷ _ ∷ _} () x₃)

@@ -7,9 +7,12 @@
 --
 module Variety where
 
+open import Function using (flip)
 open import Level renaming (zero to lzero ; suc to lsuc)
-open import UnivAlgebra
+
 open import Equational
+open import UnivAlgebra
+open import TermAlgebra
 open import Product
 open import Morphisms
 
@@ -29,7 +32,7 @@ record _≋_ {ℓ₀ ℓ₁ Σ} (C₁ : AlgClass {ℓ₀} {ℓ₁} Σ)
 
 
 ModClass : ∀ {ℓ₀ ℓ₁ Σ X ar} → (E : Theory Σ X ar) → AlgClass {ℓ₀} {ℓ₁} Σ
-ModClass E = _⊨T E
+ModClass {Σ = Σ} E = flip (_⊨T_ Σ) E
 
 
 {- Definition 2.2.6 Sanella foundations -}

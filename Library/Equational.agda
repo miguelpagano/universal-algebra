@@ -117,7 +117,7 @@ module _ {X} where
              E ⊢ (⋀ t /s σ ≈ t' /s σ)
   ax ∣ σ = psubst ax σ ∼⟨⟩
 
-module Provable-Equivalence {X} {ar : Arity Σ} {E : Theory X ar} where
+module Provable-Equivalence {X} {ar : Arity Σ} (E : Theory X ar) where
 
   -- Equivalence relation on TΣ(X) induced by the rules.
   ⊢-≈ : (s : sorts Σ) → Rel (TΣ〔 X 〕 ∥ s ∥) (Level.zero)
@@ -217,7 +217,7 @@ module Soundness-Completeness {X}  {ar : Arity Σ} {E : Theory X ar} where
     map≈ {i ∷ is} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ p₀ p) = ∼▹ p₀ (map≈ p)
 
 
-  open Provable-Equivalence {E = E}
+  open Provable-Equivalence E
   ⊢Quot : Algebra {Level.zero} {Level.zero} Σ
   ⊢Quot = TΣ〔 X 〕 / ⊢Cong
 

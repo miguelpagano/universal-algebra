@@ -258,18 +258,26 @@ vecSetoid {I = I} A = record
 ▹inj PE.refl = PE.refl , PE.refl
 
 
+≡vec : ∀ {l₀ I} {A : I → Set l₀} {is}  → {ts₁ ts₂ : HVec A is} →
+        _∼v_ {R = λ {_} → PE._≡_} ts₁ ts₂ →
+        ts₁ PE.≡ ts₂
+≡vec {ts₁ = ⟨⟩} {⟨⟩} ≈⟨⟩ = PE.refl
+≡vec {ts₁ = t ▹ ts₁} {.t ▹ ts₂} (∼▹ PE.refl ts₁≈ts₂) = PE.cong (t ▹_) (≡vec ts₁≈ts₂)
+
 ≡to∼v : ∀ {l₀ l₁ I} {A : I → Set l₀} {R : IRel A l₁} {is : List I}
         {vs vs' : HVec A is} → ((i : I) → IsEquivalence (R {i})) →
         vs PE.≡ vs' → _∼v_ {R = R} vs vs'
-≡to∼v {vs = ⟨⟩} {⟨⟩} ise eq = ∼⟨⟩
-≡to∼v {R = R} {vs = _▹_ {i} {is} v vs} {vs' = v' ▹ vs'} ise eq =
-              ∼▹ (PE.subst (λ v~ → R {i} v v~) v≡v' (irefl (ise i))) (≡to∼v ise vs≡vs')
-  where open IsEquivalence renaming (refl to irefl)
-        v≡v' : v PE.≡ v'
-        v≡v' = proj₁ (▹inj eq)
-        vs≡vs' : vs PE.≡ vs'
-        vs≡vs' = proj₂ (▹inj eq)
+≡to∼v {vs = ⟨⟩} {⟨⟩} _ _ = ∼⟨⟩
+≡to∼v {R = R} {vs = _▹_ {i} v vs} {v' ▹ vs'} ise eq =
+  ∼▹ (PE.subst (λ v~ → R {i} v v~) v≡v' (irefl (ise i))) (≡to∼v ise vs≡vs')
+  where
+  open IsEquivalence renaming (refl to irefl)
+  v≡v' : v PE.≡ v'
+  v≡v' = proj₁ (▹inj eq)
+  vs≡vs' : vs PE.≡ vs'
+  vs≡vs' = proj₂ (▹inj eq)
 
+-- Adapted from the stdlib.
 module _ {a i} {I : Set i} where
   open IndexedSetoid
   _atₛ_ : ∀ {ℓ} → IndexedSetoid I a ℓ → I → Setoid a ℓ
@@ -282,7 +290,6 @@ module _ {a i} {I : Set i} where
     }
     where module S = IndexedSetoid S
 
-------------------------------------------------------------------------
 
 _✳_ : ∀ {l₁ l₂} → {I : Set} → (A : I → Setoid l₁ l₂) → List I → Setoid l₁ (l₁ ⊔ l₂)
 _✳_ {I = I} A is = (vecSetoid {I = I} A) atₛ is

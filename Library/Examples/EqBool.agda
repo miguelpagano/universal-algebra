@@ -171,7 +171,6 @@ module Translation where
   open import Data.List renaming (map to lmap)
 
   open TermAlgebra
-  open Algebra
   open FormalTerm Σbool₂
 
   {- For each operation of Σbool₁, we define a

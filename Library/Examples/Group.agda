@@ -29,8 +29,6 @@ open import UnivAlgebra
 
 open import Examples.Monoid
 
-open Signature
-open Algebra
 open Hom
 
 
@@ -205,7 +203,6 @@ module Groups where
   GroupModel m grp-unitR-ax θ eqs = MonoidModel (isMonoid m) mon-unitR-ax θ ∼⟨⟩
     where open IsGroup
 
-  open Algebra
   open Setoid
 
   {- and we can also build a group from a model. -}

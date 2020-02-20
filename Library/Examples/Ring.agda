@@ -39,7 +39,6 @@ open import HeterogeneousVec
 open import Setoids
 
 open Signature
-open Algebra
 open Hom
 
 open import Examples.Monoid

@@ -47,7 +47,6 @@ open Signature
 Vₚ : sorts Σₚ → Set
 Vₚ _ = V
 
-open Algebra
 open TermAlgebra (Σₚ 〔 (λ _ → V) 〕)
 
 Formₚ : Set

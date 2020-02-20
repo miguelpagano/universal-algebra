@@ -10,9 +10,9 @@ open import Function.Injection
 open import Relation.Binary hiding (Total)
 open import Data.Product hiding (Σ)
 
-open Signature
+
 open import Function.Equality renaming (_∘_ to _∘ₑ_)
-open Algebra
+
 open Universe Σ
 
 module UMP {ℓ₁ ℓ₂} {A : Algebra {ℓ₁} {ℓ₂} Σ} where

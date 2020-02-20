@@ -23,10 +23,8 @@ open import Setoids
 open import Morphisms
 open import HeterogeneousVec
 
-open Signature
 open Hom
 open Homo
-open Algebra
 open Setoid
 open Congruence
 

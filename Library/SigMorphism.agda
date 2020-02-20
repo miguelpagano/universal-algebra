@@ -21,15 +21,13 @@ open import Relation.Binary
 open import Relation.Binary.PropositionalEquality as PE
 import Relation.Binary.EqReasoning as EqR
 
-open import Equational
+import Equational as Eq
 open import HeterogeneousVec
 open import Morphisms
-open import Setoids
-import TermAlgebra
+open import Setoids hiding (∥_∥)
+import TermAlgebra as T
+open T using (Vars)
 open import UnivAlgebra
-
-open Signature
-open Algebra
 
 module FormalTerm (Σ : Signature) where
 
@@ -64,17 +62,17 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
   open FormalTerm Σ
   mutual
 
-    ⟦_⟧⊩ : ∀ {ar s} → ar ⊩ s → A ⟦ ar ⟧ₛ* → ∥ A ⟦ s ⟧ₛ ∥
+    ⟦_⟧⊩ : ∀ {ar s} → ar ⊩ s → A ∥ ar ∥* → A ∥ s ∥
     ⟦ # n ⟧⊩    as =  as ‼v n
     ⟦ f ∣$∣ ts ⟧⊩  as = A ⟦ f ⟧ₒ ⟨$⟩ ⟦ ts ⟧⊩* as
 
 
-    ⟦_⟧⊩* : ∀ {ar ar'} → HVec (ar ⊩_) ar' → A ⟦ ar ⟧ₛ* → A ⟦ ar' ⟧ₛ*
+    ⟦_⟧⊩* : ∀ {ar ar'} → HVec (ar ⊩_) ar' → A ∥ ar ∥* → A ∥ ar' ∥*
     ⟦ ⟨⟩ ⟧⊩*      as = ⟨⟩
     ⟦ t ▹ ts ⟧⊩*  as = ⟦ t ⟧⊩ as ▹ ⟦ ts ⟧⊩* as
 
 
-  cong⟦⟧⊩ : ∀ {ar s} {vs vs' : A ⟦ ar ⟧ₛ* } →
+  cong⟦⟧⊩ : ∀ {ar s} {vs vs' : A ∥ ar ∥* } →
             (t : ar ⊩ s) →
             _∼v_  {R = ((Setoid._≈_ ∘ _⟦_⟧ₛ A) $-)} vs vs' →
             Setoid._≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧⊩ vs) (⟦ t ⟧⊩ vs')
@@ -198,7 +196,7 @@ module ReductHomo {Σₛ Σₜ}  {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
     where
     open FormalTermInt
     homCond↝' : (ar' : Arity Σₜ) → (s' : sorts Σₜ) → (e : ar' ⊩ s') →
-                (vs : A ⟦ ar' ⟧ₛ* ) →
+                (vs : A ∥ ar' ∥* ) →
                 Setoid._≈_ (_⟦_⟧ₛ A' s')
                            (′ h ′ s' ⟨$⟩ ⟦_⟧⊩ A e vs)
                            (⟦ A' ⟧⊩ e (map⟿ A A' ′ h ′ vs))
@@ -234,29 +232,31 @@ Img⁻¹ {A} f b = Σ[ a ∈ A ] (f a ≡ b)
 
 
 module TermTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ) where
-
   -- Variable translation
   _↝̬ : Vars Σₛ → Vars Σₜ
   (X ↝̬) s' = Σ[ p ∈ Img⁻¹ (↝ₛ Σ↝) s' ] X (proj₁ p)
 
   open Hom
   open ReductAlgebra Σ↝
+  module TΣₛ = T.OpenTerm Σₛ renaming (T_〔_〕 to TΣₛ〔_〕)
+  module TΣₜ = T.OpenTerm Σₜ renaming (T_〔_〕 to TΣₜ〔_〕)
 
-  term↝ : (Xₛ : Vars Σₛ) → Homo (T Σₛ 〔 Xₛ 〕) (〈 T Σₜ 〔 Xₛ ↝̬ 〕 〉)
+  open TΣₛ public
+  open TΣₜ hiding (Env)
+  term↝ : (Xₛ : Vars Σₛ) → Homo (TΣₛ〔 Xₛ 〕) (〈 TΣₜ〔 Xₛ ↝̬ 〕 〉)
   term↝ Xₛ = TΣXHom
-    where open TermAlgebra (Σₜ 〔 Xₛ ↝̬ 〕)
-          θv : Env Xₛ 〈 T Σₜ 〔 Xₛ ↝̬ 〕 〉
-          θv {s} v = term (inj₂ ((s , refl) , v)) ⟨⟩
-          open InitHomoExt 〈 T Σₜ 〔 Xₛ ↝̬ 〕 〉 θv
+    where θv : TΣₛ.Env Xₛ 〈 TΣₜ〔 Xₛ ↝̬ 〕 〉
+          θv {s} v = TΣₜ.var (Xₛ ↝̬) ((s , refl) , v)
+          open TΣₛ.Eval Xₛ (〈 TΣₜ〔 Xₛ ↝̬ 〕 〉) θv
 
   -- Environment translation: We have a bijection
   〈_〉ₑ : ∀ {ℓ₁ ℓ₂} {Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ} {Xₛ : Vars Σₛ} →
-          (θ : Env (Xₛ ↝̬) Aₜ) → Env Xₛ 〈 Aₜ 〉
+          (θ : TΣₜ.Env (Xₛ ↝̬) Aₜ) → Env Xₛ 〈 Aₜ 〉
   〈 θ 〉ₑ {s} = λ v → θ ((s , refl) , v)
 
   _↝ₑ : ∀ {ℓ₁ ℓ₂} {Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ} {Xₛ : Vars Σₛ} →
-          (θ : Env Xₛ 〈 Aₜ 〉) → Env (Xₛ ↝̬) Aₜ
-  _↝ₑ {Aₜ = Aₜ} {Xₛ} θ {s} ((s' , eq) , v) = subst (λ s₀ → ∥ Aₜ ⟦ s₀ ⟧ₛ ∥) eq (θ v)
+          (θ : Env Xₛ 〈 Aₜ 〉) → TΣₜ.Env (Xₛ ↝̬) Aₜ
+  _↝ₑ {Aₜ = Aₜ} {Xₛ} θ {s} ((s' , eq) , v) = subst (λ s₀ → Aₜ ∥ s₀ ∥) eq (θ v)
 
 
 {- Theory translation and preservation of models -}
@@ -267,7 +267,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   open ReductAlgebra Σ↝
   open Hom
   open Setoid
-
+  open TΣₜ hiding (Env)
   private Xₜ : Vars Σₜ
   Xₜ = Xₛ ↝̬
 
@@ -275,30 +275,37 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   s ∼ = ↝ₛ Σ↝ s
 
   open Homo
-
-  private _∼ₜ : ∀ {s} → ∥ T Σₛ 〔 Xₛ 〕 ⟦ s ⟧ₛ ∥ → ∥ T Σₜ 〔 Xₛ ↝̬ 〕 ⟦ s ∼ ⟧ₛ ∥
+  private _∼ₜ : ∀ {s} →  TΣₛ〔 Xₛ 〕 ∥ s ∥ → TΣₜ〔 Xₛ ↝̬ 〕 ∥ s ∼ ∥
   _∼ₜ {s} t = ′ term↝ Xₛ ′ s ⟨$⟩ t
 
   module ReductTheorem {ℓ₁ ℓ₂}
                        (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ)
-                       (θ : Env (Xₛ ↝̬) Aₜ) where
+                       (θ : TΣₜ.Env (Xₛ ↝̬) Aₜ) where
 
-    open InitHomoExt Aₜ θ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
-    open InitHomoExt 〈 Aₜ 〉 (〈_〉ₑ {Aₜ = Aₜ} θ)  renaming
-                       (⟦_⟧ to ⟦_⟧Σₛ ; tot to totΣₛ ; TΣXHom to ∣H∣ₛ ; HomEnv to HomEnvₛ)
+    open TΣₜ.Eval (Xₛ ↝̬) Aₜ θ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
+    open TΣₛ.Eval Xₛ 〈 Aₜ 〉 (〈_〉ₑ {Aₜ = Aₜ} θ)
+      renaming (⟦_⟧ to ⟦_⟧Σₛ ; TΣXHom to ∣H∣ₛ)
+    open TΣₛ.EvalUMP Xₛ 〈 Aₜ 〉 (〈_〉ₑ {Aₜ = Aₜ} θ)
+      renaming (extends to extendsₛ;tot to totΣₛ)
     open Homo
-    open ReductHomo Σ↝ (T Σₜ 〔 Xₛ ↝̬ 〕) Aₜ
+    open ReductHomo Σ↝ (TΣₜ〔 Xₛ ↝̬ 〕) Aₜ
     open HomComp
 
-    reductTh : ∀ {s} → (t : ∥ T Σₛ 〔 Xₛ 〕 ⟦ s ⟧ₛ ∥) →
+    reductTh : ∀ {s} → (t : TΣₛ〔 Xₛ 〕 ∥ s ∥) →
                  _≈_ (〈 Aₜ 〉 ⟦ s ⟧ₛ) ⟦ t ⟧Σₛ ⟦ t ∼ₜ ⟧Σₜ
     reductTh {s} t = totΣₛ ∣H∣ₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ) he₁ he₂ s t
-      where he₂ : HomEnvₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ)
-            he₂ s x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
-            he₁ : HomEnvₛ ∣H∣ₛ
-            he₁ s x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
+      where
+      he₂ : extendsₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ)
+      he₂ {s} x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
+      he₁ : extendsₛ ∣H∣ₛ
+      he₁ {s} x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
 
-
+  open Eq
+  _⊨ₜ_ = _⊨_ Σₜ
+  _⊢ₜ_ = _⊢_ Σₜ
+  _⊨ₜT_ = _⊨T_ Σₜ
+  _⊨ₛT_ = _⊨T_ Σₛ {X = Xₛ}
+  _⊨ₛ_ = _⊨_ Σₛ {X = Xₛ}
   -- Equation translation
   eq↝ : ∀ {s} → Equation Σₛ Xₛ s → Equation Σₜ Xₜ (↝ₛ Σ↝ s)
   eq↝ {s} (⋀ t ≈ t' if「 carty 」 cond) =
@@ -308,47 +315,40 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
           fcond = (reindex (↝ₛ Σ↝) ∘ map (_⟨$⟩_ ∘ ′ term↝ Xₛ ′))
 
 
-  module SatProp {ℓ₁ ℓ₂}
-                    (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) where
+  module SatProp {ℓ₁ ℓ₂} (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) where
 
 
     -- This theorem is usually called "satisfaction property" and
     -- "satisfaction condition" in the handbook (Definition 6.1)
-    satProp : ∀ {s} → (e : Equation Σₛ Xₛ s) → Aₜ ⊨ (eq↝ e) → 〈 Aₜ 〉 ⊨ e
+    satProp : ∀ {s} → (e : Equation Σₛ Xₛ s) → Aₜ ⊨ₜ (eq↝ e) → 〈 Aₜ 〉 ⊨ₛ e
     satProp {s} (⋀ t ≈ t' if「 ar 」 (us , us')) sat θ us≈us' = begin
                      ⟦ t ⟧Σₛ      ≈⟨ reductTh t ⟩
                      ⟦ t ∼ₜ ⟧Σₜ    ≈⟨ sat θₜ (∼v-reindex _∼ (reductTh* us≈us')) ⟩
                      ⟦ t' ∼ₜ ⟧Σₜ   ≈⟨ Setoid.sym (〈 Aₜ 〉 ⟦ s ⟧ₛ) (reductTh t') ⟩
                      ⟦ t' ⟧Σₛ     ∎
       where
-      open InitHomoExt 〈 Aₜ 〉 θ renaming
-                             (⟦_⟧ to ⟦_⟧Σₛ ; tot to totΣₛ ; TΣXHom to ∣H∣ₛ ; HomEnv to HomEnvₛ)
-      θₜ : Env Xₜ Aₜ
+      open TΣₛ.Eval Xₛ 〈 Aₜ 〉 θ renaming(⟦_⟧ to ⟦_⟧Σₛ ; TΣXHom to ∣H∣ₛ)
+      open TΣₛ.EvalUMP Xₛ 〈 Aₜ 〉 θ renaming (tot to totΣₛ ;extends to extendsₛ)
+      θₜ : TΣₜ.Env Xₜ Aₜ
       θₜ = _↝ₑ {Aₜ = Aₜ} θ
-      open InitHomoExt Aₜ θₜ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
+      open TΣₜ.Eval (Xₛ ↝̬) Aₜ θₜ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
       open ReductTheorem Aₜ θₜ
       reductTh* : ∀ {ar₀}
-                  {us₀ us₀' : HVec (λ s' → ∥ T Σₛ 〔 Xₛ 〕 ⟦ s' ⟧ₛ ∥) ar₀} →
+                  {us₀ us₀' : HVec (λ s' →  TΣₛ〔 Xₛ 〕 ∥ s' ∥) ar₀} →
                   _∼v_ {R = λ {sᵢ} uᵢ uᵢ' → _≈_ (〈 Aₜ 〉 ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧Σₛ ⟦ uᵢ' ⟧Σₛ} us₀ us₀' →
                   _∼v_ {R = λ {sᵢ} uᵢ∼ uᵢ∼' → _≈_ (Aₜ ⟦ sᵢ ∼ ⟧ₛ) ⟦ uᵢ∼ ⟧Σₜ ⟦ uᵢ∼' ⟧Σₜ}
                        (map (λ s₀ → _∼ₜ {s₀}) us₀)
                        (map (λ s₀ → _∼ₜ {s₀}) us₀')
       reductTh* {[]} ∼⟨⟩ = ∼⟨⟩
-      reductTh* {s₀ ∷ ar₀} (∼▹ {t₁ = u₀} {u₀'} u₀≈u₀' eq) =
-                ∼▹ (begin
-                     ⟦ u₀ ∼ₜ ⟧Σₜ
-                    ≈⟨ Setoid.sym (Aₜ ⟦ s₀ ∼ ⟧ₛ) (reductTh u₀) ⟩
-                     ⟦ u₀ ⟧Σₛ
-                    ≈⟨ u₀≈u₀' ⟩
-                     ⟦ u₀' ⟧Σₛ
-                    ≈⟨ reductTh u₀' ⟩
-                     ⟦ u₀' ∼ₜ ⟧Σₜ
-                    ∎)
-                    (reductTh* eq)
-        where open EqR (Aₜ ⟦ s₀ ∼ ⟧ₛ)
+      reductTh* {s₀ ∷ _} (∼▹ {t₁ = u₀} {u₀'} eq eqs) = ∼▹ u₀≈u₀' (reductTh* eqs)
+        where
+        u₀≈u₀' = begin
+           ⟦ u₀ ∼ₜ ⟧Σₜ   ≈⟨ Setoid.sym (Aₜ ⟦ s₀ ∼ ⟧ₛ) (reductTh u₀) ⟩
+           ⟦ u₀ ⟧Σₛ     ≈⟨ eq ⟩
+           ⟦ u₀' ⟧Σₛ    ≈⟨ reductTh u₀' ⟩
+           ⟦ u₀' ∼ₜ ⟧Σₜ ∎
+           where open EqR (Aₜ ⟦ s₀ ∼ ⟧ₛ)
       open EqR (〈 Aₜ 〉 ⟦ s ⟧ₛ)
-
-
 
   -- Translation of theories
   _↝T : ∀ {ar} → (Thₛ : Theory Σₛ Xₛ ar) → Theory Σₜ Xₜ (lmap (↝ₛ Σ↝) ar)
@@ -362,21 +362,24 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 
   -- Implication of theories
   _⇒T~_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set
-  Tₜ ⇒T~ Tₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Tₛ → Tₜ ⊢ eq↝ ax
+  Tₜ ⇒T~ Tₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Tₛ → Tₜ ⊢ₜ eq↝ ax
 
 
 
   module ModelPreserv {ar} (Thₛ : Theory Σₛ Xₛ ar) where
 
     -- Model preservation from a translated theory
-    ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨T (Thₛ ↝T) → 〈 Aₜ 〉 ⊨T Thₛ
+    ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨ₜT (Thₛ ↝T) → 〈 Aₜ 〉 ⊨ₛT Thₛ
     ⊨T↝ Aₜ sat {s} {e} = λ ax θ ceq → satProp e (sat (∈↝T Thₛ ax)) θ ceq
       where open SatProp Aₜ
 
     -- Model preservation from a implicated theory
     ⊨T⇒↝ : ∀ {ℓ₁ ℓ₂} {ar'} →
              (Thₜ : Theory Σₜ Xₜ ar') → (p⇒ : Thₜ ⇒T~ Thₛ) →
-             (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨T Thₜ → 〈 Aₜ 〉 ⊨T Thₛ
-    ⊨T⇒↝ Thₜ p⇒ Aₜ satAll {s} {e} = λ ax θ ceq → satProp e
-                                          (soundness (p⇒ ax) Aₜ satAll) θ ceq
-      where open SatProp Aₜ
+             (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨ₜT Thₜ → 〈 Aₜ 〉 ⊨ₛT Thₛ
+    ⊨T⇒↝ Thₜ p⇒ Aₜ satAll {s} {e} ax θ ceq =
+      satProp e (soundness (p⇒ ax) Aₜ satAll) θ ceq
+      where
+      open SatProp Aₜ
+      open Soundness-Completeness Σₜ
+

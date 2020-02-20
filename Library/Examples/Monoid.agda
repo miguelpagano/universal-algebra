@@ -1,3 +1,7 @@
+-- Universal Algebra Library
+--
+-- Definition of the theory of Monoids.
+--
 module Examples.Monoid where
 
 
@@ -23,8 +27,6 @@ open import Setoids
 open import TermAlgebra
 open import UnivAlgebra
 
-open Signature
-open Algebra
 open Hom
 
 module Monoid {op-mon : List ⊤ × ⊤ → Set}
@@ -42,8 +44,6 @@ module Monoid {op-mon : List ⊤ × ⊤ → Set}
 
     Eq₁ : Set
     Eq₁ = Equation Σ-mon X tt
-
-    open import TermAlgebra
 
     -- A formula is a term of the Term Algebra
     Form : Set
@@ -152,11 +152,7 @@ module Monoids where
   MonoidModel m mon-unitR-ax θ ∼⟨⟩ =  proj₂ (identity m) (θ 0)
     where open IsMonoid
 
-  open Algebra
-  open import Relation.Binary hiding (Total)
   open Setoid
-  open import Function.Equality
-  open import Data.Unit
   {- and we can also build a monoid from a model. -}
   monFromModel : ∀ {ℓ a} {A : Algebra {ℓ} {a} Σ-mon} → A ⊨T MonTheory →
     IsMonoid (_≈_ (A ⟦ tt ⟧ₛ)) (λ x y → A ⟦ op ⟧ₒ ⟨$⟩ ⟨⟨ x , y ⟩⟩ ) (A ⟦ e ⟧ₒ ⟨$⟩ ⟨⟩)
@@ -258,7 +254,6 @@ module ∨-Monoid where
   ∧-Alg : Algebra Σ-mon
   ∧-Alg = record { _⟦_⟧ₛ =  ∧-Monₛ ; _⟦_⟧ₒ =  ∧-Monₒ }
 
-  open import Morphisms
   ¬-⟿ : ∨-Alg ⟿ ∧-Alg
   ¬-⟿ = λ s → record { _⟨$⟩_ = λ x → not x ; cong = λ { refl → refl }}
 

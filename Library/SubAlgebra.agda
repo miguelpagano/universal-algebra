@@ -27,9 +27,6 @@ open import Setoids
 open import HeterogeneousVec renaming (map to mapV)
 open import TermAlgebra
 
-open Signature
-open Algebra
-
 open SetoidPredicate
 Predicate : (ℓ₃ : Level) → Set (lsuc (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃))
 Predicate ℓ₃ = (s : sorts Σ) → SetoidPredicate {ℓ₃ = ℓ₃} (A ⟦ s ⟧ₛ)
@@ -262,7 +259,7 @@ module FreeExt {ℓ₃ ℓ₄} {X : Universe ℓ₃ ℓ₄} {ℓ₅ ℓ₆} (B :
   open Injection
 
   freeH : ∀ {s} → Free s → ∥ B ⟦ s ⟧ₛ ∥
-  freeH* : ∀ {ar} → HVec Free ar → B ⟦ ar ⟧ₛ*
+  freeH* : ∀ {ar} → HVec Free ar → B ∥ ar ∥*
 
   freeH (var {s} x) = to (θ {s}) ⟨$⟩ x
   freeH (app f x) = B ⟦ f ⟧ₒ ⟨$⟩ freeH* x

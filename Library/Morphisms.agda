@@ -19,7 +19,7 @@ import Relation.Binary.EqReasoning as EqR
 open import Relation.Unary
 
 open import HeterogeneousVec
-open import Setoids
+open import Setoids hiding (∥_∥)
 
 open Setoid
 
@@ -29,22 +29,19 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
        (A : Algebra {ℓ₁} {ℓ₂} Σ)
        (B : Algebra {ℓ₃} {ℓ₄} Σ) where
 
-  open Algebra
-
   -- Function between algebras
   _⟿_ : Set _
   _⟿_ = (s : sorts Σ) → A ⟦ s ⟧ₛ ⟶ B ⟦ s ⟧ₛ
 
   -- Map
-  map⟿ : {ar : Arity Σ} → (m : _⟿_) →
-           (ts : A ⟦ ar ⟧ₛ*) → B ⟦ ar ⟧ₛ*
+  map⟿ : {ar : Arity Σ} → (m : _⟿_) → (ts : A ∥ ar ∥*) → B ∥ ar ∥*
   map⟿ {ar = ar} m ts = map (_⟨$⟩_ ∘ m) ts
 
 
   --Homomorphism condition
   homCond : (h : _⟿_) → Set _
   homCond h =
-    ∀ {ar s} (f : ops Σ (ar , s)) → (as : A ⟦ ar ⟧ₛ*) →
+    ∀ {ar s} (f : ops Σ (ar , s)) → (as : A ∥ ar ∥*) →
     let _≈ₛ_ = _≈_ (B ⟦ s ⟧ₛ)
     in (h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as)) ≈ₛ (B ⟦ f ⟧ₒ ⟨$⟩ (map⟿ h as))
 
@@ -76,7 +73,6 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
 
 open Hom.Homo public
 open Hom
-open Algebra
 
 {- Homomorphism composition -}
 module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
@@ -130,8 +126,6 @@ module HomCompProp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈}
                    {H₀ : Hom.Homo A₀ A₁}
                    {H₁ : Hom.Homo A₁ A₂}
                    {H₂ : Hom.Homo A₂ A₃} where
-  open Algebra
-
   open Hom
   open Homo
   open HomComp
@@ -171,7 +165,6 @@ open Bijective
 
 open Hom
 open Homo
-open Algebra
 
 {- Homomorphism inverse -}
 invHomo : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} →
@@ -340,11 +333,9 @@ Unique' {A = A} _≈_ _ = ∀ a a' → a ≈ a'
 
 
 {- Initial Algebra -}
-module Initial
-               {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
+module Initial {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
 
   open Hom
-  open Algebra
 
   record Initial  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
     field
@@ -359,7 +350,6 @@ module Initial
 module Final
              {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level} where
   open Hom
-  open Algebra
 
   record Final  : Set (lsuc (ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
     field

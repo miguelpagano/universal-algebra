@@ -54,8 +54,8 @@ record Algebra {ℓ₁ ℓ₂ : Level} (Σ : Signature) : Set (lsuc (ℓ₁ ⊔ 
     _⟦_⟧ₛ : Universe Σ ℓ₁ ℓ₂
     _⟦_⟧ₒ : ∀ {ar s} → ops Σ (ar , s) → _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
 
-  _⟦_⟧ₛ* : (ar : Arity Σ) → Set _
-  _⟦_⟧ₛ* ar = S.∥ _⟦_⟧ₛ ✳ ar ∥
+  _∥_∥* : (ar : Arity Σ) → Set _
+  _∥_∥* ar = S.∥ _⟦_⟧ₛ ✳ ar ∥
 
   _∥_∥ : ∀ s → Set _
   _∥_∥ s =  S.∥ _⟦_⟧ₛ s ∥

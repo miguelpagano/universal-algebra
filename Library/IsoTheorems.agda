@@ -50,7 +50,6 @@ module FirstIsoTheo {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {Σ : Signature}
 
 open Congruence
 open Setoid
-open Algebra
 
 module SecondIsoTheo {ℓ₁ ℓ₂ ℓ₃} {Σ : Signature}
                     (A : Algebra {ℓ₁} {ℓ₂} Σ)

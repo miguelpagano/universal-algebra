@@ -24,7 +24,6 @@ module ProdAlg {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
        (B : Algebra {ℓ₃} {ℓ₄} Σ) where
 
   open Signature
-  open Algebra
   open Setoid
   open import Setoids
 
@@ -79,8 +78,6 @@ module IndexedProduct {ℓ₁ ℓ₂ ℓ₃}
         {Σ : Signature} {I : Set ℓ₁}
         (A : I → Algebra {ℓ₂} {ℓ₃} Σ) where
 
-  open Signature
-  open Algebra
   open Setoid
   open import Setoids
 
@@ -145,7 +142,6 @@ module BinaryProduct {ℓ₁ ℓ₂}
        open IndexedProduct {Σ = Σ} {Bool} Ai public
        open import Morphisms
        open Isomorphism
-       open Algebra
        open import Function.Injection
        iso×-2→ : Isomorphism A×B Πalg
        iso×-2→ = record { hom = H

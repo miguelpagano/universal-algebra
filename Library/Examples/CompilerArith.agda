@@ -29,7 +29,6 @@ import TermAlgebra
 open import UnivAlgebra
 
 open Signature
-open Algebra
 open Setoid
 open Hom
 

@@ -1,0 +1,112 @@
+----------------------- REVIEW 1 ---------------------
+
+The paper is mostly well written and well motivated. I would stress
+that they should, at least, give a hint on the proofs of the
+isomorphims theorems. In fact, saying that they are similar to the
+ones in the literature is quite unsatisfactory.
+
+The only part of the paper that puzzled me a lot was the one on
+equational logic. When you say that you formalize the equational logic
+as presented by Goguen and Lin, this is not entirely true, right? I
+mean, while in your formalization all the equations of a theory share
+the same set of variables, this is not the case in Goguen’s
+work. Hence I wonder what kind of equational logic you are really
+implementing, or talking about…
+
+
+Finally, the subject relevant to LSFA, and I think that the audience
+will certainly profit from its presentation.
+
+
+=============
+Typos and etc
+=============
+
+Page 1.
+
+what is the “ADJ group”?
+
+[ No lo vamos a decir! Que lo averigüe. ]
+
+Page 2.
+
+and prove its soundness and completeness —> w.r.t what?
+
+
+Page 9.
+
+deduction system is sound and complete. —> w.r.t. what?
+
+
+==================
+Other observations
+==================
+
+
+The paper is not in the LSFA format.
+
+The page containing the codes has lots of typos and grammar errors
+(like, e.g. “The first example shown in paper is a counterexample of
+soundness. In our formalization is not.” —> which paper? and In our
+formalization it is not.
+
+
+----------------------- REVIEW 2 ---------------------
+Description:
+
+An Agda formalization of multi-sorted universal algebra is
+given. According to the authors this is the first formalization of
+universal algebra in Agda, the first formalization in type-theory of
+derived signature morphisms and induced reduct algebras. In the
+specification, operations are modeled using sets indexed by arities,
+and an independent library of heterogeneous vectors.
+
+Essentially, the paper discusses the formalization in Agda of the
+basic algebraic notions and the formalization of the three isomorphism
+theorems, which are related with properties of isomorphism,
+epimorphisms, subalgebras, congruences and quotients.  Also, it is
+formalized that the term algebra is initial. Gouguen and Lin
+equational deduction system is proved sound and complete.  At this
+point it should be stressed that this system constitutes indeed a
+restricted conditional equational deductive mechanism.  This requires
+disambiguation in the introduction and conclusion. Additionally,
+signature morphisms are represented with their associated
+“contra-variant” functor on algebras and it shown that this functor
+preserves models.
+
+
+Assessment
+
+The Agda specification is very elegant and precise and in its current
+status covers the basic elements expected in a formalization of
+universal algebra. I read the specification, but I was not able to
+follow the proofs in the Agda development, which as expected in
+formalization papers was made available by the authors in the web. As
+it is, this is an interesting formalization (in progress) of universal
+algebra, which takes advantages from the constructive proof
+technologies available in this proof assistant. I believe the topic
+would be of interest for the LSFA attendants and suggest this paper be
+accepted for presentation. Publication of this submission would
+require additional effort of the authors.
+
+Specific comments to the authors
+
+Introduction:
+
+
+Modify the sentences (introduction and conclusion) related with “the
+formalization includes a deduction system for conditional equational
+logic and prove its soundness and completeness”.  As it is written it
+contradicts Birkhoff’s quasi-variety uncompleteness results.
+Completeness holds only for varieties. I suggest be more explicit
+about the actual restrictions that are given to the so called
+“conditional” equational logic in order to assure completeness. As it
+is presented, the reader cannot discriminate why conditional equations
+cannot be specified such that the equational conditions encode
+unsolvable equational problems.
+
+In general, the presentation requires improvements in order to be
+accessible both to non Agda specialists (or proof assistant
+specialist, in general) and non algebraic specification specialists.
+
+

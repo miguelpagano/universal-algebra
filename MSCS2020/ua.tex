@@ -1091,7 +1091,7 @@ this universal property, existence of a unique element, for any set
 \AgdaBound{A} and any relation \AgdaBound{R}
 
 %hasUnique {A} _≈_ = A × (∀ a a' → a ≈ a')
-    
+
 \begin{code}
   \>[0]\AgdaFunction{hasUnique}\AgdaSpace{}%
   \AgdaSymbol{\{}\AgdaBound{A}\AgdaSymbol{\}}\AgdaSpace{}%
@@ -1179,7 +1179,7 @@ from the function symbols.  Sometimes this universe is called the
 \AgdaField{ops}\AgdaSpace{}%
 \AgdaBound{Σ}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaBound{ar}\AgdaSpace{}%
-\AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
 \AgdaBound{s}\AgdaSymbol{))}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaDatatype{HVec}\AgdaSpace{}%
@@ -1203,56 +1203,53 @@ operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the vector
 \AgdaInductiveConstructor{term} \AgdaBound{f}
 \AgdaInductiveConstructor{⟨}
   \AgdaBound{t$_1$} , \ldots , \AgdaBound{t$_n$}
-  \AgdaInductiveConstructor{⟩}; we omit
-the proof of \AgdaInductiveConstructor{cong}, which is too long and tedious to be
-shown.
+  \AgdaInductiveConstructor{⟩}; the term \AgdaFunction{≡vec} is the
+  proof that two vectors are equal if they are pointwise equal.
 
 \begin{code}
-\>[0]\AgdaFunction{∣T∣}\AgdaSpace{}%
+\>[2]\AgdaFunction{∣T∣}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaSymbol{(}\AgdaBound{Σ}\AgdaSpace{}%
-\AgdaSymbol{:}\AgdaSpace{}%
-\AgdaDatatype{Signature}\AgdaSpace{}%
-\AgdaSymbol{)}\AgdaSpace{}%
-\AgdaSymbol{→}\AgdaSpace{}%
 \AgdaRecord{Algebra}\AgdaSpace{}%
-\AgdaBound{Σ}
-\\%
-\>[0]\AgdaFunction{∣T∣}\AgdaSpace{}%
-\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaBound{Σ}\<%
+\\
+%
+\>[2]\AgdaFunction{∣T∣}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
-\AgdaKeyword{record}\AgdaSpace{}%
-\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaKeyword{record}%
+\>[16]\AgdaSymbol{\{}\AgdaSpace{}%
 \AgdaOperator{\AgdaField{\AgdaUnderscore{}⟦\AgdaUnderscore{}⟧ₛ}}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaFunction{setoid}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
-\AgdaSymbol{(}%
-\AgdaDatatype{HU}\AgdaSpace{}%
-\AgdaSymbol{\{}\AgdaSpace{}%
-\AgdaBound{Σ}\AgdaSpace{}%
-\AgdaSymbol{\}}\AgdaSymbol{)}\AgdaSpace{}%
-\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaDatatype{HU}\<%
+\\
+%
+\>[16]\AgdaSymbol{;}\AgdaSpace{}%
 \AgdaOperator{\AgdaField{\AgdaUnderscore{}⟦\AgdaUnderscore{}⟧ₒ}}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
-\AgdaFunction{∣}\AgdaUnderscore{}\AgdaFunction{∣ₒ}\AgdaSpace{}%
-\AgdaSymbol{\}}\AgdaSpace{}%
-\<%
-\\%
-\>[0]\>[2][@{}l@{\AgdaIndent{0}}]%
-\AgdaKeyword{where}\AgdaSpace{}%
-\AgdaFunction{∣}\AgdaSpace{}\AgdaBound{f}\AgdaSpace{}\AgdaFunction{∣ₒ}
-\AgdaSpace{}%
-\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{λ}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
 \AgdaKeyword{record}\AgdaSpace{}%
 \AgdaSymbol{\{}\AgdaSpace{}%
-\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟨\$⟩\AgdaUnderscore{}}}
+\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟨\$⟩\AgdaUnderscore{}}}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
-\AgdaInductiveConstructor{term}\AgdaSpace{}\AgdaBound{f}\AgdaSpace{}%
+\AgdaInductiveConstructor{term}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
 \AgdaSymbol{;}\AgdaSpace{}%
-\AgdaOperator{\AgdaField{cong}}
-\AgdaSymbol{=} $\ldots$
+\AgdaField{cong}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaFunction{PE.cong}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{term}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{≡vec}\AgdaSpace{}%
 \AgdaSymbol{\}}\<%
+\\
+%
+\>[16]\AgdaSymbol{\}}\<%
+\\
+%
 \end{code}
 
 \noindent Terms can be interpreted in any algebra

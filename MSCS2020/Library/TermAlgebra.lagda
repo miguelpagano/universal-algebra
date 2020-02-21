@@ -38,13 +38,9 @@ module GroundTerm  (Σ : Signature) where
   open Hom
 
   ∣T∣ : Algebra Σ
-  ∣T∣ = record
-    { _⟦_⟧ₛ = setoid ∘ HU
-    ; _⟦_⟧ₒ = λ f → record
-               { _⟨$⟩_ = term f
-               ; cong = PE.cong (term f) ∘ ≡vec
-               }
-    }
+  ∣T∣ = record  { _⟦_⟧ₛ = setoid ∘ HU
+                ; _⟦_⟧ₒ = λ f → record { _⟨$⟩_ = term f ; cong = PE.cong (term f) ∘ ≡vec }
+                }
 
   open Homo
   open Setoid

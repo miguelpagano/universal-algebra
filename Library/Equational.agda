@@ -279,22 +279,33 @@ module Theory-Implication {X} where
   ⊨T⇒ E E' E⇒E' A A⊨E ax = soundness (E⇒E' ax) A A⊨E
     where open Soundness-Completeness {X = X} {E = E}
 
-{-
-  {- Initiality of Quotiened Term Algebra -}
-  module InitialityModel {Σ X ar ℓ₁ ℓ₂} {E : Theory Σ X ar}
-                         {A : Algebra {ℓ₁} {ℓ₂} Σ} (M : A ⊨T E)
+{- Initiality of the Quotiened Term Algebra; ie, the term model -}
+module InitialityModel {X ar ℓ₁ ℓ₂} {E : Theory X ar}
+                         {A : Algebra {ℓ₁} {ℓ₂} Σ} (M : A ⊨T E) (θ : Env X A)
          where
-
-    open Hom
+    open Soundness-Completeness {E = E}
+    open Hom ⊢Quot A
     open Homo
 
-    init : (θ : Env X A) → Hom.Homo (⊢Quot E) A
-    init θ = record
+    init : Homo
+    init = record
       { ′_′ = λ s → record
           { _⟨$⟩_ = _⟨$⟩_ ( ′ TΣXHom ′ s)
           ; cong = λ {j} {i} E⊢e → soundness E⊢e A M θ ∼⟨⟩
           }
       ; cond = λ f as → TΣXcond f as
       }
-      where open InitHomoExt A θ
--}
+      where open Eval X A θ
+
+    open EvalUMP X A θ
+    liftH : Homo → Hom.Homo (OpenTerm.T Σ 〔 X 〕) A
+    liftH H = record
+      { ′_′ = λ s → record { _⟨$⟩_ = λ { x →  ′ H ′ s ⟨$⟩ x }
+            ; cong = λ { PE.refl → Setoid.refl (A ⟦ s ⟧ₛ) }
+            }
+      ; cond = λ f as → cond H f as
+      }
+
+    UMP : (H H' : Homo) → extends (liftH H) → extends (liftH H') →
+      H ≈ₕ H'
+    UMP H H' ext ext' = tot (liftH H) (liftH H') ext ext'

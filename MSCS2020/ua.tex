@@ -1295,11 +1295,213 @@ we have to mutually define \AgdaFunction{eval} and its extension over vectors
 \AgdaOperator{\AgdaFunction{∥*}}\<%
 \end{code}
 
-\noindent It is straightforward to prove that \AgdaFunction{∣h∣} preserves
-propositional equality and satisfies the homomorphism condition by
-construction. To finish the proof that \AgdaFunction{∣T∣} \AgdaBound{Σ} is
-initial, we prove, by recursion on the structure of terms, that any pair of
-homomorphisms are extensionally equal.
+\noindent It is straightforward to prove that \AgdaFunction{eval}
+preserves propositional equality and satisfies the homomorphism
+condition by construction. To finish the proof that \AgdaFunction{∣T∣}
+\AgdaBound{Σ} is initial, we prove, by recursion on the structure of
+terms, the \emph{universal mapping property}: any pair of homomorphisms
+are extensionally equal.
+
+\subsection{Free algebra with variables}
+The term algebra we have just defined contained only \emph{ground}
+terms, \ie terms without variables. Given a signature \AgdaBound{Σ}
+and
+\AgdaBound{X}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaField{sorts}\AgdaSpace{}
+\AgdaBound{Σ}\AgdaSpace{}\AgdaSymbol{→}\AgdaSpace{}\AgdaPrimitiveType{Set}
+a family of variables, we define a new signature extending
+\AgdaBound{Σ} with \AgdaBound{X} by taking the variables as new
+constants (i.e. , operations with arity
+\AgdaInductiveConstructor{[]}). In the following assume that
+variables like \AgdaBound{Σ} and \AgdaBound{X} are bound by the module
+declaration.
+
+\begin{code}
+\>[2]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}〔\AgdaUnderscore{}〕}}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Signature}\<%
+\\
+%
+\>[2]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}〔\AgdaUnderscore{}〕}}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaKeyword{record}%
+\>[17]\AgdaSymbol{\{}%
+\>[512I]\AgdaField{sorts}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaBound{Σ}\<%
+\\
+\>[.][@{}l@{}]\<[512I]%
+\>[19]\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaSymbol{=}%
+\>[518I]\AgdaSymbol{λ}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaDatatype{⊎}}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\<%
+\\
+\>[518I][@{}l@{\AgdaIndent{0}}]%
+\>[28]\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{s'}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{s'}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\<%
+\\
+%
+\>[28]\AgdaSymbol{\}}\<%
+\\
+%
+\>[19]\AgdaSymbol{\}}\<%
+\\
+\end{code}
+
+\noindent Note that it is easy to refer to constant operations and
+extend them, because we indexed the set of operations on their arity
+and target sort.
+
+It is easy to turn the term algebra of the extended signature into an
+algebra for the original signature; the only difference with the
+algebra of ground terms is that we inject constants from \AgdaBound{Σ}
+to distinguish them from variables.
+
+\begin{code}
+\>[2]\AgdaOperator{\AgdaFunction{T\AgdaUnderscore{}〔\AgdaUnderscore{}〕}}\AgdaSpace{}%
+\AgdaSymbol{:}%
+\>[11]\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaBound{Σ}\<%
+\\
+%
+\>[2]\AgdaOperator{\AgdaFunction{T\AgdaUnderscore{}〔\AgdaUnderscore{}〕}}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaSymbol{\{}%
+\>[550I]\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟦\AgdaUnderscore{}⟧ₛ}}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaFunction{∣T∣}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦\AgdaUnderscore{}⟧ₛ}}\<%
+\\
+\>[.][@{}l@{}]\<[550I]%
+\>[19]\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟦\AgdaUnderscore{}⟧ₒ}}\AgdaSpace{}%
+\AgdaSymbol{=}%
+\>[556I]\AgdaSymbol{λ}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaInductiveConstructor{[]}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaFunction{∣T∣}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaInductiveConstructor{inj₁}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₒ}}\<%
+\\
+\>[556I][@{}l@{\AgdaIndent{0}}]%
+\>[30]\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s₀}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaFunction{∣T∣}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₒ}}\AgdaSpace{}%
+\AgdaSymbol{\}}\<%
+\\
+%
+\>[19]\AgdaSymbol{\}}\<%
+\\
+\>[2][@{}l@{\AgdaIndent{0}}]%
+\>[4]\AgdaKeyword{where}\AgdaSpace{}%
+\AgdaKeyword{open}\AgdaSpace{}%
+\AgdaModule{GroundTerm}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}〔\AgdaUnderscore{}〕}}\AgdaSymbol{)}\<%
+\end{code}
+
+\newcommand{\tsigmaequis}{\AgdaOperator{\AgdaFunction{T}\AgdaSpace{}\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaFunction{〔}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}\AgdaFunction{〕}}}
+
+In order to interpret terms with variables we need \emph{environments}
+to give meaning to variables. Let \AgdaFunction{Env}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}} be the set of environments from
+\AgdaBound{X} to \AgdaBound{A}. The universal mapping property for the
+free algebra \tsigmaequis depends on an environment: given
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaBound{Σ} and an environment \AgdaBound{θ}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Env}\AgdaSpace{}%
+\AgdaBound{A}, there exists a unique homomorphism
+\AgdaBound{H}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Homo}\AgdaSpace{}\AgdaSymbol{(}\tsigmaequis\AgdaSymbol{)}\AgdaSpace{}\AgdaBound{A}
+such that \AgdaSymbol{(}\nolinebreak\AgdaSpace{}%
+\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{H}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
+\AgdaFunction{var}\AgdaSpace{}%
+\AgdaBound{x}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaField{≈}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{θ}\AgdaSpace{}%
+\AgdaBound{x}\AgdaSymbol{)} for every \AgdaBound{x} \AgdaSymbol{:}
+\AgdaBound{X}.
+
+The injection \AgdaFunction{var}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{→}\tsigmaequis \AgdaSpace{}%
+can be seen as an environment for \tsigmaequis; therefore the UMP for
+this environment says that any \AgdaBound{H}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Homo}\AgdaSpace{}\AgdaSymbol{(}\tsigmaequis\AgdaSymbol{)}\AgdaSpace{}\AgdaBound{A}
+that extends \AgdaFunction{var} satisfies
+\AgdaBound{H}\AgdaSpace{}\AgdaFunction{≈ₕ}\AgdaSpace{}\AgdaFunction{Idₕ}. We
+gave alternative definitions of free algebras\footnote{In fact the
+  alternatives are slightly more general because they admit
+  ``variables'' to have a setoid structure. In this way we can state
+  that some algebra is generated by some subset (defined as a setoid
+  together with an injective mapping).} (with its associated UMP) and
+prove that the free algebra over \AgdaBound{X} is isomorphic to the
+algebra generated by \AgdaBound{X} using the UMPs for the injections.
 
 \subsection{Homomorphic Images and Products}
 \label{sec:homom-imag-prod}

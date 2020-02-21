@@ -109,20 +109,18 @@ module OpenTerm (Σ : Signature) (X : Vars Σ) where
 
   {- Signature extension with variables -}
   _〔_〕 : Signature
-  _〔_〕 = record
-    { sorts = sorts Σ
-    ; ops = λ { ([] , s) → ops Σ ([] , s) ⊎ X s
-              ; (s' ∷ ar , s) → ops Σ (s' ∷ ar , s)
-              }
-    }
+  _〔_〕 = record  { sorts = sorts Σ
+                   ; ops = λ { ([] , s) → ops Σ ([] , s) ⊎ X s
+                            ; (s' ∷ ar , s) → ops Σ (s' ∷ ar , s)
+                            }
+                   }
 
   {- Term Algebra of Σ (X) as Σ-Algebra -}
   T_〔_〕 :  Algebra Σ
-  T_〔_〕 = record
-    { _⟦_⟧ₛ = ∣T∣ ⟦_⟧ₛ
-    ; _⟦_⟧ₒ = λ { {[]} {s} f → ∣T∣ ⟦ inj₁ f ⟧ₒ
-                ; {s₀ ∷ ar} {s} f → ∣T∣ ⟦ f ⟧ₒ}
-    }
+  T_〔_〕 = record { _⟦_⟧ₛ = ∣T∣ ⟦_⟧ₛ
+                   ; _⟦_⟧ₒ = λ { {[]} {s} f → ∣T∣ ⟦ inj₁ f ⟧ₒ
+                              ; {s₀ ∷ ar} {s} f → ∣T∣ ⟦ f ⟧ₒ }
+                   }
     where open GroundTerm (_〔_〕)
 
   {- Environments -}

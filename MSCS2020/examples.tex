@@ -11,20 +11,20 @@ groups, rings, etc.
 Previous to use parameterised modules, we can extend the example presented in
 the Sec.~\ref{sec:univ-alg} to exemplify the main limitation of directly using a
 data type to define a theory. In this prior section we define the data type
-\AgdaDatatype{monoid{-}op} as an example to define the monoid signature
-\AgdaFunction{monoid-sig}. Now, formalize the theory of monoids; \ie an
-algebraic structure with a single associative binary operation and an identity
-element. It is straightforward from apply the outline presented in
+\AgdaDatatype{monoid-op} as an example to define the monoid signature
+\AgdaFunction{monoid-sig}. It is straightforward to formalize the theory of
+monoids (\ie an algebraic structure with a single associative binary operation
+and an identity element) by applying the outline presented in
 \ref{sec:eqlog-theory-ol}: first, given some family of sets of variables, say
 \AgdaFunction{X}\AgdaSpace{} \AgdaSymbol{:}\AgdaSpace{} \AgdaFunction{Vars}
-\AgdaFunction{monoid{-}sig}, we define
-\AgdaFunction{Term}\AgdaSpace{} \AgdaSymbol{=}\AgdaSpace{} \AgdaFunction{T}
-\AgdaSpace{}\AgdaFunction{monoid{-}sig}\AgdaSpace{}
-\AgdaSymbol{〔}\AgdaFunction{X}\AgdaSymbol{〕}, the set of term over the
+\AgdaFunction{monoid{-}sig}, we define \AgdaFunction{Term}\AgdaSpace{}
+\AgdaSymbol{=}\AgdaSpace{} \AgdaFunction{T} \AgdaSpace{}
+\AgdaFunction{monoid{-}sig}\AgdaSpace{}
+\AgdaSymbol{〔}\AgdaFunction{X}\AgdaSymbol{〕}, the set of terms over the
 extended signature; second, we introduce the obvious smart-constructors
-\AgdaBound{t}\AgdaSpace{}\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}
-\AgdaBound{t'} for the binary operation, and \AgdaFunction{u} for the identity
-element; finally we write the associativity and identity element axioms.
+\AgdaUnderscore{}\AgdaOperator{\AgdaFunction{∘}}\AgdaUnderscore{} for the
+binary operation, and \AgdaFunction{u} for the identity element; finally we
+write the associativity and identity element axioms.
 
 \begin{code}
 \>[4]\AgdaFunction{assocOp}\AgdaSpace{}%
@@ -94,7 +94,7 @@ element; finally we write the associativity and identity element axioms.
 \end{code}
 
 \noindent
-To extend this theory of monoids to the theory of commutative monoids (also
+Extending this theory of monoids to the theory of commutative monoids (also
 called, abelian monoids) is pretty straightforward. There is no need to extend
 the signature with new constructors, neither new smart-constructors. We only
 need to define the commutative axiom; thus we simply define the theory of
@@ -136,7 +136,6 @@ commutative monoids as the previous theory plus this axiom.
 \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
 \AgdaFunction{MonTheory}\<%
 \\
-
 \end{code}
 
 \subsection{Groups}

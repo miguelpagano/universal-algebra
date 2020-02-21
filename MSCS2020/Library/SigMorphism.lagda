@@ -299,14 +299,14 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
     open TΣₛ.Eval Xₛ 〈 Aₜ 〉 (〈_〉ₑ {Aₜ = Aₜ} θ)
       renaming (⟦_⟧ to ⟦_⟧Σₛ ; TΣXHom to ∣H∣ₛ)
     open TΣₛ.EvalUMP Xₛ 〈 Aₜ 〉 (〈_〉ₑ {Aₜ = Aₜ} θ)
-      renaming (extends to extendsₛ;tot to totΣₛ)
+      renaming (extends to extendsₛ;UMP to UMPΣₛ)
     open Homo
     open ReductHomo Σ↝ (TΣₜ〔 Xₛ ↝̬ 〕) Aₜ
     open HomComp
 
     reductTh : ∀ {s} → (t : TΣₛ〔 Xₛ 〕 ∥ s ∥) →
                  _≈_ (〈 Aₜ 〉 ⟦ s ⟧ₛ) ⟦ t ⟧Σₛ ⟦ t ∼ₜ ⟧Σₜ
-    reductTh {s} t = totΣₛ ∣H∣ₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ) he₁ he₂ s t
+    reductTh {s} t = UMPΣₛ ∣H∣ₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ) he₁ he₂ s t
       where
       he₂ : extendsₛ (〈 ∣H∣ₜ 〉ₕ ∘ₕ term↝ Xₛ)
       he₂ {s} x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
@@ -341,7 +341,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
                      ⟦ t' ⟧Σₛ     ∎
       where
       open TΣₛ.Eval Xₛ 〈 Aₜ 〉 θ renaming(⟦_⟧ to ⟦_⟧Σₛ ; TΣXHom to ∣H∣ₛ)
-      open TΣₛ.EvalUMP Xₛ 〈 Aₜ 〉 θ renaming (tot to totΣₛ ;extends to extendsₛ)
+      open TΣₛ.EvalUMP Xₛ 〈 Aₜ 〉 θ renaming (UMP to UMPΣₛ ;extends to extendsₛ)
       θₜ : TΣₜ.Env Xₜ Aₜ
       θₜ = _↝ₑ {Aₜ = Aₜ} θ
       open TΣₜ.Eval (Xₛ ↝̬) Aₜ θₜ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)

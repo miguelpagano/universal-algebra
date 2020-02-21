@@ -1,0 +1,141 @@
+\section{Monoids and Groups: an example of equational theories}
+\label{sec:extheories}
+
+In this section we present a pleasant method, using parameterised modules, for
+defining equational theories that depends in a cascade-way in which every layer
+increase complexity, how is the case with algebraic structures like monoids,
+groups, rings, etc.
+
+\subsection{Monoids}
+
+Previous to use parameterised modules, we can extend the example presented in
+the Sec.~\ref{sec:univ-alg} to exemplify the main limitation of directly using a
+data type to define a theory. In this prior section we define the data type
+\AgdaDatatype{monoid-op} as an example to define the monoid signature
+\AgdaFunction{monoid-sig}. It is straightforward to formalize the theory of
+monoids (\ie an algebraic structure with a single associative binary operation
+and an identity element) by applying the outline presented in
+\ref{sec:eqlog-theory-ol}: first, given some family of sets of variables, say
+\AgdaFunction{X}\AgdaSpace{} \AgdaSymbol{:}\AgdaSpace{} \AgdaFunction{Vars}
+\AgdaFunction{monoid{-}sig}, we define \AgdaFunction{Term}\AgdaSpace{}
+\AgdaSymbol{=}\AgdaSpace{} \AgdaFunction{T} \AgdaSpace{}
+\AgdaFunction{monoid{-}sig}\AgdaSpace{}
+\AgdaSymbol{〔}\AgdaFunction{X}\AgdaSymbol{〕}, the set of terms over the
+extended signature; second, we introduce the obvious smart-constructors
+\AgdaUnderscore{}\AgdaOperator{\AgdaFunction{∘}}\AgdaUnderscore{} for the
+binary operation, and \AgdaFunction{u} for the identity element; finally we
+write the associativity and identity element axioms.
+
+\begin{code}
+\>[4]\AgdaFunction{assocOp}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{x}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{y}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{z}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{x}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{y}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{z}\AgdaSymbol{))}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[4]\AgdaFunction{unitLeft}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaFunction{u}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{x}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaFunction{x}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[4]\AgdaFunction{unitRight}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaFunction{x}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{u}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaFunction{x}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[4]\AgdaFunction{MonTheory}%
+\>[15]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Theory}\AgdaSpace{}%
+\AgdaFunction{X}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSymbol{)}\<%
+\\
+%
+\>[4]\AgdaFunction{MonTheory}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaFunction{assocOp}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{unitLeft}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+\AgdaFunction{unitRight}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+\AgdaInductiveConstructor{⟨⟩}\AgdaSymbol{)}\<%
+\end{code}
+
+\noindent
+Extending this theory of monoids to the theory of commutative monoids (also
+called, abelian monoids) is pretty straightforward. There is no need to extend
+the signature with new constructors, neither new smart-constructors. We only
+need to define the commutative axiom; thus we simply define the theory of
+commutative monoids as the previous theory plus this axiom.
+
+\begin{code}
+\noindent \>[0]\AgdaFunction{commOp}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{x}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{y}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{y}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{x}\AgdaSymbol{)}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[0]\AgdaFunction{CommMonTheory}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Theory}\AgdaSpace{}%
+\AgdaFunction{X}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaInductiveConstructor{[]}\AgdaSymbol{)}\<%
+\\
+%
+\>[0]\AgdaFunction{CommMonTheory}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaFunction{commOp}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+\AgdaFunction{MonTheory}\<%
+\\
+\end{code}
+
+\subsection{Groups}

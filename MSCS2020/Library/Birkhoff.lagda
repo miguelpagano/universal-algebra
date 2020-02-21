@@ -150,9 +150,9 @@ module SubAlgebrasRespectSatisfaction
     ⟦ right e ⟧A        ≈⟨ ⟦t⟧A≈H⟦t⟧B (right e) ⟩
     proj₁ ⟦ right e ⟧B ∎
     where
+    open aux-sem A (SubAlgebra B≤A) θB (sub-embedding A B≤A)
     open EqR (A ⟦ s ⟧ₛ)
     open Setoid (A ⟦ s ⟧ₛ)
-    open aux-sem A (SubAlgebra B≤A) θB (sub-embedding A B≤A)
 
 module ProductRespectSatisfaction
        {ℓ₁ ℓ₂ ℓ₃} {s : sorts Σ} (e : Equation X s)

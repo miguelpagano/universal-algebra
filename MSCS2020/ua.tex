@@ -976,7 +976,7 @@ A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for any
 $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
 from $\mathcal{A}$ to $\mathcal{B}$. We give an abstract definition of
 this universal property, existence of a unique element, for any set
-\codigo{A| and any relation |R}
+\AgdaBound{A} and any relation \AgdaBound{R}
 \begin{spec}
 hasUnique {A} _≈_ = A × (∀ a a' → a ≈ a')
 \end{spec}
@@ -1030,3 +1030,7 @@ propositional equality and satisfies the homomorphism condition by
 construction. To finish the proof that \codigo{ ∣T∣ Σ } is initial, we prove,
 by recursion on the structure of terms, that any pair of homomorphisms
 are extensionally equal.
+
+\subsection{Homomorphic Images and Products}
+\label{sec:homom-imag-prod}
+

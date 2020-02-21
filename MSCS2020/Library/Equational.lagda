@@ -318,9 +318,9 @@ module InitialityModel {X ar ℓ₁ ℓ₂} {E : Theory X ar}
       ; cond = λ f as → cond H f as
       }
 
-    UMP : (H H' : Homo) → extends (liftH H) → extends (liftH H') →
+    UMP-⊢ : (H H' : Homo) → extends (liftH H) → extends (liftH H') →
       H ≈ₕ H'
-    UMP H H' ext ext' = tot (liftH H) (liftH H') ext ext'
+    UMP-⊢ H H' ext ext' = UMP (liftH H) (liftH H') ext ext'
 
 \end{code}
 \end{document}

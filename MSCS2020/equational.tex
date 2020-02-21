@@ -9,10 +9,9 @@ the deduction system is sound and complete.
 
 \subsection{Free algebra with variables}
 The term algebra we have just defined contained only \emph{ground}
-terms, \ie terms without variables. Given a signature \codigo{Σ| and }X :
-sorts Σ → Set| a family of variables, we define a new signature
-extending \codigo{Σ| with |X} by taking the variables as new constants
-(i.e. , operations with arity []).
+terms, \ie terms without variables. Given a signature \AgdaBound{Σ} and \AgdaBound{X}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaField{sorts}\AgdaSpace{}\AgdaBound{Σ}\AgdaSpace{}\AgdaSymbol{→}\AgdaSpace{}\AgdaPrimitiveType{Set} a family of variables, we define a new signature
+extending \AgdaBound{Σ} with \AgdaBound{X} by taking the variables as new constants
+(i.e. , operations with arity \AgdaInductiveConstructor{[]}).
 \begin{spec}
   _〔_〕 : (Σ : Signature) → (X : sorts Σ → Set) → Signature
   Σ 〔 X 〕 = record  { sorts = sorts Σ ; ops =  ops' }
@@ -44,13 +43,13 @@ environment \codigo{θ : Env X A|, there exists an unique homomorphism ⟦_⟧θ
 
 \subsection{Satisfiability and provability}
 
-\paragraph{Equations} In the mono-sorted setting an equation is a pair
+\paragraph*{Equations} In the mono-sorted setting an equation is a pair
 of terms where all the variables are assumed to be universally
 quantified and an equational theory is a (finite) set of equations.
 In a  multi-sorted setting both sides of an equation should be terms
 of the same sort. Moreover we allow quasi-identities which we
 write as conditional equations:
-\[ t = t'\ \mathsf{if} \  t_1 = t'_1, \ldots, t_n = t'_n \enspace . \] 
+\[ t = t'\ \mathsf{if} \  t_1 = t'_1, \ldots, t_n = t'_n \enspace . \]
 
 Let \codigo{Σ| be a signature and |X : sorts Σ → Set} be a family of
 variables for \codigo{Σ|. An identity |e : Eq Σ X s} is a pair of (open)
@@ -58,7 +57,7 @@ terms with sort \codigo{s}. A conditional equation is modelled as record with
 fields for the conclusion and the conditions, modelled as an
 heterogeneous vector of sorted identities. We declare a constructor
 to use the lighter notation \codigo{⋀ eq if (ar , eqs)| instead of }record {
-  eq = e ; cond = (ar , eqs )}|. 
+  eq = e ; cond = (ar , eqs )}|.
 \begin{spec}
 record Equation (Σ : Signature) (X : sorts Σ → Set) (s : sorts Σ) : Set where
   constructor ⋀_if_
@@ -91,7 +90,7 @@ Meseguer \cite{goguen-remarks-87}, quantifying equations is essential:
 are given explicitly over a set of variables. This, in turn, leads us
 to define satisfiability as proposed by Huet and Oppen.}
 
-\paragraph{Satisfiability} Let $\Sigma$ be a signature and
+\paragraph*{Satisfiability} Let $\Sigma$ be a signature and
 $\mathcal{A}$ be an algebra for $\Sigma$. We say that a conditional equation
 $t = t'\ \mathsf{if}\ t_1 = t'_1,\ldots,t_n=t'_n$ is
 \emph{satisfied} by $\mathcal{A}$ if for any
@@ -122,7 +121,7 @@ _⊨Σ_ : ∀ {Σ X ar s} → (E : Theory Σ X ar) → (e : Equation Σ X s) →
 _⊨Σ_ {Σ} E e = (A : Algebra Σ) → A ⊨ₘ E → A ⊨ e
 \end{spec}%
 
-\paragraph{Provability} As noticed by Huet and Oppen
+\paragraph*{Provability} As noticed by Huet and Oppen
 \cite{huet-rewrite}, the definition of a sound deduction system for
 multi-sorted equality logic is more subtle than expected. We formalize
 the system presented in \cite{goguen2005specifying}, shown in
@@ -202,7 +201,320 @@ that $E$ is \emph{stronger} than $E'$ if every axiom $e \in E'$ can be
 deduced from $E$, written $E \vdash_{T}\, E'$.  Obviously if $E$
 is stronger than $E'$, then any equation that can be deduced from $E'$
 can also be deduced from $E$ and any model of $E$ is also a model of
-$E'$. 
+$E'$.
+
+\subsection{Equational classes are closed under IHSP}
+
+Given a class $\mathcal{C}$ of algebras over some signature $\Sigma$
+one interesting question is to know whether there it is equational,
+ie.\ if there exists some theory $E$ such that the models of $E$ are
+exactly those algebras in $\mathcal{C}$. Birkhoff showed that a
+sufficient and necessary condition is to be closed under certain
+class-operations.
+
+$\mathcal{C}$ is closed under Isomorphism if
+$\mathcal{B}\in \mathcal{C}$ whenever $\mathcal{A}\in \mathcal{C}$ and
+$\mathcal{A}\simeq \mathcal{B}$. It is closed under products if for
+any (arbitrary) family of algebras $\mathcal{A}_i\in \mathcal{C}$ its
+direct product $\Pi_{i\in I} \mathcal{A}_i$ is also in
+$\mathcal{C}$. Analogously, $\mathcal{C}$ is closed under subalgebras
+if $\mathcal{B}\in \mathcal{C}$ for any subalgebra
+$\mathcal{B}\leqslant \mathcal{A} \in \mathcal{C}$. Finally, it is
+closed under homomorphic images if for any
+$\mathcal{A} \in \mathcal{C}$ and epimorhism
+$h : \mathcal{A} \to \mathcal{B}$ the homomorphic image of $A$ under
+$h$ is also in $\mathcal{C}$. A class closed by these operations is
+called a \emph{variety}. Birkhoff proved that every variety is the
+class of models of some equational theory.
+
+In our formalization we proved that the class of models of any
+equational theory is closed under IHSP. The proof for I, S and P are
+almost the same. In the module \AgdaModule{aux-sem} we proved a result
+useful for all of them. From an environment for $\mathcal{B}$ and a
+homomorphism from $\mathcal{B}$ to $\mathcal{A}$ we have an
+environment for $\mathcal{A}$. Moreover the valuations in
+$\mathcal{A}$ via the valuation in $\mathcal{B}$ and the homo, on the
+one hand, and via the new environment should coincide by the universal
+mapping property of the free algebra.
+
+\newcommand{\sem}[2]{\llbracket #1 \rrbracket_{\mathcal{#2}}} In order
+to prove, for example, that $\mathcal{C}$ is closed under subalgebras
+we assume that $\mathcal{A}$ satisfies the equation and wants to prove
+that $\mathcal{B}$ also satifies it; that is, we have to prove
+$\sem{t}{B} = \sem{t'}{B}$. Since the equality in a subalgebra is
+given by the equality on the underlying algebra of the first
+projections, we need to show that $\pi₁ \sem{t}{A} = \pi_1\sem{t'}{A}$
+Then we note that $\pi_1$ is the subembedding morphism from $\mathcal{B}$ to
+$\mathcal{A}$, therefore we can use the previous result and the satisfaction
+of $e$ by $\mathcal{A}$ to conclude that $\mathcal{B}$ also satisfies it.
+\begin{code}
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaFunction{SubRespects⊨}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{SubAlgebra}\AgdaSpace{}%
+\AgdaBound{B≤A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⊨}}\AgdaSpace{}%
+\AgdaBound{e}\<%
+\\
+%
+\>[2]\AgdaFunction{SubRespects⊨}\AgdaSpace{}%
+\AgdaBound{θB}\AgdaSpace{}%
+\AgdaBound{B⊨conds}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{begin}}\<%
+\\
+\>[2][@{}l@{\AgdaIndent{0}}]%
+\>[4]\AgdaField{proj₁}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaField{left}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧B}}%
+\>[24]\AgdaOperator{\AgdaFunction{≈⟨}}\AgdaSpace{}%
+\AgdaFunction{sym}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{⟦t⟧A≈H⟦t⟧B}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaField{left}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSymbol{))}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟩}}\<%
+\\
+%
+\>[4]\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaField{left}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧A}}%
+\>[24]\AgdaOperator{\AgdaFunction{≈⟨}}\AgdaSpace{}%
+\AgdaBound{A⊨e}\AgdaSpace{}%
+\AgdaFunction{θA}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{⊨B*→⊨A*}\AgdaSpace{}%
+\AgdaBound{B⊨conds}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟩}}\<%
+\\
+%
+\>[4]\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaField{right}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧A}}%
+\>[24]\AgdaOperator{\AgdaFunction{≈⟨}}\AgdaSpace{}%
+\AgdaFunction{⟦t⟧A≈H⟦t⟧B}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaField{right}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟩}}\<%
+\\
+%
+\>[4]\AgdaField{proj₁}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaField{right}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧B}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∎}}\<%
+\\
+%
+\>[4]\AgdaKeyword{where}\<%
+\\
+%
+\>[4]\AgdaKeyword{open}\AgdaSpace{}%
+\AgdaModule{aux-sem}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{SubAlgebra}\AgdaSpace{}%
+\AgdaBound{B≤A}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaBound{θB}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{sub-embedding}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{B≤A}\AgdaSymbol{)}\<%
+\\
+%
+\>[4]\AgdaKeyword{open}\AgdaSpace{}%
+\AgdaModule{EqR}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSymbol{)}\<%
+\\
+%
+\>[4]\AgdaKeyword{open}\AgdaSpace{}%
+\AgdaModule{Setoid}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSymbol{)}\<%
+\end{code}
+
+The satisfaction of semi-equations are not preserved by homomorphic
+images; we proved that the satisfaction of non-conditional equations
+are preserved by homomorphic images. This result can be reduced to
+proving that satisfaction is preserved under quotients, because the
+homomorphic image is isomorphic to the source algebra quotiened by
+the kernel of the homomorphism.
+\begin{code}
+\>[3]\AgdaFunction{A/h⊨e}\AgdaSpace{}%
+\AgdaBound{θk}\AgdaSpace{}%
+\AgdaInductiveConstructor{∼⟨⟩}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{begin}}\<%
+\\
+\>[3][@{}l@{\AgdaIndent{0}}]%
+\>[5]\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaFunction{t}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧A}}%
+\>[25]\AgdaOperator{\AgdaFunction{≈⟨}}\AgdaSpace{}%
+\AgdaFunction{⟦t⟧A≈H⟦t⟧B}\AgdaSpace{}%
+\AgdaFunction{t}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟩}}\<%
+\\
+%
+\>[5]\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaFunction{ν}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaFunction{t}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧B}}%
+\>[26]\AgdaOperator{\AgdaFunction{≈⟨}}\AgdaSpace{}%
+\AgdaField{Π.cong}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaFunction{ν}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A⊨e}\AgdaSpace{}%
+\AgdaFunction{θA}\AgdaSpace{}%
+\AgdaInductiveConstructor{∼⟨⟩}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟩}}\<%
+\\
+%
+\>[5]\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaFunction{ν}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaFunction{t'}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧B}}%
+\>[26]\AgdaOperator{\AgdaFunction{≈⟨}}\AgdaSpace{}%
+\AgdaFunction{sym}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{⟦t⟧A≈H⟦t⟧B}\AgdaSpace{}%
+\AgdaFunction{t'}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟩}}\<%
+\\
+%
+\>[5]\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaFunction{t'}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧A}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∎}}\<%
+\\
+%
+\>[5]\AgdaKeyword{where}\<%
+\\
+%
+\>[5]\AgdaKeyword{open}\AgdaSpace{}%
+\AgdaModule{EqR}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{A/h}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSymbol{)}\<%
+\\
+%
+\>[5]\AgdaKeyword{open}\AgdaSpace{}%
+\AgdaModule{Setoid}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{A/h}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSymbol{)}\<%
+\\
+%
+\>[5]\AgdaKeyword{open}\AgdaSpace{}%
+\AgdaModule{aux-sem}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{ℓ₀}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{ℓ₀}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{ℓ₁}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{ℓ₃}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{ℓ₂}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{ℓ₀}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{ℓ₃}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{ℓ₁}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaFunction{A/h}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{θk}\AgdaSpace{}%
+\AgdaFunction{ν}\<%
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[3]\AgdaFunction{equ}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Equation}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\<%
+\\
+%
+\>[3]\AgdaFunction{equ}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaField{Equ.left}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaField{Equ.right}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSymbol{)}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[3]\AgdaFunction{imgH⊨e}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{homImg}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{H}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⊨}}\AgdaSpace{}%
+\AgdaFunction{equ}\<%
+\\
+%
+\>[3]\AgdaFunction{imgH⊨e}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaFunction{IsoRespects⊨}\AgdaSpace{}%
+\AgdaFunction{A/h⊨e}\<%
+\\
+\>[3][@{}l@{\AgdaIndent{0}}]%
+\>[5]\AgdaKeyword{where}\AgdaSpace{}%
+\AgdaKeyword{open}\AgdaSpace{}%
+\AgdaModule{IsoRespectSatisfaction}\AgdaSpace{}%
+\AgdaFunction{equ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{I.iso-A/kerH}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{B}\AgdaSpace{}%
+\AgdaBound{H}\AgdaSymbol{)}\<%
+\end{code}
+
+% This forced us to introduce a
+% notion of non-conditional equations and unconditional equational
+% theory.
+
+It is our immediate next goal to prove the converse, namely giving an
+equational theory for any class closed by HSP. In the development
+branch of our formalization\footnote{repository URL} we have some
+preliminaries definitions such as a more general notion of free
+algebras, congruences generated by some relation, and more results
+about sub-algebras.
+
+One application that models of equational theories are closed under
+IHSP is to prove that some theories are not equational
+axiomatizable. We proved that fields are not equational because they
+are not closed under products (of course, the problem is that an
+equational lacks negations). Our approach to proving this, was to
+introduce a shallow notion of fields (ie. we do not have a syntactic
+representation of fields, but we model them as setoids with operations
+satisfying the axioms) and assume that there is an equational theory
+modelling them. We can easily turn $\mathit{Bool}$ into a field with
+the xor and conjunction operations. %COMPLETAR.
+% Decir que tomar a≠b como ¬(a=b) se llama tight apartness
+
+In the standard library there are shallow definitions of several
+algebraic structures (from magmas up to commutative rings) but it
+lacks the product bi-functor. We have defined an interface between
+models of the deep embeddings of those structures (in our library)
+with those of the standard library. In this way we get by closedness
+of products a product of shallow monoids.
 
 \subsection{A theory for Boolean Algebras } In this section we outline
 how to formalize an equational theory and illustrate each step by
@@ -211,15 +523,11 @@ Rocha and Meseguer~\cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The
   full code is available in the file \nolinkurl{Examples/EqBool.agda}
   of the repository.}
 
-
-% \begin{description}[%
-%   before={\setcounter{descriptcount}{0}},%
-%   ,font=\it \stepcounter{descriptcount}\thedescriptcount.~]
-
-\begin{itemize}
-\item[Define the signature] describing the language, and choose a
-  family of sets for the variables. It helps if one also introduce an
-  abbreviation for terms over the signature extended with variables.
+\paragraph*{Define the signature}
+\label{sec:define-signature} describing the language, and choose
+  a family of sets for the variables. It helps if one also introduce
+  an abbreviation for terms over the signature extended with
+  variables.
 \begin{spec}
 data bool-ops : List ⊤ × ⊤ → Set where
   f t    : bool-ops ([] ↦ tt)
@@ -235,7 +543,9 @@ Form : Set
 Form = HU bool-sig 〔 vars 〕
 \end{spec}
 
-\item[Introduce smart-constructors] for terms of the extended
+\paragraph*{Introduce smart-constructors}
+\label{sec:intr-smart-constr}
+  for terms of the extended
   signature with variables to ease writing the axioms and proving
   theorems. Usually one has a smart-constructor for each operation and
   one per variable that is used in the axioms or the theorems.
@@ -255,7 +565,10 @@ _∧_ : Form → Form → Form
 ¬ φ = term neg ⟨⟨ φ ⟩⟩
 \end{spec}
 
-\item[Define the equational theory] by specifying one equation for
+\paragraph*{Define the equational theory}
+\label{sec:define-equat-theory}
+
+ by specifying one equation for
   each axiom and collect them in a theory; here one can appreciate the
   convenience of the smart-constructors. Here we only show two of the
   twelve axioms of the theory \codigo{bool-theory}. If one will prove theorems
@@ -273,7 +586,8 @@ pattern commAndAx = here
 pattern leastDefAx = there here
 \end{spec}
 
-\item [Prove theorems] using the axioms of the theory just defined.
+\paragraph*{Prove theorems}
+  using the axioms of the theory just defined.
   If a proof uses transitivity, one can use the equational reasoning
   idiom provided by the standard library of Agda:
 \begin{spec}
@@ -289,4 +603,5 @@ pattern leastDefAx = there here
 \noindent In the justification steps of this proof we use the
 substitution rule. The relevant actions of the substitution \codigo{σ₁} are
 \codigo{σ₁ p = ¬ p| and |σ₁ q = p}.
-\end{itemize}
+
+

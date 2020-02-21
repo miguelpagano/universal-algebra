@@ -17,6 +17,17 @@
 \usepackage{environ}
 \NewEnviron{spec}{}{}
 
+
+\newenvironment{quote}
+               {\list{}{\rightmargin\leftmargin}%
+                \item\relax}
+               {\endlist}
+
+
+\newcounter{descriptcount}
+\renewcommand*\thedescriptcount{\arabic{descriptcount}}
+\newcommand{\setoidMor}{{\xrightarrow{\,\thickapprox\,}}}
+               
 \newcommand{\alg}[1]{\mathcal{#1}}
 
 \newcommand{\ie}{i.e. }
@@ -69,6 +80,9 @@
 
 \include{intro}
 \include{ua}
+\include{equational}
+\include{sig_morph}
+\include{conclusions}
 
 \bibliographystyle{msclike}
 \bibliography{biblio}

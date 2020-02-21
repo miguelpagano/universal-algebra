@@ -1,0 +1,62 @@
+% mscguide.tex
+% v1.0, released 11 Nov 2019
+% Copyright 2019 Cambridge University Press
+
+\documentclass{msc}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+
+\begin{document}
+
+\lefttitle{LaTeX\ Supplement}
+\righttitle{Mathematical Structures in Computer}
+
+\papertitle{Article}
+
+\jnlPage{1}{00}
+\jnlDoiYr{2019}
+\doival{10.1017/xxxxx}
+\title{Formalization of Universal Algebra in Agda}
+
+\begin{authgrp}
+  \author{Miguel Pagano}
+  \author{Alejandro Gadea}
+\author{ Emmanuel Gunther}
+
+
+\affiliation{Facultad de Matem\'atica, Astronom\'ia y F\'isica,\\
+        Universidad Nacional de C\'ordoba\\}
+\end{authgrp}
+
+\history{(Received xx xxx xxx; revised xx xxx xxx; accepted xx xxx xxx)}
+%\received{20 March 1995; revised 30 September 1998}
+
+
+\begin{abstract}
+In this work we present a novel formalization of
+universal algebra in Agda. We show that heterogeneous signatures can
+be elegantly modelled in type-theory using sets indexed by arities to
+represent operations. We prove elementary results of heterogeneous
+algebras, including the proof that the term algebra is initial and the
+proofs of the three isomorphism theorems. We further formalize equational theory and
+prove soundness and completeness. At the end, we define (derived)
+signature morphisms, from which we get the contra-variant functor
+between algebras; moreover, we also proved that, under some
+restrictions, the translation of a theory induces a contra-variant
+functor between models.
+\end{abstract}
+
+\begin{keywords}
+  universal algebra; formalization of mathematics; equational logic;
+\end{keywords}
+
+\maketitle
+
+\include{intro}
+
+
+
+
+\end{document}

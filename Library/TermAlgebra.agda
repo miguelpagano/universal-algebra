@@ -173,23 +173,22 @@ module OpenTerm (Σ : Signature) (X : Vars Σ) where
     open Eval A a
     open Setoid
     open Hom T_〔_〕 A
-    open Homo
 
     extends : Homo → Set _
     extends h = ∀ {s} → (x : X s) → _≈_ (A ⟦ s ⟧ₛ) ( ′ h ′ s ⟨$⟩ var x) (a x)
 
-    tot : (H H' : Homo) → extends H → extends H' → H ≈ₕ H'
-    tot H H' he he' s (term {[]} (inj₂ x) ⟨⟩) = begin
+    UMP : (H H' : Homo) → extends H → extends H' → H ≈ₕ H'
+    UMP H H' he he' s (term {[]} (inj₂ x) ⟨⟩) = begin
       (′ H ′ s ⟨$⟩ var x)  ≈⟨ he x ⟩
       a x                 ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (he' x) ⟩
       ′ H' ′ s ⟨$⟩ var x ∎
       where open EqR (A ⟦ s ⟧ₛ)
-    tot H H' he he' s (term {[]} (inj₁ k) ⟨⟩) = begin
+    UMP H H' he he' s (term {[]} (inj₁ k) ⟨⟩) = begin
       ′ H ′ s ⟨$⟩ (term {[]} (inj₁ k) ⟨⟩)   ≈⟨ cond H k ⟨⟩ ⟩
       A ⟦ k ⟧ₒ ⟨$⟩ ⟨⟩                   ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond H' k ⟨⟩) ⟩
       ′ H' ′ s ⟨$⟩ (term (inj₁ k) ⟨⟩)  ∎
       where open EqR (A ⟦ s ⟧ₛ)
-    tot H H' he he' s (term {x ∷ ar} f ts) = begin
+    UMP H H' he he' s (term {x ∷ ar} f ts) = begin
       ′ H ′ s ⟨$⟩ term f ts             ≈⟨ cond H f ts ⟩
         A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ′ H ′ ts)   ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (x ∷ ar) ts) ⟩
         A ⟦ f ⟧ₒ ⟨$⟩ (map⟿ ′ H' ′ ts)  ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (cond H' f ts) ⟩
@@ -201,7 +200,7 @@ module OpenTerm (Σ : Signature) (X : Vars Σ) where
                   (map (_⟨$⟩_ ∘ ′ H ′) ts)
                   (map (_⟨$⟩_ ∘ ′ H' ′) ts)
       map≈ [] ⟨⟩ = ∼⟨⟩
-      map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (tot H H' he he' s t) (map≈ ar ts)
+      map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (UMP H H' he he' s t) (map≈ ar ts)
 
   module UMP_unit where
 
@@ -221,7 +220,7 @@ module OpenTerm (Σ : Signature) (X : Vars Σ) where
 
     -- If H extends η, then H ≈ₕ HomId.
     ≈ₕ-id⁺ : (H : Homo TX TX) → extends H → H HX.≈ₕ HomId
-    ≈ₕ-id⁺ H ext = tot H HomId ext HomId-extends-η
+    ≈ₕ-id⁺ H ext = UMP H HomId ext HomId-extends-η
 
 
   module Subst where
@@ -273,4 +272,3 @@ module OpenTerm (Σ : Signature) (X : Vars Σ) where
     subst-theo s (term {[]} (inj₁ k) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
     subst-theo s (term {[]} (inj₂ x) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
     subst-theo s (term {s' ∷ ar} {.s} f ts) = Π.cong (A ⟦ f ⟧ₒ) (subst-theo* ts)
-

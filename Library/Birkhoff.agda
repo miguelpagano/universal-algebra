@@ -55,7 +55,7 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
 
   ⟦t⟧A≈H⟦t⟧B : ∀ {s : sorts Σ} → (t : Terms s) →
                s , ⟦ t ⟧A ≈A ( ′ H ′ s ⟨$⟩ ⟦ t ⟧B)
-  ⟦t⟧A≈H⟦t⟧B {s} t = tot TΣA (H ∘ₕ TΣB)
+  ⟦t⟧A≈H⟦t⟧B {s} t = UMP TΣA (H ∘ₕ TΣB)
                         (λ {s'} _ → Setoid.refl (A ⟦ s' ⟧ₛ))
                         (λ {s'} _ → Setoid.refl (A ⟦ s' ⟧ₛ))
                         s t

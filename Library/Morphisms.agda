@@ -71,8 +71,8 @@ module Hom {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
       }
     }
 
-open Hom.Homo public
 open Hom
+open Homo public
 
 {- Homomorphism composition -}
 module HomComp {ℓ₁ ℓ₂ ℓ₃ ℓ₄ l₅ l₆}
@@ -550,9 +550,18 @@ _↾_ {A = A} {B} h C = record { ′_′ = λ s →
                       }
                ; cond = ↾-cond
                }
-  where ↾-cond : ∀ {s} {ar} (f : ops Σ (ar ↦ s)) as →
-                 ((B ⟦ s ⟧ₛ) ≈ ′ h ′ s ⟨$⟩ proj₁ ((SubAlgebra C ⟦ f ⟧ₒ) ⟨$⟩ as))
-                     ((B ⟦ f ⟧ₒ) ⟨$⟩ map (λ x x₁ → ′ h ′ x ⟨$⟩ proj₁ x₁) as)
-        ↾-cond {s} {ar} f as
-          rewrite PE.sym (map-compose (λ _ → proj₁) (λ s → ′ h ′  s ⟨$⟩_) as) = cond h f (map (λ _ → proj₁) as)
+  where
+  ↾-cond : ∀ {s} {ar} (f : ops Σ (ar ↦ s)) as →
+           ((B ⟦ s ⟧ₛ) ≈ ′ h ′ s ⟨$⟩ proj₁ ((SubAlgebra C ⟦ f ⟧ₒ) ⟨$⟩ as))
+                       ((B ⟦ f ⟧ₒ) ⟨$⟩ map (λ x x₁ → ′ h ′ x ⟨$⟩ proj₁ x₁) as)
+  ↾-cond {s} {ar} f as
+    rewrite PE.sym (map-compose (λ _ → proj₁) (λ s → ′ h ′  s ⟨$⟩_) as) =
+      cond h f (map (λ _ → proj₁) as)
 
+
+-- B is subalgebra of A if B is isomorphic to some proper subalgebra of A.
+record _IsSub_  {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (B : Algebra {ℓ₃} {ℓ₄} Σ) (A : Algebra {ℓ₁} {ℓ₂} Σ)
+                (ℓ₀ : Level) : Set (lsuc (ℓ₀ ⊔ ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+  field
+    subA : SubAlg {ℓ₀} A
+    emb  : B ≅ SubAlgebra subA

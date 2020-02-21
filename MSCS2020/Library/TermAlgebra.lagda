@@ -47,12 +47,11 @@ module GroundTerm  (Σ : Signature) where
 
   module Eval {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) where
     private
-      eval : ∀ {s} → HU s → A ∥ s ∥
+      eval : ∀ {s} →  ∣T∣ ∥ s ∥ → A ∥ s ∥
       eval* : ∀ {ar} → ∣T∣ ∥ ar ∥* → A ∥ ar ∥*
 
       eval (term f ⟨⟩)         =   A ⟦ f ⟧ₒ ⟨$⟩ ⟨⟩
       eval (term f (t ▹ ts))  =   A ⟦ f ⟧ₒ ⟨$⟩ (eval t ▹ eval* ts)
-
       eval* ⟨⟩ = ⟨⟩
       eval* (t ▹ ts) = eval t ▹ eval* ts
 

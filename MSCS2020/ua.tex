@@ -1253,58 +1253,46 @@ operation $f \colon [s_1,\ldots,s_n] \Rightarrow s$ we map the vector
 \end{code}
 
 \noindent Terms can be interpreted in any algebra
-$\mathcal{A}$, yielding an homomorphism $h_A \colon \mathcal{T}
+$\mathcal{A}$, yielding an homomorphism $\mathit{eval}_A \colon \mathcal{T}
 \to \mathcal{A}$
 \[
-  h_A (f(t_1,\ldots,t_n)) = f_{\mathcal{A}}\,(h_A\,t_1,...,h_A\,t_n) \enspace .
+  \mathit{eval}_A (f(t_1,\ldots,t_n)) = f_{\mathcal{A}}\,(h_A\,t_1,...,h_A\,t_n) \enspace .
 \] 
 \noindent We cannot translate this definition directly in Agda, instead
-we have to mutually define \AgdaFunction{∣h∣} and its extension over vectors
-\AgdaFunction{∣h*∣}
+we have to mutually define \AgdaFunction{eval} and its extension over vectors
+\AgdaFunction{eval*}
 
 \begin{code}
-  \>[0]\AgdaFunction{∣h∣}\AgdaSpace{}%
-  \AgdaSymbol{:}\AgdaSpace{}%
-  \AgdaSymbol{∀}\AgdaSpace{}%
-  \AgdaSymbol{\{}\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
-  \AgdaSymbol{→}\AgdaSpace{}%
-    \AgdaSymbol{(}
-  \AgdaBound{A}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}%
-  \AgdaRecord{Algebra}\AgdaSpace{}\AgdaBound{Σ}
-  \AgdaSymbol{)}
-    \AgdaSymbol{→}\AgdaSpace{}%
-  \AgdaSymbol{\{}\AgdaSpace{}\AgdaBound{s}\AgdaSpace{}%
-  \AgdaSymbol{:}\AgdaSpace{}%
-  \AgdaField{sorts}\AgdaSpace{}%
-  \AgdaBound{Σ}\AgdaSpace{}\AgdaSymbol{\}}\AgdaSpace{}%
-  \AgdaSymbol{→}\AgdaSpace{}%
-  \AgdaDatatype{HU}\AgdaSpace{}%
-  \AgdaBound{s}\AgdaSpace{}%
-    \AgdaSymbol{→}\AgdaSpace{}%
-  \AgdaFunction{∥}\AgdaSpace{}
-  \AgdaBound{A} \AgdaSpace{}%
-  \AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
-    \AgdaBound{s}\AgdaSpace{}%
-    \AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSpace{}%
-  \AgdaSpace{}\AgdaFunction{∥}\AgdaSpace{}%
-  \<%
-  \\
-  \>[0]\AgdaFunction{∣h∣}\AgdaSpace{}%
-  \AgdaBound{A} \AgdaSpace{}%
-  \AgdaSymbol{(}
-  \AgdaInductiveConstructor{term}
-    \AgdaSpace{}\AgdaBound{f}\AgdaSpace{}\AgdaBound{ts}
-    \AgdaSymbol{)}\AgdaSpace{}%
-    \AgdaSymbol{=}\AgdaSpace{}%
-      \AgdaBound{A} \AgdaSpace{}%
-  \AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
-    \AgdaBound{f}\AgdaSpace{}%
-    \AgdaOperator{\AgdaField{⟧ₒ}}\AgdaSpace{}%
-  \AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
-  \AgdaSymbol{(}
-  \AgdaFunction{∣h*∣}\AgdaSpace{}\AgdaBound{ts}
-  \AgdaSymbol{)}
-  \<%
+\>[6]\AgdaFunction{eval}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaFunction{∣T∣}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\<%
+\\
+%
+\>[6]\AgdaFunction{eval*}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ar}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaFunction{∣T∣}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥*}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥*}}\<%
 \end{code}
 
 \noindent It is straightforward to prove that \AgdaFunction{∣h∣} preserves

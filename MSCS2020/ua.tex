@@ -204,82 +204,126 @@ monoid and the other for the set on which the monoid acts.
 
 \end{code}
 
-% \noindent Defining operations as a family indexed by arities and
-% target sorts carries some benefits in the use of the library: as in
-% the above examples, the names of operations are constructors of a
-% family of datatypes and so it is possible to perform pattern matching
-% on them. Notice also that infinitary signatures can be represented in
-% our setting; in fact, all the results are valid for any signature, be
-% it finite or infinite.
+\noindent Defining operations as a family indexed by arities and
+target sorts carries some benefits in the use of the library: as in
+the above examples, the names of operations are constructors of a
+family of datatypes and so it is possible to perform pattern matching
+on them. Notice also that infinitary signatures can be represented in
+our setting; in fact, all the results are valid for any signature, be
+it finite or infinite.
 
-% We show two examples of signatures with infinite operations, the first
-% might be more appealing to computer scientists and the second is more
-% mathematical. The abstract syntax of a language for arithmetic expressions
-% may have one sort, a constant operation for each natural number and a
-% binary operation representing the addition of two expressions.
-% \begin{spec}
-% data Sortsₑ : Set where E : Sortsₑ
-% data Opsₑ : List Sortsₑ × Sortsₑ → Set where
-%   val   : (n : ℕ)   → Opsₑ ([] , E)
-%   plus  : Opsₑ ( E ∷ [ E ] , E )
-% \end{spec}
+\paragraph{Algebra}
+An \emph{algebra} $\mathcal{A}$ for the signature $\Sigma$ consists of
+a family of sets indexed by the sorts of $\Sigma$ and a family of
+functions indexed by the operations of $\Sigma$. We use
+$\mathcal{A}_s$ for the \emph{interpretation} or the \emph{carrier} of
+the sort $s$; given an operation
+$f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a
+total function
+$f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
+\mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. 
+We formalize the product $\mathcal{A}_{s_1} \times ... \times
+\mathcal{A}_{s_n}$ as \emph{heterogeneous vectors}. The
+type of heterogeneous vectors is parameterized by a set \AgdaBound{I}
+and a family of sets indexed by \AgdaBound{I}; and is indexed over a
+list of \AgdaBound{I}:
 
-% \noindent Vector spaces over a field can be seen as a heterogeneous signature
-% with two sorts~\cite{birkhoff-70} or as homogeneous signature
-% over the field \cite[p. 132]{birkhoff-40}; this latter approach can be
-% easily specified in our library, even if the field is infinite:
-% \begin{spec}
-% data Sorts-v Set where V : Sorts-v
-% data Ops-v (F : Set) : Set where
-%   _+_ : Ops-v ( V ∷ [ V ] , V )      -- vector addition
-%   ν  : (f : F) → Ops-v ( [ V ] , V)  -- scalar multiplication
-% vspace-sig : (F : Set) → Signature
-% vspace-sig F = record {sorts = Sorts-v ; ops = Ops-v F}
-% \end{spec}
+\begin{code}
+\>[0]\AgdaKeyword{data}\AgdaSpace{}%
+\AgdaDatatype{HVec}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{I}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSymbol{\}}%
+\>[21]\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaBound{I}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{List}\AgdaSpace{}%
+\AgdaBound{I}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaInductiveConstructor{⟨⟩}%
+\>[8]\AgdaSymbol{:}%
+\>[11]\AgdaDatatype{HVec}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaInductiveConstructor{[]}\<%
+\\
+%
+\>[2]\AgdaOperator{\AgdaInductiveConstructor{\AgdaUnderscore{}▹\AgdaUnderscore{}}}%
+\>[8]\AgdaSymbol{:}%
+\>[11]\AgdaSymbol{∀}%
+\>[14]\AgdaSymbol{\{}\AgdaBound{i}\AgdaSpace{}%
+\AgdaBound{is}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{i}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaDatatype{HVec}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{is}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaDatatype{HVec}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{i}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaBound{is}\AgdaSymbol{)}\<%
+\end{code}
 
-% \paragraph{Algebra}
-% An \emph{algebra} $\mathcal{A}$ for the signature $\Sigma$ consists of
-% a family of sets indexed by the sorts of $\Sigma$ and a family of
-% functions indexed by the operations of $\Sigma$. We use
-% $\mathcal{A}_s$ for the \emph{interpretation} or the \emph{carrier} of
-% the sort $s$; given an operation
-% $f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a
-% total function
-% $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
-% \mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. 
-% We formalize the product $\mathcal{A}_{s_1} \times ... \times
-% \mathcal{A}_{s_n}$ as \emph{heterogeneous vectors}. The
-% type of heterogeneous vectors is parameterized by a set |I|
-% and a family of sets indexed by |I|; and is indexed over a
-% list of |I|:
-% \begin{spec}
-% data HVec {I : Set}  (A : I → Set) : List I → Set where
-%   ⟨⟩    :  HVec A []
-%   _▹_   :  ∀  {i is} → A i → HVec A is → HVec A (i ∷ is)
-% \end{spec}
-% \noindent The first parameter |I| is implicit (written in braces), which means that Agda
-% will infer it by unification; notices that the constructor |_▹_| also
-% takes two implicit arguments (we use the notation |∀| to skip their
-% types). Let |Σ| be a signature and |A : sorts Σ → Set|, then the
-% product $\mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n}$ is
-% formalized as |HVec A [s₁,…,sₙ]|.
 
-% We need one more ingredient to give the formal notion of algebras: the
-% mathematical definition of carriers assumes an underlying notion of
-% equality.  In type theory one makes it apparent by using setoids (\ie
-% sets paired with an equivalence relation), which were thoroughly
-% studied by Barthe et al.~\cite{barthe-setoids-2003}. Setoids are
-% defined in the standard library \cite{danielsson-agdalib} of
-% Agda\footnote{Our formalization is based on several concepts defined
-%   in the standard library.} as a record with three
-% fields.
-% \begin{spec}
-% record Setoid : Set₁ where
-%   field
-%     Carrier       : Set                     
-%     _≈_           : Carrier → Carrier → Set 
-%     isEquivalence : IsEquivalence _≈_       
-% \end{spec}
+\noindent The first parameter \AgdaBound{I} is implicit (written in braces), which means that Agda
+will infer it by unification; notices that the constructor \AgdaInductiveConstructor{\AgdaUnderscore{}▹\AgdaUnderscore{}} also
+takes two implicit arguments (we use the notation \AgdaSymbol{∀} to skip their
+types). Let \AgdaBound{Σ} be a signature and \AgdaBound{A} \AgdaSymbol{:}\AgdaField{sorts} \AgdaBound{Σ} \AgdaSymbol{→} \AgdaPrimitiveType{Set},
+then the product $\mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n}$ is
+formalized as \AgdaDatatype{HVec} \AgdaBound{A} \AgdaSymbol{[} \AgdaBound{s₁},...,\AgdaBound{sₙ}\AgdaSymbol{]}.
+
+We need one more ingredient to give the formal notion of algebras: the
+mathematical definition of carriers assumes an underlying notion of
+equality.  In type theory one makes it apparent by using setoids (i.e. 
+sets paired with an equivalence relation), which were thoroughly
+studied by Barthe et al.~\cite{barthe-setoids-2003}. Setoids are
+defined in the standard library \cite{danielsson-agdalib} of
+Agda\footnote{Our formalization is based on several concepts defined
+  in the standard library.} as a record with three
+fields.
+
+\begin{code}
+\>[0]\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaRecord{Setoid}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaKeyword{field}\<%
+\\
+\>[2][@{}l@{\AgdaIndent{0}}]%
+\>[4]\AgdaField{Carrier}%
+\>[18]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+%
+\>[4]\AgdaOperator{\AgdaField{\AgdaUnderscore{}≈\AgdaUnderscore{}}}%
+\>[18]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{Carrier}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaField{Carrier}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+%
+\>[4]\AgdaField{isEquivalence}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{IsEquivalence}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{\AgdaUnderscore{}≈\AgdaUnderscore{}}}\<%
+\end{code}
+
+
 % \noindent The relation is given as a family of types indexed over a pair
 % of elements of the carrier (|a b : Carrier| are related if the type |a
 % ≈ b| is inhabited); |IsEquivalence _≈_| is again a record whose fields

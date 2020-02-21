@@ -105,6 +105,7 @@ SubAlgebra {Σ} {A = A} S = record { _⟦_⟧ₛ = is ; _⟦_⟧ₒ = if }
       ; cong = λ { {v₁} {v₂} eq → Π.cong (A ⟦ f ⟧ₒ) (pcong eq) }
       }
 
+
 {- Congruence -}
 record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}
                   (A : Algebra {ℓ₁} {ℓ₂} Σ) : Set (lsuc ℓ₃ ⊔ ℓ₂ ⊔ ℓ₁) where
@@ -113,7 +114,6 @@ record Congruence {ℓ₃ ℓ₁ ℓ₂} {Σ : Signature}
     welldef : (s : sorts Σ) → WellDefRel (A ⟦ s ⟧ₛ) (rel {s})
     cequiv : (s : sorts Σ) → IsEquivalence (rel {s})
     csubst : ∀ {ar s} (f : ops Σ (ar , s)) → rel * =[ A ⟦ f ⟧ₒ ⟨$⟩_ ]⇒ rel {s}
-
 
 open Congruence
 

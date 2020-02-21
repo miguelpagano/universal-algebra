@@ -6,50 +6,396 @@ open import UnivAlgebra
 open import Level renaming (zero to lzero ; suc to lsuc)
 module FreeAlgebra (Σ : Signature) where
 
+open import Data.List using ([];_∷_)
 open import Data.Product hiding (Σ)
-open import Function.Equality renaming (_∘_ to _∘ₑ_)
-open import Function.Injection
+open import Data.Sum
+open import Function as F hiding (Injective; Bijective; Surjective; Inverse;
+                          module Injection;Injection; module Bijection; Bijection;
+                          module Inverse)
+open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid;_⇨_)
+open import Function.Bijection hiding (_∘_)
+open import Function.Surjection hiding (_∘_)
+open import Function.Injection renaming (_∘_ to _∘ᵢ_)
 open import Relation.Binary hiding (Total)
+import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.PropositionalEquality as PE
+open import Relation.Unary
 
-import SubAlgebra
 
-open import Setoids
+open import HeterogeneousVec renaming (map to mapV)
 open import Morphisms
+import SubAlgebra as SA
+import TermAlgebra as T
+open import Setoids hiding (∥_∥)
+
 open Universe Σ
+open Hom
+open Homo
+-- A prof of X ⊆ Y is given by a family of injections.
+_⊆ₛ_ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} → Universe ℓ₁ ℓ₂ → Universe ℓ₃ ℓ₄ → Set _
+X ⊆ₛ Y = ∀ {s} → Injection (X s) (Y s)
 
-module UMP {ℓ₁ ℓ₂} {A : Algebra {ℓ₁} {ℓ₂} Σ} where
-  open SubAlgebra Σ A
+_≅ₛ_ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} → Universe ℓ₁ ℓ₂ → Universe ℓ₃ ℓ₄ → Set _
+X ≅ₛ Y = ∀ {s} → Bijection (X s) (Y s)
+
+
+-- The Free algeba over a universe. Note that this is more general
+-- than the term algebra because we start with a universe of setoids
+-- at any level. Notice that we do not have yet any equational theory.
+module Free {ℓ₃ ℓ₄ : Level} (X : Universe ℓ₃ ℓ₄) where
+
   open Setoid
+  -- In TermAlgebra we extended the signature; this imposes a
+  -- restriction on the level of the starting set.
+  data Free  : (s : sorts Σ) → Set (ℓ₃ ⊔ ℓ₄)  where
+    var : ∀ {s : sorts Σ} (x : Carrier (X s)) → Free s
+    app : ∀ {ar s} →  (f : ops Σ (ar ↦ s)) → (HVec Free ar) → Free s
 
-  UMP : ∀ {ℓ₃ ℓ₄ ℓ₅ ℓ₆} {X : Universe ℓ₃ ℓ₄} →
-        (X ⊆ₛ (A ⟦_⟧ₛ)) → Algebra {ℓ₅} {ℓ₆} Σ → Set _
-  UMP {X = X} X⊆A B = (f : X ⟶ₛ (B ⟦_⟧ₛ)) → ∃! _≈ₕ_ (Pr f)
-    where open Hom (⟨ X⊆A ⟩') B
-          open Homo
-          ι : X ⟶ₛ (⟨ X⊆A ⟩' ⟦_⟧ₛ)
-          ι s = record { _⟨$⟩_ = λ {x → (to ⟨$⟩ x) , inX (x , Setoid.refl (A ⟦ s ⟧ₛ)) };
-                               cong = λ {a} {b} x → cong to x
+  -- In order to build an algebra we need an equivalence relation;
+  -- it is induced by the underlying equivalence of the base setoid.
+  data ≈F : {s : sorts Σ} → Rel (Free s) (ℓ₃ ⊔ ℓ₄) where
+    ≈var : ∀ {s} {x y} → _≈_ (X s) x y → ≈F {s} (var x) (var y)
+    ≈app : ∀ {ar s} → (f : ops Σ (ar ↦ s)) → {ts ts' : HVec Free ar} →
+             _∼v_ {R = ≈F} ts ts' → ≈F {s} (app f ts) (app f ts')
+
+  ≈var-inj : ∀ {s a b} → ≈F (var a) (var b) → _≈_ (X s) a b
+  ≈var-inj (≈var eq) = eq
+
+  private
+    isRefl : ∀ s → Reflexive (≈F {s})
+    isRefl* : ∀ ar → Reflexive (_∼v_ {R = ≈F} {is = ar})
+    isRefl* [] {x = ⟨⟩} = ∼⟨⟩
+    isRefl* (s ∷ ar) {x = v ▹ x} = ∼▹ (isRefl s {x = v}) (isRefl* ar {x})
+    isRefl s {var x} = ≈var (refl (X s))
+    isRefl s {app {ar} f x} = ≈app f (isRefl* ar {x})
+    isSym : ∀ s → Symmetric (≈F {s})
+    isSym* : ∀ ar → Symmetric (_∼v_ {R = ≈F} {is = ar})
+    isSym s (≈var x) = ≈var (sym (X s) x)
+    isSym s (≈app {ar} f x) = ≈app f (isSym* ar x)
+    isSym* [] ∼⟨⟩ = ∼⟨⟩
+    isSym* (s ∷ ar) (∼▹ eq eqs) = ∼▹ (isSym s eq) (isSym* ar eqs)
+    isTrans : ∀ {s} → Transitive (≈F {s})
+    isTrans* : ∀ {ar} → Transitive (_∼v_ {R = ≈F} {is = ar})
+    isTrans* ∼⟨⟩ ∼⟨⟩ = ∼⟨⟩
+    isTrans* (∼▹ eq eqs) (∼▹ eq' eqs') = ∼▹ (isTrans eq eq') (isTrans* eqs eqs')
+    isTrans {s} (≈var eq) (≈var eq') = ≈var (trans (X s) eq eq')
+    isTrans (≈app {ar} f eqs) (≈app {.ar} .f eqs') = ≈app f (isTrans* eqs eqs')
+
+  freeSetoid : (s : sorts Σ) → Setoid (ℓ₃ ⊔ ℓ₄) (ℓ₃ ⊔ ℓ₄)
+  freeSetoid s = record
+    { Carrier = Free s
+    ; _≈_ = ≈F {s}
+    ; isEquivalence = record
+      { refl = isRefl s
+      ; sym = isSym s
+      ; trans = isTrans {s}
+      }
+    }
+
+  freeAlgebra : Algebra {ℓ₃ ⊔ ℓ₄} {ℓ₃ ⊔ ℓ₄} Σ
+  freeAlgebra = record
+    { _⟦_⟧ₛ = freeSetoid
+    ; _⟦_⟧ₒ = λ f → record
+      { _⟨$⟩_ = app f
+      ; cong = ≈app f
+      }
+    }
+
+  -- An Homo-morphism extends an injection if it coincides in the
+  -- variables.
+  open Injection
+  extends : ∀ {ℓ₁ ℓ₂} {A : Algebra {ℓ₁} {ℓ₂} Σ} → (θ : X ⊆ₛ (A ⟦_⟧ₛ)) →
+          Pred (Homo freeAlgebra A) (ℓ₃ ⊔ ℓ₂)
+  extends {A = A} θ H = ∀ s (x : Carrier (X s)) →
+    _≈_ (A ⟦ s ⟧ₛ) (′ H ′ s ⟨$⟩ var x) (to θ ⟨$⟩ x)
+
+  -- X is a subset of the (setoids of the) free algebra over X.
+  η-inj : X ⊆ₛ (freeAlgebra ⟦_⟧ₛ)
+  η-inj {s} = record { to = record { _⟨$⟩_ = var ; cong = ≈var }
+                     ; injective = ≈var-inj
+                     }
+
+  Id-extends-η : extends η-inj HomId
+  Id-extends-η s x = refl (freeAlgebra ⟦ s ⟧ₛ)
+
+  module Eval {ℓ₃ ℓ₄} (B : Algebra {ℓ₃} {ℓ₄} Σ) (θ : X ⊆ₛ (B ⟦_⟧ₛ)) where
+    free : ∀ {s} → Free s → B ∥ s ∥
+    free* : ∀ {ar} → HVec Free ar → B ∥ ar ∥*
+
+    free (var {s} x) = to (θ {s}) ⟨$⟩ x
+    free (app f x) = B ⟦ f ⟧ₒ ⟨$⟩ free* x
+    free* ⟨⟩ = ⟨⟩
+    free* (t ▹ ts) = free t ▹ free* ts
+
+    private
+      cong-free : ∀ {s} {t₁ t₂ : Free s} → ≈F t₁ t₂ → _≈_ (B ⟦ s ⟧ₛ) (free t₁) (free t₂)
+      cong-free {s} (≈var x) = cong (to (θ {s})) x
+      cong-free {s} (≈app f x) = cong (B ⟦ f ⟧ₒ) (cong-free* x)
+        where cong-free* : ∀ {ar} {t₁ t₂ : HVec Free ar} →
+                     _∼v_ {R = ≈F} t₁ t₂ →
+                     _∼v_ {R = λ {s} → _≈_ (B ⟦ s ⟧ₛ)} (free* t₁) (free* t₂)
+              cong-free* {.[]} ∼⟨⟩ = ∼⟨⟩
+              cong-free* {.(_ ∷ _)} (∼▹ eq eqs) = ∼▹ (cong-free eq) (cong-free* eqs)
+
+      free-map : ∀ {ar} ts →
+               _∼v_ {R = λ {s} → _≈_ (B ⟦ s ⟧ₛ)} {ar}
+               (free* ts)
+               (mapV (λ _ → free) ts)
+      free-map ⟨⟩ = ∼⟨⟩
+      free-map {s ∷ _} (v ▹ ts) = ∼▹ (refl (B ⟦ s ⟧ₛ)) (free-map ts)
+
+
+    freeHomo : Homo freeAlgebra B
+    freeHomo = record
+      { ′_′ = λ s → record
+        { _⟨$⟩_ = free
+        ; cong = cong-free
+        }
+      ; cond = λ f as → cong (B ⟦ f ⟧ₒ) (free-map as)
+      }
+
+    _≈h_ : _
+    _≈h_ = _≈ₕ_ freeAlgebra B
+
+    -- If an homomorphism coincides on the variables with the free
+    -- homomorphism, then they are equal.
+    UMP : ∀ (H : Homo freeAlgebra B) → extends θ H → H ≈h freeHomo
+    UMP H prop s (var x) = prop s x
+    UMP H prop s (app {ar} f ts) = begin
+      ′ H ′ s ⟨$⟩ app f ts                 ≈⟨ cond H f ts ⟩
+       B ⟦ f ⟧ₒ ⟨$⟩ mapV (_⟨$⟩_ ∘ ′ H ′) ts  ≈⟨ Π.cong (B ⟦ f ⟧ₒ) (map≈ ar ts) ⟩
+       ′ freeHomo ′ s ⟨$⟩ app f ts ∎
+      where
+      open EqR (B ⟦ s ⟧ₛ)
+      map≈ : ∀ ar → (ts : HVec Free ar) → (mapV (_⟨$⟩_ ∘ ′ H ′) ts) ∼v (free* ts)
+      map≈ [] ⟨⟩ = ∼⟨⟩
+      map≈ (s ∷ ar) (t ▹ ts) = ∼▹ (UMP H prop s t) (map≈ ar ts)
+
+    -- The universal map is epi if the injection is surjective.
+    free-preserves-surj : (∀ s → Surjective (to (θ {s}))) → isEpi freeHomo
+    free-preserves-surj surj s = record
+      { from = record
+        { _⟨$⟩_ = h⁼¹ s
+        ; cong = cong-h⁼¹ s
+        }
+      ; right-inverse-of = right-inverse-of (surj s)
+      }
+      where
+      open Surjective
+      h⁼¹ : ∀ s' → _ → _
+      h⁼¹ s' = var ∘ (from (surj s') ⟨$⟩_)
+      cong-h⁼¹ : ∀ s' → _≈_ (B ⟦ s' ⟧ₛ) =[ h⁼¹ s' ]⇒ _≈_ (freeSetoid s')
+      cong-h⁼¹ s' a≈b = ≈var (cong (from (surj s')) a≈b)
+        where open EqR (freeAlgebra ⟦ s' ⟧ₛ)
+
+  -- The following module is useful to deduce that some homomorphism
+  -- is equal to the identity.
+  module UMP_id where
+
+    private
+      F : Algebra Σ
+      F = freeAlgebra
+
+    open Eval F (η-inj)
+    module HX = Hom F F
+    ≈-id⁺ : (H : Homo F F) → extends η-inj H → H HX.≈ₕ HomId
+    ≈-id⁺ H ext s a = begin
+      ′ H ′ s ⟨$⟩ a          ≈⟨ UMP H ext s a ⟩
+      ′ freeHomo ′ s ⟨$⟩ a   ≈⟨ sym (F ⟦ s ⟧ₛ) (UMP HomId Id-extends-η s a) ⟩
+      a  ∎
+      where open EqR (F ⟦ s ⟧ₛ)
+
+
+module Over {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {X : Universe ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) where
+  open SA Σ A
+  module _ (θ : X ⊆ₛ (A ⟦_⟧ₛ)) where
+    Img :  Predicate (ℓ₂ ⊔ ℓ₃)
+    Img s = record
+      { predicate = λ a → ∃ (λ x → a ≈ (to ⟨$⟩ x))
+      ; predWellDef = λ { eq (x , eq') → x , trans (sym eq) eq' }
+      }
+      where
+      open Injection (θ {s})
+      open Setoid (A ⟦ s ⟧ₛ)
+
+    ⟨⊆⟩ : Algebra {ℓ₁ ⊔ ℓ₂ ⊔ (ℓ₂ ⊔ ℓ₃)} {ℓ₂} Σ
+    ⟨⊆⟩ = ⟨ Img ⟩
+
+    -- A is generated by X if ∀ a ∈ A, E a
+    IsGeneratedBy : ∀ {ℓ₃} → (X : Predicate ℓ₃) → Set _
+    IsGeneratedBy X = ∀ s a → E X s a
+
+  module _  (ι : X ⊆ₛ (A ⟦_⟧ₛ)) where
+    open Free X
+    open Eval A ι
+    open Setoid
+    open Injection
+    open SetoidPredicate
+    open SubAlg
+
+    ⊆E : ∀ s t → predicate (E-Pred (Img ι) s) (free t)
+    ⊆E s (var x) = inX (x , refl (A ⟦ s ⟧ₛ))
+    ⊆E s (app {ar = ar} f ts) = img {f = f} (⊆E* ar ts) (cong (A ⟦ f ⟧ₒ) (proj₁⊆E* ar ts))
+      where ⊆E* : ∀ ar (ts : HVec Free ar) → HVec ((λ x → ∃ (λ a' → E (Img ι) x a'))) ar
+            proj₁⊆E* : ∀ ar (ts : HVec Free ar) →
+              _≈_ ((λ s → A ⟦ s ⟧ₛ) ✳ ar) (mapV (λ _ → proj₁) (⊆E* ar ts)) (free* ts)
+            ⊆E* [] ⟨⟩ = ⟨⟩
+            ⊆E* (x ∷ ar) (v ▹ ts) = (free v , ⊆E x v) ▹ ⊆E* ar ts
+            proj₁⊆E* [] ⟨⟩ = ∼⟨⟩
+            proj₁⊆E* (s ∷ ar) (v ▹ ts) = ∼▹ (refl (A ⟦ s ⟧ₛ)) (proj₁⊆E* ar ts )
+
+    ⊇E : ∀ s a → predicate (E-Pred (Img ι) s) a → ∃ (λ t → _≈_ (A ⟦ s ⟧ₛ) a (free t))
+    ⊇E s a (inX (x , eq)) = var x , eq
+    ⊇E s a (img {ar = ar} {f} ts x) =
+      (app f (⊇E*1 ar ts)) , trans (A ⟦ s ⟧ₛ) (sym (A ⟦ s ⟧ₛ) x) (Π.cong (A ⟦ f ⟧ₒ) (proj₁⊇E* ar ts))
+      where ⊇E*1 : ∀ ar (ts : HVec (λ x₁ → ∃ (E (Img ι) x₁)) ar) →
+                 HVec Free ar
+            ⊇E* : ∀ ar (ts : HVec (λ x₁ → ∃ (E (Img ι) x₁)) ar) →
+              HVec (λ x → ∃ (λ a → ∃ (λ t → _≈_ (A ⟦ x ⟧ₛ) a (free t)))) ar
+            proj₁⊇E* : ∀ ar (ts : HVec (λ x₁ → ∃ (E (Img ι) x₁)) ar) →
+                 _≈_ ((λ s → A ⟦ s ⟧ₛ) ✳ ar) (mapV (λ _ → proj₁) ts)
+                           (free* (⊇E*1 ar ts))
+            ⊇E*1 [] ⟨⟩ = ⟨⟩
+            ⊇E*1 (x ∷ ar) ((a , p) ▹ ts) = (proj₁ (⊇E x a p)) ▹ ⊇E*1 ar ts
+            ⊇E* [] ⟨⟩ = ⟨⟩
+            ⊇E* (x ∷ ar) ((a , p) ▹ ts) = (a , ⊇E x a p) ▹ ⊇E* ar ts
+            proj₁⊇E* [] ⟨⟩ = ∼⟨⟩
+            proj₁⊇E* (x ∷ ar) ((a , p) ▹ ts) = ∼▹ (proj₂ (⊇E x a p)) (proj₁⊇E* ar ts)
+
+
+    E⊆H : E-Pred (Img ι) ⊆ₚ  pr (SubImg freeAlgebra A freeHomo)
+    E⊆H s {a} p = proj₁ (⊇E s a p) , sym (A ⟦ s ⟧ₛ) (proj₂ (⊇E s a p))
+    H⊆E : pr (SubImg freeAlgebra A freeHomo) ⊆ₚ E-Pred (Img ι)
+    H⊆E s {a} (t , eq) = E-WellDefined (Img ι) s eq (⊆E s t)
+
+    ⟨ι⟩≅Imgι : ⟨⊆⟩ ι ≅ homImg freeAlgebra freeHomo
+    ⟨ι⟩≅Imgι = ≅⁺ (≅-SubAlg-iso {B = E-SubAlg (Img ι)} {subA} (E⊆H , H⊆E))
+       where subA = SubImg freeAlgebra A freeHomo
+
+
+-- Free Algebras are unique up-to isomorphisms.
+  module Free-Unique {ℓ₃ ℓ₄ ℓ₅ ℓ₆ : Level} {X : Universe ℓ₃ ℓ₄} {Y : Universe ℓ₅ ℓ₆ }
+       (ι : X ⊆ₛ (A ⟦_⟧ₛ)) (ξ : Y ⊆ₛ (A ⟦_⟧ₛ)) (iso : X ≅ₛ Y) where
+
+    private
+      open Bijection
+      open Setoid
+      α : X ⊆ₛ Y
+      α {s} = Bijection.injection (iso {s})
+
+      β : Y ⊆ₛ X
+      β {s} = record { to = Bijection.from (iso {s}) ; injective = inj s }
+        where
+        inj : ∀ s → Injective (from (iso {s}))
+        inj s {a} {b} a≈b = begin
+          a                             ≈⟨ sym (Y s) (right-inverse-of iso a) ⟩
+          to iso ⟨$⟩ (from iso ⟨$⟩ a)    ≈⟨ Π.cong (to iso) a≈b ⟩
+          to iso ⟨$⟩ (from iso ⟨$⟩ b)    ≈⟨ right-inverse-of iso b ⟩
+          b  ∎
+            where open EqR (Y s)
+
+      module FX = Free X
+      module FY = Free Y
+
+      XF : Algebra Σ
+      XF = FX.freeAlgebra
+      YF : Algebra Σ
+      YF = FY.freeAlgebra
+
+      module Fα = FX.Eval YF (FY.η-inj ∘ᵢ α)
+      module Fβ = FY.Eval XF (FX.η-inj ∘ᵢ β)
+      module FηX = FX.Eval XF (FX.η-inj)
+      module FηY = FY.Eval YF (FY.η-inj)
+
+      α* = Fα.freeHomo
+      β* = Fβ.freeHomo
+
+      open module HXF = HomComp {A₀ = XF} {YF} {XF} renaming (_∘ₕ_ to _∘x_)
+      open module HXY = HomComp {A₀ = YF} {XF} {YF} renaming (_∘ₕ_ to _∘y_)
+      module HX = Hom XF XF
+      module HY = Hom YF YF
+
+      β*α*-extends-ηX : FX.extends FX.η-inj (β* ∘x α*)
+      β*α*-extends-ηX s x = Π.cong (Injection.to (FX.η-inj {s})) (left-inverse-of iso x)
+
+      α*β*-extends-ηY : FY.extends FY.η-inj (α* ∘y β*)
+      α*β*-extends-ηY s x = Π.cong (Injection.to (FY.η-inj {s})) (right-inverse-of iso x)
+
+      α*β*≈idFX = ≈-id⁺ (β* ∘x α*) β*α*-extends-ηX
+        where open FX.UMP_id
+
+      β*α*≈idFY : α* ∘y β* HY.≈ₕ HomId
+      β*α*≈idFY = ≈-id⁺ (α* ∘y β*) α*β*-extends-ηY
+       where open FY.UMP_id
+
+    XF≈YF : XF ≅ YF
+    XF≈YF = record { iso = iso⁺ α* β* β*α*≈idFY α*β*≈idFX }
+
+-- The term algebra is isomorphic to the algebra generated by X.
+module TX-is-Free (X : T.Vars Σ) where
+
+  Xs : Universe lzero lzero
+  Xs s = PE.setoid (X s)
+  module FA = Free  Xs renaming (freeAlgebra to FX)
+  module TA = T.OpenTerm Σ X renaming (T_〔_〕 to TX) hiding (var)
+
+  open FA
+  open TA
+
+  θ : Xs ⊆ₛ (TX ⟦_⟧ₛ)
+  θ {s} = record { to = record { _⟨$⟩_ = λ x → term (inj₂ x) ⟨⟩
+                               ; cong = λ { PE.refl → PE.refl }
                                }
-            where open Injection (X⊆A {s})
-          Pr : X ⟶ₛ (B ⟦_⟧ₛ) → Homo → Set _
-          Pr f H = ∀ s x → Setoid._≈_ (B ⟦ s ⟧ₛ) (f s ⟨$⟩ x) (′ H ′ s ∘ₑ ι s ⟨$⟩ x)
+                 ; injective = λ { PE.refl → PE.refl }
+                 }
+
+  module FExt = FA.Eval TX θ
+  H : Homo FX TX
+  H = FExt.freeHomo
+
+  θ⁼¹ : Env FX
+  θ⁼¹ {s} x = var x
+
+  module TExtFX = TA.Eval FX θ⁼¹
+  module TExt = UMP_unit
+
+  H⁼¹ : Homo TX FX
+  H⁼¹ = TExtFX.TΣXHom
+
+  open module HXF = HomComp {A₀ = FX} {TX} {FX} renaming (_∘ₕ_ to _∘x_)
+  open module HXT = HomComp {A₀ = TX} {FX} {TX} renaming (_∘ₕ_ to _∘y_)
+  module HX = Hom FX FX
+  module HT = Hom TX TX
+
+  open Setoid
+  H∘H⁼¹-extends  : FA.extends FA.η-inj (H⁼¹ ∘x H)
+  H∘H⁼¹-extends s x = refl (FX ⟦ s ⟧ₛ)
+
+  H∘H⁼¹≈Id : (H⁼¹ ∘x H) HX.≈ₕ HomId
+  H∘H⁼¹≈Id = ≈-id⁺ (H⁼¹ ∘x H) H∘H⁼¹-extends
+   where open FA.UMP_id
+
+  H⁼¹∘H≈Id : (H ∘y H⁼¹) HT.≈ₕ HomId
+  H⁼¹∘H≈Id = TExt.≈ₕ-id⁺ (H ∘y H⁼¹) (λ x → PE.refl)
+
+  TX≅FX : TX ≅ FX
+  TX≅FX = record { iso = iso⁺ H⁼¹ H H∘H⁼¹≈Id H⁼¹∘H≈Id }
+
+record IsSub  {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+             (B : Algebra {ℓ₃} {ℓ₄} Σ) (A : Algebra {ℓ₁} {ℓ₂} Σ) (ℓ₀ : Level) : Set (lsuc (ℓ₀ ⊔ ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
+  field
+    subA : SubAlg {ℓ₀} A
+    emb  : B ≅ SubAlgebra subA
 
 
--- A is generated by X if ∀ a ∈ A, E a
+module SubDirectProduct {ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈} {I : Set ℓ₃}
+        (A : I → Algebra {ℓ₄} {ℓ₅} Σ)  where
+  open import Product
+  open IndexedProduct A
 
-module Free {ℓ₁ ℓ₂} (𝓒 : AlgClass {ℓ₁} {ℓ₂} Σ) {ℓ₃} {ℓ₄} {X : Universe ℓ₃ ℓ₄} where
+  open IsSub
+  record isSubDirect (B : Algebra {ℓ₆} {ℓ₇} Σ) : Set (lsuc (ℓ₃ ⊔ ℓ₄ ⊔ ℓ₅ ⊔ ℓ₆ ⊔ ℓ₇ ⊔ ℓ₈)) where
+    field
+      isSub : IsSub B Πalg ℓ₈
+      πSurj : (i : I) → isEpi (π i ↾ subA isSub)
 
-  open SubAlgebra Σ using (_⊆ₛ_)
-
-  {- A is free on 𝓒 over X if A is generated by X and
-       A satisfies the UMP for any other B in 𝓒. -}
-  _is-Free-over_ : ∀ {ℓ₃ ℓ₄ ℓ₅ ℓ₆} {X : Universe ℓ₃ ℓ₄} (A : Algebra {ℓ₅} {ℓ₆} Σ) →
-                 (_⊆ₛ_ A X (A ⟦_⟧ₛ)) → Set _
-  A is-Free-over X = ∃ (λ C → A ≅ C × 𝓒 C) × A ≅ ⟨ X ⟩' × (∀ B → (CB : 𝓒 B) → UMP X B)
-    where open UMP {A = A}
-          open SubAlgebra Σ A
-
--- Alternative:
--- Asume that X is a predicate over A
--- say that A is free in 𝓒 over X if
---   ∀ B → 𝓒 B → (∀ h : A → B) → ∃ ! G : Homo (⟨ X ⟩ A) B st for all (a :A), X a → h a = G a

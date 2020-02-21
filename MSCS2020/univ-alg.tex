@@ -8,8 +8,18 @@
 \usepackage{graphicx}
 \usepackage{amsthm}
  \usepackage{stmaryrd}
-\usepackage{agda}
+ \usepackage{agda}
+ \usepackage{bussproofs}
+
 \input{unicode}
+
+\newcommand{\codigo}[1]{}
+\usepackage{environ}
+\NewEnviron{spec}{}{}
+
+\newcommand{\alg}[1]{\mathcal{#1}}
+
+\newcommand{\ie}{i.e. }
 
 \begin{document}
 

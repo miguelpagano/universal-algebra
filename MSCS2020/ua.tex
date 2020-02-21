@@ -4,12 +4,11 @@
 In this section we present our formalization in Agda of the core
 concepts of heterogeneous universal algebra; in the next two sections
 we focus respectively on equational logic and signature morphisms.
-Meinke' and Tucker's chapter~\cite{meinke-tucker-1992} is our
+Meinke' and Tucker's chapter~\citeyearpar{meinke-tucker-1992} is our
 reference for heterogeneous universal algebra; we will recall some
-definitions and state all the results we formalized. Bove et
-al.~\cite{agda-intro} offer a gentle introduction to Agda; we expect
-the reader to be familiar with Haskell or some other functional
-language.
+definitions and state all the results we formalized. \cite{agda-intro}
+offer a gentle introduction to Agda; we expect the reader to be
+familiar with Haskell or some other functional language.
 
 \subsection{Signature, algebra, and homomorphism}
 
@@ -23,11 +22,11 @@ also use the notation $f \colon [s_1,...,s_n] \Rightarrow s$).
 
 In Agda we use dependent records to represent signatures; in dependent
 records the type of some field may depend on the value of a previous
-one or parameters of the record. Type-theoretically one can take
-operations (of a signature) as a family of sets indexed by the arity and target sort
-(an indexed family of sets can also be thought as predicates over the
-index set, an index satisfies the predicate if its family is
-inhabited):
+one or on parameters of the record. Type-theoretically one can take
+operations (of a signature) as a family of sets indexed by the arity
+and target sort (an indexed family of sets can also be thought as
+predicates over the index set, an index satisfies the predicate if its
+family is inhabited):
 \begin{code}
 \>[0]\AgdaKeyword{record}\AgdaSpace{}%
 \AgdaRecord{Signature}\AgdaSpace{}%
@@ -54,17 +53,17 @@ inhabited):
 \AgdaPrimitiveType{Set}\<%
 \end{code}
 
-\noindent \AgdaBound{A}\AgdaSymbol{×}\AgdaBound{B} corresponds to the non-dependent cartesian product
-of \AgdaBound{A} and \AgdaBound{B}.
-
-In order to declare a concrete signature one first declares
-the set of sorts and the set of operations, which are then bundled
-together in a record.  For example, the mono-sorted signature of monoids has a
-unique sort, so we use the unit type \codigo{⊤} with its sole constructor
-\codigo{tt|. We define a family indexed on |List ⊤ x ⊤}, with two constructors,
-corresponding with the operations: a 0-ary operation \codigo{e}, and a binary
-operation \codigo{∙} (note that constructors can
-start with a lower-case letter or any symbol):
+In order to declare a concrete signature one first declares the set of
+sorts and the set of operations, which are then bundled together in a
+record.  For example, the mono-sorted signature of monoids has a
+unique sort, so we use the unit type \AgdaRecord{⊤} with its sole
+constructor \AgdaInductiveConstructor{tt}. We define a family indexed
+on
+\AgdaDatatype{List}\AgdaSpace{}\AgdaRecord{⊤}\AgdaSpace{}\AgdaFunction{×}\AgdaSpace{}\AgdaRecord{⊤},
+with two constructors, corresponding with the operations: a 0-ary
+operation \AgdaInductiveConstructor{e}, and a binary operation
+\AgdaInductiveConstructor{∙} (note that constructors can start with a
+lower-case letter or any symbol):
 
 \begin{code}
 \>[0]\AgdaKeyword{data}\AgdaSpace{}%
@@ -205,7 +204,7 @@ monoid and the other for the set on which the monoid acts.
 \end{code}
 
 \noindent Defining operations as a family indexed by arities and
-target sorts carries some benefits in the use of the library: as in
+target sort carries some benefits in the use of the library: as in
 the above examples, the names of operations are constructors of a
 family of datatypes and so it is possible to perform pattern matching
 on them. Notice also that infinitary signatures can be represented in
@@ -221,7 +220,7 @@ the sort $s$; given an operation
 $f \colon [s_1,...,s_n] \Rightarrow s$, the interpretation of $f$ is a
 total function
 $f_{\mathcal{A}}\colon \mathcal{A}_{s_1} \times ... \times
-\mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$. 
+\mathcal{A}_{s_n} \rightarrow \mathcal{A}_s$.
 We formalize the product $\mathcal{A}_{s_1} \times ... \times
 \mathcal{A}_{s_n}$ as \emph{heterogeneous vectors}. The
 type of heterogeneous vectors is parameterized by a set \AgdaBound{I}
@@ -231,41 +230,48 @@ list of \AgdaBound{I}:
 \begin{code}
 \>[0]\AgdaKeyword{data}\AgdaSpace{}%
 \AgdaDatatype{HVec}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ℓ}\AgdaSymbol{\}}\AgdaSpace{}%
 \AgdaSymbol{\{}\AgdaBound{I}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaPrimitiveType{Set}\AgdaSymbol{\}}%
-\>[21]\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
 \AgdaBound{I}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
-\AgdaPrimitiveType{Set}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaBound{ℓ}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
 \AgdaDatatype{List}\AgdaSpace{}%
 \AgdaBound{I}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
 \AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaBound{ℓ}\AgdaSpace{}%
 \AgdaKeyword{where}\<%
 \\
 \>[0][@{}l@{\AgdaIndent{0}}]%
 \>[2]\AgdaInductiveConstructor{⟨⟩}%
-\>[8]\AgdaSymbol{:}%
-\>[11]\AgdaDatatype{HVec}\AgdaSpace{}%
+\>[6]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{HVec}\AgdaSpace{}%
 \AgdaBound{A}\AgdaSpace{}%
 \AgdaInductiveConstructor{[]}\<%
 \\
 %
-\>[2]\AgdaOperator{\AgdaInductiveConstructor{\AgdaUnderscore{}▹\AgdaUnderscore{}}}%
-\>[8]\AgdaSymbol{:}%
-\>[11]\AgdaSymbol{∀}%
-\>[14]\AgdaSymbol{\{}\AgdaBound{i}\AgdaSpace{}%
+\>[2]\AgdaOperator{\AgdaInductiveConstructor{\AgdaUnderscore{}▹\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{i}\AgdaSpace{}%
 \AgdaBound{is}\AgdaSymbol{\}}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{v}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
 \AgdaBound{A}\AgdaSpace{}%
-\AgdaBound{i}\AgdaSpace{}%
+\AgdaBound{i}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{vs}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
 \AgdaDatatype{HVec}\AgdaSpace{}%
 \AgdaBound{A}\AgdaSpace{}%
-\AgdaBound{is}\AgdaSpace{}%
+\AgdaBound{is}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
 \AgdaDatatype{HVec}\AgdaSpace{}%
 \AgdaBound{A}\AgdaSpace{}%
@@ -275,16 +281,21 @@ list of \AgdaBound{I}:
 \end{code}
 
 
-\noindent The first parameter \AgdaBound{I} is implicit (written in braces), which means that Agda
-will infer it by unification; notices that the constructor \AgdaInductiveConstructor{\AgdaUnderscore{}▹\AgdaUnderscore{}} also
-takes two implicit arguments (we use the notation \AgdaSymbol{∀} to skip their
-types). Let \AgdaBound{Σ} be a signature and \AgdaBound{A} \AgdaSymbol{:}\AgdaField{sorts} \AgdaBound{Σ} \AgdaSymbol{→} \AgdaPrimitiveType{Set},
-then the product $\mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n}$ is
-formalized as \AgdaDatatype{HVec} \AgdaBound{A} \AgdaSymbol{[} \AgdaBound{s₁},...,\AgdaBound{sₙ}\AgdaSymbol{]}.
+\noindent The first parameter \AgdaBound{I} is implicit (written in
+braces), which means that Agda will infer it by unification; notices
+that the constructor
+\AgdaInductiveConstructor{\AgdaUnderscore{}▹\AgdaUnderscore{}} also
+takes two implicit arguments (we use the notation \AgdaSymbol{∀} to
+skip their types). Let \AgdaBound{Σ} be a signature and
+\AgdaBound{A}\AgdaSpace\AgdaSymbol{:}\AgdaSpace\AgdaField{sorts}
+\AgdaBound{Σ} \AgdaSymbol{→} \AgdaPrimitiveType{Set}, then the product
+$\mathcal{A}_{s_1} \times ... \times \mathcal{A}_{s_n}$ is formalized
+as \AgdaDatatype{HVec} \AgdaBound{A} \AgdaSymbol{[}
+\AgdaBound{s₁},...,\AgdaBound{sₙ}\AgdaSymbol{]}.
 
 We need one more ingredient to give the formal notion of algebras: the
 mathematical definition of carriers assumes an underlying notion of
-equality.  In type theory one makes it apparent by using setoids (i.e. 
+equality.  In type theory one makes it apparent by using setoids (i.e.
 sets paired with an equivalence relation), which were thoroughly
 studied by Barthe et al.~\cite{barthe-setoids-2003}. Setoids are
 defined in the standard library \cite{danielsson-agdalib} of
@@ -326,14 +337,14 @@ fields.
 
 \noindent The relation is given as a family of types indexed over a pair
 of elements of the carrier (\AgdaBound{a} \AgdaBound{b} : \AgdaField{Carrier} are related if the type
-\AgdaBound{a}\AgdaField{≈} \AgdaBound{b} is inhabited); \AgdaRecord{IsEquivalence}\AgdaSpace{}%
+\AgdaBound{a}\AgdaSpace{}\AgdaField{≈}\AgdaSpace{}\AgdaBound{b} is inhabited); \AgdaRecord{IsEquivalence}\AgdaSpace{}%
 \AgdaOperator{\AgdaField{\AgdaUnderscore{}≈\AgdaUnderscore{}}} is again a record whose fields
 correspond to the proofs of reflexivity, symmetry, and transitivity.
 
 The finest equivalence relation over any set is given
 by the \emph{propositional equality} which only equates each element with
 itself, thus we can endow any set with a setoid structure with the function
-\AgdaFunction{setoid} : \AgdaPrimitiveType{Set} \AgdaSymbol{→} \AgdaDatatype{Setoid} of the standard library; vice versa, there
+\AgdaFunction{setoid} : \AgdaPrimitiveType{Set} \AgdaSymbol{→} \AgdaDatatype{Setoid} of the standard library; and vice versa, there
 is a forgetful functor \AgdaSymbol{∥}\AgdaUnderscore{}\AgdaSymbol{∥} : \AgdaDatatype{Setoid} \AgdaSymbol{→} \AgdaPrimitiveType{Set}
 which returns the carrier.
 
@@ -450,8 +461,8 @@ formalized as records parameterized on the signature.
 
 
 
-\noindent If \AgdaBound{A} is an algebra for the signature \AgdaFunction{actMon{-}sig}, then
-\AgdaBound{A} \AgdaField{⟦ \AgdaInductiveConstructor{tt} ⟧ₛ} is the carrier, \AgdaBound{A}
+\noindent If \AgdaBound{A} is an algebra for the signature \AgdaFunction{monoid{-}sig}, then
+\AgdaBound{A} \AgdaField{⟦ \AgdaInductiveConstructor{tt} ⟧ₛ} is the carrier, while \AgdaBound{A}
 \AgdaField{⟦ \AgdaInductiveConstructor{e} ⟧ₒ}  and
 \AgdaBound{A}
 \AgdaField{⟦ \AgdaInductiveConstructor{∙} ⟧ₒ} are the interpretations
@@ -611,7 +622,7 @@ A homomorphism is a record parameterized by the source and target algebras
 
 
 \noindent As expected, we have the identity homomorphism
-\AgdaFunction{Idₕ}\AgdaSpace{}\AgdaBound{A}\AgdaSpace\AgdaSymbol{:}\AgdaRecord{Homo}
+\AgdaFunction{Idₕ}\AgdaSpace{}\AgdaBound{A}\AgdaSpace\AgdaSymbol{:}\AgdaSpace{}\AgdaRecord{Homo}
 \AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaBound{A} and
 the composition \AgdaBound{G}\AgdaSpace{}\AgdaOperator{\AgdaSymbol{∘ₕ}}\AgdaSpace{}\AgdaBound{F}\AgdaSpace{}
 \AgdaSymbol{:}\AgdaSpace{}\AgdaRecord{Homo}

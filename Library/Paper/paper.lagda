@@ -1,4 +1,4 @@
-\documentclass{entcs} \usepackage{entcsmacro}
+\documentclass{entcs} \usepackage{prentcsmacro}
 
 \sloppy
 % The following is enclosed to allow easy detection of differences in
@@ -25,6 +25,8 @@
 \usepackage{ upgreek }
 \usepackage[inline]{enumitem}
 \usepackage{calc}
+\newcounter{descriptcount}
+\renewcommand*\thedescriptcount{\arabic{descriptcount}}
 \newcommand{\setoidMor}{{\xrightarrow{\,\thickapprox\,}}}
 %format VecH' = HVec
 %format 〉 = ")"
@@ -75,7 +77,7 @@
 \newcommand{\comment}[1]{}
 \newlength{\abdisplay}
 \newlength{\bldisplay}
-
+\usepackage{textgreek}
 % Uncomment the publication rights you want to use.
 %\publicationrights{transferred}
 %\publicationrights{licensed}     % this is the default

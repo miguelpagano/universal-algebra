@@ -56,7 +56,7 @@ Let |Σ| be a signature and |X : sorts Σ → Set| be a family of
 variables for |Σ|. An identity |e : Eq Σ X s| is a pair of (open)
 terms with sort |s|. A conditional equation is modelled as record with
 fields for the conclusion and the conditions, modelled as an
-heterogeneous vector of sorted identities . We declare a constructor
+heterogeneous vector of sorted identities. We declare a constructor
 to use the lighter notation |⋀ eq if (ar , eqs)| instead of |record {
   eq = e ; cond = (ar , eqs )}|. 
 \begin{spec}
@@ -186,9 +186,9 @@ also use the facility provided by the standard library to write
 proofs with several transitive steps more nicely, as can be seen
 in the next example.
 
-The proofs of soundness and completeness are proved as in the
+Soundness and completeness are proved as in the
 mono-sorted case. For soundness one proceeds by induction on the
-derivations; completeness is a consequence that the quotient of the
+derivations; completeness is a consequence of the fact that the quotient of the
 term algebra by provable equality is a model.
 \begin{theorem}[Soundness and Completeness]
   $E \vdash t ≈ t'$ iff $E \models_{\Sigma} t ≈ t'$.
@@ -199,18 +199,25 @@ procedure at all.
 
 Let $E$ and $E'$ be two theories over the signature $\Sigma$. We say
 that $E$ is \emph{stronger} than $E'$ if every axiom $e \in E'$ can be
-deduced from $E$, written $E \vdash\!\!\text{\textup{T}}\, E'$.  Obviously if $E$
+deduced from $E$, written $E \vdash_{T}\, E'$.  Obviously if $E$
 is stronger than $E'$, then any equation that can be deduced from $E'$
 can also be deduced from $E$ and any model of $E$ is also a model of
 $E'$. 
 
-\subsection{A theory for Boolean Algebras }
-As an example we show a fragment of the formalization of a Boolean
-Theory discussed in \cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The
-  full code is available at 
-  \url{https://cs.famaf.unc.edu.ar/~mpagano/universal-algebra/html/Examples.EqBool.html}.}
-The signature is mono-sorted, so we use the unit type as its only
-sort.
+\subsection{A theory for Boolean Algebras } In this section we outline
+how to formalize an equational theory and illustrate each step by
+showing snippets of the formalization of a Boolean Theory presented by
+Rocha and Meseguer~\cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The
+  full code is available in the file \nolinkurl{Examples/EqBool.agda}
+  of the repository.}
+
+\begin{description}[%
+  before={\setcounter{descriptcount}{0}},%
+  ,font=\it \stepcounter{descriptcount}\thedescriptcount.~]
+
+\item[Define the signature] describing the language, and choose a
+  family of sets for the variables. It helps if one also introduce an
+  abbreviation for terms over the signature extended with variables.
 \begin{spec}
 data bool-ops : List ⊤ × ⊤ → Set where
   f t    : bool-ops ([] ↦ tt)
@@ -219,10 +226,17 @@ data bool-ops : List ⊤ × ⊤ → Set where
 
 bool-sig : Signature
 bool-sig = record { sorts = ⊤ ; ops = bool-ops }
+vars : sorts bool-sig → Set
+vars tt = ℕ
+
+Form : Set
+Form = HU bool-sig 〔 vars 〕
 \end{spec}
-We let |X tt = ℕ| be the set of variables, and let |Form|
-stand for terms over |bool-sig 〔 Vars 〕| with the
-following smart-constructors:
+
+\item[Introduce smart-constructors] for terms of the extended
+  signature with variables to ease writing the axioms and proving
+  theorems. Usually one has a smart-constructor for each operation and
+  one per variable that is used in the axioms or the theorems.
 \begin{spec}
 true false : Form
 true = term (inj₁ t) ⟨⟩
@@ -238,22 +252,30 @@ _∧_ : Form → Form → Form
 ¬ : Form → Form
 ¬ φ = term neg ⟨⟨ φ ⟩⟩
 \end{spec}
-\noindent We show only two of the twelve axioms of the theory |E-Bool|:
+
+\item[Define the equational theory] by specifying one equation for
+  each axiom and collect them in a theory; here one can appreciate the
+  convenience of the smart-constructors. Here we only show two of the
+  twelve axioms of the theory |bool-theory|. If one will prove theorems
+  of the theory, then it is also convenient to define pattern-synonyms
+  for the proofs that each axiom is in the theory.
 \begin{spec}
-commAnd leastDef : Equation bool-sig Vars tt
+commAnd leastDef : Equation bool-sig vars tt
 commAnd = ⋀ (p ∧ q) ≈ (q ∧ p) if ([] , ⟨⟩)
 leastDef = ⋀ (p ∧ (¬ p)) ≈ false  if ([] , ⟨⟩)
 
-E-bool : Theory bool-sig Vars [ tt , tt , … ]
-E-bool = ⟨ commAnd , leastDef , … ⟩
+bool-theory : Theory bool-sig vars [ tt , tt , … ]
+bool-theory = ⟨ commAnd , leastDef , … ⟩
+
+pattern commAndAx = here
+pattern leastDefAx = there here
 \end{spec}
-\noindent The following example shows an equational proof using the
-facility for equational reasoning provided by the standard library of
-Agda. In the justification steps we use the substitution rule (called
-|psubst|) and the pattern-synonyms |commAndAx,leastDefAx| as short-hands for
-|commAnd ∈ E-bool| and |leastDef ∈ E-bool|, respectively.
+
+\item [Prove theorems] using the axioms of the theory just defined.
+  If a proof uses transitivity, one can use the equational reasoning
+  idiom provided by the standard library of Agda:
 \begin{spec}
-  p₁ : E-bool ⊢ (⋀ ¬ p ∧ p ≈ false)
+  p₁ : bool-theory ⊢ (⋀ ¬ p ∧ p ≈ false)
   p₁ = begin
          ¬ p ∧ p
          ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩
@@ -262,17 +284,7 @@ Agda. In the justification steps we use the substitution rule (called
          false
        ∎
 \end{spec}
-\noindent The relevant actions of the substitution |σ₁| are |σ₁ p = ¬
-p| and | σ₁ q = p|. 
-
-% The first step is performed by the |psubst| rule, with the
-% first axiom of theory |Tbool₁|, the commutativity of conjunction.
-% The substitution used consists of mapping the first variable
-% (whose term we called |p|) to the term
-% resulting of the negation of that variable, i. e., |¬ p|. And mapping
-% the second variable (whose term we called |q|) to the first one (|p|).
-% For the rest, we can define the identity substitution.
-% Once we proved the first step, the conclusion is exactly the left side
-% of the second axiom, so we can use |psubst| rule with the identity
-% substitution.
-
+\noindent In the justification steps of this proof we use the
+substitution rule. The relevant actions of the substitution |σ₁| are
+|σ₁ p = ¬ p| and |σ₁ q = p|.
+\end{description}

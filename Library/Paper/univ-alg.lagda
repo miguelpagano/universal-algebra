@@ -40,7 +40,7 @@ of |A| and |B|.
 
 In order to declare a concrete signature one first declares
 the set of sorts and the set of operations, which are then bundled
-together in a record.  For example, the mono-sorted signature of monoids has an
+together in a record.  For example, the mono-sorted signature of monoids has a
 unique sort, so we use the unit type |⊤| with its sole constructor
 |tt|. We define a family indexed on |List ⊤ x ⊤|, with two constructors,
 corresponding with the operations: a 0-ary operation |e|, and a binary
@@ -66,16 +66,41 @@ data actMonₒ : List actMonₛ × actMonₛ → Set where
 actMon-sig : Signature
 actMon-sig = record { sorts = actMonₛ ; ops = actMonₒ }
 \end{spec}
-\noindent Defining operations as a family indexed by arities and target sorts
-carries some benefits in the use of the library: as in the above
-examples, the names of operations are constructors of a family of
-datatypes and so it is possible to perform pattern matching on
-them. Notice also that infinitary signatures can be represented in our
-setting; in fact, all the results are valid for any signature, be it
-finite or infinite.
+
+\noindent Defining operations as a family indexed by arities and
+target sorts carries some benefits in the use of the library: as in
+the above examples, the names of operations are constructors of a
+family of datatypes and so it is possible to perform pattern matching
+on them. Notice also that infinitary signatures can be represented in
+our setting; in fact, all the results are valid for any signature, be
+it finite or infinite.
+
+We show two examples of signatures with infinite operations, the first
+might be more appealing to computer scientists and the second is more
+mathematical. The abstract syntax of a language for arithmetic expressions
+may have one sort, a constant operation for each natural number and a
+binary operation representing the addition of two expressions.
+\begin{spec}
+data Sortsₑ : Set where E : Sortsₑ
+data Opsₑ : List Sortsₑ × Sortsₑ → Set where
+  val   : (n : ℕ)   → Opsₑ ([] , E)
+  plus  : Opsₑ ( E ∷ [ E ] , E )
+\end{spec}
+
+\noindent Vector spaces over a field can be seen as a heterogeneous signature
+with two sorts~\cite{birkhoff-70} or as homogeneous signature
+over the field \cite[p. 132]{birkhoff-40}; this latter approach can be
+easily specified in our library, even if the field is infinite:
+\begin{spec}
+data Sorts-v Set where V : Sorts-v
+data Ops-v (F : Set) : Set where
+  _+_ : Ops-v ( V ∷ [ V ] , V )      -- vector addition
+  ν  : (f : F) → Ops-v ( [ V ] , V)  -- scalar multiplication
+vspace-sig : (F : Set) → Signature
+vspace-sig F = record {sorts = Sorts-v ; ops = Ops-v F}
+\end{spec}
 
 \paragraph{Algebra}
-
 An \emph{algebra} $\mathcal{A}$ for the signature $\Sigma$ consists of
 a family of sets indexed by the sorts of $\Sigma$ and a family of
 functions indexed by the operations of $\Sigma$. We use
@@ -107,7 +132,7 @@ mathematical definition of carriers assumes an underlying notion of
 equality.  In type theory one makes it apparent by using setoids (\ie
 sets paired with an equivalence relation), which were thoroughly
 studied by Barthe et al.~\cite{barthe-setoids-2003}. Setoids are
-defined in the the standard library \cite{danielsson-agdalib} of
+defined in the standard library \cite{danielsson-agdalib} of
 Agda\footnote{Our formalization is based on several concepts defined
   in the standard library.} as a record with three
 fields.
@@ -126,7 +151,7 @@ correspond to the proofs of reflexivity, symmetry, and transitivity.
 The finest equivalence relation over any set is given
 by the \emph{propositional equality} which only equates each element with
 itself, thus we can endow any set with a setoid structure with the function
-|setoid : Set → Setoid| of standard library; vice versa, there
+|setoid : Set → Setoid| of the standard library; vice versa, there
 is a forgetful functor | ∥_∥ : Setoid → Set | which returns the carrier.
 
 Setoid morphisms are functions which preserve the equality:
@@ -159,8 +184,7 @@ record Algebra (Σ : Signature) : Set₁  where
 \noindent If |A| is an algebra for the signature |monoid-sig|, then
 |A ⟦ tt ⟧ₛ| is the carrier, |A ⟦ e ⟧ₒ| and |A ⟦ ∙ ⟧ₒ| are the interpretations
 of the operations. We invite the interested reader to browse the examples to
-see algebras for the signatures we have shown, which cannot be given here
-for lack of space.
+see algebras for the signatures we have shown.
 
 \paragraph{Homomorphism}
 Let $\Sigma$ be a signature and let $\mathcal{A}$ and $\mathcal{B}$ be
@@ -323,7 +347,7 @@ is given by |csubst Q|.
 
 \paragraph{Isomorphism Theorems} The definitions of subalgebras,
 quotients, and epimorphisms (surjective homomorphisms) are related by
-the three isomorphims theorems. Although there is some small overhead
+the three isomorphism theorems. Although there is some small overhead
 by the coding of subalgebras, the proofs follow very close what one would
 do in paper. For proving these results we also defined the
 \emph{kernel} and the \emph{homomorphic} image of homomorphisms.
@@ -383,12 +407,12 @@ $[\alg B]^{\phi} \simeq \alg B / \phi_B$ is given by composing the
 second projection with the first projection, thus getting an element
 in $B$.
 
-\subsection{Term algebra is initial}
+\subsection{The Term Algebra is initial}
 
 A $\Sigma$-algebra $\mathcal{A}$ is called \emph{initial} if for any
 $\Sigma$-algebra $\mathcal{B}$ there exists exactly one homomorphism
 from $\mathcal{A}$ to $\mathcal{B}$. We give an abstract definition of
-this universal property, existence of an unique element, for any set
+this universal property, existence of a unique element, for any set
 |A| and any relation |R|
 \begin{spec}
 hasUnique {A} _≈_ = A × (∀ a a' → a ≈ a')

@@ -1,8 +1,29 @@
 \section{Morphisms between signatures}
 \label{sec:trans}
-The propositional calculus of Dijkstra and Scholten \cite{dijkstra-scholten} is an alternative
-boolean theory whose only non-constant operations are equivalence and
-disjunction. 
+In this section we explain our formalization of morphisms between
+signatures; this notion is interesting because it provides a
+conceptual understanding of syntactic translations. After pointing to
+some related works, we motivate the usefulness of this notion by
+showing a relatively simple example: how to interpret the Boolean
+theory of the previous section in the propositional calculus of
+Dijkstra and Scholten.\footnote{Rocha and Meseguer~\cite{rocha-2007}
+  study more thoroughly Boolean theories and their morphisms.}
+
+The concept of morphism between signatures is related with the
+interpretability of similarity types in universal algebra
+(cf.~\cite{garcia-84}), and has an extensive literature:
+Fujiwara~\cite{fujiwara-1959} introduced this notion as
+\textit{mappings between algebraic systems},
+Janssen~\cite{janssen-98}, following the ADJ group, called it a
+\textit{polynomial derivor} and Mossakowski et al.~\cite{mossakowski-15}
+referred to it as a \textit{derived signature morphism}, a generalization
+of the more restricted \textit{signature morphisms} in the theory of
+institutions \cite{goguen-92}.
+
+Let us analyze how to translate the Boolean theory of the previous
+section to the propositional calculus of Dijkstra and Scholten
+\cite{dijkstra-scholten}, whose only non-constant operations are
+equivalence and disjunction.
 \begin{spec}
 data bool-ops' : List ⊤ × ⊤ → Set where
   f' t'    : bool-ops' ([] ↦ tt)
@@ -135,8 +156,24 @@ module ReductAlg (m : Σₛ ↝ Σₜ) (A : Algebra Σₜ) where
   _〈_〉 = record { _⟦_⟧ₛ = ⟨_⟩ₛ , _⟦_⟧ₒ = ⟨_⟩ₒ }
 \end{spec}
 
-\noindent The action of the functor on homomorphisms is also straightforward,
-we do not it show for lack of space.
+\noindent The action of the functor on homomorphisms is also straightforward.
+
+A more interesting example of signature morphisms and reduct algebras
+is the definition of a compiler as presented in
+\cite{thatcher1981more}. One defines a signature for the source
+language and another one for the target language; these languages are
+the term algebras over their respective signatures. A compiler is
+specified by a signature morphism from the source signature to the
+target signature: indeed the compiler is obtained as the unique
+homomorphism from the source algebra to the reduct algebra of the
+target algebra. Moreover, one can obtain a correct compiler by
+providing semantics of each language as algebras and a morphism
+between the source semantics and the reduct of the target
+semantics.\footnote{We explored this idea by defining a correct
+  compiler for an arithmetic language targeting a stack-based
+  language; it can be found at the repository in
+  \nolinkurl{Examples/CompilerArith.agda}.}
+
 
 \newcommand{\theory}[1]{\ensuremath{\mathit{E}_{#1}}}
 
@@ -174,6 +211,8 @@ furthermore define the function |⊨↝|. Such a restriction
 over the set of variables seems to us as an impediment,
 which can be alleviated if the original variables of $\theory{t}$ are
 included in the calculated set of variables.
+
+
 
 % \paragraph{Implication of translated theories.}
 % From a signature translation $t : \intSign{\Sigma_s}{\Sigma_t}$, we

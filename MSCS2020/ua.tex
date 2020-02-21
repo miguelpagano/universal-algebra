@@ -324,113 +324,394 @@ fields.
 \end{code}
 
 
-% \noindent The relation is given as a family of types indexed over a pair
-% of elements of the carrier (|a b : Carrier| are related if the type |a
-% ≈ b| is inhabited); |IsEquivalence _≈_| is again a record whose fields
-% correspond to the proofs of reflexivity, symmetry, and transitivity.
+\noindent The relation is given as a family of types indexed over a pair
+of elements of the carrier (\AgdaBound{a} \AgdaBound{b} : \AgdaField{Carrier} are related if the type
+\AgdaBound{a}\AgdaField{≈} \AgdaBound{b} is inhabited); \AgdaRecord{IsEquivalence}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{\AgdaUnderscore{}≈\AgdaUnderscore{}}} is again a record whose fields
+correspond to the proofs of reflexivity, symmetry, and transitivity.
 
-% The finest equivalence relation over any set is given
-% by the \emph{propositional equality} which only equates each element with
-% itself, thus we can endow any set with a setoid structure with the function
-% |setoid : Set → Setoid| of the standard library; vice versa, there
-% is a forgetful functor | ∥_∥ : Setoid → Set | which returns the carrier.
+The finest equivalence relation over any set is given
+by the \emph{propositional equality} which only equates each element with
+itself, thus we can endow any set with a setoid structure with the function
+\AgdaFunction{setoid} : \AgdaPrimitiveType{Set} \AgdaSymbol{→} \AgdaDatatype{Setoid} of the standard library; vice versa, there
+is a forgetful functor \AgdaSymbol{∥}\AgdaUnderscore{}\AgdaSymbol{∥} : \AgdaDatatype{Setoid} \AgdaSymbol{→} \AgdaPrimitiveType{Set}
+which returns the carrier.
 
-% Setoid morphisms are functions which preserve the equality:
-% \begin{spec}
-% record _⟶_ (A B : Setoid) : Set where
-%   field
-%   _⟨$⟩_ : ∥ A ∥ → ∥ B ∥
-%   cong : ∀ {a a'} → _≈_ A a a' → _≈_ B (_⟨$⟩ a) (_⟨$⟩ a')
-% \end{spec}
-% \noindent Notice that |_⟶_| is a record parameterized on two setoids.
-% The first field is the function, by declaring it mixfix one can
-% write |f ⟨$⟩ a| when |f : A ⟶ B| and |a : ∥ A ∥ |; the second field is
-% given by a function mapping equivalence proofs on the source setoid to
-% equivalence proofs on the target. Setoid morphisms will be used to
-% give the interpretation of operations.
+Setoid morphisms are functions which preserve the equality:
 
-% Let |A : I → Set| be a family of sets and |P : {i : I} → A i → Set| a
-% family of predicates, we let |P * : ∀ {is} → HVec A is → Set| be the
-% point-wise extension of |P| over heterogeneous vectors. We also use
-% the point-wise extension to define the setoid of heterogeneous vectors
-% given a family of setoids |A : I → Setoid| and write |A ✳ is| for the
-% setoid of heterogeneous vectors with index |is|. Algebras are
-% formalized as records parameterized on the signature.
-% \begin{spec}
-% record Algebra (Σ : Signature) : Set₁  where
-%   field
-%     _⟦_⟧ₛ    : sorts Σ → Setoid
-%     _⟦_⟧ₒ    : ∀  {ar s} → (f : ops Σ (ar , s)) → _⟦_⟧ₛ ✳ ar ⟶ _⟦_⟧ₛ s
-% \end{spec}
-% \noindent If |A| is an algebra for the signature |monoid-sig|, then
-% |A ⟦ tt ⟧ₛ| is the carrier, |A ⟦ e ⟧ₒ| and |A ⟦ ∙ ⟧ₒ| are the interpretations
-% of the operations. We invite the interested reader to browse the examples to
-% see algebras for the signatures we have shown.
+\begin{code}
+\>[0]\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaOperator{\AgdaRecord{\AgdaUnderscore{}⟶\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{B}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Setoid}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaKeyword{field}\<%
+\\
+\>[2][@{}l@{\AgdaIndent{0}}]%
+\>[4]\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟨\$⟩\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{B}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\<%
+\\
+%
+\>[4]\AgdaField{cong}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{a}\AgdaSpace{}%
+\AgdaBound{a'}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{\AgdaUnderscore{}≈\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{a}\AgdaSpace{}%
+\AgdaBound{a'}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{\AgdaUnderscore{}≈\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaBound{B}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟨\$⟩\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaBound{a}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟨\$⟩\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaBound{a'}\AgdaSymbol{)}\<%
+\end{code}
 
-% \paragraph{Homomorphism}
-% Let $\Sigma$ be a signature and let $\mathcal{A}$ and $\mathcal{B}$ be
-% algebras for $\Sigma$. A \emph{homomorphism} $h$ from $\mathcal{A}$ to
-% $\mathcal{B}$ is a family of functions indexed by the sorts
-% $h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$, such that for each
-% operation $f : [s_1,...,s_n] \Rightarrow s$, the following holds:
-% \begin{equation}
-%   h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)\label{eq:homcond}
-% \end{equation}
-% \noindent Notice that this is a condition over the family of
-% functions.
 
-% In order to formalize homomorphisms we first introduce a
-% notation for families of setoid morphisms indexed over sorts:
-% \begin{spec}
-% _⟿_ : ∀ {Σ} → Algebra Σ → Algebra Σ → Set
-% _⟿_ {Σ} A B = (s : sorts Σ) → A ⟦ s ⟧ₛ ⟶ B ⟦ s ⟧ₛ
-% \end{spec}
-% \noindent We make explicit the implicit parameter |Σ| because
-% otherwise |sorts Σ| does not make sense.\footnote{In the library we
-%   use modules in order to avoid the repetition of the parameters |Σ|,
-%   |A|, and |B|.} To enforce \eqref{eq:homcond} we also define a
-% predicate over families of setoids morphisms:
-% \begin{spec}
-% homCond : ∀ {Σ} {A B} → A ⟿ B → Set
-% homCond {Σ} {A} {B} h = ∀ {ar s} (f : ops Σ (ar , s)) (as : ∥ A ⟦_⟧ₛ ✳ ar ∥) → 
-%          h s ⟨$⟩ (A ⟦ f ⟧ₒ ⟨$⟩ as) ≈ₛ B ⟦ f ⟧ₒ ⟨$⟩ map h as
-% \end{spec}
-% \noindent where |_≈ₛ_| is the equivalence relation of the setoid
-% |B ⟦ s ⟧ₛ| and |map h| is the obvious extension of |h| over vectors.
-% A homomorphism is a record parameterized by the source and target algebras
-% \begin{spec}
-% record Homo {Σ} (A B : Algebra Σ) : Set where
-%   field
-%     ′_′ : A ⟿ B
-%     cond : homCond ′_′
-% \end{spec}
-% \noindent As expected, we have the identity homomorphism |Idₕ A : Homo A A| and
-% the composition |G ∘ₕ F : Homo A C| of homomorphisms |F : Homo A B|
-% and |G : Homo B C|. It is also expected that |F ∘ₕ Idₕ A| and |F| are
-% equal in some sense. Since Agda is based on an
-% intensional type theory, we cannot take the definitional equality
-% (which distinguishes |id| from |λ n → n + 0| as functions
-% on naturals); instead, we equate setoid morphisms 
-% whenever their function parts are extensionally equal:
-% \begin{spec}
-%   _≈→_ : (f g : A ⟶ B) → Set
-%   f ≈→ g  = ∀ (a : ∥ A ∥) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
-% \end{spec}
-% \noindent Two homomorphisms are equal when their corresponding setoid
-% morphisms are extensionally equal:
-% \begin{spec}
-%   _≈ₕ_  : ∀ {Σ} {A B} → Homo A B → Homo A B → Set
-%   F ≈ₕ F' = (s : sorts Σ) → ′ F ′ s ≈→ ′ F' ′ s
-% \end{spec}
-% \noindent With respect to this equality, it is straightforward to
-% prove the associativity of the composition |_∘ₕ_| and that |Idₕ| is
-% the identity for the composition.
-% % \comment{It is straightforward to define the product |A₁ × A₂| of algebras |A₁|
-% % and |A₂| and the projection homomorphisms |Πᵢ : Homo (A₁ × A₂) Aᵢ| where
-% % |′ Πᵢ ′ _ ⟨$⟩ p = projᵢ p|.}
-% \subsection{Quotient and subalgebras}
-% In order to prove the more basic results of universal algebra, we need
-% to formalize subalgebras, congruence relations, and quotients.
+\noindent Notice that \AgdaOperator{\AgdaRecord{\AgdaUnderscore{}⟶\AgdaUnderscore{}}}\AgdaSpace{} is a record parameterized on two setoids.
+The first field is the function, by declaring it mixfix one can
+write \AgdaBound{f} \AgdaField{⟨\$⟩} \AgdaBound{a} when \AgdaBound{f} : \AgdaBound{A} \AgdaSymbol{⟶} \AgdaBound{B}
+and \AgdaBound{a} : \AgdaSymbol{∥} \AgdaBound{A} \AgdaSymbol{∥}; the second field is
+given by a function mapping equivalence proofs on the source setoid to
+equivalence proofs on the target. Setoid morphisms will be used to
+give the interpretation of operations.
+
+Let \AgdaBound{A} : \AgdaBound{I} \AgdaSymbol{→} \AgdaPrimitiveType{Set} be a family of sets and
+\AgdaBound{P} : \AgdaSymbol{\{}\AgdaBound{i} : \AgdaBound{I}\AgdaSymbol{\}} \AgdaSymbol{→} \AgdaBound{A} \AgdaBound{i}
+\AgdaSymbol{→} \AgdaPrimitiveType{Set} a
+family of predicates, we let \AgdaBound{P}\AgdaSymbol{*} : \AgdaSymbol{∀} \AgdaSymbol{\{}\AgdaBound{is}\AgdaSymbol{\}}
+\AgdaSymbol{→} \AgdaDatatype{HVec} \AgdaBound{A} \AgdaBound{is} \AgdaSymbol{→} \AgdaPrimitiveType{Set} be the
+point-wise extension of \AgdaBound{P} over heterogeneous vectors. We also use
+the point-wise extension to define the setoid of heterogeneous vectors
+given a family of setoids \AgdaBound{A} : \AgdaBound{I} \AgdaSymbol{→} \AgdaDatatype{Setoid} and write
+\AgdaBound{A} \AgdaSymbol{✳} \AgdaBound{is} for the
+setoid of heterogeneous vectors with index \AgdaBound{is}. Algebras are
+formalized as records parameterized on the signature.
+
+
+\begin{code}
+\>[0]\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Signature}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaKeyword{field}\<%
+\\
+\>[2][@{}l@{\AgdaIndent{0}}]%
+\>[4]\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟦\AgdaUnderscore{}⟧ₛ}}%
+\>[12]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaRecord{Setoid}\AgdaSpace{}%
+\\
+%
+\>[4]\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟦\AgdaUnderscore{}⟧ₒ}}%
+\>[13]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟦\AgdaUnderscore{}⟧ₛ}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{✳}}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟶}}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{\AgdaUnderscore{}⟦\AgdaUnderscore{}⟧ₛ}}\AgdaSpace{}%
+\AgdaBound{s}\<%
+\end{code}
+
+
+
+\noindent If \AgdaBound{A} is an algebra for the signature \AgdaFunction{actMon{-}sig}, then
+\AgdaBound{A} \AgdaField{⟦ \AgdaInductiveConstructor{tt} ⟧ₛ} is the carrier, \AgdaBound{A}
+\AgdaField{⟦ \AgdaInductiveConstructor{e} ⟧ₒ}  and
+\AgdaBound{A}
+\AgdaField{⟦ \AgdaInductiveConstructor{∙} ⟧ₒ} are the interpretations
+of the operations. We invite the interested reader to browse the examples to
+see algebras for the signatures we have shown.
+
+\paragraph*{Homomorphism}
+Let $\Sigma$ be a signature and let $\mathcal{A}$ and $\mathcal{B}$ be
+algebras for $\Sigma$. A \emph{homomorphism} $h$ from $\mathcal{A}$ to
+$\mathcal{B}$ is a family of functions indexed by the sorts
+$h_s : \mathcal{A}_s \rightarrow \mathcal{B}_s$, such that for each
+operation $f : [s_1,...,s_n] \Rightarrow s$, the following holds:
+\begin{equation}
+  h_s(f_{\mathcal{A}}(a_1,...,a_n)) = f_{\mathcal{B}}(h_{s_1}\,a_1,...,h_{s_n}\,a_n)\label{eq:homcond}
+\end{equation}
+\noindent Notice that this is a condition over the family of
+functions.
+
+In order to formalize homomorphisms we first introduce a
+notation for families of setoid morphisms indexed over sorts:
+
+
+\begin{code}
+\>[0]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}⟿\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+\>[0]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}⟿\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{B}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟶}}\AgdaSpace{}%
+\AgdaBound{B}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₛ}}\<%
+\end{code}
+
+
+\noindent We make explicit the implicit parameter \AgdaBound{Σ} because
+otherwise \AgdaField{sorts} \AgdaBound{Σ} does not make sense.\footnote{In the library we
+  use modules in order to avoid the repetition of the parameters \AgdaBound{Σ},
+  \AgdaBound{A}, and \AgdaBound{B}.} To enforce \eqref{eq:homcond} we also define a
+predicate over families of setoids morphisms:
+
+
+
+\begin{code}
+\>[2]\AgdaFunction{homCond}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{A}\AgdaSpace{}\AgdaBound{B}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}\AgdaOperator{\AgdaFunction{⟿}}\AgdaSpace{}\AgdaBound{B}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+%
+\>[2]\AgdaFunction{homCond}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{A}%
+\>[142I]\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{B}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaBound{h}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}\<%
+\\
+\>[.]\<[142I]%
+\>[14]\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ar}\AgdaSpace{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{f}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{as}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟧ₛ*}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\<%
+\\
+\>[.]\<[142I]%
+\>[14]\AgdaSymbol{(}\AgdaBound{h}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₒ}}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
+\AgdaBound{as}\AgdaSymbol{))}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈ₛ}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{B}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₒ}}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{map}\AgdaSpace{}%
+\AgdaBound{h}\AgdaSpace{}%
+\AgdaBound{as}\AgdaSymbol{))}\<%
+\end{code}
+
+
+\noindent where \AgdaUnderscore{}\AgdaOperator{\AgdaFunction{≈ₛ}}\AgdaUnderscore{} is the equivalence relation of the setoid
+\AgdaBound{B} \AgdaField{⟦ \AgdaBound{s} ⟧ₛ} and \AgdaFunction{map} \AgdaBound{h} is the obvious extension of \AgdaBound{h} over vectors.
+A homomorphism is a record parameterized by the source and target algebras
+
+\begin{code}
+\>[2]\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaRecord{Homo}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}\AgdaBound{B}
+\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaRecord{Algebra}\AgdaSpace{}\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[2][@{}l@{\AgdaIndent{0}}]%
+\>[4]\AgdaKeyword{field}\<%
+\\
+\>[4][@{}l@{\AgdaIndent{0}}]%
+\>[6]\AgdaOperator{\AgdaField{′\AgdaUnderscore{}′}}%
+\>[13]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}⟿\AgdaUnderscore{}}}\<%
+\\
+%
+\>[6]\AgdaField{cond}%
+\>[12]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{homCond}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{′\AgdaUnderscore{}′}}\AgdaSpace{}\<%
+\end{code}
+
+
+\noindent As expected, we have the identity homomorphism
+\AgdaFunction{Idₕ}\AgdaSpace{}\AgdaBound{A}\AgdaSpace\AgdaSymbol{:}\AgdaRecord{Homo}
+\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaBound{A} and
+the composition \AgdaBound{G}\AgdaSpace{}\AgdaOperator{\AgdaSymbol{∘ₕ}}\AgdaSpace{}\AgdaBound{F}\AgdaSpace{}
+\AgdaSymbol{:}\AgdaSpace{}\AgdaRecord{Homo}
+\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaBound{C} of homomorphisms
+\AgdaBound{F}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}
+\AgdaRecord{Homo}\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaBound{B}
+and
+\AgdaBound{G}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}
+\AgdaRecord{Homo}\AgdaSpace{}\AgdaBound{B}\AgdaSpace{}\AgdaBound{C}.
+It is also expected that
+\AgdaBound{F}\AgdaSpace{}\AgdaOperator{\AgdaSymbol{∘ₕ}}\AgdaSpace{}
+\AgdaFunction{Idₕ}\AgdaSpace{}\AgdaBound{A}\AgdaSpace and
+\AgdaBound{F}  are
+equal in some sense. Since Agda is based on an
+intensional type theory, we cannot take the definitional equality
+(which distinguishes \AgdaFunction{id} from \AgdaSymbol{λ} \AgdaBound{n} \AgdaSymbol{→} \AgdaBound{n} \AgdaFunction{+} \AgdaInductiveConstructor{0} as functions
+on naturals); instead, we equate setoid morphisms 
+whenever their function parts are extensionally equal:
+
+
+\begin{code}
+\>[0]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}≈ₑₓₜ\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{f}\AgdaSpace{}\AgdaBound{g}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}
+\AgdaBound{A}\AgdaOperator{\AgdaFunction{⟶}}\AgdaBound{B}\AgdaSymbol{)}\AgdaSpace{}
+\AgdaSymbol{→}\AgdaSpace{}\AgdaPrimitiveType{Set}\AgdaSpace{}\<%
+\\
+%
+\>[0]\AgdaBound{f}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈ₑₓₜ}}\AgdaSpace{}%
+\AgdaBound{g}%
+\>[8]\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{a}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{f}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
+\AgdaBound{a}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈B}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{g}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩}}\AgdaSpace{}%
+\AgdaBound{a}\AgdaSymbol{)}\<%
+\end{code}
+
+
+\noindent Two homomorphisms are equal when their corresponding setoid
+morphisms are extensionally equal:
+
+
+\begin{code}
+\>[2]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}≈ₕ\AgdaUnderscore{}}}%
+\>[8]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{A}\AgdaSpace{}\AgdaBound{B}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{H}\AgdaSpace{}%
+\AgdaBound{G}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Homo}\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaBound{B}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaSymbol{\AgdaUnderscore{}}\<%
+\\
+%
+\>[2]\AgdaBound{H}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈ₕ}}\AgdaSpace{}%
+\AgdaBound{G}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{H}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈ₑₓₜ}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{G}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{′}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\<%
+\end{code}
+
+
+\noindent With respect to this equality, it is straightforward to
+prove the associativity of the composition \AgdaUnderscore{}\AgdaOperator{\AgdaSymbol{∘ₕ}}\AgdaUnderscore{} and that
+\AgdaFunction{Idₕ} is
+the identity for the composition.
+
+
+
+\subsection{Quotient and subalgebras}
+In order to prove the more basic results of universal algebra, we need
+to formalize subalgebras, congruence relations, and quotients.
 
 % \paragraph{Subalgebra}
 

@@ -32,7 +32,7 @@ inhabited):
 \>[0]\AgdaKeyword{record}\AgdaSpace{}%
 \AgdaRecord{Signature}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaPrimitiveType{Set₁}\AgdaSpace{}%
 \AgdaKeyword{where}\<%
 \\
 \>[0][@{}l@{\AgdaIndent{0}}]%
@@ -40,50 +40,169 @@ inhabited):
 \\
 \>[2][@{}l@{\AgdaIndent{0}}]%
 \>[4]\AgdaField{sorts}%
-\>[11]\AgdaSymbol{:}%
-\>[15]\AgdaPrimitiveType{Set}\<%
+\>[11]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
 \\
 %
 \>[4]\AgdaField{ops}%
-\>[11]\AgdaSymbol{:}%
-\>[15]\AgdaDatatype{List}\AgdaSpace{}%
-\AgdaField{sorts}\AgdaSpace{}%
+\>[11]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaDatatype{List}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{×}}\AgdaSpace{}%
 \AgdaField{sorts}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
 \AgdaPrimitiveType{Set}\<%
 \end{code}
-% \noindent |A × B| corresponds to the non-dependent cartesian product
-% of |A| and |B|.
 
-% In order to declare a concrete signature one first declares
-% the set of sorts and the set of operations, which are then bundled
-% together in a record.  For example, the mono-sorted signature of monoids has a
-% unique sort, so we use the unit type |⊤| with its sole constructor
-% |tt|. We define a family indexed on |List ⊤ x ⊤|, with two constructors,
-% corresponding with the operations: a 0-ary operation |e|, and a binary
-% operation |∙| (note that constructors can
-% start with a lower-case letter or any symbol):
-% \begin{spec}
-% data monoid-op : List ⊤ × ⊤ → Set where
-%    e : monoid-op ([ ] , tt)
-%    ∙ : monoid-op ( [ tt , tt ] , tt)
-% monoid-sig : Signature
-% monoid-sig = record { sorts = ⊤ ; ops = monoid-op }
-% \end{spec}
-% \noindent The signature of monoid actions has two sorts, one for the
-% monoid and the other for the set on which the monoid acts.
-% \begin{spec}
-% data actMonₛ : Set where
-%   mon : actMonₛ
-%   set : actMonₛ
-% data actMonₒ : List actMonₛ × actMonₛ → Set where
-%   e  : actMonₒ ([ ] , mon)
-%   *  : actMonₒ ([ mon , mon ] , mon)
-%   ∙  : actMonₒ ([ mon , set ] , set)
-% actMon-sig : Signature
-% actMon-sig = record { sorts = actMonₛ ; ops = actMonₒ }
-% \end{spec}
+\noindent \AgdaBound{A}\AgdaSymbol{×}\AgdaBound{B} corresponds to the non-dependent cartesian product
+of \AgdaBound{A} and \AgdaBound{B}.
+
+In order to declare a concrete signature one first declares
+the set of sorts and the set of operations, which are then bundled
+together in a record.  For example, the mono-sorted signature of monoids has a
+unique sort, so we use the unit type |⊤| with its sole constructor
+|tt|. We define a family indexed on |List ⊤ x ⊤|, with two constructors,
+corresponding with the operations: a 0-ary operation |e|, and a binary
+operation |∙| (note that constructors can
+start with a lower-case letter or any symbol):
+
+\begin{code}
+\>[0]\AgdaKeyword{data}\AgdaSpace{}%
+\AgdaDatatype{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{List}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{×}}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[3]\AgdaInductiveConstructor{e}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+\\
+%
+\>[3]\AgdaInductiveConstructor{∙}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+\\
+\\
+\>[0]\AgdaFunction{monoid{-}sig}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Signature}\<%
+\\
+\>[0]\AgdaFunction{monoid{-}sig}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaDatatype{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{\}}\<%
+\end{code}
+
+\noindent The signature of monoid actions has two sorts, one for the
+monoid and the other for the set on which the monoid acts.
+
+\begin{code}
+\\
+\>[0]\AgdaKeyword{data}\AgdaSpace{}%
+\AgdaDatatype{actMonₛ}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaInductiveConstructor{mon}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{actMonₛ}\<%
+\\
+%
+\>[2]\AgdaInductiveConstructor{set}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{actMonₛ}\<%
+\\
+\\
+\>[0]\AgdaKeyword{data}\AgdaSpace{}%
+\AgdaDatatype{actMonₒ}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{List}\AgdaSpace{}%
+\AgdaDatatype{actMonₛ}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{×}}\AgdaSpace{}%
+\AgdaDatatype{actMonₛ}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaInductiveConstructor{e}%
+\>[5]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{actMonₒ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaInductiveConstructor{mon}\AgdaSymbol{)}\<%
+\\
+%
+\>[2]\AgdaInductiveConstructor{∙}%
+\>[5]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{actMonₒ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaSpace{}%
+\AgdaInductiveConstructor{mon}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{mon}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaInductiveConstructor{mon}\AgdaSymbol{)}\<%
+\\
+%
+\>[2]\AgdaInductiveConstructor{*}%
+\>[5]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{actMonₒ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaSpace{}%
+\AgdaInductiveConstructor{mon}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{set}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaInductiveConstructor{set}\AgdaSymbol{)}\<%
+\\
+\\
+\>[0]\AgdaFunction{actMon{-}sig}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Signature}\<%
+\\
+\>[0]\AgdaFunction{actMon{-}sig}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaDatatype{actMonₛ}\AgdaSpace{}%
+\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaDatatype{actMonₒ}\AgdaSpace{}%
+\AgdaSymbol{\}}\<%
+
+\end{code}
 
 % \noindent Defining operations as a family indexed by arities and
 % target sorts carries some benefits in the use of the library: as in

@@ -8,16 +8,99 @@ presented by Goguen and Lin \cite{goguen2005specifying} and prove that
 the deduction system is sound and complete.
 
 \subsection{Free algebra with variables}
-The term algebra we have just defined contained only \emph{ground}
-terms, \ie terms without variables. Given a signature \AgdaBound{Σ} and \AgdaBound{X}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaField{sorts}\AgdaSpace{}\AgdaBound{Σ}\AgdaSpace{}\AgdaSymbol{→}\AgdaSpace{}\AgdaPrimitiveType{Set} a family of variables, we define a new signature
-extending \AgdaBound{Σ} with \AgdaBound{X} by taking the variables as new constants
-(i.e. , operations with arity \AgdaInductiveConstructor{[]}).
+The term algebra we have just defined contained only \emph{ground} terms, \ie
+terms without variables. Given a signature \AgdaBound{Σ} and
+\AgdaBound{X}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaField{sorts}\AgdaSpace{}
+\AgdaBound{Σ}\AgdaSpace{}\AgdaSymbol{→}\AgdaSpace{}\AgdaPrimitiveType{Set}
+a family of variables, we define a new signature extending \AgdaBound{Σ} with
+\AgdaBound{X} by taking the variables as new constants (i.e. , operations with
+arity \AgdaInductiveConstructor{[]}).
+
+
 \begin{spec}
   _〔_〕 : (Σ : Signature) → (X : sorts Σ → Set) → Signature
   Σ 〔 X 〕 = record  { sorts = sorts Σ ; ops =  ops' }
      where   ops' ([] , s)   = ops Σ ([] , s) ⊎ X s
              ops' (ar , s)   = ops Σ (ar , s)
 \end{spec}%
+
+\begin{code}
+  \>[2]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}〔\AgdaUnderscore{}〕}}
+  \AgdaSpace{}%
+  \AgdaSymbol{:}\AgdaSpace{}%
+  \AgdaSymbol{(}
+  \AgdaBound{Σ}\AgdaSpace{}%
+  \AgdaSymbol{:}\AgdaSpace{}%
+  \AgdaRecord{Signature}
+  \AgdaSymbol{)}\AgdaSpace{}%
+  \AgdaSymbol{→}
+  \AgdaSymbol{(}
+  \AgdaBound{X}\AgdaSpace{}%
+  \AgdaSymbol{:}\AgdaSpace{}%
+  \AgdaSymbol{(}\AgdaSpace{}%
+  \AgdaField{sorts}\AgdaSpace{}%
+  \AgdaBound{Σ}\AgdaSpace{}%
+  \AgdaSymbol{→}\AgdaSpace{}%
+  \AgdaPrimitiveType{Set}
+  \AgdaSymbol{)}
+  \AgdaSymbol{)}
+  \AgdaSymbol{→}
+  \AgdaRecord{Signature}
+  \<%
+  \\
+  %
+  \>[2]\AgdaOperator{
+    \AgdaFunction{\AgdaBound{Σ}\AgdaSpace{}
+      〔\AgdaSpace{}\AgdaBound{X}\AgdaSpace{}〕}
+  }
+  \AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaKeyword{record}
+  \AgdaSymbol{\{}\AgdaSpace{}%
+  \AgdaField{sorts}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaField{sorts}\AgdaSpace{}%
+  \AgdaBound{Σ}
+  \AgdaSymbol{;}\AgdaSpace{}%
+  \AgdaField{ops}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaField{ops'}\AgdaSpace{}%
+  \AgdaSymbol{\}}\<%
+  \\%
+  \>[0]\>[2][@{}l@{\AgdaIndent{0}}]%
+  \AgdaKeyword{where}\AgdaSpace{}%
+  \AgdaFunction{ops'}
+  \AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+  \AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaField{ops}\AgdaSpace{}%
+  \AgdaBound{Σ}\AgdaSpace{}%
+  \AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+  \AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+  \AgdaOperator{\AgdaDatatype{⊎}}\AgdaSpace{}%
+  \AgdaBound{X}\AgdaSpace{}%
+  \AgdaBound{s}
+  \\%
+  \>[0]\>[4][@{}l@{\AgdaIndent{0}}]
+  \AgdaFunction{ops'}
+  \AgdaSymbol{(}\AgdaBound{s'}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+  \AgdaBound{ar}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+  \AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaField{ops}\AgdaSpace{}%
+  \AgdaBound{Σ}\AgdaSpace{}%
+  \AgdaSymbol{(}\AgdaBound{s'}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+  \AgdaBound{ar}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+  \AgdaBound{s}\AgdaSymbol{)}
+  \<%
+\end{code}
+
 \noindent Note that it is easy to refer to constant operations and
 extend them, because we indexed the set of operations on their arity
 and target sort.

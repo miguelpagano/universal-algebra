@@ -639,7 +639,7 @@ It is also expected that
 equal in some sense. Since Agda is based on an
 intensional type theory, we cannot take the definitional equality
 (which distinguishes \AgdaFunction{id} from \AgdaSymbol{λ} \AgdaBound{n} \AgdaSymbol{→} \AgdaBound{n} \AgdaFunction{+} \AgdaInductiveConstructor{0} as functions
-on naturals); instead, we equate setoid morphisms 
+on naturals); instead, we equate setoid morphisms
 whenever their function parts are extensionally equal:
 
 
@@ -714,17 +714,16 @@ morphisms are extensionally equal:
 
 
 \noindent With respect to this equality, it is straightforward to
-prove the associativity of the composition \AgdaUnderscore{}\AgdaOperator{\AgdaSymbol{∘ₕ}}\AgdaUnderscore{} and that
-\AgdaFunction{Idₕ} is
-the identity for the composition.
-
+prove the associativity of the composition
+\AgdaUnderscore{}\AgdaOperator{\AgdaSymbol{∘ₕ}}\AgdaUnderscore{} and
+that \AgdaFunction{Idₕ} is the identity for the composition.
 
 
 \subsection{Quotient and subalgebras}
 In order to prove the more basic results of universal algebra, we need
 to formalize subalgebras, congruence relations, and quotients.
 
-\paragraph{Subalgebra}
+\paragraph*{Subalgebra}
 
 A subalgebra $\mathcal{B}$ of an algebra $\mathcal{A}$ consists of a
 family of subsets $\mathcal{B}_s \subseteq \mathcal{A}_s$, that are
@@ -738,19 +737,40 @@ $ f : [s_1, \ldots,s_n] \Rightarrow s$ the following condition holds
 
 \noindent As shown by Salvesen and Smith \cite{salvesen-subsets},
 subsets cannot be added as a construction in intensional type theory
-because they lack desirable properties. If \codigo{A : Set| and |P : A → Set}
-is a predicate over \codigo{A}, then one can represent the subset containing the
-elements on \codigo{A| that satisfy |P} as the dependent sum\footnote{Do not confuse
-the syntax \codigo{Σ[_∈_]_| of dependent sum, with a variable |Σ : Signature}}
-\codigo{Σ[ a ∈ A ] P} whose inhabitants are
-pairs \codigo{(a , p)| where |a : A| and |p : P a}.\comment{This is not so
-  pleasant as there can be several proofs of \codigo{P a}.} Let us consider a
-setoid \codigo{A| and a predicate on its carrier |P : ∥ A ∥ → Set}; first
-notice that we can lift the subset construction to setoids, defining
-the equivalence relation \codigo{(a , q) ≈ (a' , q')| iff |a ≈ a'}.
-Moreover, we might assume that \codigo{P} is \emph{well-defined},
-which means that \codigo{a ≈A a'| and |P a} imply
-\codigo{P a'}.
+because they lack desirable properties. If
+\AgdaBound{A}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaPrimitiveType{Set}
+and
+\AgdaBound{P}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaSymbol{→}\AgdaSpace{}\AgdaPrimitiveType{Set}
+is a predicate over \AgdaBound{A}, then one can represent the subset
+containing the elements on \AgdaBound{A} that satisfy \AgdaBound{P} as
+the dependent sum\footnote{Do not confuse the syntax
+  \AgdaFunction{Σ[}\AgdaSymbol{\AgdaUnderscore{}}\AgdaFunction{∈}\AgdaSymbol{\AgdaUnderscore{}}\AgdaFunction{]}
+  of dependent sums, with a variable
+  \AgdaBound{Σ}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaDatatype{Signature}.}
+\AgdaFunction{Σ[}\AgdaSpace{}\AgdaBound{a}\AgdaSpace{}\AgdaFunction{∈}\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaFunction{]}\AgdaSpace{}\AgdaBound{P}
+whose inhabitants are pairs
+\AgdaSymbol{(}\AgdaBound{a}\AgdaSpace{}\AgdaInductiveConstructor{,}\AgdaSpace{}\AgdaBound{p}\AgdaSymbol{)}
+where \AgdaBound{a}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaBound{A}
+and
+\AgdaBound{p}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaBound{P}\AgdaSpace{}\AgdaBound{a}. Although
+there can be several proofs of \AgdaBound{P}\AgdaSpace{}\AgdaBound{a}
+leading to more than one element with \AgdaBound{a} as their first
+component we consider all those pairs as the same; thus we can lift a
+predicate on the carrier of a setoid to a predicate of the setoid. Let
+\AgdaBound{A} be a setoid and
+\AgdaBound{P}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}\AgdaFunction{∥}\AgdaSpace{}\AgdaBound{A}%
+\AgdaSpace{}\AgdaFunction{∥}\AgdaSpace{}\AgdaSymbol{→}\AgdaSpace{}\AgdaPrimitiveType{Set}
+a predicate on its carrier; we lift the subset construction to
+setoids, defining the equivalence relation
+\AgdaSymbol{(}\AgdaBound{a}\AgdaSpace{}\AgdaInductiveConstructor{,}\AgdaSpace{}\AgdaBound{q}\AgdaSymbol{)}\AgdaSpace{}\AgdaFunction{≈}\AgdaSpace{}
+\AgdaSymbol{(}\AgdaBound{a'}\AgdaSpace{}\AgdaInductiveConstructor{,}\AgdaSpace{}\AgdaBound{q'}\AgdaSymbol{)}
+iff
+\AgdaBound{a}\AgdaSpace{}\AgdaFunction{≈}\AgdaSpace{}\AgdaBound{a'}.
+Moreover, we might assume that \AgdaBound{P} is \emph{well-defined},
+which means that
+\AgdaBound{a}\AgdaSpace{}\AgdaFunction{≈A}\AgdaSpace{}\AgdaBound{a'}
+and \AgdaBound{P}\AgdaSpace{}\AgdaBound{a} imply
+\AgdaBound{P}\AgdaSpace{}\AgdaBound{a'}.
 
 \begin{spec}
   WellDef : (A : Setoid) → (P : ∥ A ∥ → Set) → Set
@@ -758,28 +778,94 @@ which means that \codigo{a ≈A a'| and |P a} imply
 \end{spec}
 \noindent A family of well-defined predicates will induce a subalgebra;
 but we still need to formalize the condition \eqref{eq:opclosed}.  Let
-\codigo{Σ| be a signature and |A| be an algebra for |Σ}.
-\begin{spec}
-    opClosed : (P : (s : sorts Σ) → ∥ A ⟦ s ⟧ₛ∥ → Set) → Set
-    opClosed P = ∀ {ar s} (f : ops Σ (ar , s)) → (P * ⟨→⟩ P s) (A ⟦ f ⟧ₒ ⟨$⟩_)
-\end{spec}
-\noindent \codigo{(Q ⟨→⟩ R) f| can be read as the pre-condition |Q} implies
-post-condition \codigo{R| after applying |f|; so |opClosed P f| asserts that if a vector |a*}
-satisfies the predicate \codigo{P|, then the application of the interpretation |A ⟦ f ⟧ₒ}
-to \codigo{a*| satisfies |P}, according to Eq.~\eqref{eq:opclosed}.
-In summary, given an algebra
-\codigo{A| for the signature |Σ| and a family |P| of predicates, such that }P
-s\codigo{ is well-defined for every sort |s| and |P| is |opClosed}, we can
-define the \codigo{SubAlgebra A P} 
-\begin{spec}
-SubAlgebra : ∀ {Σ} A P → WellDef P → opClosed P → Algebra Σ
-\end{spec}
-\noindent In the subalgebra, an operation \codigo{f} is interpreted by
-applying the interpretation of \codigo{f| in |A} to the first components of
-the argument (and use the fact that \codigo{P} is op-closed to show that
+\AgdaBound{Σ} be a signature and \AgdaBound{A} be an algebra for \AgdaBound{Σ}.
+\begin{code}
+\>[0]\AgdaFunction{OpClosed}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ℓ₁}\AgdaSpace{}%
+\AgdaBound{ℓ₂}\AgdaSpace{}%
+\AgdaBound{ℓ₃}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ℓ₁}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ℓ₂}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{P}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{IPred}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥\AgdaUnderscore{}∥}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaBound{ℓ₃}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaSymbol{\AgdaUnderscore{}}\<%
+\\
+\>[0]\AgdaFunction{OpClosed}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{ℓ₃}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{ℓ₃}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{Σ}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{P}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{f}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{))}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{P}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⇨v}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟨→⟩}}\AgdaSpace{}%
+\AgdaBound{P}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\})}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₒ}}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟨\$⟩\AgdaUnderscore{}}}\AgdaSymbol{)}\<%
+\\
+\end{code}
+\noindent
+\AgdaSymbol{(}\AgdaBound{Q}\AgdaFunction{⟨→⟩}\AgdaBound{R}\AgdaSymbol{)}\AgdaSpace{}\AgdaFunction{f}
+can be read as the pre-condition \AgdaBound{Q} implies post-condition
+\AgdaBound{R} after applying \AgdaBound{f}; so
+\AgdaFunction{opClosed}\AgdaSpace{}\AgdaBound{P}\AgdaSpace{}\AgdaBound{f}
+asserts that if a vector \AgdaBound{as} satisfies the predicate
+\AgdaBound{P}, then the application of the interpretation
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
+\AgdaBound{f}\AgdaSpace{}%
+\AgdaOperator{\AgdaField{⟧ₒ}} to \AgdaBound{as} satisfies
+\AgdaBound{P}, according to Eq.~\eqref{eq:opclosed}.  In summary,
+given an algebra \AgdaBound{A} for the signature \AgdaBound{Σ} and a
+family \AgdaBound{P} of predicates, such that
+\AgdaBound{P}\AgdaSpace{}\AgdaBound{s} is well-defined for every sort
+\AgdaBound{s} and \AgdaBound{P} is \AgdaFunction{opClosed}, we can
+define the
+\AgdaFunction{SubAlgebra}\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaBound{P}.\footnote{In
+  the formalization we have an intermediate record type
+  \AgdaRecord{SubAlg} to pack a well-defined predicate with a proof
+  that it is Op-Closed.}
+
+\noindent In the subalgebra, an operation \AgdaBound{f} is interpreted by
+applying the interpretation of \AgdaBound{f} in \AgdaBound{A} to the first components of
+the argument (and use the fact that \AgdaBound{P} is op-closed to show that
 the resulting value satisfies the predicate of the target sort).
 
-\paragraph{Congruence and Quotients}
+\paragraph*{Congruence and Quotients}
 A \emph{congruence} on a $\Sigma$-algebra
 $\mathcal{A}$ is a family
 $Q$ of equivalence relations indexed by sorts, and each of them is
@@ -795,11 +881,13 @@ extension of $Q$ over vectors: for every operation $ f : [s_1,
 As with predicates, we say that a binary relation over a setoid is
 well-defined if it is preserved by the setoid equality; this notion
 can be extended over families of relations in the obvious way. In our
-formalization, a congruence on an algebra \codigo{A| is a family |Q} of
+formalization, a congruence on an algebra \AgdaBound{A} is a family \AgdaBound{Q} of
 well-defined, equivalence relations. The substitutivity condition
 \eqref{eq:congcond} is aptly captured by the generalized containment
-operator \codigo{_=[_]⇒_| of the standard library, where |P =[ f ]⇒ Q} if,
-for all \codigo{a,b ∈ A|, |(a,b) ∈ P| implies |(f a, f b) ∈ Q}.
+operator \AgdaUnderscore{}\AgdaOperator{\AgdaFunction{=[}}\AgdaUnderscore{}%
+\AgdaOperator{\AgdaFunction{]⇒}}\AgdaUnderscore{} of the standard library, where \AgdaBound{P}\AgdaSpace{}\AgdaOperator{\AgdaFunction{=[}}\AgdaSpace{}\AgdaBound{f}%
+\AgdaSpace{}\AgdaOperator{\AgdaFunction{]⇒}}\AgdaSpace{}\AgdaBound{Q} if,
+for all \AgdaBound{a},\AgdaBound{b}\AgdaSpace{}\AgdaSymbol{∈}\AgdaSpace{}\AgdaBound{A}, \AgdaSymbol{(}\AgdaBound{a}\AgdaInductiveConstructor{,}\AgdaBound{b}\AgdaSymbol{)}\AgdaSpace{}\AgdaSymbol{∈}\AgdaSpace{}\AgdaBound{P} implies \AgdaSymbol{(}\AgdaBound{f}\AgdaSpace{}\AgdaBound{a}\AgdaInductiveConstructor{,}\AgdaSpace{}\AgdaBound{f}\AgdaSpace{}\AgdaBound{b}\AgdaSymbol{)}\AgdaSpace{}\AgdaSymbol{∈}\AgdaSpace{}\AgdaBound{Q}.
 \begin{spec}
 record Congruence (A : Algebra Σ) : Set where
   field
@@ -816,11 +904,11 @@ as the set of equivalence classes $\mathcal{A}_s / Q$; the condition
 \Rightarrow s$ can be interpreted as the function mapping the vector
 $([a_1],\ldots,[a_n])$ of equivalence classes into the class $[
 f_\mathcal{A}(a_1,\ldots,a_n)]$. In Agda, we take the same carriers
-from \codigo{A| and use |Q s| as the equivalence relation over }∥ A ⟦ s ⟧ₛ
-∥\codigo{; operations are interpreted just as in |A} and the congruence proof
-is given by \codigo{csubst Q}.
+from \AgdaBound{A} and use \AgdaBound{Q}\AgdaSpace{}\AgdaBound{s} as the equivalence relation over
+\AgdaFunction{∥}\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaFunction{⟦}\AgdaSpace{}\AgdaBound{s}\AgdaSpace{}\AgdaFunction{⟧ₛ}\AgdaSpace{}\AgdaFunction{∥}; operations are interpreted just as in \AgdaBound{A} and the congruence proof
+is given by \AgdaField{csubst}\AgdaSpace{}\AgdaBound{Q}.
 
-\paragraph{Isomorphism Theorems} The definitions of subalgebras,
+\paragraph*{Isomorphism Theorems} The definitions of subalgebras,
 quotients, and epimorphisms (surjective homomorphisms) are related by
 the three isomorphism theorems. Although there is some small overhead
 by the coding of subalgebras, the proofs follow very close what one would

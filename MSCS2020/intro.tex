@@ -1,31 +1,31 @@
 \section{Introduction}
 
-Universal algebra~\cite{birkhoff-1935} is the study of different types
-of algebraic structures at an abstract level, thus revealing common
-results which are valid for all of them and also allowing for a
-unified definition of constructions (for example, products,
-sub-algebra, congruences). Universal algebra has played a relevant
-role in computer science since its earliest days, in particular the
-seminal paper of Birkhoff~\cite{birkhoff-70} features regular
-languages as a prominent example; shortly before,
-Burstall~\cite{burstall69} had proved properties of programs using
-structural induction, by conceiving the language as an
-initial algebra. The ADJ group~\cite{goguen-adj} promoted multi-sorted algebras as a
-key theoretical tool for specifying data
-types~\cite{adj-abstract-data-types}, semantics~\cite{goguen-77}, and
-compilers~\cite{thatcher1981more}.  More recently,
-institutions~\cite{goguen-92}, a generalization of universal algebra,
+Universal algebra, initiated by \cite{birkhoff-1935}, is the study of
+different types of algebraic structures at an abstract level, thus
+revealing common results which are valid for all of them and also
+allowing for a unified definition of constructions (for example,
+products, sub-algebra, congruences). Universal algebra has played a
+relevant role in computer science since its earliest days, in
+particular the seminal paper of \cite{birkhoff-70} features regular
+languages as a prominent example; shortly before, \cite{burstall69}
+had proved properties of programs using structural induction, by
+conceiving the language as an initial algebra. The ADJ
+group \citep[see][]{goguen-adj} promoted multi-sorted algebras as a key
+theoretical tool for specifying data
+types~\citep{adj-abstract-data-types}, semantics~\citep{goguen-77}, and
+compilers~\citep{thatcher1981more}.  More recently,
+institutions~\citep{goguen-92}, a generalization of universal algebra,
 has been used as a foundation of methodologies and frameworks for
-software specification and development~\cite{sannella2012foundations}.
+software specification and development~\citep{sannella2012foundations}.
 
 In spite of the rich mathematical theory of heterogeneous algebras
-(mostly inherited from the monosorted setting, but not always
-\cite{tarlecki-nuances}), there are few publicly available
-formalizations in type theory (which we discuss in the conclusion).
-This situation is to be contrasted with impressive advances in
-mechanization of particular algebraic structures as witnessed, for
-example, by the proof of the Feit-Thompson theorem in Coq by Gonthier
-and his team~\cite{gonthier2013machine}.
+(mostly inherited from the monosorted setting, but with some nuances
+as explained by \cite{tarlecki-nuances} and \cite{adamek-2012}), there are few publicly
+available formalizations in type theory (which we discuss in the
+conclusion).  This situation is to be contrasted with impressive
+advances in mechanization of particular algebraic structures as
+witnessed, for example, by the proof of the Feit-Thompson theorem in
+Coq by Gonthier and his team~\citeyearpar{gonthier2013machine}.
 
 In this work we present an Agda library of multi-sorted universal
 algebra aiming both a reader with a background in the area of
@@ -47,7 +47,7 @@ We formalized the proof that the term algebra is initial and also the
 proofs of the three isomorphism theorems; moreover we also define a
 deduction system for conditional equational logic and prove its
 soundness and completeness with respect to Goguen and Meseguer
-semantics~\cite{GoguenM82}; moreover we prove that the term model (the
+semantics~\citeyearpar{GoguenM82}; moreover we prove that the term model (the
 term algebra quotiened by the provable equivalence relation) is
 initial among models. Then we show that the class of models of any
 conditional equational theory is closed by Isomorphisms, Subalgebras

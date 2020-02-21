@@ -6,24 +6,23 @@ conceptual understanding of syntactic translations. After pointing to
 some related works, we motivate the usefulness of this notion by
 showing a relatively simple example: how to interpret the Boolean
 theory of the previous section in the propositional calculus of
-Dijkstra and Scholten.\footnote{Rocha and Meseguer~\cite{rocha-2007}
+Dijkstra and Scholten.\footnote{\cite{rocha-2007}
   study more thoroughly Boolean theories and their morphisms.}
 
 The concept of morphism between signatures is related with the
 interpretability of similarity types in universal algebra
 (cf.~\cite{garcia-84}), and has an extensive literature:
-Fujiwara~\cite{fujiwara-1959} introduced this notion as
+~\cite{fujiwara-1959} introduced this notion as
 \textit{mappings between algebraic systems},
-Janssen~\cite{janssen-98}, following the ADJ group, called it a
-\textit{polynomial derivor} and Mossakowski et al.~\cite{mossakowski-15}
+\cite{janssen-98}, following the ADJ group, called it a
+\textit{polynomial derivor} and \cite{mossakowski-15}
 referred to it as a \textit{derived signature morphism}, a generalization
 of the more restricted \textit{signature morphisms} in the theory of
-institutions \cite{goguen-92}.
+institutions \citep{goguen-92}.
 
 Let us analyze how to translate the Boolean theory of the previous
-section to the propositional calculus of Dijkstra and Scholten
-\cite{dijkstra-scholten}, whose only non-constant operations are
-equivalence and disjunction.
+section to the propositional calculus of \cite{dijkstra-scholten},
+whose only non-constant operations are equivalence and disjunction.
 \begin{spec}
 data bool-ops' : List ⊤ × ⊤ → Set where
   f' t'    : bool-ops' ([] ↦ tt)
@@ -43,7 +42,7 @@ translation of \codigo{f}. In particular, the translation of formulas is
 recovered as the initial homomorphism between \codigo{∣T∣ bool-sig} and the
 transformation of \codigo{∣T∣ bool-sig'}. In this section we formalize the
 concepts of \emph{derived signature morphism} and \emph{reduct
-  algebra} as introduced, for example, by Sanella et al.~\cite{sannella2012foundations}.
+  algebra} as introduced, for example, by \cite{sannella2012foundations}.
 
 \subsection{Derived signature morphism}
 

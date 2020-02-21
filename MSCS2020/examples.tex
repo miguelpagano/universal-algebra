@@ -6,7 +6,8 @@ defining equational theories that depends in a cascade-way in which every layer
 increase complexity, how is the case with algebraic structures like monoids,
 groups, rings, etc.
 
-\subsection{Monoids}
+\subsection{Naive formalization}
+%\subsection{Monoids}
 
 Previous to use parameterised modules, we can extend the example presented in
 the Sec.~\ref{sec:univ-alg} to exemplify the main limitation of directly using a
@@ -111,10 +112,8 @@ commutative monoids as the previous theory plus this axiom.
 \AgdaSymbol{(}\AgdaFunction{y}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
 \AgdaFunction{x}\AgdaSymbol{)}\<%
-\\
-%
+\\%
 \\[\AgdaEmptyExtraSkip]%
-%
 \>[0]\AgdaFunction{CommMonTheory}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
 \AgdaFunction{Theory}\AgdaSpace{}%
@@ -128,8 +127,7 @@ commutative monoids as the previous theory plus this axiom.
 \AgdaInductiveConstructor{tt}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
 \AgdaInductiveConstructor{[]}\AgdaSymbol{)}\<%
-\\
-%
+\\%
 \>[0]\AgdaFunction{CommMonTheory}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaFunction{commOp}\AgdaSpace{}%
@@ -138,4 +136,100 @@ commutative monoids as the previous theory plus this axiom.
 \\
 \end{code}
 
-\subsection{Groups}
+\noindent
+Other reasonable extension is to formalize the theory of groups using the monoid
+theory. A desirable way for doing this is to use the fact that a group (a
+an algebraic structure with a single binary operation, an unary operation
+and an identity element) is a monoid for the binary operation and the identity
+element, plus some invertibility axioms. This time we have to extend the
+signature with the new constructor for the unary operation. The simplest way
+is to define the data type and the corresponding signature:
+
+\begin{code}
+\>[0]\AgdaKeyword{data}\AgdaSpace{}%
+\AgdaDatatype{group{-}op}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{List}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{×}}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[3]\AgdaInductiveConstructor{mops}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}
+\AgdaDatatype{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}
+\AgdaSymbol{)}
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaDatatype{group{-}op}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}
+\<%
+\\
+%
+\>[3]\AgdaInductiveConstructor{\AgdaUnderscore{}⁻¹}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{group{-}op}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+\\
+\\
+\>[0]\AgdaFunction{group{-}sig}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Signature}\<%
+\\
+\>[0]\AgdaFunction{group{-}sig}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaDatatype{group{-}op}\AgdaSpace{}%
+\AgdaSymbol{\}}\<%
+\end{code}
+
+As before we define new smart-constructor for the unary operation and the
+invertibility axioms; \AgdaFunction{invElemRight}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{x}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaFunction{x}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⁻}}\AgdaSymbol{))}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaFunction{u} and
+\AgdaFunction{invElemLeft}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaSymbol{((}\AgdaFunction{x}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⁻}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
+\AgdaFunction{x}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaFunction{u}. Sadly we can't construct the group theory, say
+\AgdaFunction{GrpTheory}, by appending these axioms to \AgdaFunction{MonTheory}
+(as we did for example with \AgdaFunction{CommMonTheory}). The problem is that
+behind all this naive extension the signatures of the invertibility axioms and
+monoid theory axioms are different.
+
+\subsection{Using parameterised modules}
+%\subsection{Groups}
+

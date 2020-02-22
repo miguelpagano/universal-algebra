@@ -172,6 +172,34 @@ module ProductRespectSatisfaction
    open Setoid (A i ⟦ s ⟧ₛ)
    open aux-sem (A i) Πalg θ (π i)
 
+{- Quotients preserve equations -}
+module QuotientPreserveSatisfaction
+  {ℓ₀ ℓ₁ ℓ₂}  {s : sorts Σ} (e : Equ X s)
+  (A : Algebra {ℓ₀} {ℓ₁} Σ) (φ : Congruence {ℓ₂} A)
+   (A⊨e : A ⊨ equ-to-Equation s e) where
+
+   A/φ : _
+   A/φ = A / φ
+   ν : Homo A (A / φ)
+   ν = QuotHom A φ
+
+   t : Terms s
+   t' : Terms s
+   t = Equ.eleft e
+   t' = Equ.eright e
+
+   A/φ⊨e : A/φ ⊨ equ-to-Equation s e
+   A/φ⊨e θk ⇨v⟨⟩ = begin
+     ⟦ t ⟧A              ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
+     ′ ν ′ s ⟨$⟩ ⟦ t ⟧B   ≈⟨ Π.cong (′ ν ′ s) (A⊨e θA ⇨v⟨⟩) ⟩
+     ′ ν ′ s ⟨$⟩ ⟦ t' ⟧B  ≈⟨ sym (⟦t⟧A≈H⟦t⟧B t') ⟩
+     ⟦ t' ⟧A ∎
+     where
+     open EqR (A/φ ⟦ s ⟧ₛ)
+     open Setoid (A/φ ⟦ s ⟧ₛ)
+     open aux-sem {ℓ₀ = ℓ₀} {ℓ₁ = ℓ₂} {ℓ₂ = ℓ₀} {ℓ₃ = ℓ₁} A/φ A θk ν
+
+
 {- Homomorphic images preserve equations -}
 module HomImgRespectSatisfaction
   {ℓ₀ ℓ₁ ℓ₂ ℓ₃}  {s : sorts Σ} (e : Equ X s)
@@ -183,31 +211,15 @@ module HomImgRespectSatisfaction
    ν : Homo A (A / Kernel H)
    ν = QuotHom A (Kernel H)
 
-   t : Terms s
-   t' : Terms s
-   t = Equ.eleft e
-   t' = Equ.eright e
-
-   A/h⊨e : A/h ⊨ equ-to-Equation s e
-   A/h⊨e θk ⇨v⟨⟩ = begin
-     ⟦ t ⟧A              ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
-     ′ ν ′ s ⟨$⟩ ⟦ t ⟧B   ≈⟨ Π.cong (′ ν ′ s) (A⊨e θA ⇨v⟨⟩) ⟩
-     ′ ν ′ s ⟨$⟩ ⟦ t' ⟧B  ≈⟨ sym (⟦t⟧A≈H⟦t⟧B t') ⟩
-     ⟦ t' ⟧A ∎
-     where
-     open EqR (A/h ⟦ s ⟧ₛ)
-     open Setoid (A/h ⟦ s ⟧ₛ)
-     open aux-sem {ℓ₀ = ℓ₀} {ℓ₁ = ℓ₃} {ℓ₂ = ℓ₀} {ℓ₃ = ℓ₁} A/h A θk ν
-
    import IsoTheorems as I
 
    equ : Equation X s
    equ = (⋀ Equ.eleft e ≈ Equ.eright e)
 
    imgH⊨e : homImg A H ⊨ equ
-   imgH⊨e = IsoRespects⊨ A/h⊨e
+   imgH⊨e = IsoRespects⊨ (A/φ⊨e A⊨e)
      where open IsoRespectSatisfaction equ (I.iso-A/kerH A B H)
-
+           open QuotientPreserveSatisfaction e A (Kernel H)
 
 module ModSemiEquationIsISP  {ar} (E : Theory X ar) where
 

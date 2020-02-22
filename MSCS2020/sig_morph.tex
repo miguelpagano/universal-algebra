@@ -77,31 +77,31 @@ whose only non-constant operations are equivalence and disjunction.
 \end{code}
 
 It is clear that one can translate recursively any term over
-\AgdaFunction{bool-sig} to a term in \AgdaFunction{bool-sig'}
+\AgdaFunction{Σbool₁} to a term in \AgdaFunction{Σbool₂}
 preserving its semantics. % Tiene sentido decir cómo?
 An alternative and more general way is to specify how to translate
-each operation in \AgdaFunction{bool-sig} using operations in
-\AgdaFunction{bool-sig'}. In this way, any
-\AgdaFunction{bool-sig'}-algebra can be seen as a
-\AgdaFunction{bool-sig}-algebra: a
-\AgdaFunction{bool-sig}-operation \AgdaBound{f} is interpreted as
+each operation in \AgdaFunction{Σbool₁} using operations in
+\AgdaFunction{Σbool₂}. In this way, any
+\AgdaFunction{Σbool₂}-algebra can be seen as a
+\AgdaFunction{Σbool₁}-algebra: a
+\AgdaFunction{Σbool₁}-operation \AgdaBound{f} is interpreted as
 the semantics of the translation of \AgdaBound{f}. In particular,
 the translation of formulas is recovered as the initial
 homomorphism between
-\AgdaFunction{∣T∣}\AgdaSpace{}\AgdaFunction{bool-sig} and the
+\AgdaFunction{∣T∣}\AgdaSpace{}\AgdaFunction{Σbool₁} and the
 transformation of
-\AgdaFunction{∣T∣}\AgdaSpace{}\AgdaFunction{bool-sig'}. In this
+\AgdaFunction{∣T∣}\AgdaSpace{}\AgdaFunction{Σbool₂}. In this
 section we formalize the concepts of \emph{derived signature
   morphism} and \emph{reduct algebra} as introduced, for example,
 by \cite{sannella2012foundations}.
 
 \subsection{Derived signature morphism}
 
-Although the disjunction from \AgdaFunction{bool-sig} can be directly mapped to its
-namesake in \AgdaFunction{bool-sig'}, there is no unary operation in \AgdaFunction{bool-sig'} to
-translate the negation. In fact, we should be able to translate an
-operation as a combination of operations in \codigo{bool-sig'} and
-also refer to the arguments of the original operation.
+Although the disjunction from \AgdaFunction{Σbool₁} can be directly mapped to
+its namesake in \AgdaFunction{Σbool₂}, there is no unary operation in
+\AgdaFunction{Σbool₂} to translate the negation. In fact, we should be able
+to translate an operation as a combination of operations in \codigo{bool-sig'}
+and also refer to the arguments of the original operation.
 \newcommand{\sdash}[1]{\vdash}
 
 We introduce the notion of \emph{formal terms} which are formal
@@ -190,9 +190,10 @@ parameterized by arities and indexed by sorts.
 A formal term specifies how to interpret an operation from the source
 signature in the target signature. The arity \AgdaBound{ar'} specifies the sort
 of each argument of the original operation. For example, since the
-operation \AgdaInductiveConstructor{neg} is unary, we can use one identifier when defining its
-translation. Notice that \AgdaFunction{bool-sig} and \AgdaFunction{bool-sig'} share the sorts; in
-general, one also considers a mapping between sorts.
+operation \AgdaInductiveConstructor{neg} is unary, we can use one identifier
+when defining its translation. Notice that \AgdaFunction{Σbool₁} and
+\AgdaFunction{Σbool₂} share the sorts; in general, one also considers a
+mapping between sorts.
 
 A \emph{derived signature morphism} consists of a mapping between sorts
 and a mapping from operations to formal terms:

@@ -714,7 +714,7 @@ showing snippets of the formalization of a Boolean Theory presented by
 
   \begin{code}
     \>[0]\AgdaKeyword{data}\AgdaSpace{}%
-\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaDatatype{Σops₁}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
 \AgdaDatatype{List}\AgdaSpace{}%
 \AgdaRecord{⊤}\AgdaSpace{}%
@@ -725,25 +725,17 @@ showing snippets of the formalization of a Boolean Theory presented by
 \AgdaKeyword{where}\<%
 \\
 \>[0][@{}l@{\AgdaIndent{0}}]%
-\>[2]\AgdaInductiveConstructor{t}%
+\>[2]\AgdaInductiveConstructor{t₁} \AgdaInductiveConstructor{f₁}% %
 \>[7]\AgdaSymbol{:}\AgdaSpace{}%
-\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaDatatype{Σops₁}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
 \AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
 \\
 %
-\>[2]\AgdaInductiveConstructor{f}%
-\>[7]\AgdaSymbol{:}\AgdaSpace{}%
-\AgdaDatatype{Σops}\AgdaSpace{}%
-\AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
-\AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
-\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
-\\
-%
-\>[2]\AgdaInductiveConstructor{neg}\AgdaSpace{}%
+\>[2]\AgdaInductiveConstructor{neg₁}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaDatatype{Σops₁}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
 \AgdaInductiveConstructor{tt}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{]}}\AgdaSpace{}%
@@ -751,21 +743,9 @@ showing snippets of the formalization of a Boolean Theory presented by
 \AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
 \\
 %
-\>[2]\AgdaInductiveConstructor{and}\AgdaSpace{}%
+\>[2]\AgdaInductiveConstructor{and₁} \AgdaInductiveConstructor{or₁}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaDatatype{Σops}\AgdaSpace{}%
-\AgdaSymbol{((}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
-\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
-\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
-\AgdaInductiveConstructor{tt}\AgdaSpace{}%
-\AgdaOperator{\AgdaFunction{]}}\AgdaSymbol{)}\AgdaSpace{}%
-\AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
-\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
-\\
-%
-\>[2]\AgdaInductiveConstructor{or}%
-\>[7]\AgdaSymbol{:}\AgdaSpace{}%
-\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaDatatype{Σops₁}\AgdaSpace{}%
 \AgdaSymbol{((}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
@@ -776,11 +756,11 @@ showing snippets of the formalization of a Boolean Theory presented by
 \\
 %
 \\[\AgdaEmptyExtraSkip]%
-\>[0]\AgdaFunction{Σbool}\AgdaSpace{}%
+\>[0]\AgdaFunction{Σbool₁}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
 \AgdaRecord{Signature}\<%
 \\
-\>[0]\AgdaFunction{Σbool}\AgdaSpace{}%
+\>[0]\AgdaFunction{Σbool₁}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaKeyword{record}\AgdaSpace{}%
 \AgdaSymbol{\{}\AgdaSpace{}%
@@ -790,19 +770,19 @@ showing snippets of the formalization of a Boolean Theory presented by
 \AgdaSymbol{;}\AgdaSpace{}%
 \AgdaField{ops}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
-\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaDatatype{Σops₁}\AgdaSpace{}%
 \AgdaSymbol{\}}\<%
 \\
 %
 \\[\AgdaEmptyExtraSkip]%
 %
-\>[0]\AgdaFunction{ΣVars}\AgdaSpace{}%
+\>[0]\AgdaFunction{ΣVars₁}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
 \AgdaFunction{Vars}\AgdaSpace{}%
-\AgdaFunction{Σbool}\<%
+\AgdaFunction{Σbool₁}\<%
 \\
 %
-\>[0]\AgdaFunction{ΣVars}\AgdaSpace{}%
+\>[0]\AgdaFunction{ΣVars₁}\AgdaSpace{}%
 \AgdaBound{s}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaDatatype{ℕ}\<%
@@ -810,12 +790,12 @@ showing snippets of the formalization of a Boolean Theory presented by
 %
 \\[\AgdaEmptyExtraSkip]%
 %
-\>[0]\AgdaFunction{Form}\AgdaSpace{}%
+\>[0]\AgdaFunction{Form₁}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
 \AgdaPrimitiveType{Set}\<%
 \\
 %
-\>[0]\AgdaFunction{Form}\AgdaSpace{}%
+\>[0]\AgdaFunction{Form₁}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaFunction{Terms}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
@@ -834,11 +814,11 @@ showing snippets of the formalization of a Boolean Theory presented by
 \begin{code}
 \>[4]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}∧\AgdaUnderscore{}}}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaFunction{Form}\AgdaSpace{}%
+\AgdaFunction{Form₁}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
-\AgdaFunction{Form}\AgdaSpace{}%
+\AgdaFunction{Form₁}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
-\AgdaFunction{Form}\<%
+\AgdaFunction{Form₁}\<%
 \\
 %
 \>[4]\AgdaBound{φ}\AgdaSpace{}%
@@ -846,7 +826,7 @@ showing snippets of the formalization of a Boolean Theory presented by
 \AgdaBound{ψ}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaInductiveConstructor{term}\AgdaSpace{}%
-\AgdaInductiveConstructor{and}\AgdaSpace{}%
+\AgdaInductiveConstructor{and₁}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{⟨⟨}}\AgdaSpace{}%
 \AgdaBound{φ}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
@@ -858,16 +838,16 @@ showing snippets of the formalization of a Boolean Theory presented by
 %
 \>[4]\AgdaFunction{¬}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaFunction{Form}\AgdaSpace{}%
+\AgdaFunction{Form₁}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
-\AgdaFunction{Form}\<%
+\AgdaFunction{Form₁}\<%
 \\
 %
 \>[4]\AgdaFunction{¬}\AgdaSpace{}%
 \AgdaBound{φ}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaInductiveConstructor{term}\AgdaSpace{}%
-\AgdaInductiveConstructor{neg}\AgdaSpace{}%
+\AgdaInductiveConstructor{neg₁}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{⟪}}\AgdaSpace{}%
 \AgdaBound{φ}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{⟫}}\<%
@@ -877,7 +857,7 @@ showing snippets of the formalization of a Boolean Theory presented by
 %
 \>[4]\AgdaFunction{p}\AgdaSymbol{,}\AgdaFunction{q}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaFunction{Form}\<%
+\AgdaFunction{Form₁}\<%
 \\
 %
 \>[4]\AgdaFunction{p}\AgdaSpace{}%
@@ -899,21 +879,21 @@ showing snippets of the formalization of a Boolean Theory presented by
 %
 \>[4]\AgdaFunction{true}\AgdaSymbol{,}\AgdaFunction{false}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaFunction{Form}\<%
+\AgdaFunction{Form₁}\<%
 \\
 %
 \>[4]\AgdaFunction{true}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaInductiveConstructor{term}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaInductiveConstructor{inj₁}\AgdaSpace{}%
-\AgdaInductiveConstructor{t}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaInductiveConstructor{t₁}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaInductiveConstructor{⟨⟩}\<%
 \\
 \>[4]\AgdaFunction{false}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaInductiveConstructor{term}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaInductiveConstructor{inj₁}\AgdaSpace{}%
-\AgdaInductiveConstructor{f}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaInductiveConstructor{f₁}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaInductiveConstructor{⟨⟩}\<%
 \\
 %
@@ -932,7 +912,7 @@ showing snippets of the formalization of a Boolean Theory presented by
   \begin{code}
     \>[0]\AgdaFunction{commAnd}\AgdaSpace{}%
     \AgdaSymbol{:}\AgdaSpace{}%
-    \AgdaFunction{Eq}\<%
+    \AgdaFunction{Eq₁}\<%
     \\
     %
     \>[0]\AgdaFunction{commAnd}\AgdaSpace{}%
@@ -950,7 +930,7 @@ showing snippets of the formalization of a Boolean Theory presented by
     \\[\AgdaEmptyExtraSkip]%
     \>[2]\AgdaFunction{defF}\AgdaSpace{}%
     \AgdaSymbol{:}\AgdaSpace{}%
-    \AgdaFunction{Eq}\<%
+    \AgdaFunction{Eq₁}\<%
     \\
     %
     \>[2]\AgdaFunction{defF}\AgdaSpace{}%
@@ -964,7 +944,7 @@ showing snippets of the formalization of a Boolean Theory presented by
     \AgdaFunction{false}\<%
     \\%
     \\[\AgdaEmptyExtraSkip]%
-    \>[2]\AgdaFunction{Tbool}\AgdaSpace{}%
+    \>[2]\AgdaFunction{Tbool₁}\AgdaSpace{}%
     \AgdaSymbol{:}\AgdaSpace{}%
     \AgdaFunction{Theory}\AgdaSpace{}%
     \AgdaFunction{Vars}\AgdaSpace{}%
@@ -973,7 +953,7 @@ showing snippets of the formalization of a Boolean Theory presented by
     \AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
     \\
     %
-    \>[2]\AgdaFunction{Tbool}\AgdaSpace{}%
+    \>[2]\AgdaFunction{Tbool₁}\AgdaSpace{}%
     \AgdaSymbol{=}\AgdaSpace{}%
     \AgdaSymbol{⟨}\AgdaSpace{}\AgdaFunction{commAnd}\AgdaSpace{}%
     \AgdaSymbol{,}\AgdaSpace{}%
@@ -1005,7 +985,7 @@ showing snippets of the formalization of a Boolean Theory presented by
   \begin{code}
     \>[2]\AgdaFunction{prop}\AgdaSpace{}%
 \AgdaSymbol{:}%
-\>[8]\AgdaFunction{Tbool}\AgdaSpace{}%
+\>[8]\AgdaFunction{Tbool₁}\AgdaSpace{}%
 \AgdaOperator{\AgdaDatatype{⊢}}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
 \AgdaFunction{¬}\AgdaSpace{}%
@@ -1071,8 +1051,6 @@ substitution rule. The relevant actions of the substitution \AgdaFunction{σ} ar
 \AgdaFunction{¬}\AgdaSpace{}\AgdaFunction{p} and
 \AgdaFunction{σ}\AgdaSpace{}\AgdaFunction{q}\AgdaSpace{}\AgdaSymbol{=}
 \AgdaFunction{p}.
-
-
 
 %%% Local Variables: ***
 %%% mode:latex ***

@@ -4,7 +4,7 @@
 In this section we introduce the notion of (conditional) equational
 theories and the corresponding notion of satisfiability of theories
 by algebras. Moreover we formalize (conditional) equational logic as
-presented by Goguen and Lin \cite{goguen2005specifying} and prove that
+presented by \cite{goguen2005specifying} and prove that
 the deduction system is sound and complete.
 
 \subsection{Satisfiability and provability}
@@ -17,13 +17,12 @@ of the same sort. Moreover we allow quasi-identities which we
 write as conditional equations:
 \[ t = t'\ \mathsf{if} \  t_1 = t'_1, \ldots, t_n = t'_n \enspace . \]
 
-Let \codigo{Σ| be a signature and |X : sorts Σ → Set} be a family of
-variables for \codigo{Σ|. An identity |e : Eq Σ X s} is a pair of (open)
-terms with sort \codigo{s}. A conditional equation is modelled as record with
-fields for the conclusion and the conditions, modelled as an
-heterogeneous vector of sorted identities. We declare a constructor
-to use the lighter notation \codigo{⋀ eq if (ar , eqs)| instead of }record {
-  eq = e ; cond = (ar , eqs )}|.
+Let signature \AgdaBound{Σ} and \AgdaBound{X} be a family of variables
+for \AgdaBound{Σ}. A conditional equation is modelled as a record
+with fields for the conclusion and the conditions, consist of an
+heterogeneous vector of sorted identities. We declare a constructor to
+use the lighter notation \codigo{⋀ eq if (ar , eqs)| instead of
+}record { eq = e ; cond = (ar , eqs )}|.
 \begin{spec}
 record Equation (Σ : Signature) (X : sorts Σ → Set) (s : sorts Σ) : Set where
   constructor ⋀_if_
@@ -42,8 +41,8 @@ equations of a theory share the same set of variables, while they
 assume that each equation has its own set of quantified
 variables. Clearly, this simplification is harmless; if we have a
 theory where each equation has its own set of variables, we can take
-the union of those sets as the common set. As stressed by Goguen and
-Meseguer \cite{goguen-remarks-87}, quantifying equations is essential:
+the union of those sets as the common set. As stressed by
+\cite{goguen-remarks-87}, quantifying equations is essential:
 \begin{quote}
   [\ldots] the naive unsorted rules of deduction for equational logic
   (namely, reflexivity, symmetry, transitivity and substitutivity) are
@@ -52,9 +51,9 @@ Meseguer \cite{goguen-remarks-87}, quantifying equations is essential:
   yields a rule set that is sound.
 \end{quote}
 
-\comment{\noindent Notice that we follow Goguen and Meseguer in that equations
+\noindent Notice that we follow Goguen and Meseguer in that equations
 are given explicitly over a set of variables. This, in turn, leads us
-to define satisfiability as proposed by Huet and Oppen.}
+to define satisfiability as proposed by Huet and Oppen.
 
 \paragraph*{Satisfiability} Let $\Sigma$ be a signature and
 $\mathcal{A}$ be an algebra for $\Sigma$. We say that a conditional equation
@@ -70,7 +69,7 @@ _⊨ₑ_ θ {s} (t , t') = _≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧ θ) (⟦ t' ⟧ θ)
 \end{spec}
 \noindent Using the point-wise extension of this relation we can write
 directly the notion of satisfiability.
-\begin{spec} 
+\begin{spec}
 _⊨_ : ∀ {Σ X} (A : Algebra Σ) → {s : sorts Σ} → Equation Σ X s → Set
 A ⊨ (⋀ eq if (_ , eqs)) = ∀ θ → ((θ ⊨ₑ_)* eqs) → θ ⊨ₑ eq
 \end{spec}
@@ -87,19 +86,18 @@ _⊨Σ_ : ∀ {Σ X ar s} → (E : Theory Σ X ar) → (e : Equation Σ X s) →
 _⊨Σ_ {Σ} E e = (A : Algebra Σ) → A ⊨ₘ E → A ⊨ e
 \end{spec}%
 
-\paragraph*{Provability} As noticed by Huet and Oppen
-\cite{huet-rewrite}, the definition of a sound deduction system for
-multi-sorted equality logic is more subtle than expected. We formalize
-the system presented in \cite{goguen2005specifying}, shown in
-Fig.~\ref{fig:deduction}. The first three rules are reflexivity,
-symmetry and transitivity; the fourth rule, called substitution,
-allows to instantiate an axiom with a substitution \codigo{σ}, provided one
-has proofs for every condition of the axiom;\footnote{In our
-  formalization this rule is slightly less general because we assume
-  all the equations are quantified over the same set of variables.}
-finally, the last rule internalizes Leibniz rule, for replacing equals
-by equals in subterms.  Notice that we can only prove identities and
-not quasi-identities.
+\paragraph*{Provability} As noticed by \cite{huet-rewrite}, the
+definition of a sound deduction system for multi-sorted equality logic
+is more subtle than expected. We formalize the system presented of
+\cite{goguen2005specifying}, shown in Fig.~\ref{fig:deduction}. The
+first three rules are reflexivity, symmetry and transitivity; the
+fourth rule, called substitution, allows to instantiate an axiom with
+a substitution \codigo{σ}, provided one has proofs for every condition
+of the axiom;\footnote{In our formalization this rule is slightly less
+  general because we assume all the equations are quantified over the
+  same set of variables.}  finally, the last rule internalizes Leibniz
+rule, for replacing equals by equals in subterms.  Notice that we can
+only prove identities and not quasi-identities.
 \begin{figure}[t]
   \centering
   \bottomAlignProof
@@ -486,9 +484,8 @@ of products a product of shallow monoids.
 In this section we outline
 how to formalize an equational theory and illustrate each step by
 showing snippets of the formalization of a Boolean Theory presented by
-Rocha and Meseguer~\cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The
-  full code is available in the file \nolinkurl{Examples/EqBool.agda}
-  of the repository.}
+\cite{DBLP:conf/RelMiCS/RochaM08}.\footnote{The full code is available
+  in the file \nolinkurl{Examples/EqBool.agda} of the repository.}
 
 \paragraph*{Define the signature}
 \label{sec:define-signature} describing the language, and choose

@@ -34,21 +34,44 @@ construction of the reals; in particular they use Coq's typeclasses to
 have a cleaner representation of algebraic structures.
 
 
-\textit{Future Work.} We think that this development opened the path
-to several further work, in particular:
-\begin{enumerate}
-\item complete the proof Birkhoff's (quasi)-variety characterization:
-  this might require to revise some of the types we use (for instance,
-  whether we should restrict theories to be finite);
-\item formalize more of the mathematical theory behind universal algebra;
-\item consider algebras of binding structures as proposed by Fiore
-  \cite{fiore-2010}, Capretta's and Felty's \citeyearpar{capretta/felty:2009}
-  formalization of higher-order algebras might be an interesting
-  starting point;
-\item introduce multi-sorted rewriting; and
-\item explore the idea of using completeness and soundness for
-  automating the proof of identities in algebraic structures. %braibant phd
-\end{enumerate}
+\textit{Future Work.} We plan to extend the library to cover more
+material of the standard references on universal algebra. This has
+several independent lines of development. First we want to finish the
+proof of Birkhoff's (quasi)-variety characterization theorem; this
+implies to introduce new concepts (like subdirect products) and review
+some of our current design choices (should we allow for infinite
+theories). Congruences play an import rôle in universal algebra and we
+lack important notions (permutable congruence) and results (for
+example that congruences form a complete lattice). With regard to
+universal algebraist, it would also be nice to have an interface for
+monosorted algebras so to get rid of the nuances of the multisorted
+setting.
+
+Our interest in including translations of signatures arose as we tried
+to understand compilation in an algebraic setting (we include an
+example of a correct-by-construction compiler in our library). The
+results in Sec.~\ref{sec:trans} almost show that equational logic can
+be seen as an institution\footnote{The only gap are the proofs that
+  composition of signature morphisms is associative and that the
+  identity is neutral.} It might be interesting (but this is not our
+priority) to explore the use specification-building operations to
+build equational theories from smaller ones; for example, abelian
+groups can be obtained as the union of two theories
+\citep[see][p. 232]{sannella2012foundations}.
+
+Somewhat related to our work are the algebras of binding structures as
+proposed by \cite{fiore-2010}. Capretta's and Felty's
+\citeyearpar{capretta/felty:2009} formalization of higher-order
+algebras might be an interesting starting point.
+
+% We think that this development opened the path
+% to several further work, in particular:
+% \begin{enumerate}
+% \item 
+% \item introduce multi-sorted rewriting; and
+% \item explore the idea of using completeness and soundness for
+%   automating the proof of identities in algebraic structures. %braibant phd
+% \end{enumerate}
 
 %\begin{ack}
 
@@ -57,3 +80,8 @@ to several further work, in particular:
   and suggestions. We are grateful to Pedro Sánchez Terraf for discussions
   about universal algebra.
 %\end{ack}
+
+%%% Local Variables: ***
+%%% mode:latex ***
+%%% TeX-master: "univ-alg.tex"  ***
+%%% End: ***

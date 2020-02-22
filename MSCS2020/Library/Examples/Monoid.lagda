@@ -95,7 +95,7 @@ module Monoid {op-mon : List ⊤ × ⊤ → Set}
     pattern mon-unitL-ax = there here
     pattern mon-unitR-ax  = there (there here)
 
-    MonTheory  : Theory X (tt ∷ tt ∷ [ tt ])
+    MonTheory  : Theory X _
     MonTheory = assocOp ▹ (unitLeft ▹ unitRight ▹ ⟨⟩)
 
 {- Abelian monoid (commutative monoid) -}

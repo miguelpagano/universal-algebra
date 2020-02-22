@@ -1,31 +1,32 @@
 \section{Monoids and Groups: an example of equational theories}
 \label{sec:extheories}
 
-In this section we present a pleasant method, using parameterised modules, for
-defining equational theories that depends in a cascade-way in which every layer
-increase complexity, how is the case with algebraic structures like monoids,
-groups, rings, etc.
+In this section we present our formalization of the algebraic
+hierarchy. Using parameterized modules we can build each layer on top
+of the previous one; the resulting structure is modular in the sense
+that one can decide to parameterize the highest layer while keeping
+the rest of the hierarchy intact.
 
 \subsection{Naive formalization}
 %\subsection{Monoids}
 
-Previous to use parameterised modules, we can extend the example presented in
-the Sec.~\ref{sec:univ-alg} to exemplify the main limitation of directly using a
-data type to define a theory. In this prior section we define the data type
+The naive approach that we used to define the signature of monoids
+shows its limitations when we want to reuse it in larger signatures.
+In Sec.~\ref{sec:univ-alg} we introduced the data type
 \AgdaDatatype{monoid-op} as an example to define the monoid signature
-\AgdaFunction{monoid-sig}. It is straightforward to formalize the theory of
-monoids (\ie an algebraic structure with a single associative binary operation
-and an identity element) by applying the outline presented in
-\ref{sec:eqlog-theory-ol}: first, given some family of sets of variables, say
-\AgdaFunction{X}\AgdaSpace{} \AgdaSymbol{:}\AgdaSpace{} \AgdaFunction{Vars}
-\AgdaFunction{monoid{-}sig}, we define \AgdaFunction{Term}\AgdaSpace{}
-\AgdaSymbol{=}\AgdaSpace{} \AgdaFunction{T} \AgdaSpace{}
-\AgdaFunction{monoid{-}sig}\AgdaSpace{}
-\AgdaSymbol{〔}\AgdaFunction{X}\AgdaSymbol{〕}, the set of terms over the
-extended signature; second, we introduce the obvious smart-constructors
-\AgdaUnderscore{}\AgdaOperator{\AgdaFunction{∘}}\AgdaUnderscore{} for the
-binary operation, and \AgdaFunction{u} for the identity element; finally we
-write the associativity and identity element axioms.
+\AgdaFunction{monoid-sig}; following the steps of
+Sec.~\ref{sec:eqlog-theory-ol} we choose some set for variables, say
+\AgdaFunction{X}\AgdaSpace{} \AgdaSymbol{:}\AgdaSpace{}
+\AgdaFunction{Vars} \AgdaFunction{monoid{-}sig}, we introduce some
+abbreviations for the set of terms with variables
+\AgdaFunction{Term}\AgdaSpace{} \AgdaSymbol{=}\AgdaSpace{}
+\AgdaFunction{T} \AgdaSpace{} \AgdaFunction{monoid{-}sig}\AgdaSpace{}
+\AgdaSymbol{〔}\AgdaFunction{X}\AgdaSymbol{〕} and also
+smart-constructors
+\AgdaUnderscore{}\AgdaOperator{\AgdaFunction{∘}}\AgdaUnderscore{} for
+the binary operation, and \AgdaFunction{u} for the identity element.
+Now we can write the associativity and identity element axioms and
+collect them in the theory \AgdaFunction{MonTheory}.
 
 \begin{code}
 \>[4]\AgdaFunction{assocOp}\AgdaSpace{}%
@@ -42,8 +43,6 @@ write the associativity and identity element axioms.
 \AgdaSymbol{(}\AgdaFunction{y}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
 \AgdaFunction{z}\AgdaSymbol{))}\<%
-\\
-%
 \\[\AgdaEmptyExtraSkip]%
 %
 \>[4]\AgdaFunction{unitLeft}\AgdaSpace{}%
@@ -54,8 +53,6 @@ write the associativity and identity element axioms.
 \AgdaFunction{x}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
 \AgdaFunction{x}\<%
-\\
-%
 \\[\AgdaEmptyExtraSkip]%
 %
 \>[4]\AgdaFunction{unitRight}\AgdaSpace{}%
@@ -95,10 +92,10 @@ write the associativity and identity element axioms.
 \end{code}
 
 \noindent
-Extending this theory of monoids to the theory of commutative monoids (also
-called, abelian monoids) is pretty straightforward. There is no need to extend
-the signature with new constructors, neither new smart-constructors. We only
-need to define the commutative axiom; thus we simply define the theory of
+Extending this theory of monoids to the theory of commutative monoids
+is pretty straightforward. There is no need to extend the signature
+with new constructors, neither new smart-constructors. We only need to
+define the commutative axiom; thus we simply define the theory of
 commutative monoids as the previous theory plus this axiom.
 
 \begin{code}
@@ -136,14 +133,11 @@ commutative monoids as the previous theory plus this axiom.
 \\
 \end{code}
 
-\noindent
-Other reasonable extension is to formalize the theory of groups using the monoid
-theory. A desirable way for doing this is to use the fact that a group (a
-an algebraic structure with a single binary operation, an unary operation
-and an identity element) is a monoid for the binary operation and the identity
-element, plus some invertibility axioms. This time we have to extend the
-signature with the new constructor for the unary operation. The simplest way
-is to define the data type and the corresponding signature:
+Next one might wonder how to to formalize the theory of groups using
+our monoid theory. Now we need to extend both the signature and the
+theory. The simplest way is to define a data-type with a constructor
+to access all the operations of the monoid and another constructor for
+the new operation.
 
 \begin{code}
 \>[0]\AgdaKeyword{data}\AgdaSpace{}%
@@ -206,8 +200,9 @@ is to define the data type and the corresponding signature:
 \AgdaSymbol{\}}\<%
 \end{code}
 
-As before we define new smart-constructor for the unary operation and the
-invertibility axioms; \AgdaFunction{invElemRight}\AgdaSpace{}%
+As before we define new smart-constructor and state the axioms for the inverse:
+\begin{code}
+\>[0]\AgdaFunction{invElemRight}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaFunction{x}\AgdaSpace{}%
@@ -215,8 +210,10 @@ invertibility axioms; \AgdaFunction{invElemRight}\AgdaSpace{}%
 \AgdaSymbol{(}\AgdaFunction{x}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{⁻}}\AgdaSymbol{))}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
-\AgdaFunction{u} and
-\AgdaFunction{invElemLeft}\AgdaSpace{}%
+\AgdaFunction{u}\<%
+%
+\\
+\>[0]\AgdaFunction{invElemLeft}\AgdaSpace{}%
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
 \AgdaSymbol{((}\AgdaFunction{x}\AgdaSpace{}%
@@ -224,26 +221,28 @@ invertibility axioms; \AgdaFunction{invElemRight}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{∘}}\AgdaSpace{}%
 \AgdaFunction{x}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
-\AgdaFunction{u}. Sadly we can't construct the group theory, say
-\AgdaFunction{GrpTheory}, by appending these axioms to \AgdaFunction{MonTheory}
-(as we did for example with \AgdaFunction{CommMonTheory}). The problem is that
-behind all this naive extension the signatures of the invertibility axioms and
-monoid theory axioms are different. Obviously there are ways of solving this
-problem and possible others that can appear, but we think using parameterised
-modules is a more clean approach.
+\AgdaFunction{u}\<
+\end{code}
+Since the signature for these two axioms is different from the
+signature \AgdaFunction{MonTheory} we cannot construct the theory for
+groups, say \AgdaFunction{GrpTheory}, by concatenating these axioms
+with \AgdaFunction{MonTheory} (in contrast with
+\AgdaFunction{CommMonTheory}). Certainly one could use some signature
+morphism, but that would be too cumbersome.
 
 \subsection{Using parameterised modules}
 %\subsection{Groups}
 
-The use of parameterised modules helps us to generalize concrete definitions
-that live in the module, particularly our approach it is to generalize the
-concrete data type that define the operations field in the signature of a given
-algebraic structure. Thus, we refactor the previous formalizations generalizing
-the data types that define operations and also the corresponding constructors of
-these operations; notice that the type \AgdaBound{monoid{-}op} is valid only if
-it has at least two constructors with the correct type. Also notice that
-we don't generalize the set of sorts, but it would be necessary if we pretend
-to formalize for example Modules.
+The use of parameterised modules helps us to generalize concrete
+definitions of signatures, particularly our approach is to generalize
+the concrete data type that define the operations field of the
+signature. Thus, we refactor the previous formalizations generalizing
+the data types that define operations and also the corresponding
+constructors of these operations; notice that the type
+\AgdaBound{monoid{-}op} is valid only if it has at least two
+constructors with the correct type. Also notice that we do not
+generalize the set of sorts, but it would be necessary if we pretend
+to formalize, for example, Group actions on top of Monoid actions.
 
 \begin{code}
 \>[0]\AgdaKeyword{module}%
@@ -298,10 +297,9 @@ to formalize for example Modules.
 \AgdaSymbol{\}}\<%
 \end{code}
 
-\noindent The rest of the module is straightforward, we define a submodule
-\AgdaModule{Theory} where all the definitions related to the theory are defined;
-smart-constructors, axioms and the theory.
-
+\noindent The rest of the module is straightforward, we define a
+submodule \AgdaModule{Theory} where all the definitions related to the
+theory (smart-constructors, axioms and the theory) are defined.
 \begin{code}
   \>[0][@{}l@{\AgdaIndent{0}}]%
   \>[2]\AgdaKeyword{module}\AgdaSpace{}%
@@ -309,9 +307,6 @@ smart-constructors, axioms and the theory.
   \AgdaKeyword{where}
   \\
   \>[2][@{}l@{\AgdaIndent{0}}]%
-  \>[4]
-  $\vdots$
-  \\
   \>[4]\AgdaFunction{MonTheory}\AgdaSpace{}%
   \AgdaSymbol{=}\AgdaSpace{}%
   \AgdaFunction{assocOp}\AgdaSpace{}%
@@ -432,5 +427,5 @@ invertibility axioms.
 
 
 \noindent
-Using this approach we formalize Monoids, Commutative Monoids, Groups,
+Using this approach we formalized Monoids, Commutative Monoids, Groups,
 Commutative Groups, Semirings, Ring and Commutative Rings.

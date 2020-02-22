@@ -178,7 +178,7 @@ open FormalTerm Σₘ
 s↝ : sorts Σₑ → sorts Σₘ
 s↝ E = C
 
-op↝ : ∀ {ar s} → ops Σₑ (ar , s) → lmap s↝ ar ⊩ s↝ s
+op↝ : ∀ {ar s} → ops Σₑ (ar , s) → lmap s↝ ar ⊢ s↝ s
 op↝ (val n) = (pushₘ n) ∣$∣ ⟨⟩
 op↝ (var v) = (loadₘ v) ∣$∣ ⟨⟩
 op↝ plus = seqₘ  ∣$∣ ⟨⟨  # (suc zero)

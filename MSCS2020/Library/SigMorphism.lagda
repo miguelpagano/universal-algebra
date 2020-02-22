@@ -43,58 +43,58 @@ open import UnivAlgebra
 
 module FormalTerm (Σ : Signature) where
 
- data _⊩_  (ar' : Arity Σ) : (sorts Σ) → Set where
-   #   : (n : Fin (length ar')) → ar' ⊩ (ar' ‼ n)
+ data _⊢_  (ar' : Arity Σ) : (sorts Σ) → Set where
+   #   : (n : Fin (length ar')) → ar' ⊢ (ar' ‼ n)
    _∣$∣_ : ∀ {ar s} → ops Σ (ar , s) →
-               HVec (ar' ⊩_) ar → ar' ⊩ s
+               HVec (ar' ⊢_) ar → ar' ⊢ s
 
  {- Lifting of indices -}
  mutual
-   ↑ : ∀ {s} → (ar : Arity Σ) → (s' : sorts Σ) → ar ⊩ s → (s' ∷ ar) ⊩ s
+   ↑ : ∀ {s} → (ar : Arity Σ) → (s' : sorts Σ) → ar ⊢ s → (s' ∷ ar) ⊢ s
    ↑ {.(ar ‼ n)} ar  s' (# n) = # (suc n)
    ↑ ar s' (x ∣$∣ x₁) = x ∣$∣ ↑* ar s' x₁
 
-   ↑* : ∀ {ar'} → (ar : Arity Σ) → (s' : sorts Σ) → HVec (ar ⊩_) ar' → HVec ((s' ∷ ar) ⊩_) ar'
+   ↑* : ∀ {ar'} → (ar : Arity Σ) → (s' : sorts Σ) → HVec (ar ⊢_) ar' → HVec ((s' ∷ ar) ⊢_) ar'
    ↑* ar s' ⟨⟩ = ⟨⟩
    ↑* ar s' (v ▹ vs) = (↑ ar s' v) ▹ (↑* ar s' vs)
 
 
  {- Substitution on formal terms -}
  mutual
-   ⊩_/_ : {ar ar' : Arity Σ}  {s : sorts Σ} → ar ⊩ s → HVec (ar' ⊩_) ar → ar' ⊩ s
-   ⊩_/_ {ar} {s = .(ar ‼ n)} (# n) ts' = ts' ‼v n
-   ⊩ f ∣$∣ ts / ts' = f ∣$∣ (⊩* ts / ts')
+   ⊢_/_ : {ar ar' : Arity Σ}  {s : sorts Σ} → ar ⊢ s → HVec (ar' ⊢_) ar → ar' ⊢ s
+   ⊢_/_ {ar} {s = .(ar ‼ n)} (# n) ts' = ts' ‼v n
+   ⊢ f ∣$∣ ts / ts' = f ∣$∣ (⊢* ts / ts')
 
 
-   ⊩*_/_ : {ar ar' ar'' : Arity Σ} → HVec (ar ⊩_) ar'' → HVec (ar' ⊩_) ar → HVec (ar' ⊩_) ar''
-   ⊩* ⟨⟩ / ts' = ⟨⟩
-   ⊩* t ▹ ts / ts' = (⊩ t / ts') ▹ (⊩* ts / ts')
+   ⊢*_/_ : {ar ar' ar'' : Arity Σ} → HVec (ar ⊢_) ar'' → HVec (ar' ⊢_) ar → HVec (ar' ⊢_) ar''
+   ⊢* ⟨⟩ / ts' = ⟨⟩
+   ⊢* t ▹ ts / ts' = (⊢ t / ts') ▹ (⊢* ts / ts')
 
 module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ₂} Σ) where
   open FormalTerm Σ
   mutual
 
-    ⟦_⟧⊩ : ∀ {ar s} → ar ⊩ s → A ∥ ar ∥* → A ∥ s ∥
-    ⟦ # n ⟧⊩    as =  as ‼v n
-    ⟦ f ∣$∣ ts ⟧⊩  as = A ⟦ f ⟧ₒ ⟨$⟩ ⟦ ts ⟧⊩* as
+    ⟦_⟧⊢ : ∀ {ar s} → ar ⊢ s → A ∥ ar ∥* → A ∥ s ∥
+    ⟦ # n ⟧⊢    as =  as ‼v n
+    ⟦ f ∣$∣ ts ⟧⊢  as = A ⟦ f ⟧ₒ ⟨$⟩ ⟦ ts ⟧⊢* as
 
 
-    ⟦_⟧⊩* : ∀ {ar ar'} → HVec (ar ⊩_) ar' → A ∥ ar ∥* → A ∥ ar' ∥*
-    ⟦ ⟨⟩ ⟧⊩*      as = ⟨⟩
-    ⟦ t ▹ ts ⟧⊩*  as = ⟦ t ⟧⊩ as ▹ ⟦ ts ⟧⊩* as
+    ⟦_⟧⊢* : ∀ {ar ar'} → HVec (ar ⊢_) ar' → A ∥ ar ∥* → A ∥ ar' ∥*
+    ⟦ ⟨⟩ ⟧⊢*      as = ⟨⟩
+    ⟦ t ▹ ts ⟧⊢*  as = ⟦ t ⟧⊢ as ▹ ⟦ ts ⟧⊢* as
 
 
-  cong⟦⟧⊩ : ∀ {ar s} {vs vs' : A ∥ ar ∥* } →
-            (t : ar ⊩ s) →
+  cong⟦⟧⊢ : ∀ {ar s} {vs vs' : A ∥ ar ∥* } →
+            (t : ar ⊢ s) →
             _∼v_  {R = ((Setoid._≈_ ∘ _⟦_⟧ₛ A) $-)} vs vs' →
-            Setoid._≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧⊩ vs) (⟦ t ⟧⊩ vs')
-  cong⟦⟧⊩ {vs = vs} {vs'} (# n) eq = ~v-pointwise eq n
-  cong⟦⟧⊩ {ar} {_} {vs} {vs'} (f ∣$∣ ts) eq = Π.cong (A ⟦ f ⟧ₒ) (cong⟦⟧⊩* ts)
-    where  cong⟦⟧⊩* : ∀ {ar'} →
-                   (ts : HVec (ar ⊩_) ar') →
-                   (⟦ ts ⟧⊩* vs ) ∼v (⟦ ts ⟧⊩* vs' )
-           cong⟦⟧⊩* ⟨⟩ = ∼⟨⟩
-           cong⟦⟧⊩* (t ▹ ts) = ∼▹ (cong⟦⟧⊩ t eq) (cong⟦⟧⊩* ts)
+            Setoid._≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧⊢ vs) (⟦ t ⟧⊢ vs')
+  cong⟦⟧⊢ {vs = vs} {vs'} (# n) eq = ~v-pointwise eq n
+  cong⟦⟧⊢ {ar} {_} {vs} {vs'} (f ∣$∣ ts) eq = Π.cong (A ⟦ f ⟧ₒ) (cong⟦⟧⊢* ts)
+    where  cong⟦⟧⊢* : ∀ {ar'} →
+                   (ts : HVec (ar ⊢_) ar') →
+                   (⟦ ts ⟧⊢* vs ) ∼v (⟦ ts ⟧⊢* vs' )
+           cong⟦⟧⊢* ⟨⟩ = ∼⟨⟩
+           cong⟦⟧⊢* (t ▹ ts) = ∼▹ (cong⟦⟧⊢ t eq) (cong⟦⟧⊢* ts)
 
 
 {- (derived) signature morphism -}
@@ -102,26 +102,26 @@ record _↝_ (Σₛ Σₜ : Signature) : Set where
  open FormalTerm Σₜ
  field
   ↝ₛ : sorts Σₛ → sorts Σₜ
-  ↝ₒ : ∀ {ar s}  → ops Σₛ (ar , s) → lmap ↝ₛ ar ⊩ ↝ₛ s
+  ↝ₒ : ∀ {ar s}  → ops Σₛ (ar , s) → lmap ↝ₛ ar ⊢ ↝ₛ s
 
 {- Extension of signature morfisms to formal terms -}
 module SigMorTerms {Σ₁ Σ₂ : Signature} where
     open FormalTerm
     open _↝_
-    _⊩₁_ : Arity Σ₁ → sorts Σ₁ → Set
-    _⊩₁_ = _⊩_ Σ₁
-    _⊩₂_ : Arity Σ₂ → sorts Σ₂ → Set
-    _⊩₂_ = _⊩_ Σ₂
-    ⊩₂_/_ : _
-    ⊩₂_/_ = ⊩_/_ Σ₂
+    _⊢₁_ : Arity Σ₁ → sorts Σ₁ → Set
+    _⊢₁_ = _⊢_ Σ₁
+    _⊢₂_ : Arity Σ₂ → sorts Σ₂ → Set
+    _⊢₂_ = _⊢_ Σ₂
+    ⊢₂_/_ : _
+    ⊢₂_/_ = ⊢_/_ Σ₂
     mutual
-      _↝f_ : ∀ {ar : Arity Σ₁} {s} → (m : Σ₁ ↝ Σ₂) → ar ⊩₁ s →  lmap (↝ₛ m) ar ⊩₂ ↝ₛ m s
+      _↝f_ : ∀ {ar : Arity Σ₁} {s} → (m : Σ₁ ↝ Σ₂) → ar ⊢₁ s →  lmap (↝ₛ m) ar ⊢₂ ↝ₛ m s
       _↝f_ {[]} m (# ())
       _↝f_ {_ ∷ _} m (# zero) = # zero
       _↝f_ {s ∷ ar} m (# (suc n)) = ↑ Σ₂  (lmap (↝ₛ m) ar) (↝ₛ m s) (m ↝f (# n))
-      m ↝f (f ∣$∣ xs) = ⊩₂ (↝ₒ m f) / (m ↝f* xs)
+      m ↝f (f ∣$∣ xs) = ⊢₂ (↝ₒ m f) / (m ↝f* xs)
 
-      _↝f*_ : ∀ {ar ar' : Arity Σ₁} → (m : Σ₁ ↝ Σ₂) → HVec (ar ⊩₁_) ar' → HVec (lmap (↝ₛ m) ar ⊩₂_) (lmap (↝ₛ m) ar')
+      _↝f*_ : ∀ {ar ar' : Arity Σ₁} → (m : Σ₁ ↝ Σ₂) → HVec (ar ⊢₁_) ar' → HVec (lmap (↝ₛ m) ar ⊢₂_) (lmap (↝ₛ m) ar')
       m ↝f* ⟨⟩ = ⟨⟩
       m ↝f* (v ▹ vs) = m ↝f v ▹ (m ↝f* vs)
 
@@ -130,25 +130,25 @@ module SigMorCat where
   module Id-mor (Σ : Signature) where
     open FormalTerm Σ
 
-    id-π : (ar : Arity Σ) → HVec (ar ⊩_) ar
+    id-π : (ar : Arity Σ) → HVec (ar ⊢_) ar
     id-π [] = ⟨⟩
     id-π (s ∷ ar) = (# Fin.zero) ▹ ↑* ar s (id-π ar)
 
     id-mor : Σ ↝ Σ
     id-mor = record { ↝ₛ = id
-                    ; ↝ₒ = λ {ar} {s} f → f ∣$∣ subst (λ ar' → HVec (ar' ⊩_) ar ) (sym (LP.map-id ar)) (id-π ar)
+                    ; ↝ₒ = λ {ar} {s} f → f ∣$∣ subst (λ ar' → HVec (ar' ⊢_) ar ) (sym (LP.map-id ar)) (id-π ar)
                     }
 
   module ∘-mor (Σ₁ Σ₂ Σ₃ : Signature) where
     open FormalTerm
     open _↝_
-    open SigMorTerms {Σ₂} {Σ₃} hiding (_⊩₂_)
-    _⊩₂_ : Arity Σ₂ → sorts Σ₂ → Set
-    _⊩₂_ = _⊩_ Σ₂
-    _⊩₃_ : Arity Σ₃ → sorts Σ₃ → Set
-    _⊩₃_ = _⊩_ Σ₃
-    ∘↝∘  : ∀ {ar} {s} (m : Σ₁ ↝ Σ₂)  (m' : Σ₂ ↝ Σ₃)  → (lmap (↝ₛ m) ar) ⊩₂ (↝ₛ m s) → (lmap (↝ₛ m' ∘ ↝ₛ m) ar) ⊩₃ (↝ₛ m' (↝ₛ m s))
-    ∘↝∘ {ar} {s} m m' ft = subst (_⊩₃ (↝ₛ m' (↝ₛ m s))) (sym (LP.map-compose {g = ↝ₛ m'} {↝ₛ m} ar)) (m' ↝f ft)
+    open SigMorTerms {Σ₂} {Σ₃} hiding (_⊢₂_)
+    _⊢₂_ : Arity Σ₂ → sorts Σ₂ → Set
+    _⊢₂_ = _⊢_ Σ₂
+    _⊢₃_ : Arity Σ₃ → sorts Σ₃ → Set
+    _⊢₃_ = _⊢_ Σ₃
+    ∘↝∘  : ∀ {ar} {s} (m : Σ₁ ↝ Σ₂)  (m' : Σ₂ ↝ Σ₃)  → (lmap (↝ₛ m) ar) ⊢₂ (↝ₛ m s) → (lmap (↝ₛ m' ∘ ↝ₛ m) ar) ⊢₃ (↝ₛ m' (↝ₛ m s))
+    ∘↝∘ {ar} {s} m m' ft = subst (_⊢₃ (↝ₛ m' (↝ₛ m s))) (sym (LP.map-compose {g = ↝ₛ m'} {↝ₛ m} ar)) (m' ↝f ft)
 
     _∘↝_ : (m : Σ₁ ↝ Σ₂) (m' : Σ₂ ↝ Σ₃) → Σ₁ ↝ Σ₃
     m ∘↝ m' = record { ↝ₛ = ↝ₛ m' ∘ ↝ₛ m
@@ -161,15 +161,12 @@ module ReductAlgebra {Σₛ Σₜ} (t : Σₛ ↝ Σₜ) where
   open _↝_
   open FormalTerm Σₜ
 
-  _⟨_⟩ₛ : ∀  {ℓ₀ ℓ₁} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
-             (s : sorts Σₛ) → Setoid _ _
+  _⟨_⟩ₛ : ∀  {ℓ₀ ℓ₁} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) → (s : sorts Σₛ) → Setoid _ _
   A ⟨ s ⟩ₛ = A ⟦ ↝ₛ t s ⟧ₛ
 
-  _⟨_⟩ₒ :  ∀  {ℓ₀ ℓ₁ ar s} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) →
-              ops Σₛ (ar , s) →
-              (A ⟨_⟩ₛ) ✳ ar ⟶  A ⟨ s ⟩ₛ
-  A ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ t f ⟧⊩ ∘ reindex (↝ₛ t)
-                    ;  cong =  cong⟦⟧⊩ (↝ₒ t f) ∘ ∼v-reindex (↝ₛ t)
+  _⟨_⟩ₒ :  ∀  {ℓ₀ ℓ₁ ar s} → (A : Algebra {ℓ₀} {ℓ₁} Σₜ) → ops Σₛ (ar , s) → (A ⟨_⟩ₛ) ✳ ar ⟶  A ⟨ s ⟩ₛ
+  A ⟨ f ⟩ₒ = record  {  _⟨$⟩_ = ⟦ ↝ₒ t f ⟧⊢ ∘ reindex (↝ₛ t)
+                    ;  cong =  cong⟦⟧⊢ (↝ₒ t f) ∘ ∼v-reindex (↝ₛ t)
                     }
     where open FormalTermInt A
 
@@ -197,8 +194,8 @@ module ReductHomo {Σₛ Σₜ}  {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
   hcond↝  {A = A} {A'} h {ar} {s} f as =
                        subst (λ vec → Setoid._≈_ (A' ⟦ ↝ₛ t s ⟧ₛ)
                                     (′ h ′ (↝ₛ t s) ⟨$⟩
-                                           ⟦_⟧⊩ A (↝ₒ t f) (reindex (↝ₛ t) as))
-                                    (⟦_⟧⊩ A' (↝ₒ t f) vec)
+                                           ⟦_⟧⊢ A (↝ₒ t f) (reindex (↝ₛ t) as))
+                                    (⟦_⟧⊢ A' (↝ₒ t f) vec)
                                     )
                        (mapReindex (↝ₛ t)
                                    (_⟨$⟩_ ∘ ′ h ′)  as)
@@ -207,25 +204,25 @@ module ReductHomo {Σₛ Σₜ}  {ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level}
 
     where
     open FormalTermInt
-    homCond↝' : (ar' : Arity Σₜ) → (s' : sorts Σₜ) → (e : ar' ⊩ s') →
+    homCond↝' : (ar' : Arity Σₜ) → (s' : sorts Σₜ) → (e : ar' ⊢ s') →
                 (vs : A ∥ ar' ∥* ) →
                 Setoid._≈_ (_⟦_⟧ₛ A' s')
-                           (′ h ′ s' ⟨$⟩ ⟦_⟧⊩ A e vs)
-                           (⟦ A' ⟧⊩ e (map⟿ A A' ′ h ′ vs))
+                           (′ h ′ s' ⟨$⟩ ⟦_⟧⊢ A e vs)
+                           (⟦ A' ⟧⊢ e (map⟿ A A' ′ h ′ vs))
     homCond↝' [] _ (# ()) ⟨⟩
     homCond↝' (s ∷ ar) .s (# zero) (v ▹ vs) = Setoid.refl (A' ⟦ s ⟧ₛ)
     homCond↝' (s ∷ ar) .(ar ‼ n) (# (suc n)) (v ▹ vs) =
                                            homCond↝' ar (ar ‼ n) (# n) vs
     homCond↝' ar s (_∣$∣_ {ar₁} f₁ es) vs =
-              Setoid.trans (A' ⟦ s ⟧ₛ) (cond h f₁ (⟦_⟧⊩* A es vs))
+              Setoid.trans (A' ⟦ s ⟧ₛ) (cond h f₁ (⟦_⟧⊢* A es vs))
                                        (Π.cong (A' ⟦ f₁ ⟧ₒ)
                                                (homCond↝'vec ar₁ es))
       where
       homCond↝'vec : (ar₁ : Arity Σₜ) →
-                      (es : HVec (_⊩_ ar) ar₁) →
+                      (es : HVec (_⊢_ ar) ar₁) →
                         _∼v_ {R = (Setoid._≈_ ∘ (A' ⟦_⟧ₛ)) $- }
-                          (map (λ x → _⟨$⟩_ (′ h ′ x)) (⟦_⟧⊩* A es vs))
-                          (⟦_⟧⊩* A' es (map (λ x → _⟨$⟩_ (′ h ′ x)) vs))
+                          (map (λ x → _⟨$⟩_ (′ h ′ x)) (⟦_⟧⊢* A es vs))
+                          (⟦_⟧⊢* A' es (map (λ x → _⟨$⟩_ (′ h ′ x)) vs))
       homCond↝'vec .[] ⟨⟩ = ∼⟨⟩
       homCond↝'vec (s₁ ∷ ar₁) (e ▹ es) = ∼▹ (homCond↝' ar s₁ e vs)
                                                         (homCond↝'vec ar₁ es)
@@ -253,7 +250,7 @@ module TermTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ) where
   module TΣₛ = T.OpenTerm Σₛ renaming (T_〔_〕 to TΣₛ〔_〕)
   module TΣₜ = T.OpenTerm Σₜ renaming (T_〔_〕 to TΣₜ〔_〕)
 
-  open TΣₛ 
+  open TΣₛ
   open TΣₜ hiding (Env)
   term↝ : (Xₛ : Vars Σₛ) → Homo (TΣₛ〔 Xₛ 〕) (〈 TΣₜ〔 Xₛ ↝̬ 〕 〉)
   term↝ Xₛ = TΣXHom

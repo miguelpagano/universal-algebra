@@ -24,15 +24,14 @@ open import Morphisms
 import Equational
 open import SigMorphism
 open import TermAlgebra
-open import Data.Unit hiding (setoid)
-open import Data.List
-open import Data.Product
 open import Data.Nat
 open import Function
 open import Data.Fin hiding (#_)
-open import Data.List renaming (map to lmap)
-open import Data.Sum
-open import HeterogeneousVec
+open import Data.List
+open import Data.Product hiding (map)
+open import Data.Sum hiding (map)
+open import Data.Unit hiding (setoid)
+open import HeterogeneousVec hiding (map)
 open import Relation.Binary.PropositionalEquality using (refl)
 
 
@@ -166,14 +165,12 @@ module Theory₁ where
 
 
 {- Theory 2: Axiomatization of the propositional logic of Dijkstra-Scholten.
-   We define the signature and a signature morphism from Σbool₁ to Σbool₂. 
+   We define the signature and a signature morphism from Σbool₁ to Σbool₂.
    Then we define the axioms of Σbool₂ using variables coming from Σbool₁ (so
    we can transform a model of Σbool₂ in a model of Σbool₁ directly). -}
 data Σops₂ : List ⊤ × ⊤ → Set where
-  t₂     : Σops₂ ([] ↦ tt)
-  f₂     : Σops₂ ([] ↦ tt)
-  or₂    : Σops₂ ((tt ∷ [ tt ]) ↦ tt)
-  equiv₂ : Σops₂ ((tt ∷ [ tt ]) ↦ tt)
+  t₂ f₂       : Σops₂ ([] ↦ tt)
+  or₂ equiv₂  : Σops₂ ((tt ∷ [ tt ]) ↦ tt)
 
 
 Σbool₂ : Signature
@@ -183,23 +180,20 @@ data Σops₂ : List ⊤ × ⊤ → Set where
 {- We define signature morphism from Σbool₁ to Σbool₂ -}
 module Translation where
   open FormalTerm Σbool₂
-
   {- For each operation of Σbool₁, we define a
      formal term in Σbool₂ -}
-  ops↝ : ∀ {ar s} → (f : Σops₁ (ar ↦ s)) →
-           lmap id ar ⊩ s
+
+  ops↝ : ∀ {ar s} → (f : Σops₁ (ar ↦ s)) → map id ar ⊢ s
   ops↝ t₁ = t₂ ∣$∣ ⟨⟩
   ops↝ f₁ = f₂ ∣$∣ ⟨⟩
   ops↝ or₁ = or₂ ∣$∣ ⟨⟨ p , q ⟩⟩
     where p = # zero
           q = # (suc zero)
   -- ¬ p is translated to p ≡ false
-  ops↝ neg₁ = equiv₂ ∣$∣ ⟨⟨ p , false ⟩⟩
+  ops↝ neg₁ = equiv₂ ∣$∣ ⟨⟨ p , f₂ ∣$∣ ⟨⟩ ⟩⟩
     where p = # zero
-          false = f₂ ∣$∣ ⟨⟩
   -- p ∧ q is translated to  (p ≡ q) ≡ p ∨ q
-  ops↝ and₁ = equiv₂ ∣$∣ ⟨⟨ equiv₂ ∣$∣ ⟨⟨ p , q ⟩⟩
-                         , or₂ ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
+  ops↝ and₁ = equiv₂ ∣$∣ ⟨⟨ equiv₂ ∣$∣ ⟨⟨ p , q ⟩⟩ , or₂ ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
     where p = # zero
           q = # (suc zero)
 

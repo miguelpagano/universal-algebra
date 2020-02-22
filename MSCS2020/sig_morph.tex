@@ -100,7 +100,7 @@ by \cite{sannella2012foundations}.
 Although the disjunction from \AgdaFunction{Σbool₁} can be directly mapped to
 its namesake in \AgdaFunction{Σbool₂}, there is no unary operation in
 \AgdaFunction{Σbool₂} to translate the negation. In fact, we should be able
-to translate an operation as a combination of operations in \codigo{bool-sig'}
+to translate an operation as a combination of operations in \AgdaFunction{Σbool₂}
 and also refer to the arguments of the original operation.
 \newcommand{\sdash}[1]{\vdash}
 
@@ -187,7 +187,7 @@ parameterized by arities and indexed by sorts.
 A formal term specifies how to interpret an operation from the source
 signature in the target signature. The arity \AgdaBound{ar'} specifies the sort
 of each argument of the original operation. For example, since the
-operation \AgdaInductiveConstructor{neg} is unary, we can use one identifier
+operation \AgdaInductiveConstructor{neg₁} is unary, we can use one identifier
 when defining its translation. Notice that \AgdaFunction{Σbool₁} and
 \AgdaFunction{Σbool₂} share the sorts; in general, one also considers a
 mapping between sorts.
@@ -242,7 +242,8 @@ and a mapping from operations to formal terms:
 \AgdaField{↝ₛ}\AgdaSpace{}%
 \AgdaBound{s}\<%
 \end{code}
-\noindent We show the action of the morphism on the operations \codigo{neg| and |and}
+\noindent We show the action of the morphism on the operations
+\AgdaInductiveConstructor{or₁} and \AgdaInductiveConstructor{neg₁}
 \begin{code}
 \>[2]\AgdaFunction{ops↝}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%

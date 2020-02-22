@@ -152,7 +152,7 @@ Ax₁₃ = ⋀ p ⇐ q ≈ (q ⇒ p)
 -- More axioms.
 
 Ax≡≈ : Equation Vₚ _
-Ax≡≈ = ⋀ p ≈ q if「 [| tt |] 」 (((p ≐ q) ▹ ⟨⟩) , (true∼ ▹ ⟨⟩))
+Ax≡≈ = ⋀ p ≈ₑ q if ( [| tt |] , ((p ≐ q) ≈ₑ true∼) ▹ ⟨⟩)
 
 AxRefl≡ : Equation Vₚ _
 AxRefl≡ = ⋀ p ≐ p ≈ true∼
@@ -233,21 +233,22 @@ module BoolModel where
   B : Algebra Σₚ
   B = record { _⟦_⟧ₛ = Bsort ; _⟦_⟧ₒ = Bops }
 
-  open Equation
+  open Equ
+  open SemiEquation
 
   Bsat₁ : B ⊨ Ax₁
-  Bsat₁ θ ∼⟨⟩ with θ vp | θ vq | θ vr
-  Bsat₁ θ ∼⟨⟩ | false | false | false = refl
-  Bsat₁ θ ∼⟨⟩ | false | false | true = refl
-  Bsat₁ θ ∼⟨⟩ | false | true | c = refl
-  Bsat₁ θ ∼⟨⟩ | true | b | c = refl
+  Bsat₁ θ ⇨v⟨⟩ with θ vp | θ vq | θ vr
+  Bsat₁ θ ⇨v⟨⟩ | false | false | false = refl
+  Bsat₁ θ ⇨v⟨⟩ | false | false | true = refl
+  Bsat₁ θ ⇨v⟨⟩ | false | true | c = refl
+  Bsat₁ θ ⇨v⟨⟩ | true | b | c = refl
 
   Bsat₂ : B ⊨ Ax₂
-  Bsat₂ θ ∼⟨⟩ with θ vp | θ vq
-  Bsat₂ θ ∼⟨⟩ | false | false = refl
-  Bsat₂ θ ∼⟨⟩ | false | true = refl
-  Bsat₂ θ ∼⟨⟩ | true | false = refl
-  Bsat₂ θ ∼⟨⟩ | true | true = refl
+  Bsat₂ θ ⇨v⟨⟩ with θ vp | θ vq
+  Bsat₂ θ ⇨v⟨⟩ | false | false = refl
+  Bsat₂ θ ⇨v⟨⟩ | false | true = refl
+  Bsat₂ θ ⇨v⟨⟩ | true | false = refl
+  Bsat₂ θ ⇨v⟨⟩ | true | true = refl
 
   Bsat₃ : B ⊨ Ax₃
   Bsat₃ θ x with θ vp
@@ -318,9 +319,9 @@ module BoolModel where
   Bsat≡≈ θ satcond with θ vp | θ vq | inspect (θ) vp | inspect (θ) vq
   ... | true | true | c | d = refl
   ... | false | false | c | d = refl
-  Bsat≡≈ θ (∼▹ x ∼⟨⟩) | true | false | [ eqp ] | [ eqq ] =
+  Bsat≡≈ θ (⇨v▹ x ⇨v⟨⟩) | true | false | [ eqp ] | [ eqq ] =
          ⊥-elim (boolabsurd (sym (subst₂ (λ b₁ b₂ → b₁ =b b₂ ≡ true) eqp eqq x)))
-  Bsat≡≈ θ (∼▹ x ∼⟨⟩) | false | true | [ eqp ] | [ eqq ] =
+  Bsat≡≈ θ (⇨v▹ x ⇨v⟨⟩) | false | true | [ eqp ] | [ eqq ] =
          ⊥-elim (boolabsurd (sym (subst₂ (λ b₁ b₂ → b₁ =b b₂ ≡ true) eqp eqq x)))
 
   BsatRefl≡ : B ⊨ AxRefl≡

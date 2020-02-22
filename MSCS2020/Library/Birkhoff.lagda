@@ -35,7 +35,7 @@ open import Product
 open OpenTerm Σ X renaming (T_〔_〕 to TΣX)
 
 open HomComp
-open Equation
+open SemiEquation
 
 open Hom
 open Homo
@@ -71,10 +71,10 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
                         (λ {s'} _ → Setoid.refl (A ⟦ s' ⟧ₛ))
                         (λ {s'} _ → Setoid.refl (A ⟦ s' ⟧ₛ))
                         s t
-
-  ≈B→≈A : ∀ {s : sorts Σ} (t t' : TΣX ∥ s ∥) →
-           (s , ⟦ t ⟧B ≈B ⟦ t' ⟧B) → (s , ⟦ t ⟧A ≈A ⟦ t' ⟧A)
-  ≈B→≈A {s} t t' eq = begin
+  open Equ
+  ≈B→≈A : ∀ {s : sorts Σ} (eq : Equ X s ) →
+           (s , ⟦ eleft eq ⟧B ≈B ⟦ eright eq ⟧B) → (s , ⟦ eleft eq ⟧A ≈A ⟦ eright eq ⟧A)
+  ≈B→≈A {s} (t ≈ₑ t') eq = begin
     ⟦ t ⟧A               ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
     ′ H ′ s ⟨$⟩ ⟦ t ⟧B    ≈⟨ cong (′ H ′ s ) eq ⟩
     ′ H ′ s ⟨$⟩ ⟦ t' ⟧B   ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (⟦t⟧A≈H⟦t⟧B t')  ⟩
@@ -90,10 +90,10 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
     rB : ∀ {s} → Rel (Terms s) ℓ₃
     rB {sᵢ} uᵢ uᵢ' = _≈_ (B ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧B ⟦ uᵢ' ⟧B
 
-  ⊨B*→⊨A* : ∀ {ar : List (sorts Σ)} {ts ts' : HVec Terms ar } →
-           _∼v_ {R = rB} ts ts' →
-           _∼v_ {R = rA} ts ts'
-  ⊨B*→⊨A* B⊨conds = map∼v (λ {_} {t} {t'} eq → ≈B→≈A t t' eq) B⊨conds
+  ⊨B*→⊨A* : ∀ {ar : List (sorts Σ)} {eqs : HVec (Equ X) ar } →
+           (B , θB ⊨ₑ_ ) ⇨v eqs →
+           (A , θA ⊨ₑ_) ⇨v eqs
+  ⊨B*→⊨A* B⊨conds = map⇨v (λ { {_} {eq} x → ≈B→≈A eq x}) B⊨conds
 
 
 {- Isomorphisms of algebras preserve satisfaction of conditional equations -}
@@ -124,6 +124,7 @@ module IsoRespectSatisfaction
        ≈⟨ Π.cong (′ homAB ′ s) (symA (⟦t⟧A≈H⟦t⟧B (left e))) ⟩
    ′ homAB ′ s ⟨$⟩ ⟦ left e ⟧A
        ≈⟨ Π.cong (′ homAB  ′ s) (A⊨e θA (⊨B*→⊨A* B⊨conds)) ⟩
+
    ′ homAB ′ s ⟨$⟩ ⟦ right e ⟧A
        ≈⟨ Π.cong (′ homAB ′ s) (⟦t⟧A≈H⟦t⟧B (right e)) ⟩
    ′ homAB ∘ₕ homBA ′ s ⟨$⟩ ⟦ right e ⟧B
@@ -184,13 +185,13 @@ module HomImgRespectSatisfaction
 
    t : Terms s
    t' : Terms s
-   t = Equ.left e
-   t' = Equ.right e
+   t = Equ.eleft e
+   t' = Equ.eright e
 
    A/h⊨e : A/h ⊨ equ-to-Equation s e
-   A/h⊨e θk ∼⟨⟩ = begin
+   A/h⊨e θk ⇨v⟨⟩ = begin
      ⟦ t ⟧A              ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
-     ′ ν ′ s ⟨$⟩ ⟦ t ⟧B   ≈⟨ Π.cong (′ ν ′ s) (A⊨e θA ∼⟨⟩) ⟩
+     ′ ν ′ s ⟨$⟩ ⟦ t ⟧B   ≈⟨ Π.cong (′ ν ′ s) (A⊨e θA ⇨v⟨⟩) ⟩
      ′ ν ′ s ⟨$⟩ ⟦ t' ⟧B  ≈⟨ sym (⟦t⟧A≈H⟦t⟧B t') ⟩
      ⟦ t' ⟧A ∎
      where
@@ -201,7 +202,7 @@ module HomImgRespectSatisfaction
    import IsoTheorems as I
 
    equ : Equation X s
-   equ = (⋀ Equ.left e ≈ Equ.right e)
+   equ = (⋀ Equ.eleft e ≈ Equ.eright e)
 
    imgH⊨e : homImg A H ⊨ equ
    imgH⊨e = IsoRespects⊨ A/h⊨e
@@ -281,4 +282,3 @@ module ModEquationIsIHSP  {ar} (T : EqTheory X ar) where
 
 \end{code}
 \end{document}
-

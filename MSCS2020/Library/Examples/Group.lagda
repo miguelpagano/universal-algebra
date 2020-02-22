@@ -104,25 +104,25 @@ module Group {op-grp : List ⊤ × ⊤ → Set}
       {- unit is its own inverse. -}
       p₁ : GrpTheory ⊢ (⋀ (u ⁻) ≈ u)
       p₁ = begin ((u ⁻))
-           ≈⟨  psym (psubst grp-unitL-ax (λ x₁ → (u ⁻)) ∼⟨⟩) ⟩
+           ≈⟨  psym (psubst grp-unitL-ax (λ x₁ → (u ⁻)) ⇨v⟨⟩) ⟩
            ((u ∘ (u ⁻)))
-           ≈⟨ psubst grp-invR-ax (λ x₁ → u) ∼⟨⟩ ⟩
+           ≈⟨ psubst grp-invR-ax (λ x₁ → u) ⇨v⟨⟩ ⟩
            u
            ∎
 
-      inv-inv : GrpTheory ⊢ (⋀ x ≈ ((x ⁻) ⁻) if「 [] 」 (⟨⟩ , ⟨⟩))
+      inv-inv : GrpTheory ⊢ (⋀ x ≈ₑ ((x ⁻) ⁻) if ([] , ⟨⟩))
       inv-inv = begin x
-                ≈⟨ psym (psubst grp-unitR-ax (λ x → term (inj₂ x) ⟨⟩) ∼⟨⟩) ⟩
+                ≈⟨ psym (psubst grp-unitR-ax (λ x → term (inj₂ x) ⟨⟩) ⇨v⟨⟩) ⟩
                 (x ∘ u)
-                ≈⟨ preemp (∼▹ prefl (∼▹ (psym (psubst grp-invR-ax
-                                              (λ _ → x ⁻) ∼⟨⟩)) ∼⟨⟩)) ⟩
+                ≈⟨ preemp (⇨v▹ prefl (⇨v▹ (psym (psubst grp-invR-ax
+                                              (λ _ → x ⁻) ⇨v⟨⟩)) ⇨v⟨⟩)) ⟩
                 (x ∘ ((x ⁻) ∘ (((x ⁻)) ⁻)))
-                ≈⟨ psym (psubst grp-ass-ax σ ∼⟨⟩) ⟩
+                ≈⟨ psym (psubst grp-ass-ax σ ⇨v⟨⟩) ⟩
                 ((x ∘ (x ⁻)) ∘ ((x ⁻) ⁻))
-                ≈⟨ preemp (∼▹ (psubst grp-invR-ax (λ _ → x) ∼⟨⟩)
-                          (∼▹ prefl ∼⟨⟩)) ⟩
+                ≈⟨ preemp (⇨v▹ (psubst grp-invR-ax (λ _ → x) ⇨v⟨⟩)
+                          (⇨v▹ prefl ⇨v⟨⟩)) ⟩
                 (u ∘ ((x ⁻) ⁻))
-                ≈⟨ psubst grp-unitL-ax (λ _ → (x ⁻) ⁻) ∼⟨⟩ ⟩
+                ≈⟨ psubst grp-unitL-ax (λ _ → (x ⁻) ⁻) ⇨v⟨⟩ ⟩
                 ((x ⁻) ⁻)
                 ∎
          where σ : Subst
@@ -211,11 +211,11 @@ module Groups where
     where open IsGroup
   GroupModel m grp-invL-ax  θ eqs = inverseˡ m (θ 0)
     where open IsGroup
-  GroupModel m grp-ass-ax   θ eqs = MonoidModel (isMonoid m) mon-assoc-ax θ ∼⟨⟩
+  GroupModel m grp-ass-ax   θ eqs = MonoidModel (isMonoid m) mon-assoc-ax θ ⇨v⟨⟩
     where open IsGroup
-  GroupModel m grp-unitL-ax θ eqs = MonoidModel (isMonoid m) mon-unitL-ax θ ∼⟨⟩
+  GroupModel m grp-unitL-ax θ eqs = MonoidModel (isMonoid m) mon-unitL-ax θ ⇨v⟨⟩
     where open IsGroup
-  GroupModel m grp-unitR-ax θ eqs = MonoidModel (isMonoid m) mon-unitR-ax θ ∼⟨⟩
+  GroupModel m grp-unitR-ax θ eqs = MonoidModel (isMonoid m) mon-unitR-ax θ ⇨v⟨⟩
     where open IsGroup
 
   open Setoid
@@ -232,13 +232,13 @@ module Groups where
           { isEquivalence = isEquivalence (A ⟦ tt ⟧ₛ)
           ; ∙-cong = λ x₁ x₂ → cong (_⟦_⟧ₒ A op) (∼▹ x₁ (∼▹ x₂ ∼⟨⟩))
           }
-        ; assoc = λ x₁ y₁ z₁ → mod grp-ass-ax (η x₁ y₁ z₁) ∼⟨⟩
+        ; assoc = λ x₁ y₁ z₁ → mod grp-ass-ax (η x₁ y₁ z₁) ⇨v⟨⟩
         }
-      ; identity = (λ x₁ → mod grp-unitL-ax (λ x₂ → x₁) ∼⟨⟩)
-                           , (λ x₁ → mod grp-unitR-ax (λ _ → x₁) ∼⟨⟩)
+      ; identity = (λ x₁ → mod grp-unitL-ax (λ x₂ → x₁) ⇨v⟨⟩)
+                           , (λ x₁ → mod grp-unitR-ax (λ _ → x₁) ⇨v⟨⟩)
       }
-    ; inverse = ( (λ x → mod grp-invL-ax (λ x₂ → x) ∼⟨⟩)
-                       , (λ x → mod grp-invR-ax (λ x₂ → x) ∼⟨⟩)
+    ; inverse = ( (λ x → mod grp-invL-ax (λ x₂ → x) ⇨v⟨⟩)
+                       , (λ x → mod grp-invR-ax (λ x₂ → x) ⇨v⟨⟩)
                   )
     ; ⁻¹-cong = λ {x} {y} x≈y → cong (A ⟦ _⁻¹ ⟧ₒ) (∼▹ x≈y ∼⟨⟩)
     }

@@ -159,12 +159,12 @@ module Monoids where
   {- Each monoid is a model of our theory. -}
   MonoidModel : ∀ {a l A _≈_ _∘_} {e : A} →
                 (m : IsMonoid {a} {l} _≈_ _∘_ e) → MkMonoid m ⊨T MonTheory
-  MonoidModel m mon-assoc-ax θ ∼⟨⟩ =
+  MonoidModel m mon-assoc-ax θ ⇨v⟨⟩ =
                 IsSemigroup.assoc (isSemigroup m) (θ 0) (θ 1) (θ 2)
     where open IsMonoid
-  MonoidModel m mon-unitL-ax θ ∼⟨⟩ =  proj₁ (identity m) (θ 0)
+  MonoidModel m mon-unitL-ax θ ⇨v⟨⟩ =  proj₁ (identity m) (θ 0)
     where open IsMonoid
-  MonoidModel m mon-unitR-ax θ ∼⟨⟩ =  proj₂ (identity m) (θ 0)
+  MonoidModel m mon-unitR-ax θ ⇨v⟨⟩ =  proj₂ (identity m) (θ 0)
     where open IsMonoid
 
   open Setoid
@@ -178,10 +178,10 @@ module Monoids where
                                   ; ∙-cong = λ x₁ x₂ → cong (_⟦_⟧ₒ A op)
                                                              (∼▹ x₁ (∼▹ x₂ ∼⟨⟩))
                      }
-                     ; assoc = λ x₁ y₁ z₁ → mod here (η x₁ y₁ z₁) ∼⟨⟩
+                     ; assoc = λ x₁ y₁ z₁ → mod here (η x₁ y₁ z₁) ⇨v⟨⟩
                    }
-                 ; identity = (λ x₁ → mod (there here) (λ x₂ → x₁) ∼⟨⟩)
-                              , (λ x₁ → mod (there (there here)) (λ _ → x₁) ∼⟨⟩)
+                 ; identity = (λ x₁ → mod (there here) (λ x₂ → x₁) ⇨v⟨⟩)
+                              , (λ x₁ → mod (there (there here)) (λ _ → x₁) ⇨v⟨⟩)
                  }
       where η : A ∥ tt ∥ →  A ∥ tt ∥ → A ∥ tt ∥ → Env A
             η a b c zero = a

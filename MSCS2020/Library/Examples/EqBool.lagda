@@ -345,9 +345,9 @@ module Theory₂ where
     T₂⊢idem∧ =
       begin
         ((p ≡ p) ≡ (p ∨ p))
-      ≈⟨ preemp ∼⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ⟩
         (true₂ ≡ (p ∨ p))
-      ≈⟨ preemp ∼⟨⟨ prefl , axIdem∨ ∣ idSubst ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , axIdem∨ ∣ idSubst ⟩⟩∼ ⟩
         (true₂ ≡ p)
       ≈⟨ axComm≡ ∣ σ ⟩
         (p ≡ true₂)
@@ -384,13 +384,13 @@ module Theory₂ where
     T₂⊢abs₁ =
       begin
         (p ≡ (p ∨ q)) ≡ (p ∨ (p ∨ q))
-      ≈⟨ preemp ∼⟨⟨ prefl , axAssoc∨ ∣ σ₁ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , axAssoc∨ ∣ σ₁ ⟩⟩∼ ⟩
         ((p ≡ (p ∨ q)) ≡ ((p ∨ p) ∨ q))
-      ≈⟨ preemp ∼⟨⟨ prefl , preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , preemp ⇨⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
         (p ≡ (p ∨ q)) ≡ (p ∨ q)
       ≈⟨ psym (axAssoc≡ ∣ σ₂) ⟩
         p ≡ ((p ∨ q) ≡ (p ∨ q))
-      ≈⟨ preemp ∼⟨⟨ prefl , axRefl≡ ∣ σ₃ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , axRefl≡ ∣ σ₃ ⟩⟩∼ ⟩
         (p ≡ true₂)
       ≈⟨ axNeu≡ ∣ idSubst ⟩
         p
@@ -413,14 +413,14 @@ module Theory₂ where
         p ∨ ((p ≡ q) ≡ (p ∨ q))
       ≈⟨ axDist∨≡ ∣ σ₁ ⟩
         (p ∨ (p ≡ q)) ≡ (p ∨ (p ∨ q))
-      ≈⟨ preemp ∼⟨⟨ axDist∨≡ ∣ σ₂ , axAssoc∨ ∣ σ₂ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ axDist∨≡ ∣ σ₂ , axAssoc∨ ∣ σ₂ ⟩⟩∼ ⟩
         (((p ∨ p) ≡ (p ∨ q)) ≡ ((p ∨ p) ∨ q))
-      ≈⟨ preemp ∼⟨⟨ preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼
-                 , preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ preemp ⇨⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼
+                 , preemp ⇨⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
         (p ≡ (p ∨ q)) ≡ (p ∨ q)
       ≈⟨ psym (axAssoc≡ ∣ σ₃) ⟩
         p ≡ ((p ∨ q) ≡ (p ∨ q))
-      ≈⟨ preemp ∼⟨⟨ prefl , axRefl≡ ∣ σ₄ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , axRefl≡ ∣ σ₄ ⟩⟩∼ ⟩
         p ≡ true₂
       ≈⟨ axNeu≡ ∣ idSubst ⟩
         p
@@ -440,20 +440,20 @@ module Theory₂ where
             σ₄ : Subst
             σ₄ (_ , 0) = p ∨ q
             σ₄ x = term (inj₂ x) ⟨⟩
-            
+
 
     T₂⊢defF : Tbool₂ ⊢ eq↝ defF
     T₂⊢defF =
       begin
          (p ≡ (p ≡ false₂)) ≡ (p ∨ (p ≡ false₂))
-       ≈⟨ preemp (∼⟨⟨ axAssoc≡ ∣ σ₁ , axDist∨≡ ∣ σ₁ ⟩⟩∼) ⟩
+       ≈⟨ preemp (⇨⟨⟨ axAssoc≡ ∣ σ₁ , axDist∨≡ ∣ σ₁ ⟩⟩∼) ⟩
          ((p ≡ p) ≡ false₂) ≡ ((p ∨ p) ≡ (p ∨ false₂))
-       ≈⟨ preemp ∼⟨⟨ preemp ∼⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ,
-                    preemp ∼⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼ ⟩⟩∼ ⟩
+       ≈⟨ preemp ⇨⟨⟨ preemp ⇨⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ,
+                    preemp ⇨⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼ ⟩⟩∼ ⟩
          (true₂ ≡ false₂) ≡ (p ≡ p)
-       ≈⟨ preemp ∼⟨⟨ axComm≡ ∣ σ₂ , axRefl≡ ∣ idSubst ⟩⟩∼ ⟩
+       ≈⟨ preemp ⇨⟨⟨ axComm≡ ∣ σ₂ , axRefl≡ ∣ idSubst ⟩⟩∼ ⟩
          (false₂ ≡ true₂) ≡ true₂
-       ≈⟨ preemp (∼⟨⟨ axNeu≡ ∣ σ₃ , prefl ⟩⟩∼) ⟩
+       ≈⟨ preemp (⇨⟨⟨ axNeu≡ ∣ σ₃ , prefl ⟩⟩∼) ⟩
          false₂ ≡ true₂
        ≈⟨ axNeu≡ ∣ σ₃ ⟩
          false₂
@@ -472,16 +472,16 @@ module Theory₂ where
             σ₃ : Subst
             σ₃ (_ , 0) = false₂
             σ₃ x = term (inj₂ x) ⟨⟩
-            
 
-    
+
+
     T₂⊢3excl : Tbool₂ ⊢ eq↝ 3excl
     T₂⊢3excl =
       begin
         p ∨ (p ≡ false₂)
       ≈⟨ axDist∨≡ ∣ σ₁ ⟩
         (p ∨ p) ≡ (p ∨ false₂)
-      ≈⟨ preemp (∼⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼) ⟩
+      ≈⟨ preemp (⇨⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼) ⟩
         p ≡ p
       ≈⟨ axRefl≡ ∣ idSubst ⟩
         true₂
@@ -550,64 +550,64 @@ module BoolModel₂ where
 
   open Theory₂
   open Equational Σbool₂
-  
+
   B₂⊨assoc≡ : B₂ ⊨ assocEquiv
-  B₂⊨assoc≡ θ ∼⟨⟩ with θ varp | θ varq | θ varr
-  B₂⊨assoc≡ θ ∼⟨⟩ | true | b | c = refl
-  B₂⊨assoc≡ θ ∼⟨⟩ | false | true | c = refl
-  B₂⊨assoc≡ θ ∼⟨⟩ | false | false | false = refl
-  B₂⊨assoc≡ θ ∼⟨⟩ | false | false | true = refl
+  B₂⊨assoc≡ θ ⇨v⟨⟩ with θ varp | θ varq | θ varr
+  B₂⊨assoc≡ θ ⇨v⟨⟩ | true | b | c = refl
+  B₂⊨assoc≡ θ ⇨v⟨⟩ | false | true | c = refl
+  B₂⊨assoc≡ θ ⇨v⟨⟩ | false | false | false = refl
+  B₂⊨assoc≡ θ ⇨v⟨⟩ | false | false | true = refl
 
 
   B₂⊨comm≡ : B₂ ⊨ commEquiv
-  B₂⊨comm≡ θ ∼⟨⟩ with θ varp | θ varq
-  B₂⊨comm≡ θ ∼⟨⟩ | false | false = refl
-  B₂⊨comm≡ θ ∼⟨⟩ | false | true = refl
-  B₂⊨comm≡ θ ∼⟨⟩ | true | false = refl
-  B₂⊨comm≡ θ ∼⟨⟩ | true | true = refl
+  B₂⊨comm≡ θ ⇨v⟨⟩ with θ varp | θ varq
+  B₂⊨comm≡ θ ⇨v⟨⟩ | false | false = refl
+  B₂⊨comm≡ θ ⇨v⟨⟩ | false | true = refl
+  B₂⊨comm≡ θ ⇨v⟨⟩ | true | false = refl
+  B₂⊨comm≡ θ ⇨v⟨⟩ | true | true = refl
 
 
   B₂⊨assoc∨ : B₂ ⊨ assocOr
-  B₂⊨assoc∨ θ ∼⟨⟩ with θ varp | θ varq | θ varr
-  B₂⊨assoc∨ θ ∼⟨⟩ | false | b | c = refl
-  B₂⊨assoc∨ θ ∼⟨⟩ | true | b | c = refl
+  B₂⊨assoc∨ θ ⇨v⟨⟩ with θ varp | θ varq | θ varr
+  B₂⊨assoc∨ θ ⇨v⟨⟩ | false | b | c = refl
+  B₂⊨assoc∨ θ ⇨v⟨⟩ | true | b | c = refl
 
   B₂⊨comm∨ : B₂ ⊨ commOr
-  B₂⊨comm∨ θ ∼⟨⟩ with θ varp | θ varq
-  B₂⊨comm∨ θ ∼⟨⟩ | false | false = refl
-  B₂⊨comm∨ θ ∼⟨⟩ | false | true = refl
-  B₂⊨comm∨ θ ∼⟨⟩ | true | false = refl
-  B₂⊨comm∨ θ ∼⟨⟩ | true | true = refl
+  B₂⊨comm∨ θ ⇨v⟨⟩ with θ varp | θ varq
+  B₂⊨comm∨ θ ⇨v⟨⟩ | false | false = refl
+  B₂⊨comm∨ θ ⇨v⟨⟩ | false | true = refl
+  B₂⊨comm∨ θ ⇨v⟨⟩ | true | false = refl
+  B₂⊨comm∨ θ ⇨v⟨⟩ | true | true = refl
 
   B₂⊨neu≡ : B₂ ⊨ neuEquiv
-  B₂⊨neu≡ θ ∼⟨⟩ with θ varp
-  B₂⊨neu≡ θ ∼⟨⟩ | false = refl
-  B₂⊨neu≡ θ ∼⟨⟩ | true = refl
+  B₂⊨neu≡ θ ⇨v⟨⟩ with θ varp
+  B₂⊨neu≡ θ ⇨v⟨⟩ | false = refl
+  B₂⊨neu≡ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨refl≡ : B₂ ⊨ reflEquiv
-  B₂⊨refl≡ θ ∼⟨⟩ with θ varp
-  B₂⊨refl≡ θ ∼⟨⟩ | false = refl
-  B₂⊨refl≡ θ ∼⟨⟩ | true = refl
+  B₂⊨refl≡ θ ⇨v⟨⟩ with θ varp
+  B₂⊨refl≡ θ ⇨v⟨⟩ | false = refl
+  B₂⊨refl≡ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨abs∨ : B₂ ⊨ absOr
-  B₂⊨abs∨ θ ∼⟨⟩ with θ varp
-  B₂⊨abs∨ θ ∼⟨⟩ | false = refl
-  B₂⊨abs∨ θ ∼⟨⟩ | true = refl
+  B₂⊨abs∨ θ ⇨v⟨⟩ with θ varp
+  B₂⊨abs∨ θ ⇨v⟨⟩ | false = refl
+  B₂⊨abs∨ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨neu∨ : B₂ ⊨ neuOr
-  B₂⊨neu∨ θ ∼⟨⟩ with θ varp
-  B₂⊨neu∨ θ ∼⟨⟩ | false = refl
-  B₂⊨neu∨ θ ∼⟨⟩ | true = refl
+  B₂⊨neu∨ θ ⇨v⟨⟩ with θ varp
+  B₂⊨neu∨ θ ⇨v⟨⟩ | false = refl
+  B₂⊨neu∨ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨idem∨ : B₂ ⊨ idemOr
-  B₂⊨idem∨ θ ∼⟨⟩ with θ varp
-  B₂⊨idem∨ θ ∼⟨⟩ | false = refl
-  B₂⊨idem∨ θ ∼⟨⟩ | true = refl
+  B₂⊨idem∨ θ ⇨v⟨⟩ with θ varp
+  B₂⊨idem∨ θ ⇨v⟨⟩ | false = refl
+  B₂⊨idem∨ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨dist∨≡ : B₂ ⊨ distOrEquiv
-  B₂⊨dist∨≡ θ ∼⟨⟩ with θ varp | θ varq | θ varr
-  B₂⊨dist∨≡ θ ∼⟨⟩ | false | b | c = refl
-  B₂⊨dist∨≡ θ ∼⟨⟩ | true | b | c = refl
+  B₂⊨dist∨≡ θ ⇨v⟨⟩ with θ varp | θ varq | θ varr
+  B₂⊨dist∨≡ θ ⇨v⟨⟩ | false | b | c = refl
+  B₂⊨dist∨≡ θ ⇨v⟨⟩ | true | b | c = refl
 
   B₂model : B₂ ⊨T Tbool₂
   B₂model axAssoc≡ = B₂⊨assoc≡

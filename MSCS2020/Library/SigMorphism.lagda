@@ -314,18 +314,22 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
       he₁ {s} x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
 
   open Eq
+  open SemiEquation
+  open Equ
+  _,_⊨ₑₜ_ = _,_⊨ₑ_ Σₜ
   _⊨ₜ_ = _⊨_ Σₜ
   _⊢ₜ_ = _⊢_ Σₜ
   _⊨ₜT_ = _⊨T_ Σₜ
+  _,_⊨ₑₛ_ = _,_⊨ₑ_ Σₛ
   _⊨ₛT_ = _⊨T_ Σₛ {X = Xₛ}
-  _⊨ₛ_ = _⊨_ Σₛ {X = Xₛ}
+  _⊨ₛ_ = _⊨_ Σₛ
   -- Equation translation
-  eq↝ : ∀ {s} → Equation Σₛ Xₛ s → Equation Σₜ Xₜ (↝ₛ Σ↝ s)
-  eq↝ {s} (⋀ t ≈ t' if「 carty 」 cond) =
-           ⋀ t ∼ₜ ≈ t' ∼ₜ
-                     if「 lmap (↝ₛ Σ↝) carty 」 pmap fcond fcond cond
-    where fcond : _
-          fcond = (reindex (↝ₛ Σ↝) ∘ map (_⟨$⟩_ ∘ ′ term↝ Xₛ ′))
+  equ↝ : ∀ {s} → Equ Σₛ Xₛ s → Equ Σₜ Xₜ (↝ₛ Σ↝ s)
+  equ↝ (t ≈ₑ t') = (t ∼ₜ) ≈ₑ (t' ∼ₜ)
+  eq↝ : ∀ {s} → SemiEquation Σₛ Xₛ s → SemiEquation Σₜ Xₜ (↝ₛ Σ↝ s)
+  eq↝ {s} (⋀ eq if ( carty , cond)) =
+           ⋀ (equ↝ eq) if (lmap (↝ₛ Σ↝) carty , fcond)
+    where fcond = reindex (↝ₛ Σ↝) (map (λ- equ↝) cond)
 
 
   module SatProp {ℓ₁ ℓ₂} (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) where
@@ -333,10 +337,10 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 
     -- This theorem is usually called "satisfaction property" and
     -- "satisfaction condition" in the handbook (Definition 6.1)
-    satProp : ∀ {s} → (e : Equation Σₛ Xₛ s) → Aₜ ⊨ₜ (eq↝ e) → 〈 Aₜ 〉 ⊨ₛ e
-    satProp {s} (⋀ t ≈ t' if「 ar 」 (us , us')) sat θ us≈us' = begin
+    satProp : ∀ {s} → (e : SemiEquation Σₛ Xₛ s) → Aₜ ⊨ₜ (eq↝ e) → 〈 Aₜ 〉 ⊨ₛ e
+    satProp {s} (⋀ (t ≈ₑ t') if ( ar , eqs)) Aₜ⊨e θ us≈us' = begin
                      ⟦ t ⟧Σₛ      ≈⟨ reductTh t ⟩
-                     ⟦ t ∼ₜ ⟧Σₜ    ≈⟨ sat θₜ (∼v-reindex _∼ (reductTh* us≈us')) ⟩
+                     ⟦ t ∼ₜ ⟧Σₜ    ≈⟨ Aₜ⊨e θₜ (⇨v-reindex _∼ (reductTh* us≈us') ) ⟩
                      ⟦ t' ∼ₜ ⟧Σₜ   ≈⟨ Setoid.sym (〈 Aₜ 〉 ⟦ s ⟧ₛ) (reductTh t') ⟩
                      ⟦ t' ⟧Σₛ     ∎
       where
@@ -347,13 +351,11 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
       open TΣₜ.Eval (Xₛ ↝̬) Aₜ θₜ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
       open ReductTheorem Aₜ θₜ
       reductTh* : ∀ {ar₀}
-                  {us₀ us₀' : HVec (λ s' →  TΣₛ〔 Xₛ 〕 ∥ s' ∥) ar₀} →
-                  _∼v_ {R = λ {sᵢ} uᵢ uᵢ' → _≈_ (〈 Aₜ 〉 ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧Σₛ ⟦ uᵢ' ⟧Σₛ} us₀ us₀' →
-                  _∼v_ {R = λ {sᵢ} uᵢ∼ uᵢ∼' → _≈_ (Aₜ ⟦ sᵢ ∼ ⟧ₛ) ⟦ uᵢ∼ ⟧Σₜ ⟦ uᵢ∼' ⟧Σₜ}
-                       (map (λ s₀ → _∼ₜ {s₀}) us₀)
-                       (map (λ s₀ → _∼ₜ {s₀}) us₀')
-      reductTh* {[]} ∼⟨⟩ = ∼⟨⟩
-      reductTh* {s₀ ∷ _} (∼▹ {t₁ = u₀} {u₀'} eq eqs) = ∼▹ u₀≈u₀' (reductTh* eqs)
+                  {eqs : HVec (Equ Σₛ Xₛ) ar₀} →
+                  (〈 Aₜ 〉 , θ ⊨ₑₛ_) ⇨v eqs →
+                  (Aₜ , θₜ ⊨ₑₜ_ ) ⇨v map (λ x → equ↝) eqs
+      reductTh* {[]} ⇨v⟨⟩ = ⇨v⟨⟩
+      reductTh* {s₀ ∷ _} (⇨v▹ {_} {_} {u₀ ≈ₑ u₀'} eq eqs) = ⇨v▹ u₀≈u₀' (reductTh* eqs)
         where
         u₀≈u₀' = begin
            ⟦ u₀ ∼ₜ ⟧Σₜ   ≈⟨ Setoid.sym (Aₜ ⟦ s₀ ∼ ⟧ₛ) (reductTh u₀) ⟩
@@ -383,7 +385,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 
     -- Model preservation from a translated theory
     ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨ₜT (Thₛ ↝T) → 〈 Aₜ 〉 ⊨ₛT Thₛ
-    ⊨T↝ Aₜ sat {s} {e} = λ ax θ ceq → satProp e (sat (∈↝T Thₛ ax)) θ ceq
+    ⊨T↝ Aₜ Aₜ⊨T {s} {e} = λ ax θ ceq → satProp e (Aₜ⊨T (∈↝T Thₛ ax)) θ ceq
       where open SatProp Aₜ
 
     -- Model preservation from a implicated theory

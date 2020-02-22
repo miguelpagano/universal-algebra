@@ -1035,16 +1035,6 @@ showing snippets of the formalization of a Boolean Theory presented by
 \>[7]\AgdaOperator{\AgdaFunction{∎}}\<%
   \end{code}
 
-  \begin{spec}
-  prop : bool-theory ⊢ (⋀ ¬ p ∧ p ≈ false)
-  prop₁ = begin
-         ¬ p ∧ p
-         ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩
-         p ∧ ¬ p
-         ≈⟨ psubst leastDefAx idSubst ∼⟨⟩ ⟩
-         false
-       ∎
-\end{spec}
 \noindent In the justification steps of this proof we use the
 substitution rule. The relevant actions of the substitution \AgdaFunction{σ} are
 \AgdaFunction{σ}\AgdaSpace{}\AgdaFunction{p}\AgdaSpace{}\AgdaSymbol{=}

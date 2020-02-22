@@ -83,8 +83,7 @@ AlgClass {ℓ₀} {ℓ₁} Σ = Pred (Algebra {ℓ₀} {ℓ₁} Σ) (ℓ₀ ⊔ 
 {- Subalgebras -}
 open SetoidPredicate
 
-OpClosed : ∀ {ℓ₁ ℓ₂ ℓ₃ Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-           (P : IPred (A ∥_∥) ℓ₃) → Set _
+OpClosed : ∀ {ℓ₁ ℓ₂ ℓ₃ Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (P : IPred (A ∥_∥) ℓ₃) → Set _
 OpClosed {ℓ₃ = ℓ₃} {Σ = Σ} A P =
   ∀ {ar s} (f : ops Σ (ar , s)) → (P ⇨v ⟨→⟩ P {s}) (A ⟦ f ⟧ₒ ⟨$⟩_)
 

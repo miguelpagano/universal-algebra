@@ -813,9 +813,14 @@ and \AgdaBound{P}\AgdaSpace{}\AgdaBound{a} imply
 \AgdaBound{a'}\<%
 \end{code}
 
-\noindent A family of well-defined predicates will induce a subalgebra;
-but we still need to formalize the condition \eqref{eq:opclosed}.  Let
-\AgdaBound{Σ} be a signature and \AgdaBound{A} be an algebra for \AgdaBound{Σ}.
+\noindent A family of well-defined predicates will induce a
+subalgebra; but we still need to formalize the condition
+\eqref{eq:opclosed}.  Let \AgdaBound{Σ} be a signature and
+\AgdaBound{A} be an algebra for \AgdaBound{Σ}.\footnote{The notation
+  \AgdaBound{A}\AgdaSpace{}%
+  \AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}\AgdaBound{s}\AgdaSpace{}\AgdaFunction{∥}
+  corresponds to the carrier of the setoid \AgdaBound{A}\AgdaSpace{}%
+  \AgdaOperator{\AgdaFunction{⟦}}\AgdaSpace{}\AgdaBound{s}\AgdaSpace{}\AgdaFunction{⟧ₛ}.}
 
 \begin{code}
 \>[0]\AgdaFunction{OpClosed}\AgdaSpace{}%

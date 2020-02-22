@@ -282,4 +282,3 @@ module ∨-Monoid where
 
 \end{code}
 \end{document}
-

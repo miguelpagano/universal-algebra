@@ -142,6 +142,7 @@ module Theory₁ where
            distAndOr ▹ distOrAnd ▹ abs₁ ▹
            abs₂ ▹ defF ▹ 3excl ▹ ⟨⟩
 
+
   {- An axiom of Tbool₁ is an element of the vector, so we need 
      to say where is each one in it. In order to have a more compact
      syntax, we define patterns. -}
@@ -162,6 +163,25 @@ module Theory₁ where
                                                           (there (there (there (there here))))))))))
   pattern noax₁ = there (there (there (there (there (there (there
                                                           (there (there (there (there (there ())))))))))))
+
+
+  p₁ :  Tbool₁ ⊢ (⋀ ¬ p ∧ p ≈ false)
+  p₁ = begin
+         ¬ p ∧ p
+         ≈⟨ psubst axComm∧ σ ⇨v⟨⟩ ⟩
+         p ∧ ¬ p
+         ≈⟨ psubst axDefF idSubst ⇨v⟨⟩ ⟩
+         false
+       ∎
+       where
+       open Provable-Equivalence Tbool₁
+       open import Relation.Binary.EqReasoning (⊢-≈Setoid tt)
+       open OpenTerm.Subst Σbool₁ Vars₁
+       σ : Subst
+       σ zero = ¬ p
+       σ (suc zero) = p
+       σ (suc x) = p
+
 
 
 {- Theory 2: Axiomatization of the propositional logic of Dijkstra-Scholten.

@@ -21,21 +21,88 @@ Let signature \AgdaBound{Σ} and \AgdaBound{X} be a family of variables
 for \AgdaBound{Σ}. A conditional equation is modelled as a record
 with fields for the conclusion and the conditions, consist of an
 heterogeneous vector of sorted identities. We declare a constructor to
-use the lighter notation \codigo{⋀ eq if (ar , eqs)| instead of
-}record { eq = e ; cond = (ar , eqs )}|.
-\begin{spec}
-record Equation (Σ : Signature) (X : sorts Σ → Set) (s : sorts Σ) : Set where
-  constructor ⋀_if_
-  field
-    eq     :   Eq Σ X s
-    cond   :   Σ[ ar ∈ List (sorts Σ) ] (HVec (Eq Σ X) ar)
-\end{spec}
+use the lighter notation
+\AgdaInductiveConstructor{⋀}\AgdaSpace{}\AgdaBound{eq}\AgdaSpace{}
+\AgdaInductiveConstructor{if}\AgdaSpace{}\AgdaBound{(ar, eqs)} instead of
+\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaField{eq}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{eq}\AgdaSpace{}%
+\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaField{cond}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{\AgdaBound{(ar, eqs)}}
+\AgdaSymbol{\}}
+
+\begin{code}
+\>[0]\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaRecord{Equation}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{X}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Vars}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaKeyword{constructor}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{⋀\AgdaUnderscore{}if\AgdaUnderscore{}}}\<%
+\\
+%
+\>[2]\AgdaKeyword{field}\<%
+\\
+\>[2][@{}l@{\AgdaIndent{0}}]%
+\>[4]\AgdaField{eq}%
+\>[8]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Equ}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\<%
+\\
+%
+\>[4]\AgdaField{cond}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{∃}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaDatatype{HVec}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaRecord{Equ}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSymbol{))}\<%
+\\
+%
+\end{code}
+
 \noindent A \emph{theory} over the signature $\Sigma$ is given by a
 vector of conditional equations.
-\begin{spec}
-Theory : (Σ : Signature) → (X : sorts Σ → Set) → (ar : List (sorts Σ)) → Set
-Theory Σ X ar = HVec (Equation Σ X) ar
-\end{spec}
+\begin{code}
+  \>[0]\AgdaFunction{Theory}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{X}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Vars}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Arity}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+\>[0]\AgdaFunction{Theory}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaDatatype{HVec}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaRecord{Equation}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaBound{ar}\<%
+\\
+%
+\end{code}
+
 We deviate from Goguen's and Lin's in that we assume that all the
 equations of a theory share the same set of variables, while they
 assume that each equation has its own set of quantified
@@ -63,28 +130,213 @@ environment $\theta : X \to \mathcal{A}$, $⟦ t ⟧θ = ⟦ t' ⟧θ$, whenever
 $⟦ t_i ⟧θ = ⟦ t'_i ⟧θ$ for $1 \leqslant i \leqslant n$. In order to
 formalize satisfiability we first define when an environment models an
 equation.
-\begin{spec}
-_⊨ₑ_ : ∀ {Σ X A} → (θ : Env X A) → {s : sorts Σ} → Eq Σ X s → Set
-_⊨ₑ_ θ {s} (t , t') = _≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧ θ) (⟦ t' ⟧ θ)
-\end{spec}
+
+\begin{code}
+  \>[0]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{},\AgdaUnderscore{}⊨ₑ\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}%
+\>[12]\AgdaSymbol{\{}\AgdaBound{X}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Vars}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{θ}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Env}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaRecord{Equ}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+\>[0]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{},\AgdaUnderscore{}⊨ₑ\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{X}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaBound{θ}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{t}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{≈ₑ}}\AgdaSpace{}%
+\AgdaBound{t'}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaFunction{eval}\AgdaSpace{}%
+\AgdaBound{θ}\AgdaSpace{}%
+\AgdaBound{t}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaFunction{eval}\AgdaSpace{}%
+\AgdaBound{θ}\AgdaSpace{}%
+\AgdaBound{t'}\<%
+\end{code}
+
 \noindent Using the point-wise extension of this relation we can write
 directly the notion of satisfiability.
-\begin{spec}
-_⊨_ : ∀ {Σ X} (A : Algebra Σ) → {s : sorts Σ} → Equation Σ X s → Set
-A ⊨ (⋀ eq if (_ , eqs)) = ∀ θ → ((θ ⊨ₑ_)* eqs) → θ ⊨ₑ eq
-\end{spec}
+
+\begin{code}
+\>[0]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}⊨\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{X}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Vars}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaRecord{Equation}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+\>[0]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}⊨\AgdaUnderscore{}}}%
+\>[423I]\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{X}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaInductiveConstructor{⋀}}\AgdaSpace{}%
+\AgdaBound{equ}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{if}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{conds}\AgdaSymbol{))}\AgdaSpace{}%
+\AgdaSymbol{=}\<%
+\\
+\>[.][@{}l@{}]\<[423I]%
+\>[4]\AgdaSymbol{(}\AgdaBound{θ}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Env}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{,}}\AgdaSpace{}%
+\AgdaBound{θ}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⊨ₑ\AgdaUnderscore{}}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaDatatype{⇨v}}\AgdaSpace{}%
+\AgdaBound{conds}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{,}}\AgdaSpace{}%
+\AgdaBound{θ}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⊨ₑ}}\AgdaSpace{}%
+\AgdaBound{equ}\<%
+\\
+%
+\end{code}
 
 \noindent We say that $\mathcal{A}$ is a \emph{model} of the theory
 $E$ if it satisfies each equation in $E$. As usual an equation is a
 logical consequence of a theory, if every model of the theory
 satisfies the equation.
-\begin{spec}
-_⊨ₘ_ : ∀ {Σ X ar} → (A : Algebra Σ) → (E : Theory Σ X ar) → Set
-A ⊨ₘ E = (A ⊨_)* E
 
-_⊨Σ_ : ∀ {Σ X ar s} → (E : Theory Σ X ar) → (e : Equation Σ X s) → Set
-_⊨Σ_ {Σ} E e = (A : Algebra Σ) → A ⊨ₘ E → A ⊨ e
-\end{spec}%
+\begin{code}
+  \>[0]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}⊨T\AgdaUnderscore{}}}\AgdaSpace{}%
+  \AgdaSymbol{:}%
+\>[454I]\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSymbol{(}\AgdaBound{E}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Theory}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+\>[0]\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⊨T}}\AgdaSpace{}%
+\AgdaBound{E}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaOperator{\AgdaDatatype{\AgdaUnderscore{}∈\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaArgument{i}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSpace{}%
+\AgdaBound{E}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⊨}}\AgdaSpace{}%
+\AgdaBound{e}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\\[\AgdaEmptyExtraSkip]%
+\>[0]\AgdaFunction{⊨All}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Arity}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{E}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Theory}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSymbol{(}\AgdaBound{e}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Equation}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+\>[0]\AgdaFunction{⊨All}\AgdaSpace{}%
+\AgdaBound{E}\AgdaSpace{}%
+\AgdaBound{e}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⊨T}}\AgdaSpace{}%
+\AgdaBound{E}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⊨}}\AgdaSpace{}%
+\AgdaBound{e}\<%
+\\
+%
+\end{code}
 
 \paragraph*{Provability} As noticed by \cite{huet-rewrite}, the
 definition of a sound deduction system for multi-sorted equality logic
@@ -92,7 +344,7 @@ is more subtle than expected. We formalize the system presented of
 \cite{goguen2005specifying}, shown in Fig.~\ref{fig:deduction}. The
 first three rules are reflexivity, symmetry and transitivity; the
 fourth rule, called substitution, allows to instantiate an axiom with
-a substitution \codigo{σ}, provided one has proofs for every condition
+a substitution \AgdaBound{σ}, provided one has proofs for every condition
 of the axiom;\footnote{In our formalization this rule is slightly less
   general because we assume all the equations are quantified over the
   same set of variables.}  finally, the last rule internalizes Leibniz
@@ -133,21 +385,83 @@ only prove identities and not quasi-identities.
   \label{fig:deduction}
 \end{figure}
 We define the relation of provability as an inductive type,
-parameterized in the theory \codigo{E}, and indexed by the conclusion of the
+parameterized in the theory \AgdaBound{E}, and indexed by the conclusion of the
 proof. For conciseness, we only show the constructor for transitivity:
-\begin{spec}
-data _⊢_ {Σ X ar} (E : Theory Σ X ar) : ∀ {s} → Eq Σ X s → Set where
-    ptrans : ∀    {s} {t₀ t₁ t₂} →
-                  E ⊢ (t₀ , t₁) → E ⊢ (t₁ , t₂) → E ⊢ (t₀ , t₂)
-\end{spec}
 
-Let \codigo{E| be a theory over a signature |Σ}. It is straightforward to
-define a setoid over \codigo{∣T∣ Σ 〔 X 〕| by letting |t₁ ≈ t₂| if }E ⊢ t₁ ≈
-t₂|; this equivalence relation (thanks to the first three rules) is a
-congruence (because of the last rule) over the term algebra. We can
-also use the facility provided by the standard library to write
-proofs with several transitive steps more nicely, as can be seen
-in the next example.
+\begin{code}
+  \>[2]\AgdaKeyword{data}\AgdaSpace{}%
+\AgdaOperator{\AgdaDatatype{\AgdaUnderscore{}⊢\AgdaUnderscore{}}}%
+\>[12]\AgdaSymbol{\{}\AgdaBound{ar}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Arity}\AgdaSpace{}%
+\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{E}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Theory}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{ar}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaRecord{Equation}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[4]\AgdaInductiveConstructor{ptrans}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{s}\AgdaSymbol{\}}%
+\>[750I]\AgdaSymbol{\{}\AgdaBound{t₀}\AgdaSpace{}%
+\AgdaBound{t₁}\AgdaSpace{}%
+\AgdaBound{t₂}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{TΣ〔}}\AgdaSpace{}%
+\AgdaBound{X}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{〕}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\<%
+\\
+\>[.][@{}l@{}]\<[750I]%
+\>[19]\AgdaBound{E}\AgdaSpace{}%
+\AgdaOperator{\AgdaDatatype{⊢}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaBound{t₀}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaBound{t₁}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{E}\AgdaSpace{}%
+\AgdaOperator{\AgdaDatatype{⊢}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaBound{t₁}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaBound{t₂}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaBound{E}\AgdaSpace{}%
+\AgdaOperator{\AgdaDatatype{⊢}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaBound{t₀}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaBound{t₂}\AgdaSymbol{)}\<%
+\\
+%
+\end{code}
+
+Let \AgdaBound{E} be a theory over a signature \AgdaBound{Σ}. It is
+straightforward to define a setoid over
+\AgdaFunction{TΣ}
+\AgdaFunction{〔}\AgdaSpace{}\AgdaBound{X}\AgdaSpace{}\AgdaFunction{〕}
+by letting \AgdaBound{t₁}\AgdaFunction{≈}\AgdaBound{t₂} if
+\AgdaBound{E}\AgdaSpace{}\AgdaDatatype{⊢}\AgdaSpace{}\AgdaBound{t₁}\AgdaFunction{≈}\AgdaBound{t₂}; this
+equivalence relation (thanks to the first three rules) is a congruence (because
+of the last rule) over the term algebra. We can also use the facility provided
+by the standard library to write proofs with several transitive steps more
+nicely, as can be seen in the next example.
 
 Soundness and completeness are proved as in the
 mono-sorted case. For soundness one proceeds by induction on the
@@ -397,42 +711,213 @@ showing snippets of the formalization of a Boolean Theory presented by
   a family of sets for the variables. It helps if one also introduce
   an abbreviation for terms over the signature extended with
   variables.
-\begin{spec}
-data bool-ops : List ⊤ × ⊤ → Set where
-  f t    : bool-ops ([] ↦ tt)
-  neg  : bool-ops ([ tt ] ↦ tt)
-  and or  : bool-ops (([ tt , tt ]) ↦ tt)
 
-bool-sig : Signature
-bool-sig = record { sorts = ⊤ ; ops = bool-ops }
-vars : sorts bool-sig → Set
-vars tt = ℕ
-
-Form : Set
-Form = HU bool-sig 〔 vars 〕
-\end{spec}
-
+  \begin{code}
+    \>[0]\AgdaKeyword{data}\AgdaSpace{}%
+\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{List}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{×}}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaInductiveConstructor{t}%
+\>[7]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+\\
+%
+\>[2]\AgdaInductiveConstructor{f}%
+\>[7]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+\\
+%
+\>[2]\AgdaInductiveConstructor{neg}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+\\
+%
+\>[2]\AgdaInductiveConstructor{and}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaSymbol{((}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+\\
+%
+\>[2]\AgdaInductiveConstructor{or}%
+\>[7]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaSymbol{((}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{↦}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+\>[0]\AgdaFunction{Σbool}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Signature}\<%
+\\
+\>[0]\AgdaFunction{Σbool}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaDatatype{Σops}\AgdaSpace{}%
+\AgdaSymbol{\}}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[0]\AgdaFunction{ΣVars}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Vars}\AgdaSpace{}%
+\AgdaFunction{Σbool}\<%
+\\
+%
+\>[0]\AgdaFunction{ΣVars}\AgdaSpace{}%
+\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaDatatype{ℕ}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[0]\AgdaFunction{Form}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\<%
+\\
+%
+\>[0]\AgdaFunction{Form}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaFunction{Terms}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥}}\<%
+\\
+\end{code}
+  
 \paragraph*{Introduce smart-constructors}
 \label{sec:intr-smart-constr}
   for terms of the extended
   signature with variables to ease writing the axioms and proving
   theorems. Usually one has a smart-constructor for each operation and
   one per variable that is used in the axioms or the theorems.
-\begin{spec}
-true false : Form
-true = term (inj₁ t) ⟨⟩
-false = term (inj₁ f) ⟨⟩
 
-p q  : Form
-p = term (inj₂ 0) ⟨⟩
-q = term (inj₂ 1) ⟨⟩
-
-_∧_ : Form → Form → Form
-φ ∧ ψ = term and ⟨⟨ φ , ψ ⟩⟩
-
-¬ : Form → Form
-¬ φ = term neg ⟨⟨ φ ⟩⟩
-\end{spec}
+\begin{code}
+\>[4]\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}∧\AgdaUnderscore{}}}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Form}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaFunction{Form}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaFunction{Form}\<%
+\\
+%
+\>[4]\AgdaBound{φ}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∧}}\AgdaSpace{}%
+\AgdaBound{ψ}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaInductiveConstructor{term}\AgdaSpace{}%
+\AgdaInductiveConstructor{and}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{⟨⟨}}\AgdaSpace{}%
+\AgdaBound{φ}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaBound{ψ}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{⟩⟩}}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[4]\AgdaFunction{¬}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Form}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaFunction{Form}\<%
+\\
+%
+\>[4]\AgdaFunction{¬}\AgdaSpace{}%
+\AgdaBound{φ}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaInductiveConstructor{term}\AgdaSpace{}%
+\AgdaInductiveConstructor{neg}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{⟪}}\AgdaSpace{}%
+\AgdaBound{φ}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{⟫}}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[4]\AgdaFunction{p}\AgdaSymbol{,}\AgdaFunction{q}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Form}\<%
+\\
+%
+\>[4]\AgdaFunction{p}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaInductiveConstructor{term}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{inj₂}\AgdaSpace{}%
+\AgdaNumber{0}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaInductiveConstructor{⟨⟩}\<%
+\\
+\>[4]\AgdaFunction{q}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaInductiveConstructor{term}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{inj₂}\AgdaSpace{}%
+\AgdaNumber{1}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaInductiveConstructor{⟨⟩}\<%
+\\
+%
+\\[\AgdaEmptyExtraSkip]%
+%
+\>[4]\AgdaFunction{true}\AgdaSymbol{,}\AgdaFunction{false}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{Form}\<%
+\\
+%
+\>[4]\AgdaFunction{true}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaInductiveConstructor{term}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{inj₁}\AgdaSpace{}%
+\AgdaInductiveConstructor{t}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaInductiveConstructor{⟨⟩}\<%
+\\
+\>[4]\AgdaFunction{false}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaInductiveConstructor{term}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{inj₁}\AgdaSpace{}%
+\AgdaInductiveConstructor{f}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaInductiveConstructor{⟨⟩}\<%
+\\
+%
+\end{code}
 
 \paragraph*{Define the equational theory}
 \label{sec:define-equat-theory}
@@ -440,28 +925,139 @@ _∧_ : Form → Form → Form
  by specifying one equation for
   each axiom and collect them in a theory; here one can appreciate the
   convenience of the smart-constructors. Here we only show two of the
-  twelve axioms of the theory \codigo{bool-theory}. If one will prove theorems
+  twelve axioms of the theory \AgdaBound{Tbool}. If one will prove theorems
   of the theory, then it is also convenient to define pattern-synonyms
   for the proofs that each axiom is in the theory.
-\begin{spec}
-commAnd leastDef : Equation bool-sig vars tt
-commAnd = ⋀ (p ∧ q) ≈ (q ∧ p) if ([] , ⟨⟩)
-leastDef = ⋀ (p ∧ (¬ p)) ≈ false  if ([] , ⟨⟩)
 
-bool-theory : Theory bool-sig vars [ tt , tt , … ]
-bool-theory = ⟨ commAnd , leastDef , … ⟩
-
-pattern commAndAx = here
-pattern leastDefAx = there here
-\end{spec}
+  \begin{code}
+    \>[0]\AgdaFunction{commAnd}\AgdaSpace{}%
+    \AgdaSymbol{:}\AgdaSpace{}%
+    \AgdaFunction{Eq}\<%
+    \\
+    %
+    \>[0]\AgdaFunction{commAnd}\AgdaSpace{}%
+    \AgdaSymbol{=}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+    \AgdaFunction{p}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{∧}}\AgdaSpace{}%
+    \AgdaFunction{q}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+    \AgdaSymbol{(}\AgdaFunction{q}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{∧}}\AgdaSpace{}%
+    \AgdaFunction{p}\AgdaSymbol{)}\<%
+    \\
+    %
+    \\[\AgdaEmptyExtraSkip]%
+    \>[2]\AgdaFunction{defF}\AgdaSpace{}%
+    \AgdaSymbol{:}\AgdaSpace{}%
+    \AgdaFunction{Eq}\<%
+    \\
+    %
+    \>[2]\AgdaFunction{defF}\AgdaSpace{}%
+    \AgdaSymbol{=}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+    \AgdaFunction{p}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{∧}}\AgdaSpace{}%
+    \AgdaSymbol{(}\AgdaFunction{¬}\AgdaSpace{}%
+    \AgdaFunction{p}\AgdaSymbol{)}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+    \AgdaFunction{false}\<%
+    \\%
+    \\[\AgdaEmptyExtraSkip]%
+    \>[2]\AgdaFunction{Tbool}\AgdaSpace{}%
+    \AgdaSymbol{:}\AgdaSpace{}%
+    \AgdaFunction{Theory}\AgdaSpace{}%
+    \AgdaFunction{Vars}\AgdaSpace{}%
+    \AgdaSymbol{(}\AgdaFunction{replicate}\AgdaSpace{}%
+    \AgdaNumber{12}\AgdaSpace{}%
+    \AgdaInductiveConstructor{tt}\AgdaSymbol{)}\<%
+    \\
+    %
+    \>[2]\AgdaFunction{Tbool}\AgdaSpace{}%
+    \AgdaSymbol{=}\AgdaSpace{}%
+    \AgdaSymbol{⟨}\AgdaSpace{}\AgdaFunction{commAnd}\AgdaSpace{}%
+    \AgdaSymbol{,}\AgdaSpace{}%
+    \AgdaFunction{defF}\AgdaSpace{}%
+    \AgdaSymbol{,}\AgdaSpace{}%
+    $\ldots$
+    \AgdaSymbol{⟩}
+    \<%
+    \\%
+    \\[\AgdaEmptyExtraSkip]%
+    \>[2]\AgdaKeyword{pattern}\AgdaSpace{}%
+    \AgdaInductiveConstructor{commAndAx}\AgdaSpace{}%
+    \AgdaSymbol{=}\AgdaSpace{}%
+    \AgdaInductiveConstructor{here}\<%
+    \\
+    %
+    \>[2]\AgdaKeyword{pattern}\AgdaSpace{}%
+    \AgdaInductiveConstructor{defFAx}\AgdaSpace{}%
+    \AgdaSymbol{=}\AgdaSpace{}%
+    \AgdaInductiveConstructor{there}\AgdaSpace{}%
+    \AgdaInductiveConstructor{here}\<%
+  \end{code}
 
 \paragraph*{Prove theorems}
   using the axioms of the theory just defined.
   If a proof uses transitivity, one can use the equational reasoning
   idiom provided by the standard library of Agda:
-\begin{spec}
-  p₁ : bool-theory ⊢ (⋀ ¬ p ∧ p ≈ false)
-  p₁ = begin
+
+  \begin{code}
+    \>[2]\AgdaFunction{prop}\AgdaSpace{}%
+\AgdaSymbol{:}%
+\>[8]\AgdaFunction{Tbool}\AgdaSpace{}%
+\AgdaOperator{\AgdaDatatype{⊢}}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaOperator{\AgdaFunction{⋀}}\AgdaSpace{}%
+\AgdaFunction{¬}\AgdaSpace{}%
+\AgdaFunction{p}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∧}}\AgdaSpace{}%
+\AgdaFunction{p}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{≈}}\AgdaSpace{}%
+\AgdaFunction{false}\AgdaSymbol{)}\<%
+\\
+%
+\>[2]\AgdaFunction{prop}\AgdaSpace{}%
+\AgdaSymbol{=}%
+\>[503I]\AgdaOperator{\AgdaFunction{begin}}\<%
+\\
+\>[503I][@{}l@{\AgdaIndent{0}}]%
+\>[9]\AgdaFunction{¬}\AgdaSpace{}%
+\AgdaFunction{p}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∧}}\AgdaSpace{}%
+\AgdaFunction{p}\<%
+\\
+%
+\>[9]\AgdaOperator{\AgdaFunction{≈⟨}}\AgdaSpace{}%
+\AgdaInductiveConstructor{psubst}\AgdaSpace{}%
+\AgdaInductiveConstructor{axComm∧}\AgdaSpace{}%
+\AgdaFunction{σ}\AgdaSpace{}%
+\AgdaInductiveConstructor{⇨v⟨⟩}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟩}}\<%
+\\
+%
+\>[9]\AgdaFunction{p}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∧}}\AgdaSpace{}%
+\AgdaFunction{¬}\AgdaSpace{}%
+\AgdaFunction{p}\<%
+\\
+%
+\>[9]\AgdaOperator{\AgdaFunction{≈⟨}}\AgdaSpace{}%
+\AgdaInductiveConstructor{psubst}\AgdaSpace{}%
+\AgdaInductiveConstructor{axDefF}\AgdaSpace{}%
+\AgdaFunction{idSubst}\AgdaSpace{}%
+\AgdaInductiveConstructor{⇨v⟨⟩}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{⟩}}\<%
+\\
+%
+\>[9]\AgdaFunction{false}\<%
+\\
+\>[.][@{}l@{}]\<[503I]%
+\>[7]\AgdaOperator{\AgdaFunction{∎}}\<%
+  \end{code}
+
+  \begin{spec}
+  prop : bool-theory ⊢ (⋀ ¬ p ∧ p ≈ false)
+  prop₁ = begin
          ¬ p ∧ p
          ≈⟨ psubst commAndAx σ₁ ∼⟨⟩ ⟩
          p ∧ ¬ p
@@ -470,8 +1066,11 @@ pattern leastDefAx = there here
        ∎
 \end{spec}
 \noindent In the justification steps of this proof we use the
-substitution rule. The relevant actions of the substitution \codigo{σ₁} are
-\codigo{σ₁ p = ¬ p| and |σ₁ q = p}.
+substitution rule. The relevant actions of the substitution \AgdaFunction{σ} are
+\AgdaFunction{σ}\AgdaSpace{}\AgdaFunction{p}\AgdaSpace{}\AgdaSymbol{=}
+\AgdaFunction{¬}\AgdaSpace{}\AgdaFunction{p} and
+\AgdaFunction{σ}\AgdaSpace{}\AgdaFunction{q}\AgdaSpace{}\AgdaSymbol{=}
+\AgdaFunction{p}.
 
 
 

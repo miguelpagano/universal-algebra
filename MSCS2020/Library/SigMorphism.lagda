@@ -314,7 +314,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
       he₁ {s} x = Setoid.refl (Aₜ ⟦ s ∼ ⟧ₛ)
 
   open Eq
-  open SemiEquation
+  open Equation
   open Equ
   _,_⊨ₑₜ_ = _,_⊨ₑ_ Σₜ
   _⊨ₜ_ = _⊨_ Σₜ
@@ -326,7 +326,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   -- Equation translation
   equ↝ : ∀ {s} → Equ Σₛ Xₛ s → Equ Σₜ Xₜ (↝ₛ Σ↝ s)
   equ↝ (t ≈ₑ t') = (t ∼ₜ) ≈ₑ (t' ∼ₜ)
-  eq↝ : ∀ {s} → SemiEquation Σₛ Xₛ s → SemiEquation Σₜ Xₜ (↝ₛ Σ↝ s)
+  eq↝ : ∀ {s} → Equation Σₛ Xₛ s → Equation Σₜ Xₜ (↝ₛ Σ↝ s)
   eq↝ {s} (⋀ eq if ( carty , cond)) =
            ⋀ (equ↝ eq) if (lmap (↝ₛ Σ↝) carty , fcond)
     where fcond = reindex (↝ₛ Σ↝) (map (λ- equ↝) cond)
@@ -337,7 +337,7 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 
     -- This theorem is usually called "satisfaction property" and
     -- "satisfaction condition" in the handbook (Definition 6.1)
-    satProp : ∀ {s} → (e : SemiEquation Σₛ Xₛ s) → Aₜ ⊨ₜ (eq↝ e) → 〈 Aₜ 〉 ⊨ₛ e
+    satProp : ∀ {s} → (e : Equation Σₛ Xₛ s) → Aₜ ⊨ₜ (eq↝ e) → 〈 Aₜ 〉 ⊨ₛ e
     satProp {s} (⋀ (t ≈ₑ t') if ( ar , eqs)) Aₜ⊨e θ us≈us' = begin
                      ⟦ t ⟧Σₛ      ≈⟨ reductTh t ⟩
                      ⟦ t ∼ₜ ⟧Σₜ    ≈⟨ Aₜ⊨e θₜ (⇨v-reindex _∼ (reductTh* us≈us') ) ⟩
@@ -392,8 +392,8 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
     ⊨T⇒↝ : ∀ {ℓ₁ ℓ₂} {ar'} →
              (Thₜ : Theory Σₜ Xₜ ar') → (p⇒ : Thₜ ⇒T~ Thₛ) →
              (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨ₜT Thₜ → 〈 Aₜ 〉 ⊨ₛT Thₛ
-    ⊨T⇒↝ Thₜ p⇒ Aₜ satAll {s} {e} ax θ ceq =
-      satProp e (soundness (p⇒ ax) Aₜ satAll) θ ceq
+    ⊨T⇒↝ Thₜ p⇒ Aₜ Aₜ⊨T {s} {e} ax θ ceq =
+      satProp e (soundness (p⇒ ax) Aₜ Aₜ⊨T) θ ceq
       where
       open SatProp Aₜ
       open Soundness-Completeness Σₜ

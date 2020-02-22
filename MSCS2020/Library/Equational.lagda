@@ -45,7 +45,7 @@ record Equ (X : Vars Σ) (s : sorts Σ) : Set where
 
 
 {- Equations -}
-record SemiEquation (X : Vars Σ) (s : sorts Σ) : Set where
+record Equation (X : Vars Σ) (s : sorts Σ) : Set where
   constructor ⋀_if_
   field
     eq  : Equ X s
@@ -54,9 +54,6 @@ record SemiEquation (X : Vars Σ) (s : sorts Σ) : Set where
 
   left = eleft eq
   right = eright eq
-
-Equation : (X : Vars Σ) → (s : sorts Σ) → Set
-Equation X s = SemiEquation X s
 
 {- Unconditional equation -}
 ⋀_≈_ : ∀ {X s} → (t t' : TΣ〔 X 〕 ∥ s ∥) → Equation X s
@@ -77,9 +74,9 @@ EqTheory X ar = HVec (Equ X) ar
 eqTheory-to-Theory : ∀ {X ar} → EqTheory X ar → Theory X ar
 eqTheory-to-Theory = mapV equ-to-Equation
 
-equation-to-Equ : ∀ {X} s → SemiEquation X s → Equ X s
+equation-to-Equ : ∀ {X} s → Equation X s → Equ X s
 equation-to-Equ _ equ = record { eleft = left equ ; eright = right equ }
-  where open SemiEquation
+  where open Equation
 
 iso-equ : ∀ {X} s → (eq : Equ X s) →
         eq ≡ equation-to-Equ s (equ-to-Equation s eq)

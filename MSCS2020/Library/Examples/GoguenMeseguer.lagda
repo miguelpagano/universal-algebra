@@ -146,7 +146,7 @@ module EqBool where
     open Provable-Equivalence Th
     open EqR (⊢-≈Setoid bool)
     open OpenTerm.Subst Σ∼ Vars∼
-    open SemiEquation
+    open Equation
     open Smartcons
     open TermAlgebra
 

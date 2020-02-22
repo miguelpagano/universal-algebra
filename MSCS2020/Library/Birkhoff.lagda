@@ -35,7 +35,7 @@ open import Product
 open OpenTerm Σ X renaming (T_〔_〕 to TΣX)
 
 open HomComp
-open SemiEquation
+open Equation
 
 open Hom
 open Homo

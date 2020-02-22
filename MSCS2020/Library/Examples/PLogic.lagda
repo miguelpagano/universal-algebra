@@ -234,7 +234,7 @@ module BoolModel where
   B = record { _⟦_⟧ₛ = Bsort ; _⟦_⟧ₒ = Bops }
 
   open Equ
-  open SemiEquation
+  open Equation
 
   Bsat₁ : B ⊨ Ax₁
   Bsat₁ θ ⇨v⟨⟩ with θ vp | θ vq | θ vr

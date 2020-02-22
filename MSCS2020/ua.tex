@@ -811,7 +811,7 @@ and \AgdaBound{P}\AgdaSpace{}\AgdaBound{a} imply
 \AgdaSymbol{→}\AgdaSpace{}%
 \AgdaBound{P}\AgdaSpace{}%
 \AgdaBound{a'}\<%
-\end{code} 
+\end{code}
 
 \noindent A family of well-defined predicates will induce a subalgebra;
 but we still need to formalize the condition \eqref{eq:opclosed}.  Let
@@ -820,24 +820,23 @@ but we still need to formalize the condition \eqref{eq:opclosed}.  Let
 \begin{code}
 \>[0]\AgdaFunction{OpClosed}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaSymbol{(}
-\AgdaBound{P}\AgdaSpace{}\AgdaSymbol{:}\AgdaSpace{}%
-\AgdaSymbol{(}\AgdaBound{s}\AgdaSpace{}%
+\AgdaSymbol{∀}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaBound{Σ}\AgdaSymbol{\}}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaField{sorts}\AgdaSpace{}%
+\AgdaRecord{Algebra}\AgdaSpace{}%
 \AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
-\AgdaFunction{∥}\AgdaSpace{}
-\AgdaBound{A} \AgdaSpace{}%
-\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
-\AgdaBound{s}\AgdaSpace{}%
-\AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSpace{}%
-\AgdaSpace{}\AgdaFunction{∥}\AgdaSpace{}
+\AgdaSymbol{(}\AgdaBound{P}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaFunction{IPred}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥\AgdaUnderscore{}∥}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaUnderscore{}\AgdaSymbol{)}\AgdaSpace{}%
 \AgdaSymbol{→}\AgdaSpace{}%
-\AgdaPrimitiveType{Set}
-\AgdaSymbol{)}
-\AgdaSymbol{→}\AgdaSpace{}%
-\AgdaPrimitiveType{Set}\AgdaSpace{}\<%
+\AgdaPrimitiveType{Set}\AgdaSpace{}%
+\AgdaSymbol{\AgdaUnderscore{}}\<%
 \\
 \>[0]\AgdaFunction{OpClosed}\AgdaSpace{}%
 \AgdaBound{P}\AgdaSpace{}%
@@ -934,28 +933,11 @@ for all \AgdaBound{a},\AgdaBound{b}\AgdaSpace{}\AgdaSymbol{∈}\AgdaSpace{}\Agda
 \>[2][@{}l@{\AgdaIndent{0}}]%
 \>[4]\AgdaField{rel}\AgdaSpace{}%
 \AgdaSymbol{:}\AgdaSpace{}%
-\AgdaSymbol{(}\AgdaBound{s}\AgdaSpace{}%
-\AgdaSymbol{:}\AgdaSpace{}%
-\AgdaField{sorts}\AgdaSpace{}%
-\AgdaBound{Σ}\AgdaSymbol{)}\AgdaSpace{}%
-\AgdaSymbol{→}\AgdaSpace{}%
-\AgdaSymbol{(}
-\AgdaFunction{∥}\AgdaSpace{}
-\AgdaBound{A} \AgdaSpace{}%
-\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
-\AgdaBound{s}\AgdaSpace{}%
-\AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSpace{}%
-\AgdaSpace{}\AgdaFunction{∥}
-\AgdaSymbol{→}\AgdaSpace{}%
-\AgdaFunction{∥}\AgdaSpace{}
-\AgdaBound{A} \AgdaSpace{}%
-\AgdaOperator{\AgdaField{⟦}}\AgdaSpace{}%
-\AgdaBound{s}\AgdaSpace{}%
-\AgdaOperator{\AgdaField{⟧ₛ}}\AgdaSpace{}%
-\AgdaSpace{}\AgdaFunction{∥}
-\AgdaSymbol{→}\AgdaSpace{}%
-\AgdaPrimitiveType{Set}
-\AgdaSymbol{)}\<%
+\AgdaFunction{IRel}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaBound{A}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{∥\AgdaUnderscore{}∥}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaUnderscore{}
+\<%
 \\
 %
 \>[4]\AgdaField{welldef}\AgdaSpace{}%
@@ -1018,7 +1000,7 @@ as the set of equivalence classes $\mathcal{A}_s / Q$; the condition
 $([a_1],\ldots,[a_n])$ of equivalence classes into the class $[
 f_\mathcal{A}(a_1,\ldots,a_n)]$. In Agda, we take the same carriers
 from \AgdaBound{A} and use \AgdaBound{Q}\AgdaSpace{}\AgdaBound{s} as the equivalence relation over
-\AgdaFunction{∥}\AgdaSpace{}\AgdaBound{A}\AgdaSpace{}\AgdaFunction{⟦}\AgdaSpace{}\AgdaBound{s}\AgdaSpace{}\AgdaFunction{⟧ₛ}\AgdaSpace{}\AgdaFunction{∥}; operations are interpreted just as in \AgdaBound{A} and the congruence proof
+\AgdaBound{A}\AgdaSpace{}\AgdaFunction{∥}\AgdaSpace{}\AgdaBound{s}\AgdaSpace{}\AgdaFunction{∥}; operations are interpreted just as in \AgdaBound{A} and the congruence proof
 is given by \AgdaField{csubst}\AgdaSpace{}\AgdaBound{Q}.
 
 \paragraph*{Isomorphism Theorems} The definitions of subalgebras,

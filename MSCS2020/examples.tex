@@ -87,11 +87,11 @@ write the associativity and identity element axioms.
 \AgdaSymbol{=}\AgdaSpace{}%
 \AgdaFunction{assocOp}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
-\AgdaSymbol{(}\AgdaFunction{unitLeft}\AgdaSpace{}%
+\AgdaFunction{unitLeft}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
 \AgdaFunction{unitRight}\AgdaSpace{}%
 \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
-\AgdaInductiveConstructor{⟨⟩}\AgdaSymbol{)}\<%
+\AgdaInductiveConstructor{⟨⟩}\<%
 \end{code}
 
 \noindent
@@ -228,8 +228,204 @@ invertibility axioms; \AgdaFunction{invElemRight}\AgdaSpace{}%
 \AgdaFunction{GrpTheory}, by appending these axioms to \AgdaFunction{MonTheory}
 (as we did for example with \AgdaFunction{CommMonTheory}). The problem is that
 behind all this naive extension the signatures of the invertibility axioms and
-monoid theory axioms are different.
+monoid theory axioms are different. Obviously there are ways of solving this
+problem and possible others that can appear, but we think using parameterised
+modules is a more clean approach.
 
 \subsection{Using parameterised modules}
 %\subsection{Groups}
+
+The use of parameterised modules helps us to generalize concrete definitions
+that live in the module, particularly our approach it is to generalize the
+concrete data type that define the operations field in the signature of a given
+algebraic structure. Thus, we refactor the previous formalizations generalizing
+the data types that define operations and also the corresponding constructors of
+these operations; notice that the type \AgdaBound{monoid{-}op} is valid only if
+it has at least two constructors with the correct type. Another interesting note
+is that we don't have the need to generalize the set of sorts.
+
+\begin{code}
+\>[0]\AgdaKeyword{module}%
+\>[70I]\AgdaModule{Monoid}%
+\>[71I]\AgdaSymbol{\{}\AgdaBound{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaDatatype{List}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{×}}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaSymbol{→}\AgdaSpace{}%
+\AgdaPrimitiveType{Set}\AgdaSymbol{\}}\<%
+\\
+\>[.][@{}l@{}]\<[71I]%
+\>[14]\AgdaSymbol{(}\AgdaBound{e}%
+\>[22]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaBound{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{))}\<%
+\\
+%
+\>[14]\AgdaSymbol{(}\AgdaBound{∘}%
+\>[21]\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaBound{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{((}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+\AgdaOperator{\AgdaFunction{]}}\AgdaSymbol{)}\AgdaSpace{}%
+\AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+\AgdaInductiveConstructor{tt}\AgdaSymbol{))}\AgdaSpace{}%
+\AgdaKeyword{where}\<%
+\\%
+\\[\AgdaEmptyExtraSkip]%
+\>[0][@{}l@{\AgdaIndent{0}}]%
+\>[2]\AgdaFunction{Σ-mon}\AgdaSpace{}%
+\AgdaSymbol{:}\AgdaSpace{}%
+\AgdaRecord{Signature}\<%
+\\%
+\>[2]\AgdaFunction{Σ-mon}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaKeyword{record}\AgdaSpace{}%
+\AgdaSymbol{\{}\AgdaSpace{}%
+\AgdaField{sorts}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaRecord{⊤}\AgdaSpace{}%
+\AgdaSymbol{;}\AgdaSpace{}%
+\AgdaField{ops}\AgdaSpace{}%
+\AgdaSymbol{=}\AgdaSpace{}%
+\AgdaBound{monoid{-}op}\AgdaSpace{}%
+\AgdaSymbol{\}}\<%
+\end{code}
+
+\noindent The rest of the module is straightforward, we define a submodule
+\AgdaModule{Theory} where all the definitions related to the theory are defined;
+smart-constructors, axioms and the theory.
+
+\begin{code}
+  \>[0][@{}l@{\AgdaIndent{0}}]%
+  \>[2]\AgdaKeyword{module}\AgdaSpace{}%
+  \AgdaModule{Theory}\AgdaSpace{}%
+  \AgdaKeyword{where}
+  \\
+  \>[2][@{}l@{\AgdaIndent{0}}]%
+  \>[4]
+  $\vdots$
+  \\
+  \>[4]\AgdaFunction{MonTheory}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaFunction{assocOp}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+  \AgdaFunction{unitLeft}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+  \AgdaFunction{unitRight}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+  \AgdaInductiveConstructor{⟨⟩}
+  \<%
+\end{code}
+
+\noindent
+Following the same strategy we define the group theory with a parameterised
+modules with the data type that define the operations and the corresponding
+constructors for the binary operation, the unary operation and the identity
+element. Notice that using the previous module definition we can instantiate
+the Monoid module with the data type \AgdaBound{group-op}, then it is a monoid
+with the constructors \AgdaBound{e} and \AgdaBound{∘}; thus we have the axioms of
+\AgdaFunction{MonTheory} in the correct signature, and we can append the
+invertibility axioms.
+
+\begin{code}
+  \>[0]\AgdaKeyword{module}%
+  \>[64I]\AgdaModule{Group}%
+  \>[65I]\AgdaSymbol{\{}\AgdaBound{group-op}\AgdaSpace{}%
+  \AgdaSymbol{:}\AgdaSpace{}%
+  \AgdaDatatype{List}\AgdaSpace{}%
+  \AgdaRecord{⊤}\AgdaSpace{}%
+  \AgdaOperator{\AgdaFunction{×}}\AgdaSpace{}%
+  \AgdaRecord{⊤}\AgdaSpace{}%
+  \AgdaSymbol{→}\AgdaSpace{}%
+  \AgdaPrimitiveType{Set}\AgdaSymbol{\}}\<%
+  \\
+  \>[.][@{}l@{}]\<[65I]%
+  \>[13]\AgdaSymbol{(}\AgdaBound{e}%
+  \>[21]\AgdaSymbol{:}\AgdaSpace{}%
+  \AgdaBound{group-op}\AgdaSpace{}%
+  \AgdaSymbol{(}\AgdaInductiveConstructor{[]}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+  \AgdaInductiveConstructor{tt}\AgdaSymbol{))}\<%
+  \\%
+  \>[13]\AgdaSymbol{(}\AgdaOperator{\AgdaBound{\AgdaUnderscore{}⁻¹}}%
+  \>[21]\AgdaSymbol{:}\AgdaSpace{}%
+  \AgdaBound{group-op}\AgdaSpace{}%
+  \AgdaSymbol{(}\AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+    \AgdaInductiveConstructor{tt}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{]}}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+  \AgdaInductiveConstructor{tt}\AgdaSymbol{))}\<%
+  \\%
+  \>[13]\AgdaSymbol{(}\AgdaBound{∘}%
+  \>[20]\AgdaSymbol{:}\AgdaSpace{}%
+  \AgdaBound{group-op}\AgdaSpace{}%
+  \AgdaSymbol{((}\AgdaInductiveConstructor{tt}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{∷}}\AgdaSpace{}%
+  \AgdaOperator{\AgdaFunction{[}}\AgdaSpace{}%
+    \AgdaInductiveConstructor{tt}\AgdaSpace{}%
+    \AgdaOperator{\AgdaFunction{]}}\AgdaSymbol{)}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{,}}\AgdaSpace{}%
+  \AgdaInductiveConstructor{tt}\AgdaSymbol{))}\<%
+  \\
+  \>[.][@{}l@{}]\<[64I]%
+  \>[7]\AgdaKeyword{where}\<%
+  \\
+  \>[0][@{}l@{\AgdaIndent{0}}]%
+  \>[2]\AgdaKeyword{open}\AgdaSpace{}%
+  \AgdaKeyword{module}\AgdaSpace{}%
+  \AgdaModule{M}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaModule{Monoid}\AgdaSpace{}%
+  \AgdaSymbol{\{}\AgdaBound{group-op}\AgdaSymbol{\}}\AgdaSpace{}%
+  \AgdaBound{e}\AgdaSpace{}%
+  \AgdaBound{∘}\<%
+  \\
+  %
+  \\[\AgdaEmptyExtraSkip]%
+  %
+  \>[2]\AgdaFunction{Σ-grp}\AgdaSpace{}%
+  \AgdaSymbol{:}\AgdaSpace{}%
+  \AgdaRecord{Signature}\<%
+  \\
+  %
+  \>[2]\AgdaFunction{Σ-grp}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaKeyword{record}\AgdaSpace{}%
+  \AgdaSymbol{\{}\AgdaSpace{}%
+  \AgdaField{sorts}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaRecord{⊤}\AgdaSpace{}%
+  \AgdaSymbol{;}\AgdaSpace{}%
+  \AgdaField{ops}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaBound{group-op}\AgdaSpace{}%
+  \AgdaSymbol{\}}\<%
+  \\%
+  \\[\AgdaEmptyExtraSkip]%
+  %
+  \>[2]\AgdaKeyword{module}\AgdaSpace{}%
+  \AgdaModule{GrpTheory}\AgdaSpace{}%
+  \AgdaKeyword{where}\<%
+  \\
+  \>[2][@{}l@{\AgdaIndent{0}}]%
+  \>[4]\AgdaKeyword{open}\AgdaSpace{}%
+  \AgdaModule{M.Theory}\AgdaSpace{}%
+  \\
+  \>[4]$\vdots$
+  \\
+  \>[4]\AgdaFunction{GrpTheory}\AgdaSpace{}%
+  \AgdaSymbol{=}\AgdaSpace{}%
+  \AgdaFunction{invElemRight}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+  \AgdaFunction{invElemLeft}\AgdaSpace{}%
+  \AgdaOperator{\AgdaInductiveConstructor{▹}}\AgdaSpace{}%
+  \AgdaFunction{MonTheory}\<%
+  \<%
+\end{code}
 

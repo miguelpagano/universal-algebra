@@ -466,11 +466,20 @@ IHSP is to prove that some theories are not equational
 axiomatizable. We proved that fields are not equational because they
 are not closed under products (of course, the problem is that an
 equational lacks negations). Our approach to proving this, was to
-introduce a shallow notion of fields (ie. we do not have a syntactic
+introduce a shallow notion of fields (\ie we do not have a syntactic
 representation of fields, but we model them as setoids with operations
 satisfying the axioms) and assume that there is an equational theory
-modelling them. We can easily turn $\mathit{Bool}$ into a field with
-the xor and conjunction operations. %COMPLETAR.
+modelling them. Thus, we can easily turn $\mathit{Bool}$ into a field with
+the xor and conjunction operations that satisfy the equational theory,
+then the self-product must satisfy the equational using that it is closed under
+IHSP (particularly Products), however as we have noticed the product of fields
+is not a field; for this particular field, clearly not all pair
+$(b,b') \neq 0_{\mathit{Bool} \times \mathit{Bool}}$
+satisfy $(b,b') * (b,b')^{-1} = 1_{\mathit{Bool} \times \mathit{Bool}}$ where
+the operations apply component-wise
+\footnote{$1_{\mathit{Bool} \times \mathit{Bool}} = (true, true)$,\,
+  $0_{\mathit{Bool} \times \mathit{Bool}} = (false, false)$}.
+% COMPLETAR.
 % Decir que tomar a≠b como ¬(a=b) se llama tight apartness
 
 In the standard library there are shallow definitions of several

@@ -12,15 +12,14 @@ open import Morphisms
 import Equational
 open import SigMorphism
 open import TermAlgebra
-open import Data.Unit hiding (setoid)
-open import Data.List
-open import Data.Product
 open import Data.Nat
 open import Function
 open import Data.Fin hiding (#_)
-open import Data.List renaming (map to lmap)
-open import Data.Sum
-open import HeterogeneousVec
+open import Data.List
+open import Data.Product hiding (map)
+open import Data.Sum hiding (map)
+open import Data.Unit hiding (setoid)
+open import HeterogeneousVec hiding (map)
 open import Relation.Binary.PropositionalEquality using (refl)
 
 
@@ -131,6 +130,7 @@ module Theory₁ where
            distAndOr ▹ distOrAnd ▹ abs₁ ▹
            abs₂ ▹ defF ▹ 3excl ▹ ⟨⟩
 
+
   {- An axiom of Tbool₁ is an element of the vector, so we need 
      to say where is each one in it. In order to have a more compact
      syntax, we define patterns. -}
@@ -153,15 +153,32 @@ module Theory₁ where
                                                           (there (there (there (there (there ())))))))))))
 
 
+  p₁ :  Tbool₁ ⊢ (⋀ ¬ p ∧ p ≈ false)
+  p₁ = begin
+         ¬ p ∧ p
+         ≈⟨ psubst axComm∧ σ ⇨v⟨⟩ ⟩
+         p ∧ ¬ p
+         ≈⟨ psubst axDefF idSubst ⇨v⟨⟩ ⟩
+         false
+       ∎
+       where
+       open Provable-Equivalence Tbool₁
+       open import Relation.Binary.EqReasoning (⊢-≈Setoid tt)
+       open OpenTerm.Subst Σbool₁ Vars₁
+       σ : Subst
+       σ zero = ¬ p
+       σ (suc zero) = p
+       σ (suc x) = p
+
+
+
 {- Theory 2: Axiomatization of the propositional logic of Dijkstra-Scholten.
-   We define the signature and a signature morphism from Σbool₁ to Σbool₂. 
+   We define the signature and a signature morphism from Σbool₁ to Σbool₂.
    Then we define the axioms of Σbool₂ using variables coming from Σbool₁ (so
    we can transform a model of Σbool₂ in a model of Σbool₁ directly). -}
 data Σops₂ : List ⊤ × ⊤ → Set where
-  t₂     : Σops₂ ([] ↦ tt)
-  f₂     : Σops₂ ([] ↦ tt)
-  or₂    : Σops₂ ((tt ∷ [ tt ]) ↦ tt)
-  equiv₂ : Σops₂ ((tt ∷ [ tt ]) ↦ tt)
+  t₂ f₂       : Σops₂ ([] ↦ tt)
+  or₂ equiv₂  : Σops₂ ((tt ∷ [ tt ]) ↦ tt)
 
 
 Σbool₂ : Signature
@@ -171,23 +188,20 @@ data Σops₂ : List ⊤ × ⊤ → Set where
 {- We define signature morphism from Σbool₁ to Σbool₂ -}
 module Translation where
   open FormalTerm Σbool₂
-
   {- For each operation of Σbool₁, we define a
      formal term in Σbool₂ -}
-  ops↝ : ∀ {ar s} → (f : Σops₁ (ar ↦ s)) →
-           lmap id ar ⊩ s
+
+  ops↝ : ∀ {ar s} → (f : Σops₁ (ar ↦ s)) → map id ar ⊢ s
   ops↝ t₁ = t₂ ∣$∣ ⟨⟩
   ops↝ f₁ = f₂ ∣$∣ ⟨⟩
   ops↝ or₁ = or₂ ∣$∣ ⟨⟨ p , q ⟩⟩
     where p = # zero
           q = # (suc zero)
   -- ¬ p is translated to p ≡ false
-  ops↝ neg₁ = equiv₂ ∣$∣ ⟨⟨ p , false ⟩⟩
+  ops↝ neg₁ = equiv₂ ∣$∣ ⟨⟨ p , f₂ ∣$∣ ⟨⟩ ⟩⟩
     where p = # zero
-          false = f₂ ∣$∣ ⟨⟩
   -- p ∧ q is translated to  (p ≡ q) ≡ p ∨ q
-  ops↝ and₁ = equiv₂ ∣$∣ ⟨⟨ equiv₂ ∣$∣ ⟨⟨ p , q ⟩⟩
-                         , or₂ ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
+  ops↝ and₁ = equiv₂ ∣$∣ ⟨⟨ equiv₂ ∣$∣ ⟨⟨ p , q ⟩⟩ , or₂ ∣$∣ ⟨⟨ p , q ⟩⟩ ⟩⟩
     where p = # zero
           q = # (suc zero)
 
@@ -333,9 +347,9 @@ module Theory₂ where
     T₂⊢idem∧ =
       begin
         ((p ≡ p) ≡ (p ∨ p))
-      ≈⟨ preemp ∼⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ⟩
         (true₂ ≡ (p ∨ p))
-      ≈⟨ preemp ∼⟨⟨ prefl , axIdem∨ ∣ idSubst ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , axIdem∨ ∣ idSubst ⟩⟩∼ ⟩
         (true₂ ≡ p)
       ≈⟨ axComm≡ ∣ σ ⟩
         (p ≡ true₂)
@@ -372,13 +386,13 @@ module Theory₂ where
     T₂⊢abs₁ =
       begin
         (p ≡ (p ∨ q)) ≡ (p ∨ (p ∨ q))
-      ≈⟨ preemp ∼⟨⟨ prefl , axAssoc∨ ∣ σ₁ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , axAssoc∨ ∣ σ₁ ⟩⟩∼ ⟩
         ((p ≡ (p ∨ q)) ≡ ((p ∨ p) ∨ q))
-      ≈⟨ preemp ∼⟨⟨ prefl , preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , preemp ⇨⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
         (p ≡ (p ∨ q)) ≡ (p ∨ q)
       ≈⟨ psym (axAssoc≡ ∣ σ₂) ⟩
         p ≡ ((p ∨ q) ≡ (p ∨ q))
-      ≈⟨ preemp ∼⟨⟨ prefl , axRefl≡ ∣ σ₃ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , axRefl≡ ∣ σ₃ ⟩⟩∼ ⟩
         (p ≡ true₂)
       ≈⟨ axNeu≡ ∣ idSubst ⟩
         p
@@ -401,14 +415,14 @@ module Theory₂ where
         p ∨ ((p ≡ q) ≡ (p ∨ q))
       ≈⟨ axDist∨≡ ∣ σ₁ ⟩
         (p ∨ (p ≡ q)) ≡ (p ∨ (p ∨ q))
-      ≈⟨ preemp ∼⟨⟨ axDist∨≡ ∣ σ₂ , axAssoc∨ ∣ σ₂ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ axDist∨≡ ∣ σ₂ , axAssoc∨ ∣ σ₂ ⟩⟩∼ ⟩
         (((p ∨ p) ≡ (p ∨ q)) ≡ ((p ∨ p) ∨ q))
-      ≈⟨ preemp ∼⟨⟨ preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼
-                 , preemp ∼⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ preemp ⇨⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼
+                 , preemp ⇨⟨⟨ axIdem∨ ∣ idSubst , prefl ⟩⟩∼ ⟩⟩∼ ⟩
         (p ≡ (p ∨ q)) ≡ (p ∨ q)
       ≈⟨ psym (axAssoc≡ ∣ σ₃) ⟩
         p ≡ ((p ∨ q) ≡ (p ∨ q))
-      ≈⟨ preemp ∼⟨⟨ prefl , axRefl≡ ∣ σ₄ ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , axRefl≡ ∣ σ₄ ⟩⟩∼ ⟩
         p ≡ true₂
       ≈⟨ axNeu≡ ∣ idSubst ⟩
         p
@@ -428,20 +442,20 @@ module Theory₂ where
             σ₄ : Subst
             σ₄ (_ , 0) = p ∨ q
             σ₄ x = term (inj₂ x) ⟨⟩
-            
+
 
     T₂⊢defF : Tbool₂ ⊢ eq↝ defF
     T₂⊢defF =
       begin
          (p ≡ (p ≡ false₂)) ≡ (p ∨ (p ≡ false₂))
-       ≈⟨ preemp (∼⟨⟨ axAssoc≡ ∣ σ₁ , axDist∨≡ ∣ σ₁ ⟩⟩∼) ⟩
+       ≈⟨ preemp (⇨⟨⟨ axAssoc≡ ∣ σ₁ , axDist∨≡ ∣ σ₁ ⟩⟩∼) ⟩
          ((p ≡ p) ≡ false₂) ≡ ((p ∨ p) ≡ (p ∨ false₂))
-       ≈⟨ preemp ∼⟨⟨ preemp ∼⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ,
-                    preemp ∼⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼ ⟩⟩∼ ⟩
+       ≈⟨ preemp ⇨⟨⟨ preemp ⇨⟨⟨ axRefl≡ ∣ idSubst , prefl ⟩⟩∼ ,
+                    preemp ⇨⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼ ⟩⟩∼ ⟩
          (true₂ ≡ false₂) ≡ (p ≡ p)
-       ≈⟨ preemp ∼⟨⟨ axComm≡ ∣ σ₂ , axRefl≡ ∣ idSubst ⟩⟩∼ ⟩
+       ≈⟨ preemp ⇨⟨⟨ axComm≡ ∣ σ₂ , axRefl≡ ∣ idSubst ⟩⟩∼ ⟩
          (false₂ ≡ true₂) ≡ true₂
-       ≈⟨ preemp (∼⟨⟨ axNeu≡ ∣ σ₃ , prefl ⟩⟩∼) ⟩
+       ≈⟨ preemp (⇨⟨⟨ axNeu≡ ∣ σ₃ , prefl ⟩⟩∼) ⟩
          false₂ ≡ true₂
        ≈⟨ axNeu≡ ∣ σ₃ ⟩
          false₂
@@ -460,16 +474,16 @@ module Theory₂ where
             σ₃ : Subst
             σ₃ (_ , 0) = false₂
             σ₃ x = term (inj₂ x) ⟨⟩
-            
 
-    
+
+
     T₂⊢3excl : Tbool₂ ⊢ eq↝ 3excl
     T₂⊢3excl =
       begin
         p ∨ (p ≡ false₂)
       ≈⟨ axDist∨≡ ∣ σ₁ ⟩
         (p ∨ p) ≡ (p ∨ false₂)
-      ≈⟨ preemp (∼⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼) ⟩
+      ≈⟨ preemp (⇨⟨⟨ axIdem∨ ∣ idSubst , axNeu∨ ∣ idSubst ⟩⟩∼) ⟩
         p ≡ p
       ≈⟨ axRefl≡ ∣ idSubst ⟩
         true₂
@@ -538,64 +552,64 @@ module BoolModel₂ where
 
   open Theory₂
   open Equational Σbool₂
-  
+
   B₂⊨assoc≡ : B₂ ⊨ assocEquiv
-  B₂⊨assoc≡ θ ∼⟨⟩ with θ varp | θ varq | θ varr
-  B₂⊨assoc≡ θ ∼⟨⟩ | true | b | c = refl
-  B₂⊨assoc≡ θ ∼⟨⟩ | false | true | c = refl
-  B₂⊨assoc≡ θ ∼⟨⟩ | false | false | false = refl
-  B₂⊨assoc≡ θ ∼⟨⟩ | false | false | true = refl
+  B₂⊨assoc≡ θ ⇨v⟨⟩ with θ varp | θ varq | θ varr
+  B₂⊨assoc≡ θ ⇨v⟨⟩ | true | b | c = refl
+  B₂⊨assoc≡ θ ⇨v⟨⟩ | false | true | c = refl
+  B₂⊨assoc≡ θ ⇨v⟨⟩ | false | false | false = refl
+  B₂⊨assoc≡ θ ⇨v⟨⟩ | false | false | true = refl
 
 
   B₂⊨comm≡ : B₂ ⊨ commEquiv
-  B₂⊨comm≡ θ ∼⟨⟩ with θ varp | θ varq
-  B₂⊨comm≡ θ ∼⟨⟩ | false | false = refl
-  B₂⊨comm≡ θ ∼⟨⟩ | false | true = refl
-  B₂⊨comm≡ θ ∼⟨⟩ | true | false = refl
-  B₂⊨comm≡ θ ∼⟨⟩ | true | true = refl
+  B₂⊨comm≡ θ ⇨v⟨⟩ with θ varp | θ varq
+  B₂⊨comm≡ θ ⇨v⟨⟩ | false | false = refl
+  B₂⊨comm≡ θ ⇨v⟨⟩ | false | true = refl
+  B₂⊨comm≡ θ ⇨v⟨⟩ | true | false = refl
+  B₂⊨comm≡ θ ⇨v⟨⟩ | true | true = refl
 
 
   B₂⊨assoc∨ : B₂ ⊨ assocOr
-  B₂⊨assoc∨ θ ∼⟨⟩ with θ varp | θ varq | θ varr
-  B₂⊨assoc∨ θ ∼⟨⟩ | false | b | c = refl
-  B₂⊨assoc∨ θ ∼⟨⟩ | true | b | c = refl
+  B₂⊨assoc∨ θ ⇨v⟨⟩ with θ varp | θ varq | θ varr
+  B₂⊨assoc∨ θ ⇨v⟨⟩ | false | b | c = refl
+  B₂⊨assoc∨ θ ⇨v⟨⟩ | true | b | c = refl
 
   B₂⊨comm∨ : B₂ ⊨ commOr
-  B₂⊨comm∨ θ ∼⟨⟩ with θ varp | θ varq
-  B₂⊨comm∨ θ ∼⟨⟩ | false | false = refl
-  B₂⊨comm∨ θ ∼⟨⟩ | false | true = refl
-  B₂⊨comm∨ θ ∼⟨⟩ | true | false = refl
-  B₂⊨comm∨ θ ∼⟨⟩ | true | true = refl
+  B₂⊨comm∨ θ ⇨v⟨⟩ with θ varp | θ varq
+  B₂⊨comm∨ θ ⇨v⟨⟩ | false | false = refl
+  B₂⊨comm∨ θ ⇨v⟨⟩ | false | true = refl
+  B₂⊨comm∨ θ ⇨v⟨⟩ | true | false = refl
+  B₂⊨comm∨ θ ⇨v⟨⟩ | true | true = refl
 
   B₂⊨neu≡ : B₂ ⊨ neuEquiv
-  B₂⊨neu≡ θ ∼⟨⟩ with θ varp
-  B₂⊨neu≡ θ ∼⟨⟩ | false = refl
-  B₂⊨neu≡ θ ∼⟨⟩ | true = refl
+  B₂⊨neu≡ θ ⇨v⟨⟩ with θ varp
+  B₂⊨neu≡ θ ⇨v⟨⟩ | false = refl
+  B₂⊨neu≡ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨refl≡ : B₂ ⊨ reflEquiv
-  B₂⊨refl≡ θ ∼⟨⟩ with θ varp
-  B₂⊨refl≡ θ ∼⟨⟩ | false = refl
-  B₂⊨refl≡ θ ∼⟨⟩ | true = refl
+  B₂⊨refl≡ θ ⇨v⟨⟩ with θ varp
+  B₂⊨refl≡ θ ⇨v⟨⟩ | false = refl
+  B₂⊨refl≡ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨abs∨ : B₂ ⊨ absOr
-  B₂⊨abs∨ θ ∼⟨⟩ with θ varp
-  B₂⊨abs∨ θ ∼⟨⟩ | false = refl
-  B₂⊨abs∨ θ ∼⟨⟩ | true = refl
+  B₂⊨abs∨ θ ⇨v⟨⟩ with θ varp
+  B₂⊨abs∨ θ ⇨v⟨⟩ | false = refl
+  B₂⊨abs∨ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨neu∨ : B₂ ⊨ neuOr
-  B₂⊨neu∨ θ ∼⟨⟩ with θ varp
-  B₂⊨neu∨ θ ∼⟨⟩ | false = refl
-  B₂⊨neu∨ θ ∼⟨⟩ | true = refl
+  B₂⊨neu∨ θ ⇨v⟨⟩ with θ varp
+  B₂⊨neu∨ θ ⇨v⟨⟩ | false = refl
+  B₂⊨neu∨ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨idem∨ : B₂ ⊨ idemOr
-  B₂⊨idem∨ θ ∼⟨⟩ with θ varp
-  B₂⊨idem∨ θ ∼⟨⟩ | false = refl
-  B₂⊨idem∨ θ ∼⟨⟩ | true = refl
+  B₂⊨idem∨ θ ⇨v⟨⟩ with θ varp
+  B₂⊨idem∨ θ ⇨v⟨⟩ | false = refl
+  B₂⊨idem∨ θ ⇨v⟨⟩ | true = refl
 
   B₂⊨dist∨≡ : B₂ ⊨ distOrEquiv
-  B₂⊨dist∨≡ θ ∼⟨⟩ with θ varp | θ varq | θ varr
-  B₂⊨dist∨≡ θ ∼⟨⟩ | false | b | c = refl
-  B₂⊨dist∨≡ θ ∼⟨⟩ | true | b | c = refl
+  B₂⊨dist∨≡ θ ⇨v⟨⟩ with θ varp | θ varq | θ varr
+  B₂⊨dist∨≡ θ ⇨v⟨⟩ | false | b | c = refl
+  B₂⊨dist∨≡ θ ⇨v⟨⟩ | true | b | c = refl
 
   B₂model : B₂ ⊨T Tbool₂
   B₂model axAssoc≡ = B₂⊨assoc≡

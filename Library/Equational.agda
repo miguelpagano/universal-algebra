@@ -7,8 +7,8 @@
 open import UnivAlgebra
 module Equational (Σ : Signature) where
 
-open import Data.List
-open import Data.Product hiding (Σ)
+open import Data.List hiding (zip;zipWith)
+open import Data.Product hiding (Σ;zip)
 open import Data.Sum hiding (map)
 open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘e_)
@@ -25,32 +25,35 @@ open import Setoids hiding (∥_∥)
 
 open OpenTerm Σ renaming (T_〔_〕 to TΣ〔_〕)
 
+record Equ (X : Vars Σ) (s : sorts Σ) : Set where
+  constructor _≈ₑ_
+  field
+    eleft  : TΣ〔 X 〕 ∥ s ∥
+    eright : TΣ〔 X 〕 ∥ s ∥
+
+
 {- Equations -}
 record Equation (X : Vars Σ) (s : sorts Σ) : Set where
-  constructor ⋀_≈_if「_」_
+  constructor ⋀_if_
   field
-    left  : TΣ〔 X 〕 ∥ s ∥
-    right : TΣ〔 X 〕 ∥ s ∥
-    carty : Arity Σ
-    cond : HVec (λ s' → TΣ〔 X 〕 ∥ s' ∥) carty ×
-           HVec (λ s' → TΣ〔 X 〕 ∥ s' ∥) carty
+    eq  : Equ X s
+    cond : ∃ (HVec (Equ X))
+  open Equ
 
+  left = eleft eq
+  right = eright eq
 
 {- Unconditional equation -}
 ⋀_≈_ : ∀ {X s} → (t t' : TΣ〔 X 〕 ∥ s ∥) → Equation X s
-⋀ t ≈ t' = ⋀ t ≈ t' if「 [] 」 (⟨⟩ , ⟨⟩)
+⋀ t ≈ t' = ⋀ (t ≈ₑ t') if ([] , ⟨⟩)
 
 infix 0 ⋀_≈_
-record Equ (X : Vars Σ) (s : sorts Σ) : Set where
-  field
-    left  : TΣ〔 X 〕 ∥ s ∥
-    right : TΣ〔 X 〕 ∥ s ∥
 
 Theory : (X : Vars Σ) → (ar : Arity Σ) → Set
 Theory X ar = HVec (Equation X) ar
 
 equ-to-Equation : ∀ {X} s → Equ X s → Equation X s
-equ-to-Equation _ equ = ⋀ (left equ) ≈ (right equ)
+equ-to-Equation _ equ = ⋀ (eleft equ) ≈ (eright equ)
   where open Equ
 
 EqTheory : (X : Vars Σ) → (ar : Arity Σ) → Set
@@ -60,24 +63,28 @@ eqTheory-to-Theory : ∀ {X ar} → EqTheory X ar → Theory X ar
 eqTheory-to-Theory = mapV equ-to-Equation
 
 equation-to-Equ : ∀ {X} s → Equation X s → Equ X s
-equation-to-Equ _ equ = record { left = left equ ; right = right equ }
+equation-to-Equ _ equ = record { eleft = left equ ; eright = right equ }
   where open Equation
 
 iso-equ : ∀ {X} s → (eq : Equ X s) →
         eq ≡ equation-to-Equ s (equ-to-Equation s eq)
-iso-equ s record { left = t ; right = t' } = PE.refl
+iso-equ s record { eleft = t ; eright = t' } = PE.refl
   where open Equ
 
 {- Satisfactibility -}
-_⊨_ : ∀  {X : Vars Σ} {s : sorts Σ} {ℓ₁ ℓ₂} →
-        (A : Algebra {ℓ₁} {ℓ₂} Σ) → Equation X s → Set (ℓ₂ Level.⊔ ℓ₁)
-_⊨_ {X = X} {s} A (⋀ t ≈ t' if「 _ 」 (us , us')) =
-    (θ : Env X A ) →
-    _∼v_ {R = λ {sᵢ} uᵢ uᵢ' → _≈_ (A ⟦ sᵢ ⟧ₛ) (eval θ uᵢ) (eval θ uᵢ')} us us' →
-    (_≈_ (A ⟦ s ⟧ₛ)) (eval θ t) (eval θ t')
+_,_⊨ₑ_ : ∀  {X : Vars Σ} {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) → (θ : Env X A ) → {s : sorts Σ} → Equ X s → Set ℓ₂
+_,_⊨ₑ_ {X} A θ {s} (t ≈ₑ t') = eval θ t ≈ eval θ t'
   where
   open Eval X A
-  open Setoid
+  open Setoid (A ⟦ s ⟧ₛ)
+
+_⊨c_ : ∀ {X : Vars Σ}  {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) {s : sorts Σ} → Equ X s → Set (ℓ₁ ⊔ ℓ₂)
+_⊨c_ {X = X} A {s} equ = (θ : Env X A ) → A , θ ⊨ₑ equ
+
+
+_⊨_ : ∀ {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) {X : Vars Σ} {s : sorts Σ} → Equation X s → Set (ℓ₁ ⊔ ℓ₂)
+_⊨_ A {X = X} {s} (⋀ equ if (ar , conds)) =
+    (θ : Env X A ) → (A , θ ⊨ₑ_) ⇨v conds → A , θ ⊨ₑ equ
 
 
 {- A is model -}
@@ -85,13 +92,32 @@ _⊨T_ : ∀ {X ar ℓ₁ ℓ₂} → (A : Algebra {ℓ₁} {ℓ₂} Σ) →
        (E : Theory X ar) → Set _
 A ⊨T E = ∀ {s e} → _∈_ {i = s} e E → A ⊨ e
 
+
 ⊨All : ∀ {ℓ₁ ℓ₂ X} {ar : Arity Σ} {s : sorts Σ} → (E : Theory X ar) →
                (e : Equation X s) → Set (lsuc ℓ₂ Level.⊔ lsuc ℓ₁)
 ⊨All {ℓ₁} {ℓ₂} E e = (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T E → A ⊨ e
 
+open Equ
+lefts : ∀ {X} {ar} → HVec (Equ X) ar → HVec (TΣ〔 X 〕 ∥_∥) ar
+lefts ⟨⟩ = ⟨⟩
+lefts (v ▹ ts) = eleft v ▹ lefts ts
+rights : ∀ {X} {ar} → HVec (Equ X) ar → HVec (TΣ〔 X 〕 ∥_∥) ar
+rights ⟨⟩ = ⟨⟩
+rights (v ▹ ts) = (eright v) ▹ (rights ts)
+
+lefts-zip : ∀ {X} ar (ts ts' : HVec (_∥_∥ TΣ〔 X 〕) ar) →
+            lefts (zipWith (_≈ₑ_) ts  ts') ≡ ts
+lefts-zip [] ⟨⟩ ⟨⟩ = PE.refl
+lefts-zip (x ∷ ar) (v ▹ ts) (v₁ ▹ ts') = cong₂ _▹_ PE.refl (lefts-zip ar ts ts')
+
+rights-zip : ∀ {X} ar (ts ts' : HVec (_∥_∥ TΣ〔 X 〕) ar) →
+            rights (zipWith (_≈ₑ_) ts  ts') ≡ ts'
+rights-zip [] ⟨⟩ ⟨⟩ = PE.refl
+rights-zip (x ∷ ar) (v ▹ ts) (v₁ ▹ ts') = cong₂ _▹_ PE.refl (rights-zip ar ts ts')
+
+
 module _ {X} where
   open Subst X
-
   {- Provability -}
   data _⊢_  {ar : Arity Σ} (E : Theory X ar) : ∀ {s} → Equation X s → Set where
     prefl : ∀ {s} {t : TΣ〔 X 〕 ∥ s ∥} → E ⊢ (⋀ t ≈ t)
@@ -99,24 +125,32 @@ module _ {X} where
                                                     E ⊢ (⋀ t' ≈ t)
     ptrans : ∀ {s} {t₀ t₁ t₂ : TΣ〔 X 〕 ∥ s ∥} →
                    E ⊢ (⋀ t₀ ≈ t₁) → E ⊢ (⋀ t₁ ≈ t₂) → E ⊢ (⋀ t₀ ≈ t₂)
-    psubst : ∀ {s} {ar'} {us us' : HVec (λ s' → TΣ〔 X 〕 ∥ s' ∥) ar'}
+    psubst : ∀ {s} {ar'} {eqs : HVec (Equ X) ar'}
              {t t' : TΣ〔 X 〕 ∥ s ∥} →
-             (⋀ t ≈ t' if「 ar' 」 (us , us')) ∈ E →
+             (⋀ (t ≈ₑ t') if (ar' , eqs)) ∈ E →
              (σ : Subst) →
-             _∼v_ {R = λ uᵢ uᵢ' → E ⊢ (⋀ uᵢ /s σ ≈ uᵢ' /s σ)} us us' →
+             (λ x → E ⊢ (⋀ (eleft x /s σ) ≈ (eright x /s σ))) ⇨v eqs →
              E ⊢ (⋀ t /s σ ≈ t' /s σ )
-    preemp : ∀ {ar'} {s} {ts ts' : HVec (λ s' → TΣ〔 X 〕 ∥ s' ∥) ar'} →
-               _∼v_ {R = λ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' →
-               {f : ops (_〔_〕 X) (ar' , s)} → E ⊢ (⋀ term f ts ≈ term f ts')
+    preemp : ∀ {ar'} {s} {ts ts' : HVec _ ar'} →
+               (E ⊢_) ⇨v (zipWith (⋀_≈_) ts ts') →
+               {f : ops (_〔_〕 X) (ar' , s)} →
+               E ⊢ (⋀  term f ts ≈ term f ts')
 
+
+
+  _∼⊢-to-⇨ : ∀ {ar' : Arity Σ} (E : Theory X ar') {ar}
+             {ts ts' : HVec (_∥_∥ TΣ〔 X 〕) ar} →
+             _∼v_ {R = λ t t' → E ⊢ (⋀ t ≈ t')} ts ts' →
+             (E ⊢_) ⇨v (zipWith (⋀_≈_) ts ts')
+  (E ∼⊢-to-⇨) {[]} ∼⟨⟩ = ⇨v⟨⟩
+  (E ∼⊢-to-⇨) {_ ∷ _} (∼▹ eq eqs) = ⇨v▹ eq ((E ∼⊢-to-⇨) eqs)
 
   -- Syntactic sugar
   _∣_ : ∀ {ar : Arity Σ} {E : Theory X ar} {s}
              {t t' : TΣ〔 X 〕 ∥ s ∥} →
              (⋀ t ≈ t') ∈ E → (σ : Subst) →
              E ⊢ (⋀ t /s σ ≈ t' /s σ)
-  ax ∣ σ = psubst ax σ ∼⟨⟩
-
+  ax ∣ σ = psubst ax σ ⇨v⟨⟩
 module Provable-Equivalence {X} {ar : Arity Σ} (E : Theory X ar) where
 
   -- Equivalence relation on TΣ(X) induced by the rules.
@@ -147,10 +181,11 @@ module Provable-Equivalence {X} {ar : Arity Σ} (E : Theory X ar) where
     where
     pwdef : ∀ s → WellDefRel (TΣ〔 X 〕 ⟦ s ⟧ₛ) (⊢-≈ s)
     pwdef s {(t , t')} {(.t , .t')} (PE.refl , PE.refl) ⊢t₀≈t₁ = ⊢t₀≈t₁
-    pcsubst : ∀ {ar} {s} → (f : ops Σ (ar , s)) →
-                _∼v_ =[ _⟨$⟩_ (TΣ〔 X 〕 ⟦ f ⟧ₒ) ]⇒ ⊢-≈ s
-    pcsubst {[]} f ∼⟨⟩ = prefl
-    pcsubst {s₀ ∷ ar} {s} f {ts} {ts'} ⊢ts≈ts' = preemp ⊢ts≈ts' {f}
+    pcsubst : ∀ {ar} {s : sorts Σ} (f : ops Σ (ar ↦ s)) →
+            (⊢-≈ _ *) =[ _⟨$⟩_ (TΣ〔 X 〕 ⟦ f ⟧ₒ) ]⇒ ⊢-≈ s
+    pcsubst {[]} f {.⟨⟩} {.⟨⟩} ∼⟨⟩ = preemp ⇨v⟨⟩
+    pcsubst {x ∷ ar} f {ts} {ts'} conds = preemp  ((E ∼⊢-to-⇨) conds) {f = f}
+
 
 -- Soundness and completeness of the equational calculus.
 module Soundness-Completeness {X}  {ar : Arity Σ} {E : Theory X ar} where
@@ -160,61 +195,55 @@ module Soundness-Completeness {X}  {ar : Arity Σ} {E : Theory X ar} where
 
   soundness : ∀ {ℓ₁ ℓ₂} {s} {e : Equation X s} → E ⊢ e → ⊨All {ℓ₁} {ℓ₂} E e
   soundness {s = s} prefl A _ _ _ = refl (A ⟦ s ⟧ₛ)
-  soundness {s = s} (psym t₁≈t₀) A A⊨E θ ∼⟨⟩ =
-    sym (A ⟦ s ⟧ₛ) (soundness t₁≈t₀ A A⊨E θ ∼⟨⟩)
-  soundness {s = s} (ptrans t₀≈t₁ t₁≈t₂) A x θ ∼⟨⟩ =
-    trans (A ⟦ s ⟧ₛ) (soundness t₀≈t₁ A x θ ∼⟨⟩) (soundness t₁≈t₂ A x θ ∼⟨⟩)
+  soundness {s = s} (psym t₁≈t₀) A A⊨E θ ⇨v⟨⟩ =
+    sym (A ⟦ s ⟧ₛ) (soundness t₁≈t₀ A A⊨E θ ⇨v⟨⟩)
+  soundness {s = s} (ptrans t₀≈t₁ t₁≈t₂) A x θ ⇨v⟨⟩ =
+    trans (A ⟦ s ⟧ₛ) (soundness t₀≈t₁ A x θ ⇨v⟨⟩) (soundness t₁≈t₂ A x θ ⇨v⟨⟩)
   soundness {s = s}
-              (psubst {t = t} {t'} e∈E σ ⊢us≈us') A A⊨E θ ∼⟨⟩ = begin
+              (psubst {t = t} {t'} e∈E σ ⊢us≈us') A A⊨E θ ⇨v⟨⟩ = begin
                    ⟦ ⟦ t ⟧σ ⟧θ
                 ≈⟨ subst-theo s t ⟩
                    ⟦ t ⟧θσ
-                ≈⟨ A⊨E e∈E θ∘σ (
-                   map∼v (λ {s₀} {uᵢ} {uᵢ'} eq → A-trans (A-sym (subst-theo s₀ uᵢ))
-                                               (A-trans eq (subst-theo s₀ uᵢ')) ) (IHus θ ⊢us≈us')) ⟩
+                ≈⟨ A⊨E e∈E θ∘σ ( IHus ⊢us≈us' ) ⟩
                    ⟦ t' ⟧θσ
                 ≈⟨ sym (A ⟦ s ⟧ₛ) (subst-theo s t') ⟩
                    ⟦ ⟦ t' ⟧σ ⟧θ
                 ∎
     where
-    open EqR (A ⟦ s ⟧ₛ)
-    A-sym : ∀ {s} {i j} → _ → _
-    A-sym {s} {i} {j} eq = sym (A ⟦ s ⟧ₛ) {i} {j} eq
-    A-trans : ∀ {s} {i j k} → _ → _ → _
-    A-trans {s} {i} {j} {k} eq eq' = trans (A ⟦ s ⟧ₛ) {i} {j} {k} eq eq'
     open SubstitutionTheorem X A θ σ
       renaming (⟦_⟧ησ to ⟦_⟧θσ;⟦_⟧η to ⟦_⟧θ; ση to θ∘σ)
     open Eval X A
-    IHus : ∀ {ar₀} {us₀ us₀' : HVec (TΣ〔 X 〕 ∥_∥) ar₀} →
-           (θ' : Env X A) →
-           _∼v_ {R = λ uᵢ uᵢ' → E ⊢ (⋀ uᵢ /s σ ≈  uᵢ' /s σ )} us₀ us₀' →
-           _∼v_ {R = λ {sᵢ} uᵢ uᵢ' →
-                     (_≈_ (A ⟦ sᵢ ⟧ₛ) (eval θ' (uᵢ /s σ)) (eval θ' (uᵢ' /s σ)))} us₀ us₀'
-    IHus θ' ∼⟨⟩ = ∼⟨⟩
-    IHus θ' (∼▹ ⊢u₁≈u₂ ⊢us₁≈us₂) = ∼▹ (soundness ⊢u₁≈u₂ A A⊨E θ' ∼⟨⟩) (IHus θ' ⊢us₁≈us₂)
+    IHus : ∀ {ar₀} {eqs : HVec (Equ X) ar₀} →
+           (λ x → E ⊢ (⋀ (eleft x /s σ) ≈ (eright x /s σ))) ⇨v eqs →
+           (λ { {sᵢ} (uᵢ ≈ₑ uᵢ') → _≈_ (A ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧θσ ⟦ uᵢ' ⟧θσ}) ⇨v eqs
+    IHus {[]} {⟨⟩} ⇨v⟨⟩ = ⇨v⟨⟩
+    IHus {s' ∷ _} {(u₁ ≈ₑ u₁') ▹ _} (⇨v▹ pv prf) = ⇨v▹ ihₒ (IHus prf)
+      where
+      open EqR (A ⟦ s' ⟧ₛ)
+      ihₒ = begin
+        ⟦ u₁ ⟧θσ       ≈⟨  sym (A ⟦ s' ⟧ₛ) (subst-theo s' u₁) ⟩
+        ⟦ ⟦ u₁ ⟧σ ⟧θ   ≈⟨  soundness pv A A⊨E θ ⇨v⟨⟩ ⟩
+        ⟦ ⟦ u₁' ⟧σ ⟧θ  ≈⟨ subst-theo s' u₁' ⟩
+        ⟦ u₁' ⟧θσ      ∎
+    open EqR (A ⟦ s ⟧ₛ)
 
-  soundness {s = s} (preemp {[]} ∼⟨⟩ {f}) A A⊨E θ ∼⟨⟩ = refl (A ⟦ s ⟧ₛ)
-  soundness (preemp {x ∷ _} {s} {ts} {ts'} ⊢ts≈ts' {f}) A A⊨E θ ∼⟨⟩ = begin
+  soundness {s = s} (preemp {[]} {ts = ⟨⟩} {⟨⟩} ⇨v⟨⟩ {f}) A A⊨E θ ⇨v⟨⟩ = refl (A ⟦ s ⟧ₛ)
+  soundness (preemp {x ∷ _} {s} {ts} {ts'} ⊢ts≈ts' {f}) A A⊨E θ ⇨v⟨⟩ = begin
     eval θ (term f ts)                         ≈⟨ TΣXcond f ts ⟩
-    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (TΣ〔 X 〕) A TΣX⇝A ts  ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (map≈ (IHts ⊢ts≈ts')) ⟩
+    A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (TΣ〔 X 〕) A TΣX⇝A ts  ≈⟨ Π.cong (A ⟦ f ⟧ₒ) (IHts ⊢ts≈ts') ⟩
     A ⟦ f ⟧ₒ ⟨$⟩ map⟿ (TΣ〔 X 〕) A TΣX⇝A ts' ≈⟨ sym (A ⟦ s ⟧ₛ) (TΣXcond f ts') ⟩
     eval θ (term f ts') ∎
     where
     open EqR (A ⟦ s ⟧ₛ)
     open Eval X A hiding (TΣX⇝A;TΣXcond)
     open Eval X A θ hiding (eval)
-    IHts : ∀ {ar₀} {ts ts' : HVec (TΣ〔 X 〕 ∥_∥) ar₀} →
-          _∼v_ {R = λ tᵢ tᵢ' → E ⊢ (⋀ tᵢ ≈ tᵢ')} ts ts' →
-          _∼v_ {R = λ {sᵢ} tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ eval θ tᵢ) (eval θ tᵢ')} ts ts'
-    IHts {[]} {⟨⟩} ∼⟨⟩ = ∼⟨⟩
-    IHts {s₀ ∷ ar₀} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ ⊢t₀≈t₀' ⊢ts₀≈ts₀') =
-      ∼▹ (soundness ⊢t₀≈t₀' A A⊨E θ ∼⟨⟩) (IHts ⊢ts₀≈ts₀')
-    map≈ : ∀ {ar'} {ts ts' : HVec (TΣ〔 X 〕 ∥_∥) ar'} →
-           (_∼v_ {R = λ {sᵢ} tᵢ tᵢ' → (A ⟦ sᵢ ⟧ₛ ≈ eval θ tᵢ) (eval θ tᵢ')} ts ts') →
+    IHts : ∀ {ar'} {ts ts' : HVec (TΣ〔 X 〕 ∥_∥) ar'} →
+           ((E ⊢_) ⇨v (zipWith (⋀_≈_) ts ts')) →
            _∼v_ {R = λ {s₀} → _≈_ (A ⟦ s₀ ⟧ₛ)}
-           (map⟿ (TΣ〔 X 〕) A TΣX⇝A ts) (map⟿ (TΣ〔 X 〕) A TΣX⇝A ts')
-    map≈ {[]} ∼⟨⟩ = ∼⟨⟩
-    map≈ {i ∷ is} {t₀ ▹ ts₀} {t₀' ▹ ts₀'} (∼▹ p₀ p) = ∼▹ p₀ (map≈ p)
+                (map⟿ (TΣ〔 X 〕) A TΣX⇝A ts) (map⟿ (TΣ〔 X 〕) A TΣX⇝A ts')
+    IHts {[]} {⟨⟩} {⟨⟩} ⇨v⟨⟩ = ∼⟨⟩
+    IHts {_ ∷ _} {_ ▹ _} {_ ▹ _} (⇨v▹ eq eqs) =
+      ∼▹ (soundness eq A A⊨E θ ⇨v⟨⟩) (IHts eqs)
 
 
   open Provable-Equivalence E
@@ -242,23 +271,23 @@ module Soundness-Completeness {X}  {ar : Arity Σ} {E : Theory X ar} where
 
 
     A⊨E : ∀ {s} {e : Equation X s} → _∈_ {is = ar} e E → ⊢Quot ⊨ e
-    A⊨E {s} {e = ⋀ t ≈ t' if「 _ 」 _ } e∈E θ us~us' =
+    A⊨E {s} {e = (⋀ (t ≈ₑ t') if (_ , _))} e∈E θ us~us' =
       welldef ⊢Cong s (S.sym (thm t) , S.sym (thm t')) tσ≈t'σ
       where
       open Congruence
       open EqR (⊢-≈Setoid s)
       module S = Setoid (TΣ〔 X 〕 ⟦ s ⟧ₛ)
       open ⊢QuotSubst θ
-      tσ≈t'σ : E ⊢ (⋀ t /s θ ≈ t' /s θ)
+      tσ≈t'σ : E ⊢ (⋀ (t /s θ) ≈ (t' /s θ))
       tσ≈t'σ = psubst e∈E θ
-        (map∼v (λ {s'} {t₁} {t₂} → welldef ⊢Cong s' (thm t₁ , thm t₂)) us~us')
+        (map⇨v (λ { {s'} {t₁ ≈ₑ t₂} eq → welldef ⊢Cong s' (thm t₁ , thm t₂) eq }) us~us')
 
   completeness : ∀ {s} {t t' : TΣ〔 X 〕 ∥ s ∥ } →
                  ⊨All {0ℓ} {0ℓ} E (⋀ t ≈ t') →
                  E ⊢ (⋀ t ≈ t')
   completeness {s} {t} {t'} A⊨E = begin
     t              ≈⟨ ≡to≈ (⊢-≈Setoid s) (PE.sym (subst-id t)) ⟩
-    t /s idSubst   ≈⟨ welldef ⊢Cong s (thm t , thm t') (A⊨E ⊢Quot ⊢Quot⊨E idSubst ∼⟨⟩) ⟩
+    t /s idSubst   ≈⟨ welldef ⊢Cong s (thm t , thm t') (A⊨E ⊢Quot ⊢Quot⊨E idSubst ⇨v⟨⟩) ⟩
     t' /s idSubst  ≈⟨ ≡to≈ (⊢-≈Setoid s) (subst-id t') ⟩
     t' ∎
     where
@@ -276,7 +305,7 @@ module Theory-Implication {X} where
 
   ⊨T⇒ : ∀ {ℓ₁ ℓ₂ ar ar'} → (E : Theory X ar) (E' : Theory X ar')
         (E⇒E' : E ⇒T E') → (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T E → A ⊨T E'
-  ⊨T⇒ E E' E⇒E' A A⊨E ax = soundness (E⇒E' ax) A A⊨E
+  ⊨T⇒ E E' E⇒E' A A⊨E ax θ A⊨conds = soundness (E⇒E' ax) A A⊨E θ A⊨conds
     where open Soundness-Completeness {X = X} {E = E}
 
 {- Initiality of the Quotiened Term Algebra; ie, the term model -}
@@ -291,7 +320,7 @@ module InitialityModel {X ar ℓ₁ ℓ₂} {E : Theory X ar}
     init = record
       { ′_′ = λ s → record
           { _⟨$⟩_ = _⟨$⟩_ ( ′ TΣXHom ′ s)
-          ; cong = λ {j} {i} E⊢e → soundness E⊢e A M θ ∼⟨⟩
+          ; cong = λ {j} {i} E⊢e → soundness E⊢e A M θ ⇨v⟨⟩
           }
       ; cond = λ f as → TΣXcond f as
       }
@@ -306,6 +335,6 @@ module InitialityModel {X ar ℓ₁ ℓ₂} {E : Theory X ar}
       ; cond = λ f as → cond H f as
       }
 
-    UMP-model : (H H' : Homo) → extends (liftH H) → extends (liftH H') →
+    UMP-⊢ : (H H' : Homo) → extends (liftH H) → extends (liftH H') →
       H ≈ₕ H'
-    UMP-model H H' ext ext' = UMP (liftH H) (liftH H') ext ext'
+    UMP-⊢ H H' ext ext' = UMP (liftH H) (liftH H') ext ext'

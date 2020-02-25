@@ -5,7 +5,8 @@
 ------------------------------------------------------------
 module HeterogeneousVec where
 open import Data.Fin
-open import Data.List renaming (map to lmap;lookup to _‼_) hiding (zip)
+open import Data.List renaming (map to lmap;lookup to _‼_)
+  hiding (zip;zipWith)
 open import Data.Product hiding (map;zip)
 open import Data.Unit hiding (setoid)
 open import Function
@@ -55,6 +56,13 @@ zip : ∀ {l₀ l₁ I} {A : I → Set l₀} {B : I → Set l₁}  {is : List I}
 zip ⟨⟩ ⟨⟩ = ⟨⟩
 zip (v ▹ vs) (v' ▹ vs') = (v , v') ▹ zip vs vs'
 
+zipWith : ∀ {l₀ l₁ l₂ I} {A : I → Set l₀} {B : I → Set l₁} {C : I → Set l₂} →
+          (f : {i : I} → A i → B i → C i) →
+          {is : List I} →
+          (vs : HVec A is) → (vs' : HVec B is) → HVec C is
+zipWith _ ⟨⟩ ⟨⟩ = ⟨⟩
+zipWith f (v ▹ vs) (v' ▹ vs') = f v v' ▹ zipWith f vs vs'
+
 map : ∀ {l₀ l₁ I} {A : I → Set l₀} {A' : I → Set l₁} {is : List I} →
       (f : (i : I) → (A i) → (A' i)) → (vs : HVec A is) → HVec A' is
 map {is = []} f ⟨⟩ = ⟨⟩
@@ -69,6 +77,8 @@ data _⇨v_ {l₀ l₁ I} {A : I → Set l₀} (P : IPred A l₁) :
           {is : List I} → HVec A is → Set (l₀ ⊔ l₁) where
      ⇨v⟨⟩ : P ⇨v ⟨⟩
      ⇨v▹ : ∀ {i is v vs} → (pv : P {i} v) → (pvs : _⇨v_ P {is} vs) → P ⇨v (v ▹ vs)
+
+pattern ⇨⟨⟨_,_⟩⟩∼ a b = ⇨v▹ a (⇨v▹ b ⇨v⟨⟩)
 
 _⇨v : ∀ {l₀ l₁ I} {A : I → Set l₀} (P : IPred A l₁) →
        {is : List I} → Pred (HVec A is) (l₀ ⊔ l₁)

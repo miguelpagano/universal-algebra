@@ -166,7 +166,7 @@ open FormalTerm Σₘ
 s↝ : sorts Σₑ → sorts Σₘ
 s↝ E = C
 
-op↝ : ∀ {ar s} → ops Σₑ (ar , s) → lmap s↝ ar ⊩ s↝ s
+op↝ : ∀ {ar s} → ops Σₑ (ar , s) → lmap s↝ ar ⊢ s↝ s
 op↝ (val n) = (pushₘ n) ∣$∣ ⟨⟩
 op↝ (var v) = (loadₘ v) ∣$∣ ⟨⟩
 op↝ plus = seqₘ  ∣$∣ ⟨⟨  # (suc zero)
@@ -253,4 +253,3 @@ compₑ e = ′ hcomp ′ E ⟨$⟩ e
 correct : ∀  e s σ →
           ⟪∣ compₑ  e ∣⟫ (s , σ) ≡ just ((⟦ e ⟧ σ ) ∷ s)
 correct e s σ = eqH E e (s , σ)
-

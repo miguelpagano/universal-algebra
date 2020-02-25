@@ -1,3 +1,4 @@
+
 open import Relation.Binary hiding (_⇒_)
 open import Level renaming (suc to lsuc ; zero to lzero)
 
@@ -184,19 +185,19 @@ module ToEquational where
   open Equational Σₚ
 
   ⟦_⟧ₐ : ∀ {φ' ψ' τ φ ψ} → (φ ≡' ψ) ∈ Axioms φ' ψ' τ → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁ = psubst axₚ₁ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₂ = psubst axₚ₂ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₃ = psubst axₚ₃ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₄ = psubst axₚ₄ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₅ = psubst axₚ₅ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₆ = psubst axₚ₆ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₇ = psubst axₚ₇ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₈ = psubst axₚ₈ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₉ = psubst axₚ₉ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁₀ = psubst axₚ₁₀ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁₁ = psubst axₚ₁₁ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁₂ = psubst axₚ₁₂ (subsₐ φ' ψ' τ) ∼⟨⟩
-  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁₃ = psubst axₚ₁₃ (subsₐ φ' ψ' τ) ∼⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁ = psubst axₚ₁ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₂ = psubst axₚ₂ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₃ = psubst axₚ₃ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₄ = psubst axₚ₄ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₅ = psubst axₚ₅ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₆ = psubst axₚ₆ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₇ = psubst axₚ₇ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₈ = psubst axₚ₈ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₉ = psubst axₚ₉ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁₀ = psubst axₚ₁₀ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁₁ = psubst axₚ₁₁ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁₂ = psubst axₚ₁₂ (subsₐ φ' ψ' τ) ⇨v⟨⟩
+  ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁₃ = psubst axₚ₁₃ (subsₐ φ' ψ' τ) ⇨v⟨⟩
   ⟦_⟧ₐ {φ'} {ψ'} {τ} {φ} {ψ} noax
 
   
@@ -210,14 +211,14 @@ module ToEquational where
   pequan₂ : (φ ψ ψ₁ ψ₂ : Formula) → Tₚ ⊢ (⋀ ⟦ ψ₁ ⟧ ≈ ⟦ ψ₂ ⟧) → ψ ≡ ψ₁ ≡' ψ₂ →
             Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)
   pequan₂ φ ψ ψ₁ ψ₂ ⋀ψ₁≈ψ₂ ψ=ψ₁≡ψ₂ ⋀ψ≈φ = ptrans (psym (ptrans
-              (psym (preemp (∼▹ ⋀ψ₁≈ψ₂ (∼▹ prefl ∼⟨⟩))))
+              (psym (preemp (⇨v▹ ⋀ψ₁≈ψ₂ (⇨v▹ prefl ⇨v⟨⟩))))
               (subst (λ ψ₀ → Tₚ ⊢ (⋀ ⟦ ψ₀ ⟧ ≈ ⟦ φ ⟧)) ψ=ψ₁≡ψ₂ ⋀ψ≈φ)))
                    reflψ₂
     where subs₀ : Subst
           subs₀ 0 = ⟦ ψ₂ ⟧
           subs₀ n = term (inj₂ n) ⟨⟩
           reflψ₂ : Tₚ ⊢ (⋀ ⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧ ≈ true∼)
-          reflψ₂ = psubst axrefl≡ subs₀ ∼⟨⟩
+          reflψ₂ = psubst axrefl≡ subs₀ ⇨v⟨⟩
 
   open Signature
 
@@ -226,7 +227,7 @@ module ToEquational where
               Tₚ ⊢ (⋀ ⟦ φ₂ [ p := ψ ] ⟧ ≈ ⟦ φ₂ [ p := τ ] ⟧) →
               Tₚ ⊢ (⋀ term σ (⟦ φ₁ [ p := ψ ] ⟧ ▹ ⟦ φ₂ [ p := ψ ] ⟧ ▹ ⟨⟩) ≈
                       term σ (⟦ φ₁ [ p := τ ] ⟧ ▹ ⟦ φ₂ [ p := τ ] ⟧ ▹ ⟨⟩))
-  pleibin σ p₁ p₂ = preemp (∼▹ p₁ (∼▹ p₂ ∼⟨⟩))
+  pleibin σ p₁ p₂ = preemp (⇨v▹ p₁ (⇨v▹ p₂ ⇨v⟨⟩))
 
   pleib : ∀ {ψ τ φ p} → Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ τ ⟧) → Tₚ ⊢ (⋀ ⟦ φ [ p := ψ ] ⟧ ≈ ⟦ φ [ p := τ ] ⟧)
   pleib {φ = true} eqpru = prefl
@@ -234,7 +235,7 @@ module ToEquational where
   pleib {ψ} {τ} {var q} {p} eqpru with p ≟ q
   ... | yes p₁ = eqpru
   ... | no ¬p = prefl
-  pleib {ψ} {τ} {¬ φ} {p} eqpru = preemp (∼▹ (pleib {φ = φ} eqpru) ∼⟨⟩)
+  pleib {ψ} {τ} {¬ φ} {p} eqpru = preemp (⇨v▹ (pleib {φ = φ} eqpru) ⇨v⟨⟩)
   pleib {ψ} {τ} {φ₁ ≡' φ₂} {p} eqpru = pleibin {φ₁ = φ₁} {φ₂}
                                                equiv (pleib {φ = φ₁} eqpru)
                                                      (pleib {φ = φ₂} eqpru)
@@ -262,7 +263,7 @@ module ToEquational where
                          (proj₂ (cong⁻¹≡ (sym ψ≡φ=ψ'≡φ'))) ⋀ψ'≈φ')
 
   p≡to≈ : ∀ {φ ψ} → Tₚ ⊢ (⋀ ⟦ φ ≡' ψ ⟧ ≈ true∼) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
-  p≡to≈ {φ} {ψ} pru = psubst ax≡≈ subs₀ (∼▹ pru ∼⟨⟩)
+  p≡to≈ {φ} {ψ} pru = psubst ax≡≈ subs₀ (⇨v▹ pru ⇨v⟨⟩)
     where subs₀ : Subst
           subs₀ 0 = ⟦ φ ⟧
           subs₀ 1 = ⟦ ψ ⟧

@@ -146,13 +146,13 @@ module EqBool where
         T
       ≈⟨ psym (ax₃ ∣ σ₁) ⟩
         (fu av ∨ (¬ (fu av)))
-      ≈⟨ preemp ∼⟨⟨ prefl , psym (ax₇ ∣ idSubst) ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , psym (ax₇ ∣ idSubst) ⟩⟩∼ ⟩
         (fu av ∨ fu av)
       ≈⟨ ax₆ ∣ σ₁ ⟩
         fu av
       ≈⟨ psym (ax₅ ∣ σ₁) ⟩
         (fu av ∧ fu av)
-      ≈⟨ preemp ∼⟨⟨ prefl , ax₇ ∣ idSubst ⟩⟩∼ ⟩
+      ≈⟨ preemp ⇨⟨⟨ prefl , ax₇ ∣ idSubst ⟩⟩∼ ⟩
         (fu av ∧ (¬ (fu av)))
       ≈⟨ ax₄ ∣ σ₁ ⟩
         F
@@ -220,8 +220,8 @@ module EqBool where
     sat₆ θ x | true = PE.refl
 
     sat₇ : model ⊨ fooax
-    sat₇ θ ∼⟨⟩ with (θ {a} tt)
-    sat₇ θ ∼⟨⟩ | ()
+    sat₇ θ ⇨v⟨⟩ with (θ {a} tt)
+    sat₇ θ ⇨v⟨⟩ | ()
 
 
     ismodel : model ⊨T Th
@@ -243,11 +243,10 @@ module EqBool where
     -- You can uncomment the next function and try to fill the hole.
 {-
     abs : true ≡ false
-    abs = soundness t≈f model ismodel env ∼⟨⟩
+    abs = soundness t≈f model ismodel env ⇨v⟨⟩
       where open Proof
             env : Env Vars∼ model
             env {bool} v = true
             -- We cannot give an element of ⊥
             env {a} v = {!!}
 -}
-

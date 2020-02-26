@@ -37,7 +37,7 @@ open import UnivAlgebra
 open Hom
 
 data lattice-ops' : ms-type → Set where
-  or-op and-op : lattice-ops' binary
+  meet-op join-op : lattice-ops' binary
 
 Σ-lattice : Signature
 Σ-lattice = record { sorts = ms-sorts ; ops = lattice-ops' }
@@ -46,7 +46,7 @@ module Theory where
   X : Vars Σ-lattice
   X ms-sort = ℕ
 
-  open OpenTerm Σ-lattice X renaming (T_〔_〕 to Terms) public
+  open OpenTerm Σ-lattice X renaming (T_〔_〕 to Terms;var to v) public
   open Equational Σ-lattice
 
   Eq₁ : Set
@@ -61,46 +61,49 @@ module Theory where
   y : LTerm
   y = term (inj₂ 1) ⟨⟩
 
+  z : LTerm
+  z = term (inj₂ 2) ⟨⟩
 
-
-binary-smart : (op-name : Name) → (op : Name) → TC ⊤
-binary-smart op-name op = defineFun op-name
-  [ clause
-     ( arg (arg-info visible relevant) (var "x")
-    ∷ arg (arg-info visible relevant) (var "y")
-    ∷ []
-    )
-  (con (quote OpenTerm.term)
-      (arg vis (con op [])
-       ∷
-      arg vis (
-        con (quote _▹_) (
-             arg vis (var 1 [])
-          ∷ arg vis (con (quote _▹_)
-                (arg vis ((var 0 []))
-                ∷ arg vis (con (quote ⟨⟩) [])
-                ∷ []
-                ))
-          ∷ []
-          )
+  binary-smart : (op-name : Name) → (op : Name) → TC ⊤
+  binary-smart op-name op = defineFun op-name
+    [ clause
+       ( arg (arg-info visible relevant) (var "x")
+      ∷ arg (arg-info visible relevant) (var "y")
+      ∷ []
       )
-      ∷
-      []
-       )
-  )
-  ]
-  where
-  vis = arg-info visible relevant
+    (con (quote OpenTerm.term)
+        (arg vis (con op [])
+         ∷
+        arg vis (
+          con (quote _▹_) (
+               arg vis (var 1 [])
+            ∷ arg vis (con (quote _▹_)
+                  (arg vis ((var 0 []))
+                  ∷ arg vis (con (quote ⟨⟩) [])
+                  ∷ []
+                  ))
+            ∷ []
+            )
+        )
+        ∷
+        []
+         )
+    )
+    ]
+    where
+    vis = arg-info visible relevant
 
-open Theory
 
 
-_∧'_ _∨'_ : LTerm → LTerm → LTerm
-unquoteDef _∨'_ = binary-smart _∨'_ (quote or-op)
-unquoteDef _∧'_ = binary-smart _∧'_ (quote and-op)
+  _∧'_ _∨'_ : LTerm → LTerm → LTerm
+  unquoteDef _∨'_ = binary-smart _∨'_ (quote meet-op)
+  unquoteDef _∧'_ = binary-smart _∧'_ (quote join-op)
 
-ex : LTerm
-ex = x ∨' y
+  ex : LTerm
+  ex = x ∨' y
+
+  assocOp : Eq₁
+  assocOp = ⋀ (x ∨' y) ∨' z ≈ (x ∨' (y ∨' z))
 
 {-
   module Theory where

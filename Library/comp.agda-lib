@@ -1,0 +1,4 @@
+name: UniversaAlgebra -- Formalization of Universal Algebra in Agda
+depend: standard-library
+include:
+    .

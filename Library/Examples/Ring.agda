@@ -61,8 +61,8 @@ module SemiRing {op-semiring : List ⊤ × ⊤ → Set}
     open Equational Σ-sr
 
 
-    Eq-sr : Set
-    Eq-sr = Equation X tt
+    Eq-sr : Set₁
+    Eq-sr = Equation tt
 
     SRTerm : Set
     SRTerm = SRTerms ∥ tt ∥
@@ -94,22 +94,22 @@ module SemiRing {op-semiring : List ⊤ × ⊤ → Set}
     -}
 
     distMultOverAddLeft : Eq-sr
-    distMultOverAddLeft = ⋀ x ⋆ (y ⊹ z) ≈ (x ⋆ y) ⊹ (x ⋆ z)
+    distMultOverAddLeft = ⋀ X , x ⋆ (y ⊹ z) ≈ (x ⋆ y) ⊹ (x ⋆ z)
 
     distMultOverAddRight : Eq-sr
-    distMultOverAddRight = ⋀ (x ⊹ y) ⋆ z ≈ (x ⋆ z) ⊹ (y ⋆ z)
+    distMultOverAddRight = ⋀ X , (x ⊹ y) ⋆ z ≈ (x ⋆ z) ⊹ (y ⋆ z)
 
     {- Multiplication by 0 annihilates R:
       - 0 ⋅ a = a ⋅ 0 = 0
     -}
 
     absMultLeft : Eq-sr
-    absMultLeft = ⋀ 0' ⋆ x ≈ 0'
+    absMultLeft = ⋀ X , 0' ⋆ x ≈ 0'
 
     absMultRight : Eq-sr
-    absMultRight = ⋀ x ⋆ 0' ≈ 0'
+    absMultRight = ⋀ X , x ⋆ 0' ≈ 0'
 
-    SRTheory : Theory X (replicate 11 tt)
+    SRTheory : Theory (replicate 11 tt)
     SRTheory = distMultOverAddLeft ▹ distMultOverAddRight ▹
                absMultLeft ▹ absMultRight ▹
                MonTheory ++v AbeMonTheory
@@ -146,8 +146,8 @@ module Ring {op-ring : List ⊤ × ⊤ → Set}
     module RT = OpenTerm Σ-ring X renaming (T_〔_〕 to RTerms)
     open RT
     open Equational Σ-ring
-    Eq-r : Set
-    Eq-r = Equation X tt
+    Eq-r : Set₁
+    Eq-r = Equation tt
 
     -- A formula is a term of the Term Algebra
     Term-r : Set
@@ -177,12 +177,12 @@ module Ring {op-ring : List ⊤ × ⊤ → Set}
     -}
 
     distMultOverAddLeft : Eq-r
-    distMultOverAddLeft = ⋀ x ⋆ (y ⊹ z) ≈ (x ⋆ y) ⊹ (x ⋆ z)
+    distMultOverAddLeft = ⋀ X , x ⋆ (y ⊹ z) ≈ (x ⋆ y) ⊹ (x ⋆ z)
 
     distMultOverAddRight : Eq-r
-    distMultOverAddRight = ⋀ (x ⊹ y) ⋆ z ≈ (x ⋆ z) ⊹ (y ⋆ z)
+    distMultOverAddRight = ⋀ X , (x ⊹ y) ⋆ z ≈ (x ⋆ z) ⊹ (y ⋆ z)
 
-    RTheory : Theory X (replicate 11 tt)
+    RTheory : Theory (replicate 11 tt)
     RTheory = distMultOverAddLeft ▹ distMultOverAddRight ▹
               MonTheory ++v AbeGrpTheory
 
@@ -211,15 +211,15 @@ module CommutativeRing {op-cring : List ⊤ × ⊤ → Set}
     open CR
     open Equational Σ-cring
 
-    Eq-cr : Set
-    Eq-cr = Equation X tt
+    Eq-cr : Set₁
+    Eq-cr = Equation tt
 
     open SRSmartcons
     {-  Multiplication is commutative:
        - x ⋅ y = y ⋅ x
     -}
     commMult : Eq-cr
-    commMult = ⋀ x ⋆ y ≈ y ⋆ x
+    commMult = ⋀ X , x ⋆ y ≈ y ⋆ x
 
-    CRTheory : Theory X (replicate 12 tt)
+    CRTheory : Theory (replicate 12 tt)
     CRTheory = commMult ▹ RTheory

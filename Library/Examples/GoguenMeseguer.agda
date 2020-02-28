@@ -57,8 +57,8 @@ module EqBool where
   open OpenTerm Σ∼ Vars∼ renaming (T_〔_〕 to Terms)
   open Equational Σ∼
 
-  Eq∼ : Set
-  Eq∼ = Equation Vars∼ bool
+  Eq∼ : Set₁
+  Eq∼ = Equation bool
 
   -- A formula is a term of the Term Algebra.
   Form : Set
@@ -98,26 +98,26 @@ module EqBool where
 
     {- The theory consist of seven axioms -}
     notT : Eq∼
-    notT = ⋀ ¬ T ≈ F
+    notT = ⋀ Vars∼ , ¬ T ≈ F
 
     notF : Eq∼
-    notF = ⋀ ¬ F ≈ T
+    notF = ⋀ Vars∼ , ¬ F ≈ T
     3exc : Eq∼
-    3exc = ⋀ b ∨ (¬ b) ≈ T
+    3exc = ⋀ Vars∼ , b ∨ (¬ b) ≈ T
 
     b∧¬b : Eq∼
-    b∧¬b = ⋀ b ∧ (¬ b) ≈ F
+    b∧¬b = ⋀ Vars∼ , b ∧ (¬ b) ≈ F
 
     idem∧ : Eq∼
-    idem∧ = ⋀ b ∧ b ≈ b
+    idem∧ = ⋀ Vars∼ , b ∧ b ≈ b
 
     idem∨ : Eq∼
-    idem∨ = ⋀ b ∨ b ≈ b
+    idem∨ = ⋀ Vars∼ , b ∨ b ≈ b
 
     fooax : Eq∼
-    fooax = ⋀ fu av ≈ ¬ (fu av)
+    fooax = ⋀ Vars∼ , fu av ≈ ¬ (fu av)
 
-    Th : Theory Vars∼ (replicate 7 bool)
+    Th : Theory (replicate 7 bool)
     Th = notT ▹ notF ▹ 3exc ▹ b∧¬b ▹ idem∧ ▹ idem∨ ▹ fooax ▹ ⟨⟩
 
     pattern ax₁ = here
@@ -131,16 +131,17 @@ module EqBool where
 
   module Proof where
     open Theory
-    open Provable-Equivalence Th
+    open Provable-Equivalence {Vars∼} Th
     open EqR (⊢-≈Setoid bool)
-    open OpenTerm.Subst Σ∼ Vars∼
+    open Subst {Σ∼} {Vars∼} {Vars∼}
+    open IdSubst Σ∼ Vars∼
     open Equation
     open Smartcons
     open TermAlgebra
 
 
     {- We can prove T ≈ F -}
-    t≈f : Th ⊢ (⋀ T ≈ F)
+    t≈f : Th ⊢ (⋀ Vars∼ , T ≈ F)
     t≈f =
       begin
         T
@@ -226,7 +227,7 @@ module EqBool where
 
     ismodel : model ⊨T Th
     ismodel = sat
-      where sat : {s : sorts∼} {e : Equation Vars∼ s} → e ∈ Th → model ⊨ e
+      where sat : {s : sorts∼} {e : Equation s} → e ∈ Th → model ⊨ e
             sat ax₁ = sat₁
             sat ax₂ = λ θ _ → PE.refl
             sat ax₃ = sat₃

@@ -5,7 +5,7 @@
 --
 open import UnivAlgebra
 open import TermAlgebra
-module Birkhoff {Σ : Signature} {X : Vars Σ} where
+module Birkhoff {Σ : Signature} where
 
 open import Data.List using (List;[])
 open import Data.Product hiding (Σ;map)
@@ -20,7 +20,7 @@ open import HeterogeneousVec
 open import Morphisms
 open import Product
 
-open OpenTerm Σ X renaming (T_〔_〕 to TΣX)
+open OpenTerm Σ renaming (T_〔_〕 to TΣ〔_〕)
 
 open HomComp
 open Equation
@@ -29,20 +29,21 @@ open Hom
 open Homo
 
 private
-  Terms : ∀ s → Set _
-  Terms s = TΣX ∥ s ∥
+  Terms : ∀ X s → Set _
+  Terms X s = TΣ〔 X 〕 ∥ s ∥
 
 
 module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
+  (X : Vars Σ)
   (A : Algebra {ℓ₀} {ℓ₁} Σ) (B : Algebra {ℓ₂} {ℓ₃} Σ)
-  (θB : Env B) (H : Homo B A) where
-  θA : Env A
+  (θB : Env X B) (H : Homo B A) where
+  θA : Env X A
   θA {s} x = ′ H ′ s ⟨$⟩ θB x
 
 
-  module EB = Eval B θB renaming (TΣXHom to TΣB;⟦_⟧ to ⟦_⟧B)
-  module EA = Eval A θA renaming (TΣXHom to TΣA;⟦_⟧ to ⟦_⟧A)
-  open EvalUMP A θA
+  module EB = Eval X B θB renaming (TΣXHom to TΣB;⟦_⟧ to ⟦_⟧B)
+  module EA = Eval X A θA renaming (TΣXHom to TΣA;⟦_⟧ to ⟦_⟧A)
+  open EvalUMP X A θA
   open EA
   open EB
   open EB using (⟦_⟧B) public
@@ -53,7 +54,7 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
   _,_≈B_ : (s : sorts Σ) → _
   _,_≈B_ s = Setoid._≈_ (B ⟦ s ⟧ₛ)
 
-  ⟦t⟧A≈H⟦t⟧B : ∀ {s : sorts Σ} → (t : Terms s) →
+  ⟦t⟧A≈H⟦t⟧B : ∀ {s : sorts Σ} → (t : Terms X s) →
                s , ⟦ t ⟧A ≈A ( ′ H ′ s ⟨$⟩ ⟦ t ⟧B)
   ⟦t⟧A≈H⟦t⟧B {s} t = UMP TΣA (H ∘ₕ TΣB)
                         (λ {s'} _ → Setoid.refl (A ⟦ s' ⟧ₛ))
@@ -72,10 +73,10 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
   open Setoid
 
   private
-    rA : ∀ {s} → Rel (Terms s) ℓ₁
+    rA : ∀ {s} → Rel (Terms X s) ℓ₁
     rA {sᵢ} uᵢ uᵢ' = _≈_ (A ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧A ⟦ uᵢ' ⟧A
 
-    rB : ∀ {s} → Rel (Terms s) ℓ₃
+    rB : ∀ {s} → Rel (Terms X s) ℓ₃
     rB {sᵢ} uᵢ uᵢ' = _≈_ (B ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧B ⟦ uᵢ' ⟧B
 
   ⊨B*→⊨A* : ∀ {ar : List (sorts Σ)} {eqs : HVec (Equ X) ar } →
@@ -86,7 +87,7 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
 
 {- Isomorphisms of algebras preserve satisfaction of conditional equations -}
 module IsoRespectSatisfaction
-  {ℓ₀ ℓ₁ ℓ₂ ℓ₃} {s : sorts Σ} (e : Equation X s)
+  {ℓ₀ ℓ₁ ℓ₂ ℓ₃} {s : sorts Σ} (e : Equation s)
   {A : Algebra {ℓ₀} {ℓ₁} Σ} {B : Algebra {ℓ₂} {ℓ₃} Σ}
   (A≅B : A ≅ B) (A⊨e : A ⊨ e)
   where
@@ -121,14 +122,14 @@ module IsoRespectSatisfaction
      where
      open EqR (B ⟦ s ⟧ₛ)
      open Setoid (B ⟦ s ⟧ₛ)
-     open aux-sem A B θB homBA
+     open aux-sem (X e) A B θB homBA
      symA : _ → _
      symA = Setoid.sym (A ⟦ s ⟧ₛ)
 
 
 {- Sub-algebras preserve satisfaction of conditional equations -}
 module SubAlgebrasRespectSatisfaction
-       {ℓ₃} {ℓ₁ ℓ₂} {s : sorts Σ} (e : Equation X s)
+       {ℓ₃} {ℓ₁ ℓ₂} {s : sorts Σ} (e : Equation s)
        (A : Algebra {ℓ₁} {ℓ₂} Σ) (B≤A : SubAlg {ℓ₃} A) (A⊨e : A ⊨ e)
        where
 
@@ -139,12 +140,12 @@ module SubAlgebrasRespectSatisfaction
     ⟦ right e ⟧A        ≈⟨ ⟦t⟧A≈H⟦t⟧B (right e) ⟩
     proj₁ ⟦ right e ⟧B ∎
     where
-    open aux-sem A (SubAlgebra B≤A) θB (sub-embedding A B≤A)
+    open aux-sem (X e) A (SubAlgebra B≤A) θB (sub-embedding A B≤A)
     open EqR (A ⟦ s ⟧ₛ)
     open Setoid (A ⟦ s ⟧ₛ)
 
 module ProductRespectSatisfaction
-       {ℓ₁ ℓ₂ ℓ₃} {s : sorts Σ} (e : Equation X s)
+       {ℓ₁ ℓ₂ ℓ₃} {s : sorts Σ} (e : Equation s)
        {I : Set ℓ₁} (A : I → Algebra {ℓ₂} {ℓ₃} Σ)
          (Ai⊨e : (i : I) → A i ⊨ e) where
   open IndexedProduct {I = I} A
@@ -158,25 +159,25 @@ module ProductRespectSatisfaction
    where
    open EqR (A i ⟦ s ⟧ₛ)
    open Setoid (A i ⟦ s ⟧ₛ)
-   open aux-sem (A i) Πalg θ (π i)
+   open aux-sem (X e) (A i) Πalg θ (π i)
 
 {- Quotients preserve equations -}
 module QuotientPreserveSatisfaction
-  {ℓ₀ ℓ₁ ℓ₂}  {s : sorts Σ} (e : Equ X s)
+  {ℓ₀ ℓ₁ ℓ₂}  {s : sorts Σ} {X : Vars Σ} (e : Equ X s)
   (A : Algebra {ℓ₀} {ℓ₁} Σ) (φ : Congruence {ℓ₂} A)
-   (A⊨e : A ⊨ equ-to-Equation s e) where
+   (A⊨e : A ⊨ equ-to-Equation X s e) where
 
    A/φ : _
    A/φ = A / φ
    ν : Homo A (A / φ)
    ν = QuotHom A φ
 
-   t : Terms s
-   t' : Terms s
+   t : Terms X s
+   t' : Terms X s
    t = Equ.eleft e
    t' = Equ.eright e
 
-   A/φ⊨e : A/φ ⊨ equ-to-Equation s e
+   A/φ⊨e : A/φ ⊨ equ-to-Equation X s e
    A/φ⊨e θk ⇨v⟨⟩ = begin
      ⟦ t ⟧A              ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
      ′ ν ′ s ⟨$⟩ ⟦ t ⟧B   ≈⟨ Π.cong (′ ν ′ s) (A⊨e θA ⇨v⟨⟩) ⟩
@@ -185,14 +186,14 @@ module QuotientPreserveSatisfaction
      where
      open EqR (A/φ ⟦ s ⟧ₛ)
      open Setoid (A/φ ⟦ s ⟧ₛ)
-     open aux-sem {ℓ₀ = ℓ₀} {ℓ₁ = ℓ₂} {ℓ₂ = ℓ₀} {ℓ₃ = ℓ₁} A/φ A θk ν
+     open aux-sem {ℓ₀ = ℓ₀} {ℓ₁ = ℓ₂} {ℓ₂ = ℓ₀} {ℓ₃ = ℓ₁} X A/φ A θk ν
 
 
 {- Homomorphic images preserve equations -}
 module HomImgRespectSatisfaction
-  {ℓ₀ ℓ₁ ℓ₂ ℓ₃}  {s : sorts Σ} (e : Equ X s)
+  {ℓ₀ ℓ₁ ℓ₂ ℓ₃}  {s : sorts Σ} {X : Vars Σ} (e : Equ X s)
   (A : Algebra {ℓ₀} {ℓ₁} Σ) (B : Algebra {ℓ₂} {ℓ₃} Σ)
-  (H : Homo A B) (A⊨e : A ⊨ equ-to-Equation s e) where
+  (H : Homo A B) (A⊨e : A ⊨ equ-to-Equation X s e) where
 
    A/h : _
    A/h = A / Kernel H
@@ -201,18 +202,18 @@ module HomImgRespectSatisfaction
 
    import IsoTheorems as I
 
-   equ : Equation X s
-   equ = (⋀ Equ.eleft e ≈ Equ.eright e)
+   equ : Equation s
+   equ = (⋀ X , Equ.eleft e ≈ Equ.eright e)
 
    imgH⊨e : homImg A H ⊨ equ
    imgH⊨e = IsoRespects⊨ (A/φ⊨e A⊨e)
      where open IsoRespectSatisfaction equ (I.iso-A/kerH A B H)
            open QuotientPreserveSatisfaction e A (Kernel H)
 
-module ModSemiEquationIsISP  {ar} (E : Theory X ar) where
+module ModSemiEquationIsISP  {ar} (E : Theory ar) where
 
   isoClosed : ∀ {ℓ₀ ℓ₁ ℓ₂ ℓ₃} (A : Algebra  {ℓ₀} {ℓ₁} Σ) → A ⊨T E →
-               (B : Algebra  {ℓ₂} {ℓ₃} Σ)  → A ≅ B → B ⊨T E
+               (B : Algebra  {ℓ₂} {ℓ₃} Σ) → A ≅ B → B ⊨T E
   isoClosed A A⊨E B iso {e = e} e∈E = IsoRespects⊨ (A⊨E e∈E)
     where open IsoRespectSatisfaction e iso
 
@@ -248,9 +249,9 @@ module ModSemiEquationIsISP  {ar} (E : Theory X ar) where
     ΠAB⊨E = prodClosed Ai Ai⊨E
 
 
-module ModEquationIsIHSP  {ar} (T : EqTheory X ar) where
+module ModEquationIsIHSP  {ar} {X : Vars Σ} (T : EqTheory X ar) where
 
-  E : Theory X ar
+  E : Theory ar
   E = eqTheory-to-Theory T
   open import Relation.Binary.PropositionalEquality using (_≡_)
 
@@ -275,7 +276,7 @@ module ModEquationIsIHSP  {ar} (T : EqTheory X ar) where
   {- We should change the definition of Equation -}
   himgClosed : ∀ {ℓ₀ ℓ₁ ℓ₂ ℓ₃} (A : Algebra  {ℓ₀} {ℓ₁} Σ) →
                (B : Algebra  {ℓ₂} {ℓ₃} Σ) →(h : Homo A B) →
-               ∀ {s} {e} → e ∈ T → A ⊨ (equ-to-Equation s e) →
-               homImg A h ⊨ (equ-to-Equation s e)
+               ∀ {s} {e} → e ∈ T → A ⊨ (equ-to-Equation X s e) →
+               homImg A h ⊨ (equ-to-Equation X s e)
   himgClosed A B h {s = s} {e = e} e∈E A⊨e = imgH⊨e A⊨e
     where open HomImgRespectSatisfaction e A B h

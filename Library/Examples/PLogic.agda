@@ -99,54 +99,54 @@ _⇐_ : Formₚ → Formₚ → Formₚ
 t₁ ⇐ t₂ = term conseq (t₁ ▹ t₂ ▹ ⟨⟩)
 
 open Equational Σₚ
-Ax₁ : Equation Vₚ _
-Ax₁ = ⋀ p ≐ (q ≐ r) ≈ ((p ≐ q) ≐ r)
+Ax₁ : Equation _
+Ax₁ = ⋀ Vₚ , p ≐ (q ≐ r) ≈ ((p ≐ q) ≐ r)
 
-Ax₂ : Equation Vₚ _
-Ax₂ = ⋀ (p ≐ q) ≈ (q ≐ p)
+Ax₂ : Equation _
+Ax₂ = ⋀ Vₚ , (p ≐ q) ≈ (q ≐ p)
 
-Ax₃ : Equation Vₚ _
-Ax₃ = ⋀ p ≐ true∼ ≈ p
+Ax₃ : Equation _
+Ax₃ = ⋀ Vₚ , p ≐ true∼ ≈ p
 
-Ax₄ : Equation Vₚ _
-Ax₄ = ⋀ p ∨∙ (q ∨∙ r) ≈ ((p ∨∙ q) ∨∙ r)
+Ax₄ : Equation _
+Ax₄ = ⋀ Vₚ , p ∨∙ (q ∨∙ r) ≈ ((p ∨∙ q) ∨∙ r)
 
-Ax₅ : Equation Vₚ _
-Ax₅ = ⋀ (p ∨∙ q) ≈ (q ∨∙ p)
+Ax₅ : Equation _
+Ax₅ = ⋀ Vₚ , (p ∨∙ q) ≈ (q ∨∙ p)
 
-Ax₆ : Equation Vₚ _
-Ax₆ = ⋀ p ∨∙ false∼ ≈ p
+Ax₆ : Equation _
+Ax₆ = ⋀ Vₚ , p ∨∙ false∼ ≈ p
 
-Ax₇ : Equation Vₚ _
-Ax₇ = ⋀ p ∨∙ p ≈ p
+Ax₇ : Equation _
+Ax₇ = ⋀ Vₚ , p ∨∙ p ≈ p
 
-Ax₈ : Equation Vₚ _
-Ax₈ = ⋀ p ∨∙ (q ≐ r) ≈ (p ∨∙ q ≐ p ∨∙ r)
+Ax₈ : Equation _
+Ax₈ = ⋀ Vₚ , p ∨∙ (q ≐ r) ≈ (p ∨∙ q ≐ p ∨∙ r)
 
-Ax₉ : Equation Vₚ _
-Ax₉ = ⋀ ¬ p ≈ (p ≐ false∼)
+Ax₉ : Equation _
+Ax₉ = ⋀ Vₚ , ¬ p ≈ (p ≐ false∼)
 
-Ax₁₀ : Equation Vₚ _
-Ax₁₀ = ⋀ p ≢ q ≈ ((¬ p) ≐ q)
+Ax₁₀ : Equation _
+Ax₁₀ = ⋀ Vₚ , p ≢ q ≈ ((¬ p) ≐ q)
 
-Ax₁₁ : Equation Vₚ _
-Ax₁₁ = ⋀ p ∧∙ q ≈ (p ≐ (q ≐ p ∨∙ q))
+Ax₁₁ : Equation _
+Ax₁₁ = ⋀ Vₚ , p ∧∙ q ≈ (p ≐ (q ≐ p ∨∙ q))
 
-Ax₁₂ : Equation Vₚ _
-Ax₁₂ = ⋀ p ⇒ q ≈ (p ∨∙ q ≐ q)
+Ax₁₂ : Equation _
+Ax₁₂ = ⋀ Vₚ , p ⇒ q ≈ (p ∨∙ q ≐ q)
 
-Ax₁₃ : Equation Vₚ _
-Ax₁₃ = ⋀ p ⇐ q ≈ (q ⇒ p)
+Ax₁₃ : Equation _
+Ax₁₃ = ⋀ Vₚ , p ⇐ q ≈ (q ⇒ p)
 
 -- More axioms.
 
-Ax≡≈ : Equation Vₚ _
-Ax≡≈ = ⋀ p ≈ₑ q if ( [| tt |] , ((p ≐ q) ≈ₑ true∼) ▹ ⟨⟩)
+Ax≡≈ : Equation _
+Ax≡≈ = ⋀ Vₚ , p ≈ₑ q if ( [| tt |] , ((p ≐ q) ≈ₑ true∼) ▹ ⟨⟩)
 
-AxRefl≡ : Equation Vₚ _
-AxRefl≡ = ⋀ p ≐ p ≈ true∼
+AxRefl≡ : Equation _
+AxRefl≡ = ⋀ Vₚ , p ≐ p ≈ true∼
 
-Tₚ : Theory (λ _ → V) (replicate 15 tt)
+Tₚ : Theory (replicate 15 tt)
 Tₚ = Ax₁ ▹ Ax₂ ▹ Ax₃ ▹ Ax₄ ▹ Ax₅ ▹ Ax₆ ▹ Ax₇ ▹
      Ax₈ ▹ Ax₉ ▹ Ax₁₀ ▹ Ax₁₁ ▹ Ax₁₂ ▹ Ax₁₃ ▹ Ax≡≈ ▹ AxRefl≡ ▹ ⟨⟩
 

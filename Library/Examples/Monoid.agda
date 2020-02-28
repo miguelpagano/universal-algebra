@@ -45,8 +45,8 @@ module Monoid {op-mon : List ⊤ × ⊤ → Set}
     open OpenTerm Σ-mon X renaming (T_〔_〕 to Terms) public
     open Equational Σ-mon
 
-    Eq₁ : Set
-    Eq₁ = Equation X tt
+    Eq₁ : Set₁
+    Eq₁ = Equation tt
 
     Term : Set
     Term = Terms ∥ tt ∥
@@ -71,19 +71,19 @@ module Monoid {op-mon : List ⊤ × ⊤ → Set}
     open MonSmartcons
     -- Axioms
     assocOp : Eq₁
-    assocOp = ⋀ (x ∘ y) ∘ z ≈ (x ∘ (y ∘ z))
+    assocOp = ⋀ X , (x ∘ y) ∘ z ≈ (x ∘ (y ∘ z))
 
     unitLeft : Eq₁
-    unitLeft = ⋀ u ∘ x ≈ x
+    unitLeft = ⋀ X , u ∘ x ≈ x
 
     unitRight : Eq₁
-    unitRight = ⋀ x ∘ u ≈ x
+    unitRight = ⋀ X , x ∘ u ≈ x
 
     pattern mon-assoc-ax = here
     pattern mon-unitL-ax = there here
     pattern mon-unitR-ax  = there (there here)
 
-    MonTheory  : Theory X _
+    MonTheory  : Theory _
     MonTheory = assocOp ▹ (unitLeft ▹ unitRight ▹ ⟨⟩)
 
 {- Abelian monoid (commutative monoid) -}
@@ -105,9 +105,9 @@ module AbeMonoid {op-abe-mon : List ⊤ × ⊤ → Set}
 
     -- Commutativity
     commOp : Eq₁
-    commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
+    commOp = ⋀ X , (x ∘ y) ≈ (y ∘ x)
 
-    AbeMonTheory : Theory X (tt ∷ tt ∷ tt ∷ tt ∷ [])
+    AbeMonTheory : Theory (tt ∷ tt ∷ tt ∷ tt ∷ [])
     AbeMonTheory = commOp ▹ MonTheory
 
 module Monoids where

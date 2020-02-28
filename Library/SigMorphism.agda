@@ -256,8 +256,7 @@ module TermTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ) where
 
 
 {- Theory translation and preservation of models -}
-module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
-                   (Xₛ : Vars Σₛ) where
+module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ) where
 
   open TermTrans Σ↝
   open ReductAlgebra Σ↝
@@ -265,18 +264,19 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   open Setoid
   open TΣₛ
   open TΣₜ hiding (Env)
-  private Xₜ : Vars Σₜ
-  Xₜ = Xₛ ↝̬
 
-  private _∼ : (s : sorts Σₛ) → sorts Σₜ
-  s ∼ = ↝ₛ Σ↝ s
+  private
+    _∼ : (s : sorts Σₛ) → sorts Σₜ
+    s ∼ = ↝ₛ Σ↝ s
 
   open Homo
-  private _∼ₜ : ∀ {s} → TΣₛ〔 Xₛ 〕 ∥ s ∥ → TΣₜ〔 Xₛ ↝̬ 〕 ∥ s ∼ ∥
-  _∼ₜ {s} t = ′ term↝ Xₛ ′ s ⟨$⟩ t
+  private
+    _∼ₜ : ∀ {Xₛ} {s} → TΣₛ〔 Xₛ 〕 ∥ s ∥ → TΣₜ〔 Xₛ ↝̬ 〕 ∥ s ∼ ∥
+    _∼ₜ {Xₛ} {s} t = ′ term↝ Xₛ ′ s ⟨$⟩ t
 
   module ReductTheorem {ℓ₁ ℓ₂}
                        (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ)
+                       (Xₛ : Vars Σₛ)
                        (θ : TΣₜ.Env (Xₛ ↝̬) Aₜ) where
 
     open TΣₜ.Eval (Xₛ ↝̬) Aₜ θ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
@@ -300,20 +300,23 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
   open Eq
   open Equation
   open Equ
+  -- Equation translation
+
+  equ↝ : ∀ {Xₛ} {s} → Equ Σₛ Xₛ s → Equ Σₜ (Xₛ  ↝̬)  (↝ₛ Σ↝ s)
+  equ↝ (t ≈ₑ t') = (t ∼ₜ) ≈ₑ (t' ∼ₜ)
+
+  eq↝ : ∀ {s} → Equation Σₛ s → Equation Σₜ (↝ₛ Σ↝ s)
+  eq↝ {s} (⋀ Xₛ , eq if ( carty , cond)) =
+           ⋀ Xₛ  ↝̬ , (equ↝ eq) if (lmap (↝ₛ Σ↝) carty , fcond)
+    where fcond = reindex (↝ₛ Σ↝) (map (λ- equ↝) cond)
+
   _,_⊨ₑₜ_ = _,_⊨ₑ_ Σₜ
   _⊨ₜ_ = _⊨_ Σₜ
   _⊢ₜ_ = _⊢_ Σₜ
   _⊨ₜT_ = _⊨T_ Σₜ
   _,_⊨ₑₛ_ = _,_⊨ₑ_ Σₛ
-  _⊨ₛT_ = _⊨T_ Σₛ {X = Xₛ}
+  _⊨ₛT_ = _⊨T_ Σₛ
   _⊨ₛ_ = _⊨_ Σₛ
-  -- Equation translation
-  equ↝ : ∀ {s} → Equ Σₛ Xₛ s → Equ Σₜ Xₜ (↝ₛ Σ↝ s)
-  equ↝ (t ≈ₑ t') = (t ∼ₜ) ≈ₑ (t' ∼ₜ)
-  eq↝ : ∀ {s} → Equation Σₛ Xₛ s → Equation Σₜ Xₜ (↝ₛ Σ↝ s)
-  eq↝ {s} (⋀ eq if ( carty , cond)) =
-           ⋀ (equ↝ eq) if (lmap (↝ₛ Σ↝) carty , fcond)
-    where fcond = reindex (↝ₛ Σ↝) (map (λ- equ↝) cond)
 
 
   module SatProp {ℓ₁ ℓ₂} (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) where
@@ -321,8 +324,8 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 
     -- This theorem is usually called "satisfaction property" and
     -- "satisfaction condition" in the handbook (Definition 6.1)
-    satProp : ∀ {s} → (e : Equation Σₛ Xₛ s) → Aₜ ⊨ₜ (eq↝ e) → 〈 Aₜ 〉 ⊨ₛ e
-    satProp {s} (⋀ (t ≈ₑ t') if ( ar , eqs)) Aₜ⊨e θ us≈us' = begin
+    satProp : ∀ {s} → (e : Equation Σₛ s) → Aₜ ⊨ₜ (eq↝ e) → 〈 Aₜ 〉 ⊨ₛ e
+    satProp {s} (⋀ Xₛ , (t ≈ₑ t') if ( ar , eqs)) Aₜ⊨e θ us≈us' = begin
                      ⟦ t ⟧Σₛ      ≈⟨ reductTh t ⟩
                      ⟦ t ∼ₜ ⟧Σₜ    ≈⟨ Aₜ⊨e θₜ (⇨v-reindex _∼ (reductTh* us≈us') ) ⟩
                      ⟦ t' ∼ₜ ⟧Σₜ   ≈⟨ Setoid.sym (〈 Aₜ 〉 ⟦ s ⟧ₛ) (reductTh t') ⟩
@@ -330,10 +333,10 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
       where
       open TΣₛ.Eval Xₛ 〈 Aₜ 〉 θ renaming(⟦_⟧ to ⟦_⟧Σₛ ; TΣXHom to ∣H∣ₛ)
       open TΣₛ.EvalUMP Xₛ 〈 Aₜ 〉 θ renaming (UMP to UMPΣₛ ;extends to extendsₛ)
-      θₜ : TΣₜ.Env Xₜ Aₜ
+      θₜ : TΣₜ.Env (Xₛ ↝̬) Aₜ
       θₜ = _↝ₑ {Aₜ = Aₜ} θ
       open TΣₜ.Eval (Xₛ ↝̬) Aₜ θₜ renaming (⟦_⟧ to ⟦_⟧Σₜ ; TΣXHom to ∣H∣ₜ)
-      open ReductTheorem Aₜ θₜ
+      open ReductTheorem Aₜ Xₛ θₜ
       reductTh* : ∀ {ar₀}
                   {eqs : HVec (Equ Σₛ Xₛ) ar₀} →
                   (〈 Aₜ 〉 , θ ⊨ₑₛ_) ⇨v eqs →
@@ -350,22 +353,22 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
       open EqR (〈 Aₜ 〉 ⟦ s ⟧ₛ)
 
   -- Translation of theories
-  _↝T : ∀ {ar} → (Thₛ : Theory Σₛ Xₛ ar) → Theory Σₜ Xₜ (lmap (↝ₛ Σ↝) ar)
+  _↝T : ∀ {ar} → (Thₛ : Theory Σₛ ar) → Theory Σₜ (lmap (↝ₛ Σ↝) ar)
   Thₛ ↝T = reindex _∼ (map (λ s → eq↝ {s}) Thₛ)
 
-  ∈↝T : ∀ {ar} {s} {e : Equation Σₛ Xₛ s} → (Thₛ : Theory Σₛ Xₛ ar) →
+  ∈↝T : ∀ {ar} {s} {e : Equation Σₛ s} → (Thₛ : Theory Σₛ ar) →
                     e ∈ Thₛ → (eq↝ e) ∈ (Thₛ ↝T)
   ∈↝T {[]} ⟨⟩ ()
   ∈↝T {s ∷ ar} (e ▹ Thₛ) here = here
   ∈↝T {s₀ ∷ ar} (e ▹ Thₛ) (there e∈Thₛ) = there (∈↝T Thₛ e∈Thₛ)
 
   -- Implication of theories
-  _⇒T~_ : ∀ {ar ar'} → Theory Σₜ Xₜ ar → Theory Σₛ Xₛ ar' → Set
-  Tₜ ⇒T~ Tₛ = ∀ {s} {ax : Equation Σₛ Xₛ s} → ax ∈ Tₛ → Tₜ ⊢ₜ eq↝ ax
+  _⇒T~_ : ∀ {ar ar'} → Theory Σₜ ar → Theory Σₛ ar' → Set₁
+  Tₜ ⇒T~ Tₛ = ∀ {s} {ax : Equation Σₛ s} → ax ∈ Tₛ → Tₜ ⊢ₜ eq↝ ax
 
 
 
-  module ModelPreserv {ar} (Thₛ : Theory Σₛ Xₛ ar) where
+  module ModelPreserv {ar} (Thₛ : Theory Σₛ ar) where
 
     -- Model preservation from a translated theory
     ⊨T↝ : ∀ {ℓ₁ ℓ₂} → (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨ₜT (Thₛ ↝T) → 〈 Aₜ 〉 ⊨ₛT Thₛ
@@ -374,10 +377,11 @@ module TheoryTrans {Σₛ Σₜ : Signature} (Σ↝ : Σₛ ↝ Σₜ)
 
     -- Model preservation from a implicated theory
     ⊨T⇒↝ : ∀ {ℓ₁ ℓ₂} {ar'} →
-             (Thₜ : Theory Σₜ Xₜ ar') → (p⇒ : Thₜ ⇒T~ Thₛ) →
+             (Thₜ : Theory Σₜ ar') → (p⇒ : Thₜ ⇒T~ Thₛ) →
              (Aₜ : Algebra {ℓ₁} {ℓ₂} Σₜ) → Aₜ ⊨ₜT Thₜ → 〈 Aₜ 〉 ⊨ₛT Thₛ
     ⊨T⇒↝ Thₜ p⇒ Aₜ Aₜ⊨T {s} {e} ax θ ceq =
       satProp e (soundness (p⇒ ax) Aₜ Aₜ⊨T) θ ceq
       where
       open SatProp Aₜ
-      open Soundness-Completeness Σₜ
+      open Soundness Σₜ
+

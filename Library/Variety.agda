@@ -20,7 +20,7 @@ open Signature
 open ProdAlg
 open Hom
 
-_∈_ : ∀ {ℓ₀ ℓ₁ Σ} → Algebra {ℓ₀} {ℓ₁} Σ → AlgClass {ℓ₀} {ℓ₁} Σ → Set _
+_∈_ : ∀ {ℓ₀ ℓ₁ Σ} → Algebra {ℓ₀} {ℓ₁} Σ → AlgClass {ℓ₀} {ℓ₁} Σ → Set (ℓ₀ ⊔ ℓ₁)
 A ∈ C = C A
 
 {- AlgClass Equality -}
@@ -31,18 +31,17 @@ record _≋_ {ℓ₀ ℓ₁ Σ} (C₁ : AlgClass {ℓ₀} {ℓ₁} Σ)
     ≋from : (A : Algebra {ℓ₀} {ℓ₁} Σ) → A ∈ C₂ → A ∈ C₁
 
 
-ModClass : ∀ {ℓ₀ ℓ₁ Σ X ar} → (E : Theory Σ X ar) → AlgClass {ℓ₀} {ℓ₁} Σ
+ModClass : ∀ {ℓ₀ ℓ₁ Σ ar} → (E : Theory Σ ar) → AlgClass {lsuc lzero ⊔ ℓ₀ ⊔ ℓ₁} {ℓ₁} Σ
 ModClass {Σ = Σ} E = flip (_⊨T_ Σ) E
 
 
 {- Definition 2.2.6 Sanella foundations -}
-record EqDefClass {ℓ₀ ℓ₁} Σ (C : AlgClass {ℓ₀} {ℓ₁} Σ) :
-                            Set (lsuc (ℓ₀ ⊔ ℓ₁)) where
+record EqDefClass {ℓ₀ ℓ₁} Σ (C : AlgClass {lsuc 0ℓ ⊔ ℓ₀ ⊔ ℓ₁} {ℓ₁} Σ) :
+                            Set (lsuc ((lsuc 0ℓ) ⊔ ℓ₀ ⊔ ℓ₁)) where
   field
-    vars : Vars Σ
     ar   : Arity Σ
-    th   : Theory Σ vars ar
-    eq   : C ≋ (ModClass th)
+    th   : Theory Σ ar
+    eq   : C ≋ ModClass {ℓ₀} {ℓ₁} th
 
 
 

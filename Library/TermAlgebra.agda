@@ -19,7 +19,7 @@ open import Morphisms
 open import Setoids hiding (∥_∥)
 open import UnivAlgebra
 
-module GroundTerm  (Σ : Signature) where
+module GroundTerm (Σ : Signature) where
   data HU : (s : sorts Σ) → Set where
     term : ∀  {ar s} →  (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
 
@@ -223,52 +223,61 @@ module OpenTerm (Σ : Signature) (X : Vars Σ) where
     ≈ₕ-id⁺ H ext = UMP H HomId ext HomId-extends-η
 
 
-  module Subst where
+module Subst {Σ : Signature} {X Y : Vars Σ} where
 
-    Subst : Set
-    Subst = Env (T_〔_〕)
+  open OpenTerm Σ
+  Subst : Set
+  Subst = Env X (T_〔_〕 Y)
 
-    idSubst : Subst
-    idSubst x = term (inj₂ x) ⟨⟩
+  open Eval X (T_〔_〕 Y)
 
-    open Eval (T_〔_〕)
+  _/s_ : {s : sorts Σ} →  ∣T∣ X ∥ s ∥ → Subst → ∣T∣ Y ∥ s ∥
+  _/s_ {s} t θ = eval θ t
 
-    _/s_ : {s : sorts Σ} →  ∣T∣ ∥ s ∥ → Subst → ∣T∣ ∥ s ∥
-    _/s_ {s} t θ = eval θ t
+  infixr 30 _/s_
 
-    infixr 30 _/s_
+module IdSubst (Σ : Signature) (X : Vars Σ) where
 
-    -- Identity substitution is identity.
-    subst-id : ∀ {s} → (t : T_〔_〕 ∥ s ∥) → (t /s idSubst) ≡ t
-    subst*-id : ∀ {ar'} → (ts : HVec (T_〔_〕 ∥_∥) ar') → eval* idSubst ts ≡ ts
-    subst-id (term {[]} (inj₁ k) ⟨⟩) = _≡_.refl
-    subst-id (term {[]} (inj₂ x) ⟨⟩) = _≡_.refl
-    subst-id (term {s₀ ∷ ar'} f ts) = PE.cong (term f) (subst*-id ts)
+  open Subst {Σ} {X} {X}
+  open OpenTerm Σ X
 
-    subst*-id ⟨⟩ = _≡_.refl
-    subst*-id (t ▹ ts) = cong₂ (_▹_) (subst-id t) (subst*-id ts)
+  open Eval (T_〔_〕)
+  idSubst : Subst
+  idSubst x = term (inj₂ x) ⟨⟩
 
-  open Subst
-  module SubstitutionTheorem {ℓ₁ ℓ₂ : Level} (A : Algebra {ℓ₁} {ℓ₂} Σ)
-    (η : Env A) (σ : Subst) where
+  -- Identity substitution is identity.
+  subst-id : ∀ {s} → (t : T_〔_〕 ∥ s ∥) → (t /s idSubst) ≡ t
+  subst*-id : ∀ {ar'} → (ts : HVec (T_〔_〕 ∥_∥) ar') → eval* idSubst ts ≡ ts
+  subst-id (term {[]} (inj₁ k) ⟨⟩) = _≡_.refl
+  subst-id (term {[]} (inj₂ x) ⟨⟩) = _≡_.refl
+  subst-id (term {s₀ ∷ ar'} f ts) = PE.cong (term f) (subst*-id ts)
 
-    module IA = Eval A η renaming (⟦_⟧ to ⟦_⟧η) hiding (eval;eval*)
-    open IA using (⟦_⟧η) public
-    module IT = Eval (T_〔_〕) σ renaming (⟦_⟧ to ⟦_⟧σ) hiding (eval;eval*)
-    open IT using (⟦_⟧σ) public
-    ση : Env A
-    ση x = ⟦ σ x ⟧η
+  subst*-id ⟨⟩ = _≡_.refl
+  subst*-id (t ▹ ts) = cong₂ (_▹_) (subst-id t) (subst*-id ts)
 
-    open Eval A ση renaming (⟦_⟧ to ⟦_⟧ησ) hiding (eval;eval*) public
-    open Eval hiding (eval)
-    open Setoid
+open Subst
+open OpenTerm
+module SubstitutionTheorem (Σ : Signature) (X Y : Vars Σ)
+    {ℓ₁ ℓ₂ : Level} (A : Algebra {ℓ₁} {ℓ₂} Σ)
+    (η : Env Σ Y A) (σ : Subst {Σ} {X} {Y}) where
 
-    subst-theo : ∀ s t → _≈_ (A ⟦ s ⟧ₛ) (⟦ ⟦ t ⟧σ ⟧η)  (⟦ t ⟧ησ)
-    subst-theo* : ∀ {ar} ts → _≈_ (_⟦_⟧ₛ A ✳ ar)
-                  (eval* A η (eval* ((T_〔_〕) ) σ ts))
-                  (eval* A ση ts)
-    subst-theo* {[]} ⟨⟩ = ∼⟨⟩
-    subst-theo* {s ∷ ar} (t ▹ ts) = ∼▹ (subst-theo s t) (subst-theo* ts)
-    subst-theo s (term {[]} (inj₁ k) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
-    subst-theo s (term {[]} (inj₂ x) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
-    subst-theo s (term {s' ∷ ar} {.s} f ts) = Π.cong (A ⟦ f ⟧ₒ) (subst-theo* ts)
+   module IA = Eval Σ Y A η renaming (⟦_⟧ to ⟦_⟧η) hiding (eval;eval*)
+   open IA using (⟦_⟧η) public
+   module IT = Eval Σ X (T Σ 〔 Y 〕) σ renaming (⟦_⟧ to ⟦_⟧σ) hiding (eval;eval*)
+   open IT using (⟦_⟧σ) public
+   ση : Env Σ X A
+   ση x = ⟦ σ x ⟧η
+
+   open Eval Σ X A ση renaming (⟦_⟧ to ⟦_⟧ησ) hiding (eval;eval*) public
+   open Eval hiding (eval)
+   open Setoid
+
+   subst-theo : ∀ s t → _≈_ (A ⟦ s ⟧ₛ) (⟦ ⟦ t ⟧σ ⟧η)  (⟦ t ⟧ησ)
+   subst-theo* : ∀ {ar} ts → _≈_ (_⟦_⟧ₛ A ✳ ar)
+                 (eval* Σ Y A η (eval* Σ X ((T Σ 〔 Y 〕) ) σ ts))
+                 (eval* Σ X A ση ts)
+   subst-theo* {[]} ⟨⟩ = ∼⟨⟩
+   subst-theo* {s ∷ ar} (t ▹ ts) = ∼▹ (subst-theo s t) (subst-theo* ts)
+   subst-theo s (term {[]} (inj₁ k) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
+   subst-theo s (term {[]} (inj₂ x) ⟨⟩) = Setoid.refl (A ⟦ s ⟧ₛ)
+   subst-theo s (term {s' ∷ ar} {.s} f ts) = Π.cong (A ⟦ f ⟧ₒ) (subst-theo* ts)

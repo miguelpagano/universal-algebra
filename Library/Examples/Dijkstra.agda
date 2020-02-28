@@ -176,7 +176,7 @@ module ToEquational where
      por las variables 0, 1 y 2 en el cálculo ecuacional. La substitución
      subsₐ φ' ψ' y τ formaliza eso -}
 
-  subsₐ : (φ' ψ' τ : Formula) → Subst
+  subsₐ : (φ' ψ' τ : Formula) → Subst {Σₚ} {Vₚ} {Vₚ}
   subsₐ φ' ψ' τ  0 = ⟦ φ' ⟧
   subsₐ φ' ψ' τ  1 = ⟦ ψ' ⟧
   subsₐ φ' ψ' τ  2 = ⟦ τ ⟧
@@ -184,7 +184,7 @@ module ToEquational where
 
   open Equational Σₚ
 
-  ⟦_⟧ₐ : ∀ {φ' ψ' τ φ ψ} → (φ ≡' ψ) ∈ Axioms φ' ψ' τ → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
+  ⟦_⟧ₐ : ∀ {φ' ψ' τ φ ψ} → (φ ≡' ψ) ∈ Axioms φ' ψ' τ → Tₚ ⊢ (⋀ Vₚ , ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
   ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₁ = psubst axₚ₁ (subsₐ φ' ψ' τ) ⇨v⟨⟩
   ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₂ = psubst axₚ₂ (subsₐ φ' ψ' τ) ⇨v⟨⟩
   ⟦_⟧ₐ {φ'} {ψ'} {τ} ax₃ = psubst axₚ₃ (subsₐ φ' ψ' τ) ⇨v⟨⟩
@@ -205,31 +205,31 @@ module ToEquational where
   -- prueba ecuacional.
 
   pequan₁ : (φ ψ : Formula) →
-            Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ true∼) → Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧) →
-            Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)
+            Tₚ ⊢ (⋀ Vₚ , ⟦ ψ ⟧ ≈ true∼) → Tₚ ⊢ (⋀ Vₚ , ⟦ ψ ⟧ ≈ ⟦ φ ⟧) →
+            Tₚ ⊢ (⋀ Vₚ , ⟦ φ ⟧ ≈ true∼)
   pequan₁ φ ψ ⋀ψ≈t ⋀ψ≈φ = psym (ptrans (psym ⋀ψ≈t) ⋀ψ≈φ)
-  pequan₂ : (φ ψ ψ₁ ψ₂ : Formula) → Tₚ ⊢ (⋀ ⟦ ψ₁ ⟧ ≈ ⟦ ψ₂ ⟧) → ψ ≡ ψ₁ ≡' ψ₂ →
-            Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)
+  pequan₂ : (φ ψ ψ₁ ψ₂ : Formula) → Tₚ ⊢ (⋀ Vₚ , ⟦ ψ₁ ⟧ ≈ ⟦ ψ₂ ⟧) → ψ ≡ ψ₁ ≡' ψ₂ →
+            Tₚ ⊢ (⋀ Vₚ , ⟦ ψ ⟧ ≈ ⟦ φ ⟧) → Tₚ ⊢ (⋀ Vₚ , ⟦ φ ⟧ ≈ true∼)
   pequan₂ φ ψ ψ₁ ψ₂ ⋀ψ₁≈ψ₂ ψ=ψ₁≡ψ₂ ⋀ψ≈φ = ptrans (psym (ptrans
               (psym (preemp (⇨v▹ ⋀ψ₁≈ψ₂ (⇨v▹ prefl ⇨v⟨⟩))))
-              (subst (λ ψ₀ → Tₚ ⊢ (⋀ ⟦ ψ₀ ⟧ ≈ ⟦ φ ⟧)) ψ=ψ₁≡ψ₂ ⋀ψ≈φ)))
+              (subst (λ ψ₀ → Tₚ ⊢ (⋀ Vₚ , ⟦ ψ₀ ⟧ ≈ ⟦ φ ⟧)) ψ=ψ₁≡ψ₂ ⋀ψ≈φ)))
                    reflψ₂
     where subs₀ : Subst
           subs₀ 0 = ⟦ ψ₂ ⟧
           subs₀ n = term (inj₂ n) ⟨⟩
-          reflψ₂ : Tₚ ⊢ (⋀ ⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧ ≈ true∼)
+          reflψ₂ : Tₚ ⊢ (⋀ Vₚ , ⟦ ψ₂ ⟧ ≐ ⟦ ψ₂ ⟧ ≈ true∼)
           reflψ₂ = psubst axrefl≡ subs₀ ⇨v⟨⟩
 
   open Signature
 
   pleibin : ∀ {ψ τ φ₁ φ₂ p} → (σ : ops Σₚ (_ ∷ _ ∷ [] , _)) →
-              Tₚ ⊢ (⋀ ⟦ φ₁ [ p := ψ ] ⟧ ≈ ⟦ φ₁ [ p := τ ] ⟧) →
-              Tₚ ⊢ (⋀ ⟦ φ₂ [ p := ψ ] ⟧ ≈ ⟦ φ₂ [ p := τ ] ⟧) →
-              Tₚ ⊢ (⋀ term σ (⟦ φ₁ [ p := ψ ] ⟧ ▹ ⟦ φ₂ [ p := ψ ] ⟧ ▹ ⟨⟩) ≈
+              Tₚ ⊢ (⋀ Vₚ , ⟦ φ₁ [ p := ψ ] ⟧ ≈ ⟦ φ₁ [ p := τ ] ⟧) →
+              Tₚ ⊢ (⋀ Vₚ , ⟦ φ₂ [ p := ψ ] ⟧ ≈ ⟦ φ₂ [ p := τ ] ⟧) →
+              Tₚ ⊢ (⋀ Vₚ , term σ (⟦ φ₁ [ p := ψ ] ⟧ ▹ ⟦ φ₂ [ p := ψ ] ⟧ ▹ ⟨⟩) ≈
                       term σ (⟦ φ₁ [ p := τ ] ⟧ ▹ ⟦ φ₂ [ p := τ ] ⟧ ▹ ⟨⟩))
   pleibin σ p₁ p₂ = preemp (⇨v▹ p₁ (⇨v▹ p₂ ⇨v⟨⟩))
 
-  pleib : ∀ {ψ τ φ p} → Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ τ ⟧) → Tₚ ⊢ (⋀ ⟦ φ [ p := ψ ] ⟧ ≈ ⟦ φ [ p := τ ] ⟧)
+  pleib : ∀ {ψ τ φ p} → Tₚ ⊢ (⋀ Vₚ , ⟦ ψ ⟧ ≈ ⟦ τ ⟧) → Tₚ ⊢ (⋀ Vₚ , ⟦ φ [ p := ψ ] ⟧ ≈ ⟦ φ [ p := τ ] ⟧)
   pleib {φ = true} eqpru = prefl
   pleib {φ = false} eqpru = prefl
   pleib {ψ} {τ} {var q} {p} eqpru with p ≟ q
@@ -255,14 +255,14 @@ module ToEquational where
                                                conseq (pleib {φ = φ₁} eqpru)
                                                      (pleib {φ = φ₂} eqpru)
 
-  substaux : ∀ {φ ψ φ' ψ'} → Tₚ ⊢ (⋀ ⟦ ψ' ⟧ ≈ ⟦ φ' ⟧) → (ψ ≡' φ) ≡ (ψ' ≡' φ') →
-               Tₚ ⊢ (⋀ ⟦ ψ ⟧ ≈ ⟦ φ ⟧)
+  substaux : ∀ {φ ψ φ' ψ'} → Tₚ ⊢ (⋀ Vₚ , ⟦ ψ' ⟧ ≈ ⟦ φ' ⟧) → (ψ ≡' φ) ≡ (ψ' ≡' φ') →
+               Tₚ ⊢ (⋀ Vₚ , ⟦ ψ ⟧ ≈ ⟦ φ ⟧)
   substaux ⋀ψ'≈φ' ψ≡φ=ψ'≡φ' =
-                  (subst₂ (λ φ' ψ' → Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ' ⟧))
+                  (subst₂ (λ φ' ψ' → Tₚ ⊢ (⋀ Vₚ , ⟦ φ' ⟧ ≈ ⟦ ψ' ⟧))
                          (proj₁ (cong⁻¹≡ (sym ψ≡φ=ψ'≡φ')))
                          (proj₂ (cong⁻¹≡ (sym ψ≡φ=ψ'≡φ'))) ⋀ψ'≈φ')
 
-  p≡to≈ : ∀ {φ ψ} → Tₚ ⊢ (⋀ ⟦ φ ≡' ψ ⟧ ≈ true∼) → Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
+  p≡to≈ : ∀ {φ ψ} → Tₚ ⊢ (⋀ Vₚ , ⟦ φ ≡' ψ ⟧ ≈ true∼) → Tₚ ⊢ (⋀ Vₚ , ⟦ φ ⟧ ≈ ⟦ ψ ⟧)
   p≡to≈ {φ} {ψ} pru = psubst ax≡≈ subs₀ (⇨v▹ pru ⇨v⟨⟩)
     where subs₀ : Subst
           subs₀ 0 = ⟦ φ ⟧
@@ -270,9 +270,9 @@ module ToEquational where
           subs₀ n = term (inj₂ n) ⟨⟩
 
 
-  ⊢↝Eq : ∀ {φ} → (pru : ⊢ φ) → (Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)) ⊎
+  ⊢↝Eq : ∀ {φ} → (pru : ⊢ φ) → (Tₚ ⊢ (⋀ Vₚ , ⟦ φ ⟧ ≈ true∼)) ⊎
                                    (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
-                                   ((Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (φ ≡ φ' ≡' ψ))))
+                                   ((Tₚ ⊢ (⋀ Vₚ , ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (φ ≡ φ' ≡' ψ))))
   ⊢↝Eq {φ ≡' ψ} (ax ∈A) = inj₂ (φ , ψ , (⟦ ∈A ⟧ₐ , refl))
   ⊢↝Eq {true} (ax noax)
   ⊢↝Eq {false} (ax noax)
@@ -334,16 +334,16 @@ module Examples where
 
   open Equational Σₚ
 
-  ex₁ : (Tₚ ⊢ (⋀ ⟦ true ⟧ ≈ true∼)) ⊎
+  ex₁ : (Tₚ ⊢ (⋀ Vₚ , ⟦ true ⟧ ≈ true∼)) ⊎
         (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
-        ((Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (true ≡ φ' ≡' ψ))))
+        ((Tₚ ⊢ (⋀ Vₚ , ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (true ≡ φ' ≡' ψ))))
   ex₁ = ⊢↝Eq 4∙
 
-  toproof : ∀ {φ} → (Tₚ ⊢ (⋀ ⟦ φ ⟧ ≈ true∼)) ⊎
+  toproof : ∀ {φ} → (Tₚ ⊢ (⋀ Vₚ , ⟦ φ ⟧ ≈ true∼)) ⊎
                    (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
-                   ((Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (φ ≡ φ' ≡' ψ)))) →
+                   ((Tₚ ⊢ (⋀ Vₚ , ⟦ φ' ⟧ ≈ ⟦ ψ ⟧)) × (φ ≡ φ' ≡' ψ)))) →
                    (Σ[ φ' ∈ Formula ] (Σ[ ψ ∈ Formula ]
-                   (Tₚ ⊢ (⋀ ⟦ φ' ⟧ ≈ ⟦ ψ ⟧))))
+                   (Tₚ ⊢ (⋀ Vₚ , ⟦ φ' ⟧ ≈ ⟦ ψ ⟧))))
   toproof {φ} (inj₁ x) = φ , true , x
   toproof (inj₂ (φ' , ψ , pr , _)) = φ' , (ψ , pr)
 

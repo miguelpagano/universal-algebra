@@ -47,8 +47,8 @@ module Group {op-grp : List ⊤ × ⊤ → Set}
     module OTG = OpenTerm Σ-grp X renaming (T_〔_〕 to GTerms)
     open OTG
     open Equational Σ-grp
-    Eq-grp : Set
-    Eq-grp = Equation X tt
+    Eq-grp : Set₁
+    Eq-grp = Equation tt
 
     Term-grp : Set
     Term-grp = GTerms ∥ tt ∥
@@ -70,10 +70,10 @@ module Group {op-grp : List ⊤ × ⊤ → Set}
     open GrpSmartcons
     -- Axioms
     invElemRight : Eq-grp
-    invElemRight = ⋀ (x ∘ (x ⁻)) ≈ u
+    invElemRight = ⋀ X , (x ∘ (x ⁻)) ≈ u
 
     invElemLeft : Eq-grp
-    invElemLeft = ⋀ ((x ⁻) ∘ x) ≈ u
+    invElemLeft = ⋀ X , ((x ⁻) ∘ x) ≈ u
 
     pattern grp-invR-ax = here
     pattern grp-invL-ax = there here
@@ -81,16 +81,16 @@ module Group {op-grp : List ⊤ × ⊤ → Set}
     pattern grp-unitL-ax = there (there (there here ))
     pattern grp-unitR-ax = there (there (there (there here)))
 
-    GrpTheory : Theory X (tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
+    GrpTheory : Theory (tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
     GrpTheory = invElemRight ▹ (invElemLeft ▹ MonTheory)
 
     module _ where
-      open Provable-Equivalence GrpTheory
+      open Provable-Equivalence {X} GrpTheory
       open EqR (⊢-≈Setoid tt)
-      open OTG.Subst
+      open Subst {Σ-grp} {X} {X}
 
       {- unit is its own inverse. -}
-      p₁ : GrpTheory ⊢ (⋀ (u ⁻) ≈ u)
+      p₁ : GrpTheory ⊢ (⋀ X , (u ⁻) ≈ u)
       p₁ = begin ((u ⁻))
            ≈⟨  psym (psubst grp-unitL-ax (λ x₁ → (u ⁻)) ⇨v⟨⟩) ⟩
            ((u ∘ (u ⁻)))
@@ -98,7 +98,7 @@ module Group {op-grp : List ⊤ × ⊤ → Set}
            u
            ∎
 
-      inv-inv : GrpTheory ⊢ (⋀ x ≈ₑ ((x ⁻) ⁻) if ([] , ⟨⟩))
+      inv-inv : GrpTheory ⊢ (⋀ X , x ≈ₑ ((x ⁻) ⁻) if ([] , ⟨⟩))
       inv-inv = begin x
                 ≈⟨ psym (psubst grp-unitR-ax (λ x → term (inj₂ x) ⟨⟩) ⇨v⟨⟩) ⟩
                 (x ∘ u)
@@ -137,7 +137,7 @@ module AbeGroup {op-abe-grp : List ⊤ × ⊤ → Set}
          open G.GrpTheory
          open Equational Σ-abe-grp
 
-         Eq-abe-grp : Set
+         Eq-abe-grp : Set₁
          Eq-abe-grp = Eq-grp
 
          Term-abe-grp : Set
@@ -151,9 +151,9 @@ module AbeGroup {op-abe-grp : List ⊤ × ⊤ → Set}
          open AbeGrpSmartcons
          -- Commutativity
          commOp : Eq-abe-grp
-         commOp = ⋀ (x ∘ y) ≈ (y ∘ x)
+         commOp = ⋀ X , (x ∘ y) ≈ (y ∘ x)
 
-         AbeGrpTheory : Theory X (tt ∷ tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
+         AbeGrpTheory : Theory (tt ∷ tt ∷ tt ∷ tt ∷ tt ∷ [ tt ])
          AbeGrpTheory = commOp ▹ GrpTheory
 
 module Groups where

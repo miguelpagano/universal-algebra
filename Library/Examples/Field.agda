@@ -173,11 +173,10 @@ module Fields where
   -- theories are closed under products).
   -- But we had already proved that GF2² is not a field.
   FieldIsNotEquational : ¬ (Σ[ ar ∈ List (sorts Σ-field) ]
-                           (Σ[ X ∈ Vars Σ-field ]
-                           (Σ[ T ∈ Theory X ar ]
+                           (Σ[ T ∈ Theory ar ]
                              ∀ (F : Algebra {lzero} {lzero} Σ-field) →
-                                  (F ⊨T T) ⇔ (IsField F))))
-  FieldIsNotEquational (_ , _ , T , p) = GF2²-isnot-field GF2²-is-field
+                                  (F ⊨T T) ⇔ (IsField F)))
+  FieldIsNotEquational (_ , T , p) = GF2²-isnot-field GF2²-is-field
     where
     open _⇔_
     pGF2-From : IsField GF2 → GF2 ⊨T T

@@ -48,8 +48,8 @@ module Theory₁ where
   Vars₁ s = ℕ
 
   open Equational Σbool₁
-  Eq₁ : Set
-  Eq₁ = Equation Vars₁ tt
+  Eq₁ : Set₁
+  Eq₁ = Equation tt
 
   open OpenTerm Σbool₁ Vars₁ renaming (T_〔_〕 to Terms)
 
@@ -87,44 +87,44 @@ module Theory₁ where
 
   -- Equations for each axiom of the theory
   assocAnd : Eq₁
-  assocAnd = ⋀ p ∧ (q ∧ r) ≈ ((p ∧ q) ∧ r)
+  assocAnd = ⋀ Vars₁ , p ∧ (q ∧ r) ≈ ((p ∧ q) ∧ r)
 
   commAnd : Eq₁
-  commAnd = ⋀ p ∧ q ≈ (q ∧ p)
+  commAnd = ⋀ Vars₁ , p ∧ q ≈ (q ∧ p)
 
   assocOr₁ : Eq₁
-  assocOr₁ = ⋀ p ∨ (q ∨ r) ≈ ((p ∨ q) ∨ r)
+  assocOr₁ = ⋀ Vars₁ , p ∨ (q ∨ r) ≈ ((p ∨ q) ∨ r)
 
   commOr₁ : Eq₁
-  commOr₁ = ⋀ p ∨ q ≈ (q ∨ p)
+  commOr₁ = ⋀ Vars₁ , p ∨ q ≈ (q ∨ p)
 
   idemAnd : Eq₁
-  idemAnd = ⋀ p ∧ p ≈ p
+  idemAnd = ⋀ Vars₁ , p ∧ p ≈ p
 
   idemOr₁ : Eq₁
-  idemOr₁ = ⋀ p ∨ p ≈ p
+  idemOr₁ = ⋀ Vars₁ , p ∨ p ≈ p
 
   distAndOr : Eq₁
-  distAndOr = ⋀ p ∧ (q ∨ r) ≈ ((p ∧ q) ∨ (p ∧ r))
+  distAndOr = ⋀ Vars₁ , p ∧ (q ∨ r) ≈ ((p ∧ q) ∨ (p ∧ r))
 
   distOrAnd : Eq₁
-  distOrAnd = ⋀ p ∨ (q ∧ r) ≈ ((p ∨ q) ∧ (p ∨ r))
+  distOrAnd = ⋀ Vars₁ , p ∨ (q ∧ r) ≈ ((p ∨ q) ∧ (p ∨ r))
 
   abs₁ : Eq₁
-  abs₁ = ⋀ p ∧ (p ∨ q) ≈ p
+  abs₁ = ⋀ Vars₁ , p ∧ (p ∨ q) ≈ p
 
   abs₂ : Eq₁
-  abs₂ = ⋀ p ∨ (p ∧ q) ≈ p
+  abs₂ = ⋀ Vars₁ , p ∨ (p ∧ q) ≈ p
 
   defF : Eq₁
-  defF = ⋀ p ∧ (¬ p) ≈ false
+  defF = ⋀ Vars₁ , p ∧ (¬ p) ≈ false
 
   3excl : Eq₁
-  3excl = ⋀ p ∨ (¬ p) ≈ true
+  3excl = ⋀ Vars₁ , p ∨ (¬ p) ≈ true
 
 
   {- The theory is a vector with the 12 axioms -}
-  Tbool₁ : Theory Vars₁ (replicate 12 tt)
+  Tbool₁ : Theory (replicate 12 tt)
   Tbool₁ = assocAnd ▹ commAnd ▹ assocOr₁ ▹
            commOr₁ ▹ idemAnd ▹ idemOr₁ ▹
            distAndOr ▹ distOrAnd ▹ abs₁ ▹
@@ -153,7 +153,7 @@ module Theory₁ where
                                                           (there (there (there (there (there ())))))))))))
 
 
-  p₁ :  Tbool₁ ⊢ (⋀ ¬ p ∧ p ≈ false)
+  p₁ :  Tbool₁ ⊢ (⋀ Vars₁ , ¬ p ∧ p ≈ false)
   p₁ = begin
          ¬ p ∧ p
          ≈⟨ psubst axComm∧ σ ⇨v⟨⟩ ⟩
@@ -162,9 +162,10 @@ module Theory₁ where
          false
        ∎
        where
-       open Provable-Equivalence Tbool₁
+       open Provable-Equivalence {Vars₁} Tbool₁
        open import Relation.Binary.EqReasoning (⊢-≈Setoid tt)
-       open OpenTerm.Subst Σbool₁ Vars₁
+       open Subst {Σbool₁} {Vars₁} {Vars₁}
+       open IdSubst Σbool₁ Vars₁
        σ : Subst
        σ zero = ¬ p
        σ (suc zero) = p
@@ -262,43 +263,43 @@ module Theory₂ where
     false₂ = term (inj₁ f₂) ⟨⟩
   open Equational Σbool₂
 
-  Eq₂ : Set
-  Eq₂ = Equation Vars₂ tt
+  Eq₂ : Set₁
+  Eq₂ = Equation tt
 
 
   open Smartcons
   -- Equations for each axiom
   assocEquiv : Eq₂
-  assocEquiv = ⋀ p ≡ (q ≡ r) ≈ ((p ≡ q) ≡ r)
+  assocEquiv = ⋀ Vars₂ , p ≡ (q ≡ r) ≈ ((p ≡ q) ≡ r)
 
   commEquiv : Eq₂
-  commEquiv = ⋀ p ≡ q ≈ (q ≡ p)
+  commEquiv = ⋀ Vars₂ , p ≡ q ≈ (q ≡ p)
 
   assocOr : Eq₂
-  assocOr = ⋀ p ∨ (q ∨ r) ≈ ((p ∨ q) ∨ r)
+  assocOr = ⋀ Vars₂ , p ∨ (q ∨ r) ≈ ((p ∨ q) ∨ r)
 
   commOr : Eq₂
-  commOr = ⋀ p ∨ q ≈ (q ∨ p)
+  commOr = ⋀ Vars₂ , p ∨ q ≈ (q ∨ p)
 
   neuEquiv : Eq₂
-  neuEquiv = ⋀ p ≡ true₂ ≈ p
+  neuEquiv = ⋀ Vars₂ , p ≡ true₂ ≈ p
 
   reflEquiv : Eq₂
-  reflEquiv = ⋀ p ≡ p ≈ true₂
+  reflEquiv = ⋀ Vars₂ , p ≡ p ≈ true₂
 
   absOr : Eq₂
-  absOr = ⋀ p ∨ true₂ ≈ true₂
+  absOr = ⋀ Vars₂ , p ∨ true₂ ≈ true₂
 
   neuOr : Eq₂
-  neuOr = ⋀ p ∨ false₂ ≈ p
+  neuOr = ⋀ Vars₂ , p ∨ false₂ ≈ p
 
   idemOr : Eq₂
-  idemOr = ⋀ p ∨ p ≈ p
+  idemOr = ⋀ Vars₂ , p ∨ p ≈ p
 
   distOrEquiv : Eq₂
-  distOrEquiv = ⋀ p ∨ (q ≡ r) ≈ ((p ∨ q) ≡ (p ∨ r))
+  distOrEquiv = ⋀ Vars₂ , p ∨ (q ≡ r) ≈ ((p ∨ q) ≡ (p ∨ r))
 
-  Tbool₂ : Theory Vars₂ (replicate 10 tt)
+  Tbool₂ : Theory (replicate 10 tt)
   Tbool₂ = assocEquiv ▹ commEquiv ▹ assocOr ▹
            commOr ▹ neuEquiv ▹ reflEquiv ▹
            absOr ▹ neuOr ▹ idemOr ▹
@@ -326,14 +327,15 @@ module Theory₂ where
   {- Tbool₂ implies Tbool₁ -}
   module Tbool₂⇒Tbool₁ where
     open Theory₁
-    open TheoryTrans Σtrans Vars₁
-    open Provable-Equivalence Tbool₂
+    open TheoryTrans Σtrans
+    open Provable-Equivalence {Vars₂} Tbool₂
     open import Relation.Binary.EqReasoning (⊢-≈Setoid tt)
 
     {- We have to prove each axiom of
       Tbool₁ in theory Tbool₂ -}
 
-    open OpenTerm.Subst Σbool₂ Vars₂
+    open Subst {Σbool₂} {Vars₂} {Vars₂}
+    open IdSubst Σbool₂ Vars₂
 
     T₂⊢idem∨ : Tbool₂ ⊢ eq↝ idemOr₁
     T₂⊢idem∨ =
@@ -644,7 +646,7 @@ module BoolModel₁ where
   open Theory₁
   open Theory₂
   open Theory₂.Tbool₂⇒Tbool₁
-  open TheoryTrans.ModelPreserv Σtrans Vars₁ Tbool₁
+  open TheoryTrans.ModelPreserv Σtrans Tbool₁
 
   B₁model : B₁ ⊨T Tbool₁
   B₁model = ⊨T⇒↝ Tbool₂ T₂⇒T₁ B₂ B₂model

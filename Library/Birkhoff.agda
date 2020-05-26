@@ -62,7 +62,9 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
                         s t
   open Equ
   ≈B→≈A : ∀ {s : sorts Σ} (eq : Equ X s ) →
-           (s , ⟦ eleft eq ⟧B ≈B ⟦ eright eq ⟧B) → (s , ⟦ eleft eq ⟧A ≈A ⟦ eright eq ⟧A)
+            let t ≈ₑ t' = eq
+            in
+            s , ⟦ t ⟧B ≈B ⟦ t' ⟧B → s , ⟦ t ⟧A ≈A ⟦ t' ⟧A
   ≈B→≈A {s} (t ≈ₑ t') eq = begin
     ⟦ t ⟧A               ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
     ′ H ′ s ⟨$⟩ ⟦ t ⟧B    ≈⟨ cong (′ H ′ s ) eq ⟩
@@ -72,17 +74,10 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
 
   open Setoid
 
-  private
-    rA : ∀ {s} → Rel (Terms X s) ℓ₁
-    rA {sᵢ} uᵢ uᵢ' = _≈_ (A ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧A ⟦ uᵢ' ⟧A
-
-    rB : ∀ {s} → Rel (Terms X s) ℓ₃
-    rB {sᵢ} uᵢ uᵢ' = _≈_ (B ⟦ sᵢ ⟧ₛ) ⟦ uᵢ ⟧B ⟦ uᵢ' ⟧B
-
   ⊨B*→⊨A* : ∀ {ar : List (sorts Σ)} {eqs : HVec (Equ X) ar } →
            (B , θB ⊨ₑ_ ) ⇨v eqs →
            (A , θA ⊨ₑ_) ⇨v eqs
-  ⊨B*→⊨A* B⊨conds = map⇨v (λ { {_} {eq} x → ≈B→≈A eq x}) B⊨conds
+  ⊨B*→⊨A* B⊨conds = map⇨v (λ {_} {eq} → ≈B→≈A eq ) B⊨conds
 
 
 {- Isomorphisms of algebras preserve satisfaction of conditional equations -}

@@ -126,13 +126,16 @@ _/_ : ∀ {ℓ₁ ℓ₂ ℓ₃ Σ} → (A : Algebra {ℓ₁} {ℓ₂} Σ) → (
       Algebra {ℓ₁} {ℓ₃} Σ
 A / C = record { _⟦_⟧ₛ = A/Cₛ ; _⟦_⟧ₒ = A/Cₒ }
   where A/Cₛ : _ → _
-        A/Cₛ s = record { Carrier = Carrier (A ⟦ s ⟧ₛ)
-                              ; _≈_ = rel C {s}
-                              ; isEquivalence = cequiv C s
-                              }
+        A/Cₛ s = record
+          { Carrier = Carrier (A ⟦ s ⟧ₛ)
+          ; _≈_ = rel C {s}
+          ; isEquivalence = cequiv C s
+          }
         A/Cₒ : ∀ {ar} {s} → _ → (A/Cₛ  ✳ ar) ⟶ A/Cₛ s
-        A/Cₒ {ar} {s} f = record { _⟨$⟩_ = λ v → A ⟦ f ⟧ₒ ⟨$⟩ v
-                                ; cong = csubst C f
-                                }
+        A/Cₒ {ar} {s} f = record
+          { _⟨$⟩_ = A ⟦ f ⟧ₒ ⟨$⟩_
+          ; cong = csubst C f
+          }
+
 
 

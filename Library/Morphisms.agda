@@ -497,16 +497,17 @@ Kernel {ℓ₄ = ℓ₄} {A = A} {B} h =
                 p {i ∷ is} (∼▹ x eq₁) = ∼▹ x (p eq₁)
 
 open Congruence
-open import Data.Product.Relation.Pointwise.NonDependent using (×-setoid)
 
 isEpi :  ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
             {B : Algebra {ℓ₃} {ℓ₄} Σ} → (h : Homo A B) → Set _
 isEpi h = (s : sorts Σ) → Surjective (′ h ′ s)
 
 QuotHom : ∀ {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
-                        (Q : Congruence {ℓ₃} A) → Homo A (A / Q)
-QuotHom A Q = record { ′_′ = fₕ
-                         ; cond = condₕ }
+            (Q : Congruence {ℓ₃} A) → Homo A (A / Q)
+QuotHom A Q = record
+  { ′_′ = fₕ
+  ; cond = condₕ
+  }
   where fₕ : A ⟿ (A / Q)
         fₕ s = record { _⟨$⟩_ = F.id
                       ; cong = PC-resp-~ {S = A ⟦ s ⟧ₛ} (rel Q {s}) (welldef Q s , (cequiv Q s)) }
@@ -516,6 +517,20 @@ QuotHom A Q = record { ′_′ = fₕ
                                     (PE.cong (_⟨$⟩_ (A ⟦ f ⟧ₒ)) (PE.sym (map-id as)))
                                     (IsEquivalence.refl (cequiv Q s))
 
+{-
+natIsEpi : ∀ {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+           (Q : Congruence {ℓ₃} A) →
+           isEpi (QuotHom A Q)
+natIsEpi A Q s = record
+  { from = f⁼¹
+  ; right-inverse-of = {!!}
+  }
+  where f⁼¹ : ((A / Q) ⟦ s ⟧ₛ) ⟶ (A ⟦ s ⟧ₛ)
+        f⁼¹ = record
+          { _⟨$⟩_ = F.id
+          ; cong = λ {a} {b} x → {!welldef Q s !}
+          }
+-}
 {- Monomorphism from any sub-algebra of A to A -}
 sub-embedding : ∀ {ℓ₁ ℓ₂ ℓ₃} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
                         (B : SubAlg {ℓ₃} A) → Homo (SubAlgebra B) A
@@ -537,6 +552,8 @@ ker-embedding A B H = record
     }
   ; cond = cond H
   }
+
+
 
 {- Restriction of an homomorphism to a sub-algebra -}
 _↾_ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅} {A : Algebra {ℓ₁} {ℓ₂} Σ} →
@@ -560,7 +577,7 @@ _↾_ {A = A} {B} h C = record { ′_′ = λ s →
 
 
 -- B is subalgebra of A if B is isomorphic to some proper subalgebra of A.
-record _IsSub_  {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (B : Algebra {ℓ₃} {ℓ₄} Σ) (A : Algebra {ℓ₁} {ℓ₂} Σ)
+record _IsSub_at_  {ℓ₁ ℓ₂ ℓ₃ ℓ₄} (B : Algebra {ℓ₃} {ℓ₄} Σ) (A : Algebra {ℓ₁} {ℓ₂} Σ)
                 (ℓ₀ : Level) : Set (lsuc (ℓ₀ ⊔ ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
   field
     subA : SubAlg {ℓ₀} A

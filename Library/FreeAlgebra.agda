@@ -24,7 +24,7 @@ open import Relation.Unary
 
 open import HeterogeneousVec renaming (map to mapV)
 open import Morphisms
-import SubAlgebra as SA
+import SubAlgebra
 import TermAlgebra as T
 open import Setoids hiding (∥_∥)
 
@@ -207,7 +207,7 @@ module Free {ℓ₃ ℓ₄ : Level} (X : Universe ℓ₃ ℓ₄) where
 
 
 module Over {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {X : Universe ℓ₃ ℓ₄} (A : Algebra {ℓ₁} {ℓ₂} Σ) where
-  open SA Σ A
+  open SubAlgebra Σ A
   module _ (θ : X ⊆ₛ (A ⟦_⟧ₛ)) where
     Img :  Predicate (ℓ₂ ⊔ ℓ₃)
     Img s = record
@@ -381,21 +381,15 @@ module TX-is-Free (X : T.Vars Σ) where
   TX≅FX : TX ≅ FX
   TX≅FX = record { iso = iso⁺ H⁼¹ H H∘H⁼¹≈Id H⁼¹∘H≈Id }
 
-record IsSub  {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
-             (B : Algebra {ℓ₃} {ℓ₄} Σ) (A : Algebra {ℓ₁} {ℓ₂} Σ) (ℓ₀ : Level) : Set (lsuc (ℓ₀ ⊔ ℓ₄ ⊔ ℓ₃ ⊔ ℓ₁ ⊔ ℓ₂)) where
-  field
-    subA : SubAlg {ℓ₀} A
-    emb  : B ≅ SubAlgebra subA
-
 
 module SubDirectProduct {ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈} {I : Set ℓ₃}
         (A : I → Algebra {ℓ₄} {ℓ₅} Σ)  where
   open import Product
   open IndexedProduct A
 
-  open IsSub
+  open _IsSub_at_
   record isSubDirect (B : Algebra {ℓ₆} {ℓ₇} Σ) : Set (lsuc (ℓ₃ ⊔ ℓ₄ ⊔ ℓ₅ ⊔ ℓ₆ ⊔ ℓ₇ ⊔ ℓ₈)) where
     field
-      isSub : IsSub B Πalg ℓ₈
+      isSub : B IsSub Πalg at ℓ₈
       πSurj : (i : I) → isEpi (π i ↾ subA isSub)
 

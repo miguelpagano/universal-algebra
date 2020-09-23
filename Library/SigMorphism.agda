@@ -62,13 +62,13 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
   mutual
 
     ⟦_⟧⊢ : ∀ {ar s} → ar ⊢ s → A ∥ ar ∥* → A ∥ s ∥
-    ⟦ # n ⟧⊢    as =  as ‼v n
-    ⟦ f ∣$∣ ts ⟧⊢  as = A ⟦ f ⟧ₒ ⟨$⟩ ⟦ ts ⟧⊢* as
+    ⟦ # n ⟧⊢ as =  as ‼v n
+    ⟦ f ∣$∣ ts ⟧⊢ as = A ⟦ f ⟧ₒ ⟨$⟩ ⟦ ts ⟧⊢* as
 
 
     ⟦_⟧⊢* : ∀ {ar ar'} → HVec (ar ⊢_) ar' → A ∥ ar ∥* → A ∥ ar' ∥*
-    ⟦ ⟨⟩ ⟧⊢*      as = ⟨⟩
-    ⟦ t ▹ ts ⟧⊢*  as = ⟦ t ⟧⊢ as ▹ ⟦ ts ⟧⊢* as
+    ⟦ ⟨⟩ ⟧⊢* as = ⟨⟩
+    ⟦ t ▹ ts ⟧⊢* as = ⟦ t ⟧⊢ as ▹ ⟦ ts ⟧⊢* as
 
 
   cong⟦⟧⊢ : ∀ {ar s} {vs vs' : A ∥ ar ∥* } →
@@ -77,11 +77,11 @@ module FormalTermInt {ℓ₁ ℓ₂} {Σ : Signature} (A : Algebra {ℓ₁} {ℓ
             Setoid._≈_ (A ⟦ s ⟧ₛ) (⟦ t ⟧⊢ vs) (⟦ t ⟧⊢ vs')
   cong⟦⟧⊢ {vs = vs} {vs'} (# n) eq = ~v-pointwise eq n
   cong⟦⟧⊢ {ar} {_} {vs} {vs'} (f ∣$∣ ts) eq = Π.cong (A ⟦ f ⟧ₒ) (cong⟦⟧⊢* ts)
-    where  cong⟦⟧⊢* : ∀ {ar'} →
+    where cong⟦⟧⊢* : ∀ {ar'} →
                    (ts : HVec (ar ⊢_) ar') →
                    (⟦ ts ⟧⊢* vs ) ∼v (⟦ ts ⟧⊢* vs' )
-           cong⟦⟧⊢* ⟨⟩ = ∼⟨⟩
-           cong⟦⟧⊢* (t ▹ ts) = ∼▹ (cong⟦⟧⊢ t eq) (cong⟦⟧⊢* ts)
+          cong⟦⟧⊢* ⟨⟩ = ∼⟨⟩
+          cong⟦⟧⊢* (t ▹ ts) = ∼▹ (cong⟦⟧⊢ t eq) (cong⟦⟧⊢* ts)
 
 
 {- (derived) signature morphism -}

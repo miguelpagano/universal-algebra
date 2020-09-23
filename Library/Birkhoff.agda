@@ -53,12 +53,13 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
 
   _,_≈B_ : (s : sorts Σ) → _
   _,_≈B_ s = Setoid._≈_ (B ⟦ s ⟧ₛ)
-
+  open Setoid
+  
   ⟦t⟧A≈H⟦t⟧B : ∀ {s : sorts Σ} → (t : Terms X s) →
                s , ⟦ t ⟧A ≈A ( ′ H ′ s ⟨$⟩ ⟦ t ⟧B)
   ⟦t⟧A≈H⟦t⟧B {s} t = UMP TΣA (H ∘ₕ TΣB)
-                        (λ {s'} _ → Setoid.refl (A ⟦ s' ⟧ₛ))
-                        (λ {s'} _ → Setoid.refl (A ⟦ s' ⟧ₛ))
+                        (λ {s'} _ → refl (A ⟦ s' ⟧ₛ))
+                        (λ {s'} _ → refl (A ⟦ s' ⟧ₛ))
                         s t
   open Equ
   ≈B→≈A : ∀ {s : sorts Σ} (eq : Equ X s ) →
@@ -68,11 +69,9 @@ module aux-sem {ℓ₀ ℓ₁ ℓ₂ ℓ₃}
   ≈B→≈A {s} (t ≈ₑ t') eq = begin
     ⟦ t ⟧A               ≈⟨ ⟦t⟧A≈H⟦t⟧B t ⟩
     ′ H ′ s ⟨$⟩ ⟦ t ⟧B    ≈⟨ cong (′ H ′ s ) eq ⟩
-    ′ H ′ s ⟨$⟩ ⟦ t' ⟧B   ≈⟨ Setoid.sym (A ⟦ s ⟧ₛ) (⟦t⟧A≈H⟦t⟧B t')  ⟩
+    ′ H ′ s ⟨$⟩ ⟦ t' ⟧B   ≈⟨ sym (A ⟦ s ⟧ₛ) (⟦t⟧A≈H⟦t⟧B t')  ⟩
     ⟦ t' ⟧A ∎
     where open EqR (A ⟦ s ⟧ₛ)
-
-  open Setoid
 
   ⊨B*→⊨A* : ∀ {ar : List (sorts Σ)} {eqs : HVec (Equ X) ar } →
            (B , θB ⊨ₑ_ ) ⇨v eqs →
@@ -108,7 +107,6 @@ module IsoRespectSatisfaction
        ≈⟨ Π.cong (′ homAB ′ s) (symA (⟦t⟧A≈H⟦t⟧B (left e))) ⟩
    ′ homAB ′ s ⟨$⟩ ⟦ left e ⟧A
        ≈⟨ Π.cong (′ homAB  ′ s) (A⊨e θA (⊨B*→⊨A* B⊨conds)) ⟩
-
    ′ homAB ′ s ⟨$⟩ ⟦ right e ⟧A
        ≈⟨ Π.cong (′ homAB ′ s) (⟦t⟧A≈H⟦t⟧B (right e)) ⟩
    ′ homAB ∘ₕ homBA ′ s ⟨$⟩ ⟦ right e ⟧B

@@ -36,16 +36,17 @@ module ExtEq {ℓ₁ ℓ₂ ℓ₃ ℓ₄} {A : Setoid ℓ₁ ℓ₂} {B : Setoi
 
   open Setoid B
   _≈→_ : Rel (A ⟶ B) _
-  f ≈→ g  = ∀ (a : ∥ A ∥) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
+  f ≈→ g  = (a : ∥ A ∥) → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a)
 
   ext-preserves-≈ : ∀ {a a' f g} → f ≈→ g → a ≈A a' → (f ⟨$⟩ a) ≈B (g ⟨$⟩ a')
   ext-preserves-≈ {a' = a'} {f} f≈g a≈a' = trans (Π.cong f a≈a') (f≈g a')
 
   Equiv≈→ : IsEquivalence (_≈→_)
-  Equiv≈→ = record { refl = λ {f} a → refl {f ⟨$⟩ a}
-                   ; sym = λ p a → sym (p a)
-                   ; trans = λ p q a → trans (p a) (q a)
-                   }
+  Equiv≈→ = record
+    { refl = λ {f} a → refl {f ⟨$⟩ a}
+    ; sym = λ p a → sym (p a)
+    ; trans = λ p q a → trans (p a) (q a)
+    }
 
 {- A predicate over a setoid should be even with respect to the equality -}
 open Setoid
@@ -113,15 +114,15 @@ Subset A P = Σ[ a ∈ A ] (P a)
 {- A setoid predicate defines a setoid -}
 SubSetoid : ∀ {ℓ₁ ℓ₂ ℓ₃} (S : Setoid ℓ₁ ℓ₂) → (P : Pred ∥ S ∥ ℓ₃) →
                          Setoid _ _
-SubSetoid S P = record { Carrier = Subset (Carrier S) P
-                       ; _≈_ = λ { (e₁ , _) (e₂ , _) → (_≈_ S) e₁ e₂ }
-                       ; isEquivalence = pequiv
-                       }
-  where pequiv : _
-        pequiv = record { refl = refl S
-                        ; sym = sym S
-                        ; trans = trans S }
-
+SubSetoid S P = record
+  { Carrier = Subset (Carrier S) P
+  ; _≈_ = λ { (e₁ , _) (e₂ , _) → (_≈_ S) e₁ e₂ }
+  ; isEquivalence = record
+    { refl = refl S
+    ; sym = sym S
+    ; trans = trans S
+    }
+  }
 
 private
 -- A more explicit version of well-defined relations.

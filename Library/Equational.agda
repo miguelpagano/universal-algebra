@@ -25,12 +25,12 @@ open import Setoids hiding (∥_∥)
 
 open OpenTerm Σ renaming (T_〔_〕 to TΣ〔_〕)
 
+-- An unconditional equation is just a pair of terms.
 record Equ (X : Vars Σ) (s : sorts Σ) : Set where
   constructor _≈ₑ_
   field
     eleft  : TΣ〔 X 〕 ∥ s ∥
     eright : TΣ〔 X 〕 ∥ s ∥
-
 
 {- Equations -}
 record Equation (s : sorts Σ) : Set₁ where
@@ -38,7 +38,7 @@ record Equation (s : sorts Σ) : Set₁ where
   field
     X : Vars Σ
     eq  : Equ X s
-    cond : ∃ (HVec (Equ X))
+    cond : Σ[ ar ∈ Arity Σ ] (HVec (Equ X) ar)
 
   open Equ
 
@@ -76,16 +76,19 @@ iso-equ s record { eleft = t ; eright = t' } = PE.refl
 
 
 {- Satisfactibility -}
-_,_⊨ₑ_ : ∀  {X : Vars Σ} {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) → (θ : Env X A ) → {s : sorts Σ} → Equ X s → Set ℓ₂
+_,_⊨ₑ_ : ∀  {X : Vars Σ} {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) →
+       (θ : Env X A ) → {s : sorts Σ} → Equ X s → Set ℓ₂
 _,_⊨ₑ_ {X} A θ {s} (t ≈ₑ t') = eval θ t ≈ eval θ t'
   where
   open Eval X A
   open Setoid (A ⟦ s ⟧ₛ)
-_⊨c_ : ∀ {X : Vars Σ}  {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) {s : sorts Σ} → Equ X s → Set (ℓ₁ ⊔ ℓ₂)
+_⊨c_ : ∀ {X : Vars Σ}  {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) {s : sorts Σ} →
+       Equ X s → Set (ℓ₁ ⊔ ℓ₂)
 _⊨c_ {X = X} A {s} equ = (θ : Env X A ) → A , θ ⊨ₑ equ
 
 
-_⊨_ : ∀ {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) {s : sorts Σ} → Equation s → Set (ℓ₁ ⊔ ℓ₂)
+_⊨_ : ∀ {ℓ₁ ℓ₂} (A : Algebra {ℓ₁} {ℓ₂} Σ) {s : sorts Σ} →
+      Equation s → Set (ℓ₁ ⊔ ℓ₂)
 _⊨_ A {s} (⋀ X , equ if (ar , conds)) =
     (θ : Env X A ) → (A , θ ⊨ₑ_) ⇨v conds → A , θ ⊨ₑ equ
 
@@ -98,7 +101,7 @@ A ⊨T E = ∀ {s e} → _∈_ {i = s} e E → A ⊨ e
 
 
 ⊨All : ∀ {ℓ₁ ℓ₂} {ar : Arity Σ} {s : sorts Σ} → (E : Theory ar) →
-               (e : Equation s) → Set (lsuc ℓ₂ Level.⊔ lsuc ℓ₁)
+       (e : Equation s) → Set (lsuc ℓ₂ Level.⊔ lsuc ℓ₁)
 ⊨All {ℓ₁} {ℓ₂} E e = (A : Algebra {ℓ₁} {ℓ₂} Σ) → A ⊨T E → A ⊨ e
 
 open Equ
@@ -154,7 +157,7 @@ module Provable-Equivalence {X} {ar : Arity Σ} (E : Theory ar) where
     ; trans = ptrans
     }
 
-  ⊢-≈Setoid : (s : sorts Σ) → Setoid lzero (lsuc 0ℓ)
+  ⊢-≈Setoid : (s : sorts Σ) → Setoid 0ℓ (lsuc 0ℓ)
   ⊢-≈Setoid s = record
     { Carrier = TΣ〔 X 〕 ∥ s ∥
     ; _≈_ = ⊢-≈ s
@@ -211,8 +214,8 @@ module Soundness {ar : Arity Σ} {E : Theory ar} where
       where
       open EqR (A ⟦ s' ⟧ₛ)
       ihₒ = begin
-        ⟦ u₁ ⟧θσ       ≈⟨  sym (A ⟦ s' ⟧ₛ) (subst-theo s' u₁) ⟩
-        ⟦ ⟦ u₁ ⟧σ ⟧θ   ≈⟨  soundness pv A A⊨E θ ⇨v⟨⟩ ⟩
+        ⟦ u₁ ⟧θσ       ≈⟨ sym (A ⟦ s' ⟧ₛ) (subst-theo s' u₁) ⟩
+        ⟦ ⟦ u₁ ⟧σ ⟧θ   ≈⟨ soundness pv A A⊨E θ ⇨v⟨⟩ ⟩
         ⟦ ⟦ u₁' ⟧σ ⟧θ  ≈⟨ subst-theo s' u₁' ⟩
         ⟦ u₁' ⟧θσ      ∎
     open EqR (A ⟦ s ⟧ₛ)
@@ -239,7 +242,7 @@ module Completeness {ar : Arity Σ} {E : Theory ar} {X : Vars Σ} where
   open Provable-Equivalence {X} E
 
 
-  ⊢Quot : Algebra {Level.zero} {lsuc lzero} Σ
+  ⊢Quot : Algebra {0ℓ} {lsuc 0ℓ} Σ
   ⊢Quot = TΣ〔 X 〕 / ⊢Cong
   open Subst
 
@@ -261,7 +264,6 @@ module Completeness {ar : Arity Σ} {E : Theory ar} {X : Vars Σ} where
     where
     open Eval X ⊢Quot
     open Eval X (TΣ〔 X 〕) hiding (eval) renaming (eval* to subst*)
-
 
     A⊨E : ∀ {s} {e : Equation s} → _∈_ {is = ar} e E → ⊢Quot ⊨ e
     A⊨E {s} {e = (⋀ Y , (t ≈ₑ t') if (_ , _))} e∈E θ us~us' =

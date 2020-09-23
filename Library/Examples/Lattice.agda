@@ -60,4 +60,12 @@ unquoteDef abs-meet = absorption-op abs-meet (quote _∨'_) (quote _∧'_) (quot
 unquoteDef abs-join = absorption-op abs-join (quote _∧'_) (quote _∨'_) (quote X) (quote 𝓿x) (quote 𝓿y)
 
 lattice-theory :  Theory (replicate 8 tt)
-lattice-theory = assoc-meet ▹ assoc-join ▹ comm-meet ▹ comm-join ▹ idemp-meet ▹ idemp-join ▹ abs-meet ▹ abs-join ▹ ⟨⟩
+lattice-theory =
+  assoc-meet ▹
+  assoc-join ▹
+  comm-meet ▹
+  comm-join ▹
+  idemp-meet ▹
+  idemp-join ▹
+  abs-meet ▹
+  abs-join ▹ ⟨⟩

@@ -20,6 +20,7 @@ open import Setoids hiding (∥_∥)
 open import UnivAlgebra
 
 module GroundTerm (Σ : Signature) where
+  -- Herbrand Universe
   data HU : (s : sorts Σ) → Set where
     term : ∀  {ar s} →  (f : ops Σ (ar ↦ s)) → (HVec HU ar) → HU s
 

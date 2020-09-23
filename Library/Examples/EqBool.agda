@@ -193,8 +193,10 @@ module Translation where
      formal term in Σbool₂ -}
 
   ops↝ : ∀ {ar s} → (f : Σops₁ (ar ↦ s)) → map id ar ⊢ s
+  -- constantss
   ops↝ t₁ = t₂ ∣$∣ ⟨⟩
   ops↝ f₁ = f₂ ∣$∣ ⟨⟩
+  -- disjunction 
   ops↝ or₁ = or₂ ∣$∣ ⟨⟨ p , q ⟩⟩
     where p = # zero
           q = # (suc zero)

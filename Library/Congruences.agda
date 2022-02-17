@@ -51,7 +51,7 @@ R ⇒ₛ S = ∀ s → R {s} ⇒ S {s}
                       ; sym = λ x C PC → sym (cequiv C s) (x C PC)
                       ; trans = λ x y C PC → trans (cequiv C s) (x C PC) (y C PC)
                       }
-  ; csubst = λ {s = s} f rs C PC → csubst C f (map∼v (λ r → r C PC) rs)
+  ; csubst = λ f rs C PC → csubst C f (map∼v (λ r → r C PC) rs)
   }
   where open IsEquivalence
 

@@ -9,7 +9,7 @@ open import Data.Product renaming (map to pmap)
 open import Data.Product.Function.NonDependent.Setoid
 open import Data.Product.Relation.Binary.Pointwise.NonDependent using (×-setoid)
 open import Level renaming (suc to lsuc ; zero to lzero)
-open import Function as F
+open import Function as F hiding (_⟶_)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Relation.Binary
 open import Relation.Binary.PropositionalEquality as PE hiding ( Reveal_·_is_;[_];isEquivalence)

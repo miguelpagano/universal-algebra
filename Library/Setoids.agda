@@ -9,10 +9,10 @@ open import Data.Product
 open import Data.Product.Relation.Binary.Pointwise.NonDependent using (×-setoid)
 open import Data.Sum
 open import Level renaming (suc to lsuc ; zero to lzero)
-open import Function as F
+open import Function as F hiding (_⟶_)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Relation.Binary
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 import Relation.Binary.PropositionalEquality as PE
 open import Relation.Unary
 

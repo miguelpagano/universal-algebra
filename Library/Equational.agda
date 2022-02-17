@@ -14,7 +14,7 @@ open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘e_)
 open import Level renaming (zero to lzero ; suc to lsuc)
 open import Relation.Binary hiding (Total)
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 open import Relation.Binary.PropositionalEquality using (_≡_;cong₂)
 import Relation.Binary.PropositionalEquality as PE
 

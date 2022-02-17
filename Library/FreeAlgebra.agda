@@ -17,7 +17,7 @@ open import Function.Bijection hiding (_∘_)
 open import Function.Surjection hiding (_∘_)
 open import Function.Injection renaming (_∘_ to _∘ᵢ_)
 open import Relation.Binary hiding (Total)
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 import Relation.Binary.PropositionalEquality as PE
 open import Relation.Unary
 

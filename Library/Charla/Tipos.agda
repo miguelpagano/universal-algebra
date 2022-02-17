@@ -1,5 +1,32 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 module Charla.Tipos where
+-- data Lista a = Nil | Cons a (Lista a)
+
+data Lista  (a : Set) : Set where
+ Nil : Lista a
+ Cons  : a → Lista a → Lista a
+
+map : ∀ { A B } → (f : A → B) → Lista A → Lista B
+map f Nil = Nil
+map f (Cons x xs) = Cons (f x) (map f xs)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 {- Las reglas de introducción son los _constructores_ del tipo. -}
 {- Una prueba de una proposición se puede probar si podemos construir

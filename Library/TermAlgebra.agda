@@ -11,7 +11,7 @@ open import Function as F
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Level
 open import Relation.Binary hiding (Total)
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 open import Relation.Binary.PropositionalEquality as PE
 
 open import HeterogeneousVec

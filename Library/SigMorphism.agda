@@ -13,12 +13,12 @@ import Data.List.Properties as LP
 open import Data.Nat renaming (_⊔_ to _⊔ₙ_)
 open import Data.Product renaming (map to pmap)
 open import Data.Sum hiding (map)
-open import Function
+open import Function hiding (_⟶_)
 open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (id)
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Relation.Binary
 open import Relation.Binary.PropositionalEquality as PE
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 
 import Equational as Eq
 open import HeterogeneousVec

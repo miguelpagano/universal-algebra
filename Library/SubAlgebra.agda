@@ -12,14 +12,14 @@ open import Data.Product renaming (map to ×f) hiding (Σ)
 open import Data.Sum
 open import Function as F hiding (Injective; Bijective; Surjective; Inverse;
                           module Injection;Injection; module Bijection; Bijection;
-                          module Inverse)
+                          module Inverse;_⟶_)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid;_⇨_)
 open import Function.Bijection hiding (_∘_)
 open import Function.Surjection hiding (_∘_)
 open import Function.Injection renaming (_∘_ to _∘ᵢ_)
 open import Relation.Binary
 open import Relation.Unary renaming (_⊆_ to _⊆r_) hiding (_⇒_)
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 import Relation.Binary.PropositionalEquality as PE
 
 -- import Equational

@@ -15,7 +15,7 @@ open import Data.Nat
 open import Relation.Nullary hiding (¬_)
 open import Data.Product
 
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 
 
 

@@ -14,8 +14,8 @@ open import Data.Unit hiding (setoid)
 import Function as F
 open import Function.Equality renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Level renaming (zero to lzero ; suc to lsuc)
-open import Relation.Binary
-import Relation.Binary.EqReasoning as EqR
+open import Relation.Binary hiding (_⇔_)
+import Relation.Binary.Reasoning.Setoid as EqR
 import Relation.Binary.PropositionalEquality as PE hiding ([_])
 open import Relation.Nullary using (¬_)
 

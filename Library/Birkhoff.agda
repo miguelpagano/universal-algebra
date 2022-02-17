@@ -13,7 +13,7 @@ open import Function.Bijection using (Bijective)
 open import Function
 open import Function.Equality hiding (_∘_)
 open import Relation.Binary
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 
 open import Equational Σ
 open import HeterogeneousVec

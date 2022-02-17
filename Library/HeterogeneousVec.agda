@@ -9,7 +9,7 @@ open import Data.List renaming (map to lmap;lookup to _‼_)
   hiding (zip;zipWith)
 open import Data.Product hiding (map;zip)
 open import Data.Unit hiding (setoid)
-open import Function
+open import Function hiding (_⟶_)
 open import Function.Equality as FE hiding (cong;_∘_;id)
 open import Level
 open import Relation.Binary

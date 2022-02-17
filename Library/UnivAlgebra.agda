@@ -7,7 +7,7 @@ module UnivAlgebra where
 
 open import Data.List.Base hiding (map)
 open import Data.Product hiding (map)
-open import Function
+open import Function hiding (_⟶_)
 open import Function.Equality as FE hiding (setoid;id)
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Relation.Binary hiding (Total)

@@ -13,7 +13,7 @@ import Equational
 open import SigMorphism
 open import TermAlgebra
 open import Data.Nat
-open import Function
+open import Function hiding (_⟶_)
 open import Data.Fin hiding (#_)
 open import Data.List
 open import Data.Product hiding (map)
@@ -163,12 +163,11 @@ module Theory₁ where
        ∎
        where
        open Provable-Equivalence {Vars₁} Tbool₁
-       open import Relation.Binary.EqReasoning (⊢-≈Setoid tt)
+       open import Relation.Binary.Reasoning.Setoid (⊢-≈Setoid tt)
        open Subst {Σbool₁} {Vars₁} {Vars₁}
        open IdSubst Σbool₁ Vars₁
        σ : Subst
        σ zero = ¬ p
-       σ (suc zero) = p
        σ (suc x) = p
 
 
@@ -331,7 +330,7 @@ module Theory₂ where
     open Theory₁
     open TheoryTrans Σtrans
     open Provable-Equivalence {Vars₂} Tbool₂
-    open import Relation.Binary.EqReasoning (⊢-≈Setoid tt)
+    open import Relation.Binary.Reasoning.Setoid (⊢-≈Setoid tt)
 
     {- We have to prove each axiom of
       Tbool₁ in theory Tbool₂ -}

@@ -9,13 +9,13 @@ module Morphisms {Σ : Signature} where
 
 open import Data.List hiding (map)
 open import Data.Product hiding (map;Σ)
-open import Function as F hiding (Bijective; Surjective; Bijection; Surjection; Injective; Injection)
+open import Function as F hiding (Bijective; Surjective; Bijection; Surjection; Injective; Injection;_⟶_)
 open import Function.Equality as FE renaming (_∘_ to _∘ₛ_) hiding (setoid)
 open import Level renaming (suc to lsuc ; zero to lzero)
 open import Relation.Binary hiding (Total)
 open import Relation.Binary.Indexed.Homogeneous using (IRel)
 import Relation.Binary.PropositionalEquality as PE
-import Relation.Binary.EqReasoning as EqR
+import Relation.Binary.Reasoning.Setoid as EqR
 open import Relation.Unary
 
 open import HeterogeneousVec

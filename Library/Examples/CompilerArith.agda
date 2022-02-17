@@ -14,7 +14,7 @@ open import Data.Maybe hiding (map)
 open import Data.Nat
 open import Data.String hiding (_≈_)
 open import Data.Product
-open import Function
+open import Function hiding (_⟶_)
 open import Function.Equality renaming (_∘_ to _∘ₛ_ ; cong to Πcong)
 open import Relation.Binary
 
